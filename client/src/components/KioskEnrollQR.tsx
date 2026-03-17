@@ -30,9 +30,9 @@ export function KioskEnrollQR({ onClose }: KioskEnrollQRProps) {
   useEffect(() => {
     const base = window.location.origin;
     if (selectedProgram) {
-      setEnrollUrl(`${base}/join?program=${encodeURIComponent(selectedProgram)}`);
+      setEnrollUrl(`${base}/enroll?program=${encodeURIComponent(selectedProgram)}`);
     } else {
-      setEnrollUrl(`${base}/join`);
+      setEnrollUrl(`${base}/enroll`);
     }
   }, [selectedProgram]);
 

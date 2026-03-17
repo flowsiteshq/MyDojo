@@ -60,6 +60,7 @@ const AdminCommissions = lazy(() => import("./pages/AdminCommissions"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Join = lazy(() => import("./pages/Join"));
 const BuyDayPass = lazy(() => import("./pages/BuyDayPass"));
+const Enroll = lazy(() => import("./pages/Enroll"));
 
 // Loading component
 const PageLoader = () => (
@@ -74,6 +75,7 @@ function Router() {
       <Switch>
         {/* Separate routes without Layout */}
         <Route path="/join" component={Join} />
+        <Route path="/enroll" component={Enroll} />
         <Route path="/buy-day-pass" component={BuyDayPass} />
         <Route path="/instructor" component={InstructorDashboard} />
         <Route path="/check-in" component={KioskCheckIn} />

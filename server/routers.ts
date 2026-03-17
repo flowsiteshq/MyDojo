@@ -2208,6 +2208,17 @@ Please enter your card details below to complete your registration securely. Tot
 
         return { success: true };
       }),
+    // Get active membership packages (public - used by standalone enrollment page)
+    getActivePackages: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+      const pkgs = await db
+        .select()
+        .from(schema.membershipPackages)
+        .where(eq(schema.membershipPackages.isActive, 1))
+        .orderBy(schema.membershipPackages.id);
+      return pkgs;
+    }),
     // Create enrollment with Fluid Pay - accepts tokenizer token, creates customer vault, charges down payment, creates subscription
     createEnrollmentCheckout: publicProcedure
       .input(z.object({

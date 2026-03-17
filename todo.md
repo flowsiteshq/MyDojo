@@ -1773,3 +1773,5 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 
 - [x] Add collapsible sidebar (desktop) and hamburger menu (mobile) to AdminLayout
 - [x] Add real-time Active Now indicator to admin sidebar footer showing current check-ins
+- [ ] Fix QR code enrollment flow - route to enrollment page instead of free trial page
+- [ ] Fix FluidPay payment integration not working
