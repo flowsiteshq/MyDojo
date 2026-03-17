@@ -5844,6 +5844,47 @@ Please enter your card details below to complete your registration securely. Tot
         .limit(1);
       return latest ?? null;
     }),
+
+    // ─── Active Now ─────────────────────────────────────────────────────────────
+    // Returns the count of unique members checked in today (CST) plus the last
+    // 5 check-in names so the sidebar can show a live pulse.
+    getActiveNow: protectedProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+
+      // Today's date string in CST (YYYY-MM-DD)
+      const nowCST = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+      const todayStr = `${nowCST.getFullYear()}-${String(nowCST.getMonth() + 1).padStart(2, '0')}-${String(nowCST.getDate()).padStart(2, '0')}`;
+
+      // Count unique students checked in today
+      const [{ count }] = await db
+        .select({ count: sql<number>`COUNT(DISTINCT ${schema.attendance.studentId})` })
+        .from(schema.attendance)
+        .where(eq(schema.attendance.checkInDate, todayStr));
+
+      // Fetch the last 5 check-ins with student names for the tooltip
+      const recent = await db
+        .select({
+          studentId: schema.attendance.studentId,
+          checkInTimestamp: schema.attendance.checkInTimestamp,
+          studentName: schema.enrollments.studentName,
+          customerName: schema.enrollments.customerName,
+        })
+        .from(schema.attendance)
+        .leftJoin(
+          schema.enrollments,
+          eq(schema.attendance.studentId, schema.enrollments.id)
+        )
+        .where(eq(schema.attendance.checkInDate, todayStr))
+        .orderBy(desc(schema.attendance.checkInTimestamp))
+        .limit(5);
+
+      return {
+        count: Number(count),
+        recentNames: recent.map(r => r.studentName ?? r.customerName ?? 'Member'),
+        asOf: new Date().toISOString(),
+      };
+    }),
   }),
   // ─── Lead Magnet ───────────────────────────────────────────────────────────────
   leadMagnet: router({

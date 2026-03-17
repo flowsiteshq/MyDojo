@@ -20,14 +20,92 @@ import {
   ChevronRight,
   Menu,
   X,
+  Activity,
 } from "lucide-react";
 import { Button } from "./ui/button";
+import { trpc } from "@/lib/trpc";
 
 interface AdminLayoutProps {
   children: ReactNode;
 }
 
 const SIDEBAR_COLLAPSED_KEY = "admin-sidebar-collapsed";
+
+// ── Active Now Indicator ──────────────────────────────────────────────────────
+function ActiveNowBadge({ collapsed }: { collapsed: boolean }) {
+  const { data, isLoading } = trpc.admin.getActiveNow.useQuery(undefined, {
+    refetchInterval: 30_000, // refresh every 30 seconds
+    staleTime: 25_000,
+  });
+
+  const count = data?.count ?? 0;
+  const names = data?.recentNames ?? [];
+
+  // Tooltip content
+  const tooltipLines =
+    names.length > 0
+      ? names.map((n) => `• ${n}`).join("\n")
+      : "No check-ins yet today";
+
+  if (collapsed) {
+    // Icon-only mode: show count bubble on the activity icon
+    return (
+      <div className="relative group flex justify-center py-2 border-t border-gray-100">
+        <div className="relative">
+          <Activity className="w-5 h-5 text-emerald-600" />
+          {!isLoading && (
+            <span className="absolute -top-1.5 -right-2 bg-emerald-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+              {count > 99 ? "99+" : count}
+            </span>
+          )}
+        </div>
+        {/* Tooltip */}
+        <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-pre z-50 transition-opacity min-w-[140px]">
+          <p className="font-semibold mb-1">{count} Active Today</p>
+          <p className="text-gray-300 whitespace-pre-line">{tooltipLines}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Expanded mode: full card
+  return (
+    <div className="mx-3 mb-3 rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {/* Pulsing green dot */}
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <span className="text-xs font-semibold text-emerald-800">Active Now</span>
+        </div>
+        <span className="text-lg font-bold text-emerald-700 leading-none">
+          {isLoading ? "—" : count}
+        </span>
+      </div>
+      {names.length > 0 && (
+        <div className="mt-1.5 space-y-0.5">
+          {names.slice(0, 3).map((name, i) => (
+            <p key={i} className="text-[11px] text-emerald-700 truncate">
+              {name}
+            </p>
+          ))}
+          {names.length > 3 && (
+            <p className="text-[11px] text-emerald-500">
+              +{names.length - 3} more
+            </p>
+          )}
+        </div>
+      )}
+      {!isLoading && names.length === 0 && (
+        <p className="text-[11px] text-emerald-500 mt-1">No check-ins yet today</p>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
@@ -205,6 +283,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           );
         })}
       </nav>
+
+      {/* ── Active Now Indicator ── */}
+      <ActiveNowBadge collapsed={isCollapsed && !mobile} />
 
       {/* User Info & Logout */}
       <div className="p-3 border-t border-gray-200">
