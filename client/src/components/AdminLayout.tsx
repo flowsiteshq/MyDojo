@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import {
@@ -16,6 +16,10 @@ import {
   PackageIcon,
   DollarSign,
   Megaphone,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  X,
 } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -23,13 +27,30 @@ interface AdminLayoutProps {
   children: ReactNode;
 }
 
+const SIDEBAR_COLLAPSED_KEY = "admin-sidebar-collapsed";
+
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
   const { user, loading, logout } = useAuth();
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+    return saved === "true";
+  });
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  // Persist collapsed state
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(isCollapsed));
+  }, [isCollapsed]);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileOpen(false);
+  }, [location]);
 
   // Redirect to admin login if not authenticated or not an admin/staff
-  if (!loading && (!user || (user.role !== 'admin' && user.role !== 'staff'))) {
-    window.location.href = '/admin/login';
+  if (!loading && (!user || (user.role !== "admin" && user.role !== "staff"))) {
+    window.location.href = "/admin/login";
     return null;
   }
 
@@ -45,7 +66,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  const isAdmin = user.role === 'admin';
+  const isAdmin = user.role === "admin";
 
   // Operational tools available to both admin and staff
   const baseNavItems = [
@@ -60,7 +81,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/commissions", label: "Commissions", icon: DollarSign },
   ];
 
-  // Admin-only tools: staff management, audit log, and settings
+  // Admin-only tools
   const adminOnlyNavItems = [
     { href: "/admin/staff", label: "Staff", icon: UserPlus },
     { href: "/admin/packages", label: "Packages", icon: PackageIcon },
@@ -69,93 +90,232 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
-  const navItems = isAdmin
-    ? [...baseNavItems, ...adminOnlyNavItems]
-    : baseNavItems;
+  const navItems = isAdmin ? [...baseNavItems, ...adminOnlyNavItems] : baseNavItems;
 
   const handleLogout = async () => {
     await logout();
     window.location.href = "/admin/login";
   };
 
-  return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        {/* Logo */}
-        <div className="p-6 border-b border-gray-200">
-          <Link href="/admin">
+  const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => (
+    <>
+      {/* Logo / Header */}
+      <div
+        className={`flex items-center border-b border-gray-200 ${
+          isCollapsed && !mobile ? "justify-center p-4" : "justify-between p-5"
+        }`}
+      >
+        {/* Logo — clicking it toggles collapse on desktop */}
+        <button
+          onClick={() => {
+            if (mobile) return;
+            setIsCollapsed((c) => !c);
+          }}
+          className={`focus:outline-none ${mobile ? "cursor-default" : "cursor-pointer"}`}
+          aria-label="Toggle sidebar"
+        >
+          {isCollapsed && !mobile ? (
+            <img
+              src="/images/logo-icon.png"
+              alt="MyDojo"
+              className="h-8 w-8 object-contain"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
             <img
               src="/images/logo-full-black.png"
               alt="MyDojo Admin"
-              className="h-10"
+              className="h-9 object-contain"
               onError={(e) => {
                 e.currentTarget.src = "/images/FULLLOGOBLACK.png";
               }}
             />
-          </Link>
-          <p className="text-sm text-gray-500 mt-2">{isAdmin ? 'Admin Portal' : 'Staff Portal'}</p>
+          )}
+        </button>
+
+        {/* Collapse toggle button (desktop only, expanded state) */}
+        {!isCollapsed && !mobile && (
+          <button
+            onClick={() => setIsCollapsed(true)}
+            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+            aria-label="Collapse sidebar"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Close button (mobile only) */}
+        {mobile && (
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+
+      {/* Role badge */}
+      {(!isCollapsed || mobile) && (
+        <div className="px-5 pt-3 pb-1">
+          <span
+            className={`text-xs font-semibold px-2 py-0.5 rounded ${
+              isAdmin ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
+            }`}
+          >
+            {isAdmin ? "Admin Portal" : "Staff Portal"}
+          </span>
         </div>
+      )}
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive
-                    ? "bg-[#E10600] text-white"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              title={isCollapsed && !mobile ? item.label : undefined}
+              className={`flex items-center gap-3 rounded-lg transition-colors group relative ${
+                isCollapsed && !mobile
+                  ? "justify-center px-2 py-3"
+                  : "px-3 py-2.5"
+              } ${
+                isActive
+                  ? "bg-[#E10600] text-white"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              <Icon className="w-5 h-5 shrink-0" />
+              {(!isCollapsed || mobile) && (
+                <span className="font-medium text-sm">{item.label}</span>
+              )}
+              {/* Tooltip for collapsed state */}
+              {isCollapsed && !mobile && (
+                <span className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity">
+                  {item.label}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
 
-        {/* User Info & Logout */}
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-              <Users className="w-5 h-5 text-gray-600" />
+      {/* User Info & Logout */}
+      <div className="p-3 border-t border-gray-200">
+        {isCollapsed && !mobile ? (
+          /* Collapsed: just avatar + logout icon */
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700">
+              {user?.name?.charAt(0).toUpperCase() || "A"}
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-gray-900 truncate">
+            <button
+              onClick={handleLogout}
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+              title="Sign out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          /* Expanded: full user card */
+          <>
+            <div className="flex items-center gap-3 mb-3 px-1">
+              <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-700 shrink-0">
+                {user?.name?.charAt(0).toUpperCase() || "A"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate leading-tight">
                   {user?.name || "Admin"}
                 </p>
-                <span className={`text-xs px-1.5 py-0.5 rounded font-medium shrink-0 ${
-                  isAdmin
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-blue-100 text-blue-700'
-                }`}>
-                  {isAdmin ? 'Admin' : 'Staff'}
-                </span>
+                <p className="text-xs text-gray-500 truncate mt-0.5">
+                  {user?.email}
+                </p>
               </div>
-              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
             </div>
-          </div>
-          <Button
-            onClick={handleLogout}
-            variant="outline"
-            className="w-full justify-start gap-2"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </Button>
-        </div>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="w-full justify-start gap-2 text-sm"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </Button>
+          </>
+        )}
+      </div>
+
+      {/* Expand button when collapsed (desktop only) */}
+      {isCollapsed && !mobile && (
+        <button
+          onClick={() => setIsCollapsed(false)}
+          className="flex items-center justify-center py-2 border-t border-gray-200 hover:bg-gray-50 transition-colors text-gray-400 hover:text-gray-700"
+          aria-label="Expand sidebar"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      )}
+    </>
+  );
+
+  return (
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* ── Desktop Sidebar ── */}
+      <aside
+        className={`hidden md:flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ${
+          isCollapsed ? "w-16" : "w-64"
+        }`}
+      >
+        <SidebarContent />
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-8">{children}</div>
-      </main>
+      {/* ── Mobile Overlay ── */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      {/* ── Mobile Drawer ── */}
+      <aside
+        className={`fixed top-0 left-0 h-full w-72 bg-white border-r border-gray-200 z-50 flex flex-col md:hidden transition-transform duration-300 ${
+          isMobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <SidebarContent mobile />
+      </aside>
+
+      {/* ── Main Content ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile top bar with hamburger */}
+        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 shrink-0">
+          <button
+            onClick={() => setIsMobileOpen(true)}
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-700"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <img
+            src="/images/logo-full-black.png"
+            alt="MyDojo"
+            className="h-7 object-contain"
+            onError={(e) => {
+              e.currentTarget.src = "/images/FULLLOGOBLACK.png";
+            }}
+          />
+        </header>
+
+        <main className="flex-1 overflow-auto">
+          <div className="p-4 md:p-8">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

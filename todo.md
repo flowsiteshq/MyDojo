@@ -1771,3 +1771,4 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 
 
 
+- [x] Add collapsible sidebar (desktop) and hamburger menu (mobile) to AdminLayout
