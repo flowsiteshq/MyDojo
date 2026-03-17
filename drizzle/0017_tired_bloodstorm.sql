@@ -1,0 +1,1 @@
+ALTER TABLE `conversationStates` ADD `selectedPlanId` int;

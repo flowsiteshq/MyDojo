@@ -1,0 +1,13 @@
+{
+  "query": "\nSELECT COUNT(*) as fake_count\nFROM trialSignups\nWHERE \n  email LIKE '%@example.com'\n  OR email LIKE '%test%@%'\n  OR phone LIKE '555-%'\n  OR phone LIKE '555%'\n  OR name LIKE 'Test %'\n  OR name LIKE '% Test'\n  OR name = 'Jane Doe'\n  OR name = 'John Doe'\n  OR name = 'Sarah Johnson'\n  OR (email LIKE '%manus%' AND email LIKE '%test%');\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute \nSELECT COUNT(*) as fake_count\nFROM trialSignups\nWHERE \n  email LIKE '%@example.com'\n  OR email LIKE '%test%@%'\n  OR phone LIKE '555-%'\n  OR phone LIKE '555%'\n  OR name LIKE 'Test %'\n  OR name LIKE '% Test'\n  OR name = 'Jane Doe'\n  OR name = 'John Doe'\n  OR name = 'Sarah Johnson'\n  OR (email LIKE '%manus%' AND email LIKE '%test%');\n",
+  "rows": [
+    {
+      "fake_count": "457"
+    }
+  ],
+  "messages": [],
+  "stdout": "fake_count\n457\n",
+  "stderr": "",
+  "execution_time_ms": 389
+}

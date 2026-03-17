@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO trialSignups (name, phone, program, location, status, source, introCountRequired, introCountBooked, bookingRequestId) VALUES ('Test User 2', '281-818-9999', 'Dragon Kids', 'Tomball HQ', 'new', 'test', 2, 2, 'test-booking-456');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute INSERT INTO trialSignups (name, phone, program, location, status, source, introCountRequired, introCountBooked, bookingRequestId) VALUES ('Test User 2', '281-818-9999', 'Dragon Kids', 'Tomball HQ', 'new', 'test', 2, 2, 'test-booking-456');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 71
+}

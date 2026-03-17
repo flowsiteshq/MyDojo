@@ -1,0 +1,43 @@
+CREATE TABLE `enrollments` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`leadId` int,
+	`membershipPackageId` int NOT NULL,
+	`customerName` varchar(255) NOT NULL,
+	`customerEmail` varchar(320) NOT NULL,
+	`customerPhone` varchar(20) NOT NULL,
+	`stripeCustomerId` varchar(255),
+	`stripePaymentIntentId` varchar(255),
+	`stripeSubscriptionId` varchar(255),
+	`downPaymentAmount` decimal(10,2) NOT NULL,
+	`paidFirstMonth` int NOT NULL DEFAULT 0,
+	`remainingBalance` decimal(10,2) NOT NULL,
+	`monthlyPaymentsRemaining` int NOT NULL,
+	`status` enum('pending','active','cancelled','completed','failed') NOT NULL DEFAULT 'pending',
+	`discountApplied` varchar(255),
+	`discountAmount` decimal(10,2) DEFAULT '0.00',
+	`startDate` timestamp,
+	`completionDate` timestamp,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `enrollments_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `membershipPackages` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`name` varchar(100) NOT NULL,
+	`durationMonths` int NOT NULL,
+	`monthlyPrice` decimal(10,2) NOT NULL,
+	`totalPrice` decimal(10,2) NOT NULL,
+	`registrationFee` decimal(10,2) NOT NULL,
+	`downPayment` decimal(10,2) NOT NULL,
+	`description` text,
+	`benefits` text,
+	`invitationOnly` int NOT NULL DEFAULT 0,
+	`isActive` int NOT NULL DEFAULT 1,
+	`stripeProductId` varchar(255),
+	`stripePriceId` varchar(255),
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `membershipPackages_id` PRIMARY KEY(`id`),
+	CONSTRAINT `membershipPackages_name_unique` UNIQUE(`name`)
+);

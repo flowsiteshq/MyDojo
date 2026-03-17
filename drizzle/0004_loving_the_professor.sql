@@ -1,0 +1,1 @@
+ALTER TABLE `trialSignups` MODIFY COLUMN `program` enum('Little Ninjas','Dragon Kids','Teens','Adult Karate','Kickboxing','After School','Summer Camp','Not Sure') NOT NULL;

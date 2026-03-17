@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, name, email, phone, program, createdAt FROM trialSignups WHERE email = 'testlead@dojoflow.com' ORDER BY createdAt DESC LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute SELECT id, name, email, phone, program, createdAt FROM trialSignups WHERE email = 'testlead@dojoflow.com' ORDER BY createdAt DESC LIMIT 1;",
+  "rows": [
+    {
+      "id": "210001",
+      "name": "Test Lead DojoFlow",
+      "email": "testlead@dojoflow.com",
+      "phone": "281-555-9999",
+      "program": "Core Kids",
+      "createdAt": "2026-02-16 23:13:02"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\tphone\tprogram\tcreatedAt\n210001\tTest Lead DojoFlow\ttestlead@dojoflow.com\t281-555-9999\tCore Kids\t2026-02-16 23:13:02\n",
+  "stderr": "",
+  "execution_time_ms": 351
+}

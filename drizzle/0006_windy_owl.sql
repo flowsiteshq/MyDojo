@@ -1,0 +1,2 @@
+ALTER TABLE `testimonials` MODIFY COLUMN `program` enum('Little Ninjas','Dragon Kids','Teens','Adults','Kickboxing','After School') NOT NULL;--> statement-breakpoint
+ALTER TABLE `trialSignups` MODIFY COLUMN `program` enum('Little Ninjas','Dragon Kids','Teens','Adults','Kickboxing','After School','Not Sure') NOT NULL;

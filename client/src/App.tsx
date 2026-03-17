@@ -1,0 +1,188 @@
+import { lazy, Suspense, useEffect } from "react";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Route, Switch } from "wouter";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { LocationProvider } from "./contexts/LocationContext";
+import { ChatbotProvider } from "./contexts/ChatbotContext";
+import Layout from "./components/Layout";
+import { StructuredData } from "./components/StructuredData";
+
+
+// Lazy load pages
+const Home = lazy(() => import("./pages/Home"));
+const Programs = lazy(() => import("./pages/Programs"));
+const ProgramDetail = lazy(() => import("./pages/ProgramDetail"));
+const Schedule = lazy(() => import("./pages/Schedule"));
+const Events = lazy(() => import("./pages/Events"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const Locations = lazy(() => import("./pages/Locations"));
+const LocationDetail = lazy(() => import("./pages/LocationDetail"));
+const Careers = lazy(() => import("./pages/Careers"));
+const NotificationSettings = lazy(() => import("./pages/NotificationSettings"));
+const NotificationHistory = lazy(() => import("./pages/NotificationHistory"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const SummerCamp = lazy(() => import("./pages/SummerCamp"));
+const LeadCapture = lazy(() => import("./pages/LeadCapture"));
+const Testimonials = lazy(() => import("./pages/Testimonials"));
+const Kickboxing = lazy(() => import("./pages/Kickboxing"));
+const Waiver = lazy(() => import("./pages/Waiver"));
+const MemberDashboard = lazy(() => import("./pages/MemberDashboard2"));
+const InstructorDashboard = lazy(() => import("./pages/InstructorDashboard"));
+const AdminMembershipRequests = lazy(() => import("./pages/AdminMembershipRequests"));
+const AdminEnrollments = lazy(() => import("./pages/AdminEnrollments"));
+const EnrollmentSuccess = lazy(() => import("./pages/EnrollmentSuccess"));
+const CheckIn = lazy(() => import("./pages/CheckIn"));
+const KioskCheckIn = lazy(() => import("./pages/KioskCheckIn"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminIntroAppointments = lazy(() => import("./pages/AdminIntroAppointments"));
+const AdminStudents = lazy(() => import("./pages/AdminStudents"));
+const AdminAttendance = lazy(() => import("./pages/AdminAttendance"));
+const AdminClasses = lazy(() => import("./pages/AdminClasses"));
+const AdminMilestones = lazy(() => import("./pages/AdminMilestones"));
+const AdminStaff = lazy(() => import("./pages/AdminStaff"));
+const AdminPromoBlast = lazy(() => import("./pages/AdminPromoBlast"));
+const AdminMessages = lazy(() => import("./pages/AdminMessages"));
+const AdminAuditLog = lazy(() => import("./pages/AdminAuditLog"));
+const AdminSettings = lazy(() => import("./pages/AdminSettings"));
+const AdminBilling = lazy(() => import("./pages/AdminBilling"));
+const AdminPackages = lazy(() => import("./pages/AdminPackages"));
+const StaffInviteAccept = lazy(() => import("./pages/StaffInviteAccept"));
+const AdminCommissions = lazy(() => import("./pages/AdminCommissions"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Join = lazy(() => import("./pages/Join"));
+const BuyDayPass = lazy(() => import("./pages/BuyDayPass"));
+
+// Loading component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+  </div>
+);
+function Router() {
+  // make sure to consider if you need authentication for certain routes
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Switch>
+        {/* Separate routes without Layout */}
+        <Route path="/join" component={Join} />
+        <Route path="/buy-day-pass" component={BuyDayPass} />
+        <Route path="/instructor" component={InstructorDashboard} />
+        <Route path="/check-in" component={KioskCheckIn} />
+        
+        {/* Student dashboard without Layout */}
+        <Route path="/dashboard" component={MemberDashboard} />
+
+        {/* Admin routes without Layout */}
+        <Route path="/admin/login" component={AdminLogin} />
+        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/intro-appointments" component={AdminIntroAppointments} />
+        <Route path="/admin/students" component={AdminStudents} />
+        <Route path="/admin/attendance" component={AdminAttendance} />
+        <Route path="/admin/classes" component={AdminClasses} />
+        <Route path="/admin/milestones" component={AdminMilestones} />
+        <Route path="/admin/staff" component={AdminStaff} />
+        <Route path="/admin/promo-blast" component={AdminPromoBlast} />
+        <Route path="/admin/messages" component={AdminMessages} />
+        <Route path="/admin/audit-log" component={AdminAuditLog} />
+        <Route path="/admin/settings" component={AdminSettings} />
+        <Route path="/admin/billing" component={AdminBilling} />
+        <Route path="/admin/packages" component={AdminPackages} />
+        <Route path="/staff-invite" component={StaffInviteAccept} />
+        <Route path="/admin/commissions" component={AdminCommissions} />
+        
+        {/* All other routes with Layout */}
+        <Route>
+          <Layout>
+            <Switch>
+              <Route path="/" component={Home} />
+              <Route path="/programs" component={Programs} />
+              <Route path="/programs/kickboxing" component={Kickboxing} />
+              <Route path="/waiver" component={Waiver} />
+              <Route path="/programs/:slug" component={ProgramDetail} />
+              <Route path="/summer-camp" component={SummerCamp} />
+              <Route path="/trial" component={LeadCapture} />
+              <Route path="/schedule" component={Schedule} />
+              <Route path="/events" component={Events} />
+              <Route path="/testimonials" component={Testimonials} />
+              <Route path="/about" component={About} />
+              <Route path="/contact" component={Contact} />
+              <Route path="/locations" component={Locations} />
+              <Route path="/locations/:id" component={LocationDetail} />
+              <Route path="/careers" component={Careers} />
+              <Route path="/blog" component={Blog} />
+              <Route path="/blog/:slug" component={BlogPost} />
+              <Route path="/privacy-policy" component={PrivacyPolicy} />
+              <Route path="/terms-of-service" component={TermsOfService} />
+              <Route path="/login" component={Login} />
+              <Route path="/register" component={Register} />
+              <Route path="/settings/notifications" component={NotificationSettings} />
+              <Route path="/notifications" component={NotificationHistory} />
+              <Route path="/admin/membership-requests" component={AdminMembershipRequests} />
+              <Route path="/admin/enrollments" component={AdminEnrollments} />
+              <Route path="/enrollment/success" component={EnrollmentSuccess} />
+              <Route path="/404" component={NotFound} />
+              <Route component={NotFound} />
+            </Switch>
+          </Layout>
+        </Route>
+      </Switch>
+    </Suspense>
+  );
+}
+
+function App() {
+  // Secret keyboard shortcut: Shift+A pressed 3 times redirects to admin login
+  useEffect(() => {
+    let shiftACount = 0;
+    let resetTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input/textarea
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return;
+
+      if (e.shiftKey && e.key === 'A') {
+        shiftACount++;
+        if (resetTimer) clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => { shiftACount = 0; }, 1500);
+        if (shiftACount >= 3) {
+          shiftACount = 0;
+          window.location.href = '/admin/login';
+        }
+      } else {
+        shiftACount = 0;
+        if (resetTimer) clearTimeout(resetTimer);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <ThemeProvider defaultTheme="light">
+        <LocationProvider>
+          <ChatbotProvider>
+            <TooltipProvider>
+              <StructuredData type="LocalBusiness" />
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </ChatbotProvider>
+        </LocationProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
+  );
+}
+
+export default App;

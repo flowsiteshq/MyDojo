@@ -1,0 +1,162 @@
+{
+  "query": "DESCRIBE trialSignups;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute DESCRIBE trialSignups;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int(11)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "email",
+      "Type": "varchar(320)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "phone",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "program",
+      "Type": "enum('Little Ninjas','Core Kids','Teens','Adults','Kickboxing','After School','Not Sure')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "segment",
+      "Type": "enum('Kids 3-5','Kids 6-12','Teens','Adults','Not sure')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "goal",
+      "Type": "enum('Confidence','Discipline','Fitness','Self-defense','Bullying help','Weight loss')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "preferredDays",
+      "Type": "enum('Weekdays','Weekends','Either')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "scheduledTime",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "location",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "preferredContactMethod",
+      "Type": "enum('email','phone','text')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "email",
+      "Extra": ""
+    },
+    {
+      "Field": "message",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "status",
+      "Type": "enum('new','contacted','scheduled','completed','cancelled')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "new",
+      "Extra": ""
+    },
+    {
+      "Field": "source",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "chatbot",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "introCountRequired",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "introCountBooked",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "introCountCompleted",
+      "Type": "int(11)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint(11)\tNO\tPRI\tNULL\tauto_increment\nname\tvarchar(255)\tNO\t\tNULL\t\nemail\tvarchar(320)\tYES\t\tNULL\t\nphone\tvarchar(20)\tNO\t\tNULL\t\nprogram\tenum('Little Ninjas','Core Kids','Teens','Adults','Kickboxing','After School','Not Sure')\tNO\t\tNULL\t\nsegment\tenum('Kids 3-5','Kids 6-12','Teens','Adults','Not sure')\tYES\t\tNULL\t\ngoal\tenum('Confidence','Discipline','Fitness','Self-defense','Bullying help','Weight loss')\tYES\t\tNULL\t\npreferredDays\tenum('Weekdays','Weekends','Either')\tYES\t\tNULL\t\nscheduledTime\ttimestamp\tYES\t\tNULL\t\nlocation\tvarchar(255)\tNO\t\tNULL\t\npreferredContactMethod\tenum('email','phone','text')\tNO\t\temail\t\nmessage\ttext\tYES\t\tNULL\t\nstatus\tenum('new','contacted','scheduled','completed','cancelled')\tNO\t\tnew\t\nsource\tvarchar(100)\tNO\t\tchatbot\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\nintroCountRequired\tint(11)\tYES\t\t0\t\nintroCountBooked\tint(11)\tYES\t\t0\t\nintroCountCompleted\tint(11)\tYES\t\t0\t\n",
+  "stderr": "",
+  "execution_time_ms": 346
+}

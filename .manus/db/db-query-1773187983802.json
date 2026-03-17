@@ -1,0 +1,46 @@
+{
+  "query": "SELECT id, customerName, customerEmail, status FROM enrollments ORDER BY createdAt ASC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute SELECT id, customerName, customerEmail, status FROM enrollments ORDER BY createdAt ASC;",
+  "rows": [
+    {
+      "id": "1",
+      "customerName": "Vincent Holmes",
+      "customerEmail": "sensei30002003@gmail.com",
+      "status": "active"
+    },
+    {
+      "id": "60001",
+      "customerName": "JT Jasper",
+      "customerEmail": "jtjasper@sbcglobal.net",
+      "status": "active"
+    },
+    {
+      "id": "60002",
+      "customerName": "Craig Simonson",
+      "customerEmail": "simonsoncraig@gmail.com",
+      "status": "active"
+    },
+    {
+      "id": "90001",
+      "customerName": "Gianna Gozzo",
+      "customerEmail": "giannagozzo@gmail.com",
+      "status": "active"
+    },
+    {
+      "id": "120001",
+      "customerName": "Swaa Jackson",
+      "customerEmail": "amoree.j14@gmail.com",
+      "status": "active"
+    },
+    {
+      "id": "150001",
+      "customerName": "Bryce G",
+      "customerEmail": "kingbrother20@gmail.com",
+      "status": "active"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcustomerName\tcustomerEmail\tstatus\n1\tVincent Holmes\tsensei30002003@gmail.com\tactive\n60001\tJT Jasper\tjtjasper@sbcglobal.net\tactive\n60002\tCraig Simonson\tsimonsoncraig@gmail.com\tactive\n90001\tGianna Gozzo\tgiannagozzo@gmail.com\tactive\n120001\tSwaa Jackson\tamoree.j14@gmail.com\tactive\n150001\tBryce G\tkingbrother20@gmail.com\tactive\n",
+  "stderr": "",
+  "execution_time_ms": 366
+}

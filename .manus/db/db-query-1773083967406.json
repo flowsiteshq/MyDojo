@@ -1,0 +1,9 @@
+{
+  "query": "\nCREATE TABLE IF NOT EXISTS `beltPromotions` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `enrollmentId` int NOT NULL,\n  `studentName` varchar(255) NOT NULL,\n  `fromBelt` varchar(100) NOT NULL,\n  `toBelt` varchar(100) NOT NULL,\n  `classesAtPromotion` int NOT NULL,\n  `promotedBy` int NOT NULL,\n  `promotedByName` varchar(255) NOT NULL,\n  `notes` text,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `beltPromotions_id` PRIMARY KEY(`id`)\n);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute \nCREATE TABLE IF NOT EXISTS `beltPromotions` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `enrollmentId` int NOT NULL,\n  `studentName` varchar(255) NOT NULL,\n  `fromBelt` varchar(100) NOT NULL,\n  `toBelt` varchar(100) NOT NULL,\n  `classesAtPromotion` int NOT NULL,\n  `promotedBy` int NOT NULL,\n  `promotedByName` varchar(255) NOT NULL,\n  `notes` text,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `beltPromotions_id` PRIMARY KEY(`id`)\n);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 477
+}

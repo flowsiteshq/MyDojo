@@ -1,0 +1,31 @@
+{
+  "query": "SELECT id, name, monthlyPrice, downPayment, stripePriceId FROM membershipPackages;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute SELECT id, name, monthlyPrice, downPayment, stripePriceId FROM membershipPackages;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Foundation",
+      "monthlyPrice": "149.00",
+      "downPayment": "294.00",
+      "stripePriceId": "price_1T3LpSL2gHbMVosgFiPeywMw"
+    },
+    {
+      "id": "2",
+      "name": "Black Belt",
+      "monthlyPrice": "199.00",
+      "downPayment": "294.00",
+      "stripePriceId": "price_1T3LpTL2gHbMVosgsJPASdep"
+    },
+    {
+      "id": "3",
+      "name": "Leadership",
+      "monthlyPrice": "249.00",
+      "downPayment": "294.00",
+      "stripePriceId": "price_1T3LpUL2gHbMVosgHtblyo7s"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tmonthlyPrice\tdownPayment\tstripePriceId\n1\tFoundation\t149.00\t294.00\tprice_1T3LpSL2gHbMVosgFiPeywMw\n2\tBlack Belt\t199.00\t294.00\tprice_1T3LpTL2gHbMVosgsJPASdep\n3\tLeadership\t249.00\t294.00\tprice_1T3LpUL2gHbMVosgHtblyo7s\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

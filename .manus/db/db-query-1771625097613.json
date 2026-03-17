@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `membershipPackages` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `name` varchar(100) NOT NULL UNIQUE,\n  `durationMonths` int NOT NULL,\n  `monthlyPrice` decimal(10,2) NOT NULL,\n  `totalPrice` decimal(10,2) NOT NULL,\n  `registrationFee` decimal(10,2) NOT NULL,\n  `downPayment` decimal(10,2) NOT NULL,\n  `description` text,\n  `benefits` text,\n  `invitationOnly` int NOT NULL DEFAULT 0,\n  `isActive` int NOT NULL DEFAULT 1,\n  `stripeProductId` varchar(255),\n  `stripePriceId` varchar(255),\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `membershipPackages_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute CREATE TABLE IF NOT EXISTS `membershipPackages` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `name` varchar(100) NOT NULL UNIQUE,\n  `durationMonths` int NOT NULL,\n  `monthlyPrice` decimal(10,2) NOT NULL,\n  `totalPrice` decimal(10,2) NOT NULL,\n  `registrationFee` decimal(10,2) NOT NULL,\n  `downPayment` decimal(10,2) NOT NULL,\n  `description` text,\n  `benefits` text,\n  `invitationOnly` int NOT NULL DEFAULT 0,\n  `isActive` int NOT NULL DEFAULT 1,\n  `stripeProductId` varchar(255),\n  `stripePriceId` varchar(255),\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `membershipPackages_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 256
+}

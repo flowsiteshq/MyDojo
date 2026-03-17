@@ -1,0 +1,9 @@
+{
+  "query": "\n-- First, get the user's email (assuming you're logged in)\n-- Then create a test enrollment with Orange Belt rank\n\nINSERT INTO enrollments (\n  membershipPackageId,\n  customerName,\n  customerEmail,\n  customerPhone,\n  downPaymentAmount,\n  remainingBalance,\n  monthlyPaymentsRemaining,\n  status,\n  beltRank,\n  beltAchievedDate,\n  startDate,\n  createdAt,\n  updatedAt\n) VALUES (\n  1,\n  'Test Student',\n  'test@example.com',\n  '555-0123',\n  100.00,\n  0.00,\n  0,\n  'active',\n  'Orange Belt',\n  NOW(),\n  NOW(),\n  NOW(),\n  NOW()\n)\nON DUPLICATE KEY UPDATE\n  beltRank = 'Orange Belt',\n  beltAchievedDate = NOW();\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute \n-- First, get the user's email (assuming you're logged in)\n-- Then create a test enrollment with Orange Belt rank\n\nINSERT INTO enrollments (\n  membershipPackageId,\n  customerName,\n  customerEmail,\n  customerPhone,\n  downPaymentAmount,\n  remainingBalance,\n  monthlyPaymentsRemaining,\n  status,\n  beltRank,\n  beltAchievedDate,\n  startDate,\n  createdAt,\n  updatedAt\n) VALUES (\n  1,\n  'Test Student',\n  'test@example.com',\n  '555-0123',\n  100.00,\n  0.00,\n  0,\n  'active',\n  'Orange Belt',\n  NOW(),\n  NOW(),\n  NOW(),\n  NOW()\n)\nON DUPLICATE KEY UPDATE\n  beltRank = 'Orange Belt',\n  beltAchievedDate = NOW();\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 78
+}

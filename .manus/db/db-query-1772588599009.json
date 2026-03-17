@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO enrollments (\n  membershipPackageId, customerName, customerEmail, customerPhone,\n  stripeCustomerId, stripeSubscriptionId,\n  downPaymentAmount, paidFirstMonth, remainingBalance, monthlyPaymentsRemaining,\n  status, startDate, beltRank, totalXP, currentStreak, longestStreak\n) VALUES (\n  1, 'Gianna Gozzo', 'giannagozzo@gmail.com', '(832) 274-5035',\n  'cus_U5D2IwkHIyrqca', 'sub_1T72cJL2gHbMVosg7GKd0aVd',\n  '99.00', 1, '0.00', 0,\n  'active', '2026-03-03 23:44:40', 'No Belt', 0, 0, 0\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute INSERT INTO enrollments (\n  membershipPackageId, customerName, customerEmail, customerPhone,\n  stripeCustomerId, stripeSubscriptionId,\n  downPaymentAmount, paidFirstMonth, remainingBalance, monthlyPaymentsRemaining,\n  status, startDate, beltRank, totalXP, currentStreak, longestStreak\n) VALUES (\n  1, 'Gianna Gozzo', 'giannagozzo@gmail.com', '(832) 274-5035',\n  'cus_U5D2IwkHIyrqca', 'sub_1T72cJL2gHbMVosg7GKd0aVd',\n  '99.00', 1, '0.00', 0,\n  'active', '2026-03-03 23:44:40', 'No Belt', 0, 0, 0\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 399
+}

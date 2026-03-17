@@ -1,0 +1,1 @@
+ALTER TABLE `conversationStates` ADD `intent` enum('trial','enroll');

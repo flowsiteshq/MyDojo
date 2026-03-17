@@ -1,0 +1,4620 @@
+{
+  "query": "\nSELECT \n  id,\n  name,\n  email,\n  phone,\n  program,\n  source,\n  LEFT(message, 80) as msg_preview,\n  FROM_UNIXTIME(createdAt/1000) as created_at\nFROM trialSignups\nWHERE createdAt > UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 1 DAY)) * 1000\nORDER BY createdAt ASC;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute \nSELECT \n  id,\n  name,\n  email,\n  phone,\n  program,\n  source,\n  LEFT(message, 80) as msg_preview,\n  FROM_UNIXTIME(createdAt/1000) as created_at\nFROM trialSignups\nWHERE createdAt > UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 1 DAY)) * 1000\nORDER BY createdAt ASC;\n",
+  "rows": [
+    {
+      "id": "600001",
+      "name": "Andrea Aguilera",
+      "email": "andreamariediths@hotmail.com",
+      "phone": "+18329075266",
+      "program": "Not Sure",
+      "source": "landing_page",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 06:49:22.2180"
+    },
+    {
+      "id": "600002",
+      "name": "Bryson Gamble",
+      "email": "kingbrother20@gmail.com",
+      "phone": "2816875837",
+      "program": "Adult Karate",
+      "source": "landing_page",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 06:49:40.4170"
+    },
+    {
+      "id": "720037",
+      "name": "Gary Fulcher",
+      "email": "garyfulcher48@gmail.com",
+      "phone": "9364001082",
+      "program": "Not Sure",
+      "source": "trial_form",
+      "msg_preview": "Child's name: Mike",
+      "created_at": "2612-01-10 07:37:50.7130"
+    },
+    {
+      "id": "750001",
+      "name": "Cassandra",
+      "email": "Cassandralston@yahoo.com",
+      "phone": "2022714706",
+      "program": "Not Sure",
+      "source": "landing_page",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:40:33.0040"
+    },
+    {
+      "id": "750002",
+      "name": "Test run",
+      "email": "coachkleila@gmail.com",
+      "phone": "2816627799",
+      "program": "Not Sure",
+      "source": "landing_page",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:40:35.5580"
+    },
+    {
+      "id": "780001",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:24.6380"
+    },
+    {
+      "id": "780002",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6380"
+    },
+    {
+      "id": "780003",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6380"
+    },
+    {
+      "id": "780004",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6380"
+    },
+    {
+      "id": "780005",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6390"
+    },
+    {
+      "id": "780006",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6390"
+    },
+    {
+      "id": "780007",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6390"
+    },
+    {
+      "id": "780008",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6390"
+    },
+    {
+      "id": "780009",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6390"
+    },
+    {
+      "id": "780010",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6390"
+    },
+    {
+      "id": "780011",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6390"
+    },
+    {
+      "id": "780012",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6390"
+    },
+    {
+      "id": "780013",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:24.6510"
+    },
+    {
+      "id": "780014",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6510"
+    },
+    {
+      "id": "780015",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6520"
+    },
+    {
+      "id": "780016",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6520"
+    },
+    {
+      "id": "780017",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6520"
+    },
+    {
+      "id": "780018",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6520"
+    },
+    {
+      "id": "780019",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6520"
+    },
+    {
+      "id": "780020",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6520"
+    },
+    {
+      "id": "780021",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6520"
+    },
+    {
+      "id": "780022",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6520"
+    },
+    {
+      "id": "780023",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6520"
+    },
+    {
+      "id": "780024",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.6530"
+    },
+    {
+      "id": "780025",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:24.7020"
+    },
+    {
+      "id": "780026",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7030"
+    },
+    {
+      "id": "780027",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7030"
+    },
+    {
+      "id": "780028",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7030"
+    },
+    {
+      "id": "780029",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7030"
+    },
+    {
+      "id": "780030",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7030"
+    },
+    {
+      "id": "780031",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7030"
+    },
+    {
+      "id": "780032",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7030"
+    },
+    {
+      "id": "780033",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7030"
+    },
+    {
+      "id": "780034",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7030"
+    },
+    {
+      "id": "780035",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7040"
+    },
+    {
+      "id": "780036",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7040"
+    },
+    {
+      "id": "780037",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:24.7140"
+    },
+    {
+      "id": "780038",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7140"
+    },
+    {
+      "id": "780039",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7140"
+    },
+    {
+      "id": "780040",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7140"
+    },
+    {
+      "id": "780041",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7140"
+    },
+    {
+      "id": "780042",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7140"
+    },
+    {
+      "id": "780043",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7140"
+    },
+    {
+      "id": "780044",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7150"
+    },
+    {
+      "id": "780045",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7150"
+    },
+    {
+      "id": "780046",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7150"
+    },
+    {
+      "id": "780047",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7150"
+    },
+    {
+      "id": "780048",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7150"
+    },
+    {
+      "id": "780049",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:24.7250"
+    },
+    {
+      "id": "780050",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7250"
+    },
+    {
+      "id": "780051",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7260"
+    },
+    {
+      "id": "780052",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7260"
+    },
+    {
+      "id": "780053",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7260"
+    },
+    {
+      "id": "780054",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7260"
+    },
+    {
+      "id": "780055",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7260"
+    },
+    {
+      "id": "780056",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7260"
+    },
+    {
+      "id": "780057",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7260"
+    },
+    {
+      "id": "780058",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7260"
+    },
+    {
+      "id": "780059",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7260"
+    },
+    {
+      "id": "780060",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7270"
+    },
+    {
+      "id": "780061",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:24.7550"
+    },
+    {
+      "id": "780062",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7550"
+    },
+    {
+      "id": "780063",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7550"
+    },
+    {
+      "id": "780064",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7550"
+    },
+    {
+      "id": "780065",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7550"
+    },
+    {
+      "id": "780066",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7550"
+    },
+    {
+      "id": "780067",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7550"
+    },
+    {
+      "id": "780068",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7560"
+    },
+    {
+      "id": "780069",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7560"
+    },
+    {
+      "id": "780070",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7560"
+    },
+    {
+      "id": "780071",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7560"
+    },
+    {
+      "id": "780072",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.7560"
+    },
+    {
+      "id": "780073",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:24.8060"
+    },
+    {
+      "id": "780074",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8060"
+    },
+    {
+      "id": "780075",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8060"
+    },
+    {
+      "id": "780076",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8060"
+    },
+    {
+      "id": "780077",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8060"
+    },
+    {
+      "id": "780078",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8070"
+    },
+    {
+      "id": "780079",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8070"
+    },
+    {
+      "id": "780080",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8070"
+    },
+    {
+      "id": "780081",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8070"
+    },
+    {
+      "id": "780082",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8070"
+    },
+    {
+      "id": "780083",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8070"
+    },
+    {
+      "id": "780084",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8070"
+    },
+    {
+      "id": "780085",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:24.8180"
+    },
+    {
+      "id": "780086",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8180"
+    },
+    {
+      "id": "780087",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8180"
+    },
+    {
+      "id": "780088",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8180"
+    },
+    {
+      "id": "780089",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8180"
+    },
+    {
+      "id": "780090",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8180"
+    },
+    {
+      "id": "780091",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8180"
+    },
+    {
+      "id": "780092",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8180"
+    },
+    {
+      "id": "780093",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8190"
+    },
+    {
+      "id": "780094",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8190"
+    },
+    {
+      "id": "780095",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8190"
+    },
+    {
+      "id": "780096",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8190"
+    },
+    {
+      "id": "780097",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:24.8350"
+    },
+    {
+      "id": "780098",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8350"
+    },
+    {
+      "id": "780099",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8360"
+    },
+    {
+      "id": "780100",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8360"
+    },
+    {
+      "id": "780101",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8360"
+    },
+    {
+      "id": "780102",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8360"
+    },
+    {
+      "id": "780103",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8360"
+    },
+    {
+      "id": "780104",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8360"
+    },
+    {
+      "id": "780105",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8360"
+    },
+    {
+      "id": "780106",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8360"
+    },
+    {
+      "id": "780107",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8360"
+    },
+    {
+      "id": "780108",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.8370"
+    },
+    {
+      "id": "780109",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:24.9390"
+    },
+    {
+      "id": "780110",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.9390"
+    },
+    {
+      "id": "780111",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.9390"
+    },
+    {
+      "id": "780112",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.9400"
+    },
+    {
+      "id": "780113",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.9400"
+    },
+    {
+      "id": "780114",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.9400"
+    },
+    {
+      "id": "780115",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.9400"
+    },
+    {
+      "id": "780116",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.9400"
+    },
+    {
+      "id": "780117",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.9400"
+    },
+    {
+      "id": "780118",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.9400"
+    },
+    {
+      "id": "780119",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.9400"
+    },
+    {
+      "id": "780120",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:24.9400"
+    },
+    {
+      "id": "780121",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:25.0060"
+    },
+    {
+      "id": "780122",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0060"
+    },
+    {
+      "id": "780123",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0070"
+    },
+    {
+      "id": "780124",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0070"
+    },
+    {
+      "id": "780125",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0070"
+    },
+    {
+      "id": "780126",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0070"
+    },
+    {
+      "id": "780127",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0070"
+    },
+    {
+      "id": "780128",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0070"
+    },
+    {
+      "id": "780129",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0070"
+    },
+    {
+      "id": "780130",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0070"
+    },
+    {
+      "id": "780131",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0070"
+    },
+    {
+      "id": "780132",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0080"
+    },
+    {
+      "id": "780133",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:25.0190"
+    },
+    {
+      "id": "780134",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0190"
+    },
+    {
+      "id": "780135",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0190"
+    },
+    {
+      "id": "780136",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0190"
+    },
+    {
+      "id": "780137",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0190"
+    },
+    {
+      "id": "780138",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0200"
+    },
+    {
+      "id": "780139",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0200"
+    },
+    {
+      "id": "780140",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0200"
+    },
+    {
+      "id": "780141",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0200"
+    },
+    {
+      "id": "780142",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0200"
+    },
+    {
+      "id": "780143",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0200"
+    },
+    {
+      "id": "780144",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.0200"
+    },
+    {
+      "id": "780145",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:25.1090"
+    },
+    {
+      "id": "780146",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1090"
+    },
+    {
+      "id": "780147",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1090"
+    },
+    {
+      "id": "780148",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1090"
+    },
+    {
+      "id": "780149",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1090"
+    },
+    {
+      "id": "780150",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1090"
+    },
+    {
+      "id": "780151",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1100"
+    },
+    {
+      "id": "780152",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1100"
+    },
+    {
+      "id": "780153",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1100"
+    },
+    {
+      "id": "780154",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1100"
+    },
+    {
+      "id": "780155",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1100"
+    },
+    {
+      "id": "780156",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1100"
+    },
+    {
+      "id": "780157",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:25.1270"
+    },
+    {
+      "id": "780158",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1270"
+    },
+    {
+      "id": "780159",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1270"
+    },
+    {
+      "id": "780160",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1270"
+    },
+    {
+      "id": "780161",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1270"
+    },
+    {
+      "id": "780162",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1280"
+    },
+    {
+      "id": "780163",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1280"
+    },
+    {
+      "id": "780164",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1280"
+    },
+    {
+      "id": "780165",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1280"
+    },
+    {
+      "id": "780166",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1280"
+    },
+    {
+      "id": "780167",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1280"
+    },
+    {
+      "id": "780168",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:25.1280"
+    },
+    {
+      "id": "780169",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:30.7260"
+    },
+    {
+      "id": "780170",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7260"
+    },
+    {
+      "id": "780171",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7260"
+    },
+    {
+      "id": "780172",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7260"
+    },
+    {
+      "id": "780173",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7260"
+    },
+    {
+      "id": "780174",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7260"
+    },
+    {
+      "id": "780175",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7270"
+    },
+    {
+      "id": "780176",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7270"
+    },
+    {
+      "id": "780177",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7270"
+    },
+    {
+      "id": "780178",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7270"
+    },
+    {
+      "id": "780179",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7270"
+    },
+    {
+      "id": "780180",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7270"
+    },
+    {
+      "id": "780181",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:30.7380"
+    },
+    {
+      "id": "780182",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7380"
+    },
+    {
+      "id": "780183",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7380"
+    },
+    {
+      "id": "780184",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7380"
+    },
+    {
+      "id": "780185",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7380"
+    },
+    {
+      "id": "780186",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7380"
+    },
+    {
+      "id": "780187",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7390"
+    },
+    {
+      "id": "780188",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7390"
+    },
+    {
+      "id": "780189",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7390"
+    },
+    {
+      "id": "780190",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7390"
+    },
+    {
+      "id": "780191",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7390"
+    },
+    {
+      "id": "780192",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7390"
+    },
+    {
+      "id": "780193",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:30.7580"
+    },
+    {
+      "id": "780194",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7580"
+    },
+    {
+      "id": "780195",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7580"
+    },
+    {
+      "id": "780196",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7580"
+    },
+    {
+      "id": "780197",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7580"
+    },
+    {
+      "id": "780198",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7580"
+    },
+    {
+      "id": "780199",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7580"
+    },
+    {
+      "id": "780200",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7580"
+    },
+    {
+      "id": "780201",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7590"
+    },
+    {
+      "id": "780202",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7590"
+    },
+    {
+      "id": "780203",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7590"
+    },
+    {
+      "id": "780204",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.7590"
+    },
+    {
+      "id": "780205",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:30.8120"
+    },
+    {
+      "id": "780206",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.8120"
+    },
+    {
+      "id": "780207",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.8120"
+    },
+    {
+      "id": "780208",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.8120"
+    },
+    {
+      "id": "780209",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.8120"
+    },
+    {
+      "id": "780210",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.8120"
+    },
+    {
+      "id": "780211",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.8120"
+    },
+    {
+      "id": "780212",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.8120"
+    },
+    {
+      "id": "780213",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.8130"
+    },
+    {
+      "id": "780214",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.8130"
+    },
+    {
+      "id": "780215",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.8130"
+    },
+    {
+      "id": "780216",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.8130"
+    },
+    {
+      "id": "780217",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:30.9070"
+    },
+    {
+      "id": "780218",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9080"
+    },
+    {
+      "id": "780219",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9080"
+    },
+    {
+      "id": "780220",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9080"
+    },
+    {
+      "id": "780221",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9080"
+    },
+    {
+      "id": "780222",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9080"
+    },
+    {
+      "id": "780223",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9080"
+    },
+    {
+      "id": "780224",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9080"
+    },
+    {
+      "id": "780225",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9080"
+    },
+    {
+      "id": "780226",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9080"
+    },
+    {
+      "id": "780227",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9090"
+    },
+    {
+      "id": "780228",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9090"
+    },
+    {
+      "id": "780229",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:30.9230"
+    },
+    {
+      "id": "780230",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9240"
+    },
+    {
+      "id": "780231",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9240"
+    },
+    {
+      "id": "780232",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9240"
+    },
+    {
+      "id": "780233",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9240"
+    },
+    {
+      "id": "780234",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9240"
+    },
+    {
+      "id": "780235",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9240"
+    },
+    {
+      "id": "780236",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9240"
+    },
+    {
+      "id": "780237",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9240"
+    },
+    {
+      "id": "780238",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9240"
+    },
+    {
+      "id": "780239",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9250"
+    },
+    {
+      "id": "780240",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9250"
+    },
+    {
+      "id": "780241",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:30.9370"
+    },
+    {
+      "id": "780242",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9370"
+    },
+    {
+      "id": "780243",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9370"
+    },
+    {
+      "id": "780244",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9370"
+    },
+    {
+      "id": "780245",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9370"
+    },
+    {
+      "id": "780246",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9370"
+    },
+    {
+      "id": "780247",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9380"
+    },
+    {
+      "id": "780248",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9380"
+    },
+    {
+      "id": "780249",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9380"
+    },
+    {
+      "id": "780250",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9380"
+    },
+    {
+      "id": "780251",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9380"
+    },
+    {
+      "id": "780252",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:30.9380"
+    },
+    {
+      "id": "780253",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:31.0340"
+    },
+    {
+      "id": "780254",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0340"
+    },
+    {
+      "id": "780255",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0340"
+    },
+    {
+      "id": "780256",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0340"
+    },
+    {
+      "id": "780257",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0340"
+    },
+    {
+      "id": "780258",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0340"
+    },
+    {
+      "id": "780259",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0340"
+    },
+    {
+      "id": "780260",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0340"
+    },
+    {
+      "id": "780261",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0350"
+    },
+    {
+      "id": "780262",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0350"
+    },
+    {
+      "id": "780263",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0350"
+    },
+    {
+      "id": "780264",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0350"
+    },
+    {
+      "id": "780265",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:31.0470"
+    },
+    {
+      "id": "780266",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0470"
+    },
+    {
+      "id": "780267",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0470"
+    },
+    {
+      "id": "780268",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0470"
+    },
+    {
+      "id": "780269",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0470"
+    },
+    {
+      "id": "780270",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0470"
+    },
+    {
+      "id": "780271",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0470"
+    },
+    {
+      "id": "780272",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0480"
+    },
+    {
+      "id": "780273",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0480"
+    },
+    {
+      "id": "780274",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0480"
+    },
+    {
+      "id": "780275",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0480"
+    },
+    {
+      "id": "780276",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.0480"
+    },
+    {
+      "id": "780277",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:31.2360"
+    },
+    {
+      "id": "780278",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2360"
+    },
+    {
+      "id": "780279",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2360"
+    },
+    {
+      "id": "780280",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2370"
+    },
+    {
+      "id": "780281",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2370"
+    },
+    {
+      "id": "780282",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2370"
+    },
+    {
+      "id": "780283",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2370"
+    },
+    {
+      "id": "780284",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2370"
+    },
+    {
+      "id": "780285",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2370"
+    },
+    {
+      "id": "780286",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2370"
+    },
+    {
+      "id": "780287",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2370"
+    },
+    {
+      "id": "780288",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2370"
+    },
+    {
+      "id": "780289",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:31.2470"
+    },
+    {
+      "id": "780290",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2470"
+    },
+    {
+      "id": "780291",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2470"
+    },
+    {
+      "id": "780292",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2470"
+    },
+    {
+      "id": "780293",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2480"
+    },
+    {
+      "id": "780294",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2480"
+    },
+    {
+      "id": "780295",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2480"
+    },
+    {
+      "id": "780296",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2480"
+    },
+    {
+      "id": "780297",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2480"
+    },
+    {
+      "id": "780298",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2480"
+    },
+    {
+      "id": "780299",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2480"
+    },
+    {
+      "id": "780300",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.2480"
+    },
+    {
+      "id": "780301",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:31.3240"
+    },
+    {
+      "id": "780302",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3240"
+    },
+    {
+      "id": "780303",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3240"
+    },
+    {
+      "id": "780304",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3240"
+    },
+    {
+      "id": "780305",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3250"
+    },
+    {
+      "id": "780306",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3250"
+    },
+    {
+      "id": "780307",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3250"
+    },
+    {
+      "id": "780308",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3250"
+    },
+    {
+      "id": "780309",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3250"
+    },
+    {
+      "id": "780310",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3250"
+    },
+    {
+      "id": "780311",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3250"
+    },
+    {
+      "id": "780312",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3250"
+    },
+    {
+      "id": "780313",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:31.3400"
+    },
+    {
+      "id": "780314",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3400"
+    },
+    {
+      "id": "780315",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3400"
+    },
+    {
+      "id": "780316",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3410"
+    },
+    {
+      "id": "780317",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3410"
+    },
+    {
+      "id": "780318",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3410"
+    },
+    {
+      "id": "780319",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3410"
+    },
+    {
+      "id": "780320",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3410"
+    },
+    {
+      "id": "780321",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3410"
+    },
+    {
+      "id": "780322",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3410"
+    },
+    {
+      "id": "780323",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3410"
+    },
+    {
+      "id": "780324",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3410"
+    },
+    {
+      "id": "780325",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:31.3540"
+    },
+    {
+      "id": "780326",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3540"
+    },
+    {
+      "id": "780327",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3540"
+    },
+    {
+      "id": "780328",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3540"
+    },
+    {
+      "id": "780329",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3540"
+    },
+    {
+      "id": "780330",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3540"
+    },
+    {
+      "id": "780331",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3540"
+    },
+    {
+      "id": "780332",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3550"
+    },
+    {
+      "id": "780333",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3550"
+    },
+    {
+      "id": "780334",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3550"
+    },
+    {
+      "id": "780335",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3550"
+    },
+    {
+      "id": "780336",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:31.3550"
+    },
+    {
+      "id": "780337",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:33.2420"
+    },
+    {
+      "id": "780338",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2420"
+    },
+    {
+      "id": "780339",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2420"
+    },
+    {
+      "id": "780340",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2420"
+    },
+    {
+      "id": "780341",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2420"
+    },
+    {
+      "id": "780342",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2420"
+    },
+    {
+      "id": "780343",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2420"
+    },
+    {
+      "id": "780344",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2430"
+    },
+    {
+      "id": "780345",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2430"
+    },
+    {
+      "id": "780346",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2430"
+    },
+    {
+      "id": "780347",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2430"
+    },
+    {
+      "id": "780348",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2430"
+    },
+    {
+      "id": "780349",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:33.2570"
+    },
+    {
+      "id": "780350",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2570"
+    },
+    {
+      "id": "780351",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2570"
+    },
+    {
+      "id": "780352",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2570"
+    },
+    {
+      "id": "780353",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2580"
+    },
+    {
+      "id": "780354",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2580"
+    },
+    {
+      "id": "780355",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2580"
+    },
+    {
+      "id": "780356",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2580"
+    },
+    {
+      "id": "780357",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2580"
+    },
+    {
+      "id": "780358",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2580"
+    },
+    {
+      "id": "780359",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2580"
+    },
+    {
+      "id": "780360",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.2580"
+    },
+    {
+      "id": "780361",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:33.3110"
+    },
+    {
+      "id": "780362",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3110"
+    },
+    {
+      "id": "780363",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3110"
+    },
+    {
+      "id": "780364",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3110"
+    },
+    {
+      "id": "780365",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3110"
+    },
+    {
+      "id": "780366",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3110"
+    },
+    {
+      "id": "780367",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3110"
+    },
+    {
+      "id": "780368",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3110"
+    },
+    {
+      "id": "780369",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3120"
+    },
+    {
+      "id": "780370",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3120"
+    },
+    {
+      "id": "780371",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3120"
+    },
+    {
+      "id": "780372",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3120"
+    },
+    {
+      "id": "780373",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:33.3520"
+    },
+    {
+      "id": "780374",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3520"
+    },
+    {
+      "id": "780375",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3520"
+    },
+    {
+      "id": "780376",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3520"
+    },
+    {
+      "id": "780377",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3520"
+    },
+    {
+      "id": "780378",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3520"
+    },
+    {
+      "id": "780379",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3530"
+    },
+    {
+      "id": "780380",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3530"
+    },
+    {
+      "id": "780381",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3530"
+    },
+    {
+      "id": "780382",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3530"
+    },
+    {
+      "id": "780383",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3530"
+    },
+    {
+      "id": "780384",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.3530"
+    },
+    {
+      "id": "780385",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:33.4110"
+    },
+    {
+      "id": "780386",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4110"
+    },
+    {
+      "id": "780387",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4120"
+    },
+    {
+      "id": "780388",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4120"
+    },
+    {
+      "id": "780389",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4120"
+    },
+    {
+      "id": "780390",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4120"
+    },
+    {
+      "id": "780391",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4120"
+    },
+    {
+      "id": "780392",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4120"
+    },
+    {
+      "id": "780393",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4120"
+    },
+    {
+      "id": "780394",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4120"
+    },
+    {
+      "id": "780395",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4130"
+    },
+    {
+      "id": "780396",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4130"
+    },
+    {
+      "id": "780397",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:33.4300"
+    },
+    {
+      "id": "780398",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4300"
+    },
+    {
+      "id": "780399",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4300"
+    },
+    {
+      "id": "780400",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4300"
+    },
+    {
+      "id": "780401",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4310"
+    },
+    {
+      "id": "780402",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4310"
+    },
+    {
+      "id": "780403",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4310"
+    },
+    {
+      "id": "780404",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4310"
+    },
+    {
+      "id": "780405",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4310"
+    },
+    {
+      "id": "780406",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4310"
+    },
+    {
+      "id": "780407",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4310"
+    },
+    {
+      "id": "780408",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4310"
+    },
+    {
+      "id": "780409",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:33.4530"
+    },
+    {
+      "id": "780410",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4530"
+    },
+    {
+      "id": "780411",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4530"
+    },
+    {
+      "id": "780412",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4540"
+    },
+    {
+      "id": "780413",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4540"
+    },
+    {
+      "id": "780414",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4540"
+    },
+    {
+      "id": "780415",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4540"
+    },
+    {
+      "id": "780416",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4540"
+    },
+    {
+      "id": "780417",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4540"
+    },
+    {
+      "id": "780418",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4540"
+    },
+    {
+      "id": "780419",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4540"
+    },
+    {
+      "id": "780420",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:33.4550"
+    },
+    {
+      "id": "780421",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:41.6490"
+    },
+    {
+      "id": "780422",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.6490"
+    },
+    {
+      "id": "780423",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.6500"
+    },
+    {
+      "id": "780424",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.6500"
+    },
+    {
+      "id": "780425",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.6500"
+    },
+    {
+      "id": "780426",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.6500"
+    },
+    {
+      "id": "780427",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.6500"
+    },
+    {
+      "id": "780428",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.6500"
+    },
+    {
+      "id": "780429",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.6500"
+    },
+    {
+      "id": "780430",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.6500"
+    },
+    {
+      "id": "780431",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.6500"
+    },
+    {
+      "id": "780432",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.6510"
+    },
+    {
+      "id": "780433",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:41.7350"
+    },
+    {
+      "id": "780434",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.7350"
+    },
+    {
+      "id": "780435",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.7350"
+    },
+    {
+      "id": "780436",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.7350"
+    },
+    {
+      "id": "780437",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.7350"
+    },
+    {
+      "id": "780438",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.7350"
+    },
+    {
+      "id": "780439",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.7360"
+    },
+    {
+      "id": "780440",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.7360"
+    },
+    {
+      "id": "780441",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.7360"
+    },
+    {
+      "id": "780442",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.7360"
+    },
+    {
+      "id": "780443",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.7360"
+    },
+    {
+      "id": "780444",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.7360"
+    },
+    {
+      "id": "780445",
+      "name": "Test User",
+      "email": "test@example.com",
+      "phone": "555-123-4567",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "Looking forward to trying out the class!",
+      "created_at": "2612-01-10 07:55:41.8120"
+    },
+    {
+      "id": "780446",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.8120"
+    },
+    {
+      "id": "780447",
+      "name": "Test Little Ninjas",
+      "email": "test-little-ninjas@example.com",
+      "phone": "555-000-0000",
+      "program": "Little Ninjas",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.8120"
+    },
+    {
+      "id": "780448",
+      "name": "Test Dragon Kids",
+      "email": "test-dragon-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Dragon Kids",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.8130"
+    },
+    {
+      "id": "780449",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.8130"
+    },
+    {
+      "id": "780450",
+      "name": "Test Adult Karate",
+      "email": "test-adult-karate@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.8130"
+    },
+    {
+      "id": "780451",
+      "name": "Test Kickboxing",
+      "email": "test-kickboxing@example.com",
+      "phone": "555-000-0000",
+      "program": "Kickboxing",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.8130"
+    },
+    {
+      "id": "780452",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.8130"
+    },
+    {
+      "id": "780453",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.8130"
+    },
+    {
+      "id": "780454",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.8130"
+    },
+    {
+      "id": "780455",
+      "name": "Test phone",
+      "email": "test-phone@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.8130"
+    },
+    {
+      "id": "780456",
+      "name": "Test text",
+      "email": "test-text@example.com",
+      "phone": "555-000-0000",
+      "program": "Adult Karate",
+      "source": "chatbot",
+      "msg_preview": "NULL",
+      "created_at": "2612-01-10 07:55:41.8140"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\tphone\tprogram\tsource\tmsg_preview\tcreated_at\n600001\tAndrea Aguilera\tandreamariediths@hotmail.com\t+18329075266\tNot Sure\tlanding_page\tNULL\t2612-01-10 06:49:22.2180\n600002\tBryson Gamble\tkingbrother20@gmail.com\t2816875837\tAdult Karate\tlanding_page\tNULL\t2612-01-10 06:49:40.4170\n720037\tGary Fulcher\tgaryfulcher48@gmail.com\t9364001082\tNot Sure\ttrial_form\tChild's name: Mike\t2612-01-10 07:37:50.7130\n750001\tCassandra\tCassandralston@yahoo.com\t2022714706\tNot Sure\tlanding_page\tNULL\t2612-01-10 07:40:33.0040\n750002\tTest run\tcoachkleila@gmail.com\t2816627799\tNot Sure\tlanding_page\tNULL\t2612-01-10 07:40:35.5580\n780001\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:24.6380\n780002\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.6380\n780003\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:24.6380\n780004\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.6380\n780005\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:24.6390\n780006\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.6390\n780007\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:24.6390\n780008\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:24.6390\n780009\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:24.6390\n780010\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.6390\n780011\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.6390\n780012\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.6390\n780013\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:24.6510\n780014\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.6510\n780015\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:24.6520\n780016\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.6520\n780017\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:24.6520\n780018\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.6520\n780019\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:24.6520\n780020\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:24.6520\n780021\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:24.6520\n780022\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.6520\n780023\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.6520\n780024\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.6530\n780025\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:24.7020\n780026\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.7030\n780027\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:24.7030\n780028\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.7030\n780029\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:24.7030\n780030\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7030\n780031\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:24.7030\n780032\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:24.7030\n780033\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:24.7030\n780034\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7030\n780035\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7040\n780036\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7040\n780037\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:24.7140\n780038\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.7140\n780039\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:24.7140\n780040\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.7140\n780041\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:24.7140\n780042\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7140\n780043\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:24.7140\n780044\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:24.7150\n780045\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:24.7150\n780046\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7150\n780047\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7150\n780048\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7150\n780049\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:24.7250\n780050\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.7250\n780051\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:24.7260\n780052\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.7260\n780053\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:24.7260\n780054\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7260\n780055\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:24.7260\n780056\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:24.7260\n780057\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:24.7260\n780058\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7260\n780059\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7260\n780060\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7270\n780061\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:24.7550\n780062\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.7550\n780063\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:24.7550\n780064\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.7550\n780065\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:24.7550\n780066\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7550\n780067\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:24.7550\n780068\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:24.7560\n780069\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:24.7560\n780070\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7560\n780071\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7560\n780072\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.7560\n780073\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:24.8060\n780074\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.8060\n780075\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:24.8060\n780076\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.8060\n780077\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:24.8060\n780078\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.8070\n780079\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:24.8070\n780080\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:24.8070\n780081\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:24.8070\n780082\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.8070\n780083\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.8070\n780084\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.8070\n780085\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:24.8180\n780086\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.8180\n780087\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:24.8180\n780088\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.8180\n780089\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:24.8180\n780090\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.8180\n780091\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:24.8180\n780092\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:24.8180\n780093\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:24.8190\n780094\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.8190\n780095\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.8190\n780096\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.8190\n780097\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:24.8350\n780098\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.8350\n780099\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:24.8360\n780100\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.8360\n780101\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:24.8360\n780102\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.8360\n780103\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:24.8360\n780104\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:24.8360\n780105\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:24.8360\n780106\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.8360\n780107\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.8360\n780108\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.8370\n780109\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:24.9390\n780110\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.9390\n780111\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:24.9390\n780112\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:24.9400\n780113\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:24.9400\n780114\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.9400\n780115\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:24.9400\n780116\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:24.9400\n780117\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:24.9400\n780118\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.9400\n780119\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.9400\n780120\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:24.9400\n780121\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:25.0060\n780122\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:25.0060\n780123\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:25.0070\n780124\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:25.0070\n780125\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:25.0070\n780126\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.0070\n780127\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:25.0070\n780128\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:25.0070\n780129\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:25.0070\n780130\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.0070\n780131\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.0070\n780132\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.0080\n780133\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:25.0190\n780134\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:25.0190\n780135\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:25.0190\n780136\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:25.0190\n780137\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:25.0190\n780138\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.0200\n780139\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:25.0200\n780140\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:25.0200\n780141\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:25.0200\n780142\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.0200\n780143\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.0200\n780144\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.0200\n780145\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:25.1090\n780146\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:25.1090\n780147\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:25.1090\n780148\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:25.1090\n780149\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:25.1090\n780150\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.1090\n780151\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:25.1100\n780152\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:25.1100\n780153\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:25.1100\n780154\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.1100\n780155\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.1100\n780156\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.1100\n780157\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:25.1270\n780158\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:25.1270\n780159\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:25.1270\n780160\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:25.1270\n780161\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:25.1270\n780162\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.1280\n780163\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:25.1280\n780164\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:25.1280\n780165\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:25.1280\n780166\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.1280\n780167\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.1280\n780168\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:25.1280\n780169\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:30.7260\n780170\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.7260\n780171\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:30.7260\n780172\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.7260\n780173\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:30.7260\n780174\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.7260\n780175\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:30.7270\n780176\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:30.7270\n780177\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:30.7270\n780178\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.7270\n780179\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.7270\n780180\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.7270\n780181\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:30.7380\n780182\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.7380\n780183\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:30.7380\n780184\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.7380\n780185\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:30.7380\n780186\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.7380\n780187\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:30.7390\n780188\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:30.7390\n780189\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:30.7390\n780190\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.7390\n780191\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.7390\n780192\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.7390\n780193\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:30.7580\n780194\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.7580\n780195\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:30.7580\n780196\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.7580\n780197\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:30.7580\n780198\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.7580\n780199\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:30.7580\n780200\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:30.7580\n780201\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:30.7590\n780202\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.7590\n780203\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.7590\n780204\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.7590\n780205\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:30.8120\n780206\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.8120\n780207\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:30.8120\n780208\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.8120\n780209\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:30.8120\n780210\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.8120\n780211\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:30.8120\n780212\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:30.8120\n780213\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:30.8130\n780214\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.8130\n780215\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.8130\n780216\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.8130\n780217\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:30.9070\n780218\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.9080\n780219\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:30.9080\n780220\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.9080\n780221\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:30.9080\n780222\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.9080\n780223\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:30.9080\n780224\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:30.9080\n780225\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:30.9080\n780226\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.9080\n780227\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.9090\n780228\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.9090\n780229\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:30.9230\n780230\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.9240\n780231\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:30.9240\n780232\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.9240\n780233\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:30.9240\n780234\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.9240\n780235\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:30.9240\n780236\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:30.9240\n780237\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:30.9240\n780238\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.9240\n780239\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.9250\n780240\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.9250\n780241\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:30.9370\n780242\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.9370\n780243\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:30.9370\n780244\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:30.9370\n780245\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:30.9370\n780246\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.9370\n780247\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:30.9380\n780248\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:30.9380\n780249\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:30.9380\n780250\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.9380\n780251\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.9380\n780252\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:30.9380\n780253\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:31.0340\n780254\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.0340\n780255\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:31.0340\n780256\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.0340\n780257\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:31.0340\n780258\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.0340\n780259\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:31.0340\n780260\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:31.0340\n780261\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:31.0350\n780262\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.0350\n780263\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.0350\n780264\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.0350\n780265\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:31.0470\n780266\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.0470\n780267\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:31.0470\n780268\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.0470\n780269\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:31.0470\n780270\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.0470\n780271\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:31.0470\n780272\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:31.0480\n780273\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:31.0480\n780274\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.0480\n780275\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.0480\n780276\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.0480\n780277\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:31.2360\n780278\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.2360\n780279\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:31.2360\n780280\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.2370\n780281\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:31.2370\n780282\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.2370\n780283\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:31.2370\n780284\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:31.2370\n780285\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:31.2370\n780286\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.2370\n780287\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.2370\n780288\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.2370\n780289\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:31.2470\n780290\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.2470\n780291\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:31.2470\n780292\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.2470\n780293\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:31.2480\n780294\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.2480\n780295\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:31.2480\n780296\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:31.2480\n780297\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:31.2480\n780298\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.2480\n780299\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.2480\n780300\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.2480\n780301\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:31.3240\n780302\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.3240\n780303\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:31.3240\n780304\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.3240\n780305\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:31.3250\n780306\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.3250\n780307\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:31.3250\n780308\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:31.3250\n780309\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:31.3250\n780310\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.3250\n780311\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.3250\n780312\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.3250\n780313\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:31.3400\n780314\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.3400\n780315\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:31.3400\n780316\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.3410\n780317\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:31.3410\n780318\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.3410\n780319\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:31.3410\n780320\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:31.3410\n780321\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:31.3410\n780322\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.3410\n780323\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.3410\n780324\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.3410\n780325\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:31.3540\n780326\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.3540\n780327\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:31.3540\n780328\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:31.3540\n780329\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:31.3540\n780330\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.3540\n780331\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:31.3540\n780332\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:31.3550\n780333\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:31.3550\n780334\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.3550\n780335\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.3550\n780336\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:31.3550\n780337\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:33.2420\n780338\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.2420\n780339\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:33.2420\n780340\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.2420\n780341\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:33.2420\n780342\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.2420\n780343\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:33.2420\n780344\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:33.2430\n780345\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:33.2430\n780346\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.2430\n780347\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.2430\n780348\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.2430\n780349\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:33.2570\n780350\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.2570\n780351\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:33.2570\n780352\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.2570\n780353\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:33.2580\n780354\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.2580\n780355\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:33.2580\n780356\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:33.2580\n780357\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:33.2580\n780358\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.2580\n780359\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.2580\n780360\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.2580\n780361\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:33.3110\n780362\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.3110\n780363\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:33.3110\n780364\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.3110\n780365\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:33.3110\n780366\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.3110\n780367\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:33.3110\n780368\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:33.3110\n780369\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:33.3120\n780370\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.3120\n780371\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.3120\n780372\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.3120\n780373\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:33.3520\n780374\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.3520\n780375\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:33.3520\n780376\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.3520\n780377\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:33.3520\n780378\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.3520\n780379\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:33.3530\n780380\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:33.3530\n780381\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:33.3530\n780382\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.3530\n780383\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.3530\n780384\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.3530\n780385\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:33.4110\n780386\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.4110\n780387\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:33.4120\n780388\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.4120\n780389\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:33.4120\n780390\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.4120\n780391\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:33.4120\n780392\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:33.4120\n780393\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:33.4120\n780394\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.4120\n780395\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.4130\n780396\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.4130\n780397\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:33.4300\n780398\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.4300\n780399\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:33.4300\n780400\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.4300\n780401\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:33.4310\n780402\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.4310\n780403\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:33.4310\n780404\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:33.4310\n780405\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:33.4310\n780406\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.4310\n780407\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.4310\n780408\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.4310\n780409\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:33.4530\n780410\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.4530\n780411\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:33.4530\n780412\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:33.4540\n780413\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:33.4540\n780414\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.4540\n780415\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:33.4540\n780416\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:33.4540\n780417\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:33.4540\n780418\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.4540\n780419\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.4540\n780420\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:33.4550\n780421\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:41.6490\n780422\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:41.6490\n780423\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:41.6500\n780424\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:41.6500\n780425\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:41.6500\n780426\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:41.6500\n780427\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:41.6500\n780428\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:41.6500\n780429\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:41.6500\n780430\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:41.6500\n780431\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:41.6500\n780432\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:41.6510\n780433\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:41.7350\n780434\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:41.7350\n780435\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:41.7350\n780436\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:41.7350\n780437\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:41.7350\n780438\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:41.7350\n780439\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:41.7360\n780440\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:41.7360\n780441\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:41.7360\n780442\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:41.7360\n780443\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:41.7360\n780444\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:41.7360\n780445\tTest User\ttest@example.com\t555-123-4567\tLittle Ninjas\tchatbot\tLooking forward to trying out the class!\t2612-01-10 07:55:41.8120\n780446\tJane Doe\tjane@example.com\t555-987-6543\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:41.8120\n780447\tTest Little Ninjas\ttest-little-ninjas@example.com\t555-000-0000\tLittle Ninjas\tchatbot\tNULL\t2612-01-10 07:55:41.8120\n780448\tTest Dragon Kids\ttest-dragon-kids@example.com\t555-000-0000\tDragon Kids\tchatbot\tNULL\t2612-01-10 07:55:41.8130\n780449\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tchatbot\tNULL\t2612-01-10 07:55:41.8130\n780450\tTest Adult Karate\ttest-adult-karate@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:41.8130\n780451\tTest Kickboxing\ttest-kickboxing@example.com\t555-000-0000\tKickboxing\tchatbot\tNULL\t2612-01-10 07:55:41.8130\n780452\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tchatbot\tNULL\t2612-01-10 07:55:41.8130\n780453\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tchatbot\tNULL\t2612-01-10 07:55:41.8130\n780454\tTest email\ttest-email@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:41.8130\n780455\tTest phone\ttest-phone@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:41.8130\n780456\tTest text\ttest-text@example.com\t555-000-0000\tAdult Karate\tchatbot\tNULL\t2612-01-10 07:55:41.8140\n",
+  "stderr": "",
+  "execution_time_ms": 408
+}

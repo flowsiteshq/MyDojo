@@ -1,0 +1,24 @@
+{
+  "query": "SELECT * FROM trialSignups WHERE email = 'leadcapture-test@example.com' ORDER BY createdAt DESC LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute SELECT * FROM trialSignups WHERE email = 'leadcapture-test@example.com' ORDER BY createdAt DESC LIMIT 1;",
+  "rows": [
+    {
+      "id": "150001",
+      "name": "Test Lead Capture",
+      "email": "leadcapture-test@example.com",
+      "phone": "281-555-9999",
+      "program": "Core Kids",
+      "location": "Tomball HQ",
+      "preferredContactMethod": "email",
+      "message": "Child's name: Tommy",
+      "status": "new",
+      "source": "chatbot",
+      "createdAt": "2026-02-15 17:03:02",
+      "updatedAt": "2026-02-15 17:03:02"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\tphone\tprogram\tlocation\tpreferredContactMethod\tmessage\tstatus\tsource\tcreatedAt\tupdatedAt\n150001\tTest Lead Capture\tleadcapture-test@example.com\t281-555-9999\tCore Kids\tTomball HQ\temail\tChild's name: Tommy\tnew\tchatbot\t2026-02-15 17:03:02\t2026-02-15 17:03:02\n",
+  "stderr": "",
+  "execution_time_ms": 371
+}

@@ -1,0 +1,166 @@
+{
+  "query": "SELECT program, dayOfWeek, startTime, endTime FROM classSchedule WHERE isActive = 1 ORDER BY program, FIELD(dayOfWeek, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'), startTime;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute SELECT program, dayOfWeek, startTime, endTime FROM classSchedule WHERE isActive = 1 ORDER BY program, FIELD(dayOfWeek, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'), startTime;",
+  "rows": [
+    {
+      "program": "Little Ninjas",
+      "dayOfWeek": "Monday",
+      "startTime": "5:00 PM",
+      "endTime": "6:00 PM"
+    },
+    {
+      "program": "Little Ninjas",
+      "dayOfWeek": "Tuesday",
+      "startTime": "5:00 PM",
+      "endTime": "6:00 PM"
+    },
+    {
+      "program": "Little Ninjas",
+      "dayOfWeek": "Wednesday",
+      "startTime": "2:00 PM",
+      "endTime": "3:00 PM"
+    },
+    {
+      "program": "Little Ninjas",
+      "dayOfWeek": "Wednesday",
+      "startTime": "5:00 PM",
+      "endTime": "6:00 PM"
+    },
+    {
+      "program": "Little Ninjas",
+      "dayOfWeek": "Thursday",
+      "startTime": "5:00 PM",
+      "endTime": "6:00 PM"
+    },
+    {
+      "program": "Little Ninjas",
+      "dayOfWeek": "Friday",
+      "startTime": "2:00 PM",
+      "endTime": "3:00 PM"
+    },
+    {
+      "program": "Little Ninjas",
+      "dayOfWeek": "Saturday",
+      "startTime": "10:00 AM",
+      "endTime": "11:00 AM"
+    },
+    {
+      "program": "Dragon Kids",
+      "dayOfWeek": "Monday",
+      "startTime": "4:00 PM",
+      "endTime": "5:00 PM"
+    },
+    {
+      "program": "Dragon Kids",
+      "dayOfWeek": "Tuesday",
+      "startTime": "6:00 PM",
+      "endTime": "7:00 PM"
+    },
+    {
+      "program": "Dragon Kids",
+      "dayOfWeek": "Wednesday",
+      "startTime": "4:00 PM",
+      "endTime": "5:00 PM"
+    },
+    {
+      "program": "Dragon Kids",
+      "dayOfWeek": "Thursday",
+      "startTime": "6:00 PM",
+      "endTime": "7:00 PM"
+    },
+    {
+      "program": "Dragon Kids",
+      "dayOfWeek": "Saturday",
+      "startTime": "10:45 AM",
+      "endTime": "11:45 AM"
+    },
+    {
+      "program": "Teens",
+      "dayOfWeek": "Monday",
+      "startTime": "6:00 PM",
+      "endTime": "7:00 PM"
+    },
+    {
+      "program": "Teens",
+      "dayOfWeek": "Tuesday",
+      "startTime": "4:00 PM",
+      "endTime": "5:00 PM"
+    },
+    {
+      "program": "Teens",
+      "dayOfWeek": "Wednesday",
+      "startTime": "6:00 PM",
+      "endTime": "7:00 PM"
+    },
+    {
+      "program": "Teens",
+      "dayOfWeek": "Thursday",
+      "startTime": "4:00 PM",
+      "endTime": "5:00 PM"
+    },
+    {
+      "program": "Teens",
+      "dayOfWeek": "Saturday",
+      "startTime": "11:30 AM",
+      "endTime": "12:30 PM"
+    },
+    {
+      "program": "Adult Karate",
+      "dayOfWeek": "Tuesday",
+      "startTime": "7:00 PM",
+      "endTime": "8:00 PM"
+    },
+    {
+      "program": "Adult Karate",
+      "dayOfWeek": "Thursday",
+      "startTime": "7:00 PM",
+      "endTime": "8:00 PM"
+    },
+    {
+      "program": "Kickboxing",
+      "dayOfWeek": "Monday",
+      "startTime": "7:00 PM",
+      "endTime": "8:00 PM"
+    },
+    {
+      "program": "Kickboxing",
+      "dayOfWeek": "Tuesday",
+      "startTime": "8:00 PM",
+      "endTime": "9:00 PM"
+    },
+    {
+      "program": "Kickboxing",
+      "dayOfWeek": "Wednesday",
+      "startTime": "12:00 PM",
+      "endTime": "1:00 PM"
+    },
+    {
+      "program": "Kickboxing",
+      "dayOfWeek": "Wednesday",
+      "startTime": "7:00 PM",
+      "endTime": "8:00 PM"
+    },
+    {
+      "program": "Kickboxing",
+      "dayOfWeek": "Thursday",
+      "startTime": "8:00 PM",
+      "endTime": "9:00 PM"
+    },
+    {
+      "program": "Kickboxing",
+      "dayOfWeek": "Friday",
+      "startTime": "12:00 PM",
+      "endTime": "1:00 PM"
+    },
+    {
+      "program": "Kickboxing",
+      "dayOfWeek": "Saturday",
+      "startTime": "9:00 AM",
+      "endTime": "10:00 AM"
+    }
+  ],
+  "messages": [],
+  "stdout": "program\tdayOfWeek\tstartTime\tendTime\nLittle Ninjas\tMonday\t5:00 PM\t6:00 PM\nLittle Ninjas\tTuesday\t5:00 PM\t6:00 PM\nLittle Ninjas\tWednesday\t2:00 PM\t3:00 PM\nLittle Ninjas\tWednesday\t5:00 PM\t6:00 PM\nLittle Ninjas\tThursday\t5:00 PM\t6:00 PM\nLittle Ninjas\tFriday\t2:00 PM\t3:00 PM\nLittle Ninjas\tSaturday\t10:00 AM\t11:00 AM\nDragon Kids\tMonday\t4:00 PM\t5:00 PM\nDragon Kids\tTuesday\t6:00 PM\t7:00 PM\nDragon Kids\tWednesday\t4:00 PM\t5:00 PM\nDragon Kids\tThursday\t6:00 PM\t7:00 PM\nDragon Kids\tSaturday\t10:45 AM\t11:45 AM\nTeens\tMonday\t6:00 PM\t7:00 PM\nTeens\tTuesday\t4:00 PM\t5:00 PM\nTeens\tWednesday\t6:00 PM\t7:00 PM\nTeens\tThursday\t4:00 PM\t5:00 PM\nTeens\tSaturday\t11:30 AM\t12:30 PM\nAdult Karate\tTuesday\t7:00 PM\t8:00 PM\nAdult Karate\tThursday\t7:00 PM\t8:00 PM\nKickboxing\tMonday\t7:00 PM\t8:00 PM\nKickboxing\tTuesday\t8:00 PM\t9:00 PM\nKickboxing\tWednesday\t12:00 PM\t1:00 PM\nKickboxing\tWednesday\t7:00 PM\t8:00 PM\nKickboxing\tThursday\t8:00 PM\t9:00 PM\nKickboxing\tFriday\t12:00 PM\t1:00 PM\nKickboxing\tSaturday\t9:00 AM\t10:00 AM\n",
+  "stderr": "",
+  "execution_time_ms": 348
+}

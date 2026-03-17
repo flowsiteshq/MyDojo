@@ -1,0 +1,31 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_Lu5Er8YqGDyrsXYnbeua3C": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_Lu5Er8YqGDyrsXYnbeua3C": "notificationHistory"
+    },
+    {
+      "Tables_in_Lu5Er8YqGDyrsXYnbeua3C": "notificationPreferences"
+    },
+    {
+      "Tables_in_Lu5Er8YqGDyrsXYnbeua3C": "pushSubscriptions"
+    },
+    {
+      "Tables_in_Lu5Er8YqGDyrsXYnbeua3C": "testimonials"
+    },
+    {
+      "Tables_in_Lu5Er8YqGDyrsXYnbeua3C": "trialSignups"
+    },
+    {
+      "Tables_in_Lu5Er8YqGDyrsXYnbeua3C": "users"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_Lu5Er8YqGDyrsXYnbeua3C\n__drizzle_migrations\nnotificationHistory\nnotificationPreferences\npushSubscriptions\ntestimonials\ntrialSignups\nusers\n",
+  "stderr": "",
+  "execution_time_ms": 360
+}

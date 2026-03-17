@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `classAttendance` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `enrollmentId` int NOT NULL,\n  `userId` int NOT NULL,\n  `classScheduleId` int NOT NULL,\n  `attendanceDate` varchar(10) NOT NULL,\n  `checkInTime` timestamp NOT NULL,\n  `checkInMethod` enum('manual','qr_code','admin') NOT NULL DEFAULT 'manual',\n  `checkOutTime` timestamp NULL,\n  `status` enum('present','late','absent','excused') NOT NULL DEFAULT 'present',\n  `notes` text NULL,\n  `ipAddress` varchar(45) NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `classAttendance_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute CREATE TABLE IF NOT EXISTS `classAttendance` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `enrollmentId` int NOT NULL,\n  `userId` int NOT NULL,\n  `classScheduleId` int NOT NULL,\n  `attendanceDate` varchar(10) NOT NULL,\n  `checkInTime` timestamp NOT NULL,\n  `checkInMethod` enum('manual','qr_code','admin') NOT NULL DEFAULT 'manual',\n  `checkOutTime` timestamp NULL,\n  `status` enum('present','late','absent','excused') NOT NULL DEFAULT 'present',\n  `notes` text NULL,\n  `ipAddress` varchar(45) NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `classAttendance_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 367
+}

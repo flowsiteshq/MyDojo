@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `leadMagnetLeads` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `email` varchar(255) NOT NULL,\n  `name` varchar(255),\n  `source` varchar(100) NOT NULL DEFAULT 'popup',\n  `guideTitle` varchar(255) NOT NULL DEFAULT '5 Self-Defense Moves Every Parent Should Teach Their Child',\n  `emailSent` boolean NOT NULL DEFAULT false,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `leadMagnetLeads_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute CREATE TABLE IF NOT EXISTS `leadMagnetLeads` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `email` varchar(255) NOT NULL,\n  `name` varchar(255),\n  `source` varchar(100) NOT NULL DEFAULT 'popup',\n  `guideTitle` varchar(255) NOT NULL DEFAULT '5 Self-Defense Moves Every Parent Should Teach Their Child',\n  `emailSent` boolean NOT NULL DEFAULT false,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `leadMagnetLeads_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1011
+}

@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `chatbotConversations` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `identifier` varchar(320) NOT NULL,\n  `name` varchar(255),\n  `email` varchar(320),\n  `phone` varchar(20),\n  `program` varchar(100),\n  `currentStep` varchar(50) NOT NULL DEFAULT 'greeting',\n  `conversationHistory` text,\n  `completed` int NOT NULL DEFAULT 0,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `chatbotConversations_id` PRIMARY KEY(`id`),\n  CONSTRAINT `chatbotConversations_identifier_unique` UNIQUE(`identifier`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute CREATE TABLE IF NOT EXISTS `chatbotConversations` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `identifier` varchar(320) NOT NULL,\n  `name` varchar(255),\n  `email` varchar(320),\n  `phone` varchar(20),\n  `program` varchar(100),\n  `currentStep` varchar(50) NOT NULL DEFAULT 'greeting',\n  `conversationHistory` text,\n  `completed` int NOT NULL DEFAULT 0,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `chatbotConversations_id` PRIMARY KEY(`id`),\n  CONSTRAINT `chatbotConversations_identifier_unique` UNIQUE(`identifier`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 395
+}

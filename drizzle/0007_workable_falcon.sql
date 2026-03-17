@@ -1,0 +1,4 @@
+ALTER TABLE `classSchedule` MODIFY COLUMN `program` enum('Little Ninjas','Dragon Kids','Teens','Adult Karate','Kickboxing') NOT NULL;--> statement-breakpoint
+ALTER TABLE `testimonials` MODIFY COLUMN `program` enum('Little Ninjas','Dragon Kids','Teens','Adult Karate','Kickboxing','After School') NOT NULL;--> statement-breakpoint
+ALTER TABLE `trialSignups` MODIFY COLUMN `program` enum('Little Ninjas','Dragon Kids','Teens','Adult Karate','Kickboxing','After School','Not Sure') NOT NULL;--> statement-breakpoint
+ALTER TABLE `trialSignups` MODIFY COLUMN `segment` enum('Kids 3-5','Kids 6-12','Teens','Adult Karate','Kickboxing','Not sure');

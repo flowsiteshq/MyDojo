@@ -1,0 +1,1 @@
+ALTER TABLE `trialSignups` ADD `ghlContactId` varchar(255);

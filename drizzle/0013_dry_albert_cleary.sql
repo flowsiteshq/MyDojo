@@ -1,0 +1,1 @@
+ALTER TABLE `trialSignups` ADD `pipelineStage` enum('new_lead','contacted','intro_scheduled','showed_up','offer_presented','enrolled','nurture') DEFAULT 'new_lead' NOT NULL;

@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `classSchedule` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `program` enum('Little Ninjas', 'Dragon Kids', 'Teens', 'Adults', 'Kickboxing') NOT NULL,\n  `location` varchar(255) NOT NULL,\n  `dayOfWeek` enum('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') NOT NULL,\n  `startTime` varchar(20) NOT NULL,\n  `endTime` varchar(20) NOT NULL,\n  `instructor` varchar(255),\n  `isActive` int NOT NULL DEFAULT 1,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `classSchedule_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute CREATE TABLE IF NOT EXISTS `classSchedule` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `program` enum('Little Ninjas', 'Dragon Kids', 'Teens', 'Adults', 'Kickboxing') NOT NULL,\n  `location` varchar(255) NOT NULL,\n  `dayOfWeek` enum('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') NOT NULL,\n  `startTime` varchar(20) NOT NULL,\n  `endTime` varchar(20) NOT NULL,\n  `instructor` varchar(255),\n  `isActive` int NOT NULL DEFAULT 1,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `classSchedule_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 626
+}

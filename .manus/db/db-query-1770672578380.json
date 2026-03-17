@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as total_leads FROM trialSignups;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute SELECT COUNT(*) as total_leads FROM trialSignups;",
+  "rows": [
+    {
+      "total_leads": "16"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_leads\n16\n",
+  "stderr": "",
+  "execution_time_ms": 346
+}

@@ -1,0 +1,394 @@
+{
+  "query": "DESCRIBE enrollments;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute DESCRIBE enrollments;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "leadId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "membershipPackageId",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "customerName",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "customerEmail",
+      "Type": "varchar(320)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "customerPhone",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "studentName",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "stripeCustomerId",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "stripePaymentIntentId",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "stripeSubscriptionId",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "downPaymentAmount",
+      "Type": "decimal(10,2)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "paidFirstMonth",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "remainingBalance",
+      "Type": "decimal(10,2)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "monthlyPaymentsRemaining",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "status",
+      "Type": "enum('pending','active','cancelled','completed','failed')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "pending",
+      "Extra": ""
+    },
+    {
+      "Field": "discountApplied",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "discountAmount",
+      "Type": "decimal(10,2)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0.00",
+      "Extra": ""
+    },
+    {
+      "Field": "startDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "completionDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "beltRank",
+      "Type": "enum('No Belt','White Belt','White Belt 1 White Stripe','White Belt 2 White Stripes','White Belt 3 White Stripes','White Belt 4 White Stripes','Yellow Belt','Yellow Belt 1 Yellow Stripe','Yellow Belt 2 Yellow Stripes','Yellow Belt 3 Yellow Stripes','Yellow Belt 4 Yellow Stripes','Orange Belt','Orange Belt 1 Orange Stripe','Orange Belt 2 Orange Stripes','Orange Belt 3 Orange Stripes','Orange Belt 4 Orange Stripes','Green Belt','Green Belt 1 Green Stripe','Green Belt 2 Green Stripes','Green Belt 3 Green Stripes','Green Belt 4 Green Stripes','Green Belt 5 Green Stripes','Green Belt 6 Green Stripes','Green Belt 7 Green Stripes','Green Belt 8 Green Stripes','Blue Belt','Blue Belt 1 Blue Stripe','Blue Belt 2 Blue Stripes','Blue Belt 3 Blue Stripes','Blue Belt 4 Blue Stripes','Blue Belt 5 Blue Stripes','Blue Belt 6 Blue Stripes','Blue Belt 7 Blue Stripes','Blue Belt 8 Blue Stripes','Purple Belt','Purple Belt 1 Purple Stripe','Purple Belt 2 Purple Stripes','Purple Belt 3 Purple Stripes','Purple Belt 4 Purple Stripes','Purple Belt 5 Purple Stripes','Purple Belt 6 Purple Stripes','Purple Belt 7 Purple Stripes','Purple Belt 8 Purple Stripes','Brown Belt','Brown Belt 1 Brown Stripe','Brown Belt 2 Brown Stripes','Brown Belt 3 Brown Stripes','Brown Belt 4 Brown Stripes','Brown Belt 5 Brown Stripes','Brown Belt 6 Brown Stripes','Brown Belt 7 Brown Stripes','Brown Belt 8 Brown Stripes','Probationary Black','Black Belt 1st Dan','Black Belt 2nd Dan','Black Belt 3rd Dan','Black Belt 4th Dan','Black Belt 5th Dan','Black Belt 6th Dan')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "No Belt",
+      "Extra": ""
+    },
+    {
+      "Field": "beltAchievedDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dateOfBirth",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "totalXP",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "currentStreak",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "longestStreak",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "lastCheckInDate",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "photoUrl",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "fluidpayCustomerId",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "fluidpaySubscriptionId",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "agreementSignedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "agreementSignature",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "agreementSignedIp",
+      "Type": "varchar(45)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "cancellationRequestedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "cancellationEffectiveDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "cancellationReason",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "finalBillingProcessed",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "freezeStartDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "freezeEndDate",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "freezeReason",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "isFrozen",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "classesAtCurrentBelt",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "currentStripePhase",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "stripesInCurrentPhase",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "beltExamEligible",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "beltExamFeePaid",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "beltExamPaymentId",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nleadId\tint\tYES\t\tNULL\t\nmembershipPackageId\tint\tNO\t\tNULL\t\ncustomerName\tvarchar(255)\tNO\t\tNULL\t\ncustomerEmail\tvarchar(320)\tNO\t\tNULL\t\ncustomerPhone\tvarchar(20)\tNO\t\tNULL\t\nstudentName\tvarchar(255)\tYES\t\tNULL\t\nstripeCustomerId\tvarchar(255)\tYES\t\tNULL\t\nstripePaymentIntentId\tvarchar(255)\tYES\t\tNULL\t\nstripeSubscriptionId\tvarchar(255)\tYES\t\tNULL\t\ndownPaymentAmount\tdecimal(10,2)\tNO\t\tNULL\t\npaidFirstMonth\tint\tNO\t\t0\t\nremainingBalance\tdecimal(10,2)\tNO\t\tNULL\t\nmonthlyPaymentsRemaining\tint\tNO\t\tNULL\t\nstatus\tenum('pending','active','cancelled','completed','failed')\tNO\t\tpending\t\ndiscountApplied\tvarchar(255)\tYES\t\tNULL\t\ndiscountAmount\tdecimal(10,2)\tYES\t\t0.00\t\nstartDate\ttimestamp\tYES\t\tNULL\t\ncompletionDate\ttimestamp\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\nbeltRank\tenum('No Belt','White Belt','White Belt 1 White Stripe','White Belt 2 White Stripes','White Belt 3 White Stripes','White Belt 4 White Stripes','Yellow Belt','Yellow Belt 1 Yellow Stripe','Yellow Belt 2 Yellow Stripes','Yellow Belt 3 Yellow Stripes','Yellow Belt 4 Yellow Stripes','Orange Belt','Orange Belt 1 Orange Stripe','Orange Belt 2 Orange Stripes','Orange Belt 3 Orange Stripes','Orange Belt 4 Orange Stripes','Green Belt','Green Belt 1 Green Stripe','Green Belt 2 Green Stripes','Green Belt 3 Green Stripes','Green Belt 4 Green Stripes','Green Belt 5 Green Stripes','Green Belt 6 Green Stripes','Green Belt 7 Green Stripes','Green Belt 8 Green Stripes','Blue Belt','Blue Belt 1 Blue Stripe','Blue Belt 2 Blue Stripes','Blue Belt 3 Blue Stripes','Blue Belt 4 Blue Stripes','Blue Belt 5 Blue Stripes','Blue Belt 6 Blue Stripes','Blue Belt 7 Blue Stripes','Blue Belt 8 Blue Stripes','Purple Belt','Purple Belt 1 Purple Stripe','Purple Belt 2 Purple Stripes','Purple Belt 3 Purple Stripes','Purple Belt 4 Purple Stripes','Purple Belt 5 Purple Stripes','Purple Belt 6 Purple Stripes','Purple Belt 7 Purple Stripes','Purple Belt 8 Purple Stripes','Brown Belt','Brown Belt 1 Brown Stripe','Brown Belt 2 Brown Stripes','Brown Belt 3 Brown Stripes','Brown Belt 4 Brown Stripes','Brown Belt 5 Brown Stripes','Brown Belt 6 Brown Stripes','Brown Belt 7 Brown Stripes','Brown Belt 8 Brown Stripes','Probationary Black','Black Belt 1st Dan','Black Belt 2nd Dan','Black Belt 3rd Dan','Black Belt 4th Dan','Black Belt 5th Dan','Black Belt 6th Dan')\tNO\t\tNo Belt\t\nbeltAchievedDate\ttimestamp\tYES\t\tNULL\t\ndateOfBirth\tvarchar(10)\tYES\t\tNULL\t\ntotalXP\tint\tNO\t\t0\t\ncurrentStreak\tint\tNO\t\t0\t\nlongestStreak\tint\tNO\t\t0\t\nlastCheckInDate\tvarchar(10)\tYES\t\tNULL\t\nphotoUrl\ttext\tYES\t\tNULL\t\nfluidpayCustomerId\tvarchar(255)\tYES\t\tNULL\t\nfluidpaySubscriptionId\tvarchar(255)\tYES\t\tNULL\t\nagreementSignedAt\ttimestamp\tYES\t\tNULL\t\nagreementSignature\tvarchar(255)\tYES\t\tNULL\t\nagreementSignedIp\tvarchar(45)\tYES\t\tNULL\t\ncancellationRequestedAt\ttimestamp\tYES\t\tNULL\t\ncancellationEffectiveDate\ttimestamp\tYES\t\tNULL\t\ncancellationReason\tvarchar(500)\tYES\t\tNULL\t\nfinalBillingProcessed\tint\tNO\t\t0\t\nfreezeStartDate\ttimestamp\tYES\t\tNULL\t\nfreezeEndDate\ttimestamp\tYES\t\tNULL\t\nfreezeReason\tvarchar(500)\tYES\t\tNULL\t\nisFrozen\tint\tNO\t\t0\t\nclassesAtCurrentBelt\tint\tNO\t\t0\t\ncurrentStripePhase\tint\tNO\t\t1\t\nstripesInCurrentPhase\tint\tNO\t\t0\t\nbeltExamEligible\tint\tNO\t\t0\t\nbeltExamFeePaid\tint\tNO\t\t0\t\nbeltExamPaymentId\tvarchar(255)\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 389
+}

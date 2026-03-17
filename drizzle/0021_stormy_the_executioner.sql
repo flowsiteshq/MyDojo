@@ -1,0 +1,1 @@
+ALTER TABLE `conversationStates` MODIFY COLUMN `intent` enum('trial','enroll','summer_camp','after_school');

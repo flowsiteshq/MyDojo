@@ -1,0 +1,1 @@
+ALTER TABLE `chatbotConversations` MODIFY COLUMN `conversationHistory` json;

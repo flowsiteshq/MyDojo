@@ -1,0 +1,110 @@
+{
+  "query": "SELECT id, name, email, phone, program, location, status, createdAt \nFROM trialSignups \nORDER BY createdAt DESC \nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute SELECT id, name, email, phone, program, location, status, createdAt \nFROM trialSignups \nORDER BY createdAt DESC \nLIMIT 10;",
+  "rows": [
+    {
+      "id": "90001",
+      "name": "Vincent",
+      "email": "Sensei30002003@gmail.com",
+      "phone": "2818189288",
+      "program": "Core Kids",
+      "location": "Tomball HQ",
+      "status": "new",
+      "createdAt": "2026-02-08 16:29:10"
+    },
+    {
+      "id": "60002",
+      "name": "Sarah Martinez",
+      "email": "sarah.martinez@example.com",
+      "phone": "555-987-6543",
+      "program": "Little Ninjas",
+      "location": "Tomball HQ",
+      "status": "new",
+      "createdAt": "2026-02-07 17:25:06"
+    },
+    {
+      "id": "60001",
+      "name": "John Smith",
+      "email": "john.smith@example.com",
+      "phone": "555-123-4567",
+      "program": "Adults",
+      "location": "Tomball HQ",
+      "status": "new",
+      "createdAt": "2026-02-07 17:18:04"
+    },
+    {
+      "id": "30001",
+      "name": "Vincent",
+      "email": "Sensei30002003@gmail.com",
+      "phone": "2818189288",
+      "program": "Not Sure",
+      "location": "Tomball",
+      "status": "new",
+      "createdAt": "2026-02-07 04:22:07"
+    },
+    {
+      "id": "9",
+      "name": "Test Not Sure",
+      "email": "test-not-sure@example.com",
+      "phone": "555-000-0000",
+      "program": "Not Sure",
+      "location": "Tomball HQ",
+      "status": "new",
+      "createdAt": "2026-02-07 03:45:30"
+    },
+    {
+      "id": "5",
+      "name": "Test Teens",
+      "email": "test-teens@example.com",
+      "phone": "555-000-0000",
+      "program": "Teens",
+      "location": "Tomball HQ",
+      "status": "new",
+      "createdAt": "2026-02-07 03:45:30"
+    },
+    {
+      "id": "10",
+      "name": "Test email",
+      "email": "test-email@example.com",
+      "phone": "555-000-0000",
+      "program": "Adults",
+      "location": "Tomball HQ",
+      "status": "new",
+      "createdAt": "2026-02-07 03:45:30"
+    },
+    {
+      "id": "4",
+      "name": "Test Core Kids",
+      "email": "test-core-kids@example.com",
+      "phone": "555-000-0000",
+      "program": "Core Kids",
+      "location": "Tomball HQ",
+      "status": "new",
+      "createdAt": "2026-02-07 03:45:30"
+    },
+    {
+      "id": "8",
+      "name": "Test After School",
+      "email": "test-after-school@example.com",
+      "phone": "555-000-0000",
+      "program": "After School",
+      "location": "Tomball HQ",
+      "status": "new",
+      "createdAt": "2026-02-07 03:45:30"
+    },
+    {
+      "id": "2",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "555-987-6543",
+      "program": "Core Kids",
+      "location": "Tomball HQ",
+      "status": "new",
+      "createdAt": "2026-02-07 03:45:30"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\tphone\tprogram\tlocation\tstatus\tcreatedAt\n90001\tVincent\tSensei30002003@gmail.com\t2818189288\tCore Kids\tTomball HQ\tnew\t2026-02-08 16:29:10\n60002\tSarah Martinez\tsarah.martinez@example.com\t555-987-6543\tLittle Ninjas\tTomball HQ\tnew\t2026-02-07 17:25:06\n60001\tJohn Smith\tjohn.smith@example.com\t555-123-4567\tAdults\tTomball HQ\tnew\t2026-02-07 17:18:04\n30001\tVincent\tSensei30002003@gmail.com\t2818189288\tNot Sure\tTomball\tnew\t2026-02-07 04:22:07\n9\tTest Not Sure\ttest-not-sure@example.com\t555-000-0000\tNot Sure\tTomball HQ\tnew\t2026-02-07 03:45:30\n5\tTest Teens\ttest-teens@example.com\t555-000-0000\tTeens\tTomball HQ\tnew\t2026-02-07 03:45:30\n10\tTest email\ttest-email@example.com\t555-000-0000\tAdults\tTomball HQ\tnew\t2026-02-07 03:45:30\n4\tTest Core Kids\ttest-core-kids@example.com\t555-000-0000\tCore Kids\tTomball HQ\tnew\t2026-02-07 03:45:30\n8\tTest After School\ttest-after-school@example.com\t555-000-0000\tAfter School\tTomball HQ\tnew\t2026-02-07 03:45:30\n2\tJane Doe\tjane@example.com\t555-987-6543\tCore Kids\tTomball HQ\tnew\t2026-02-07 03:45:30\n",
+  "stderr": "",
+  "execution_time_ms": 344
+}

@@ -1,0 +1,45 @@
+{
+  "query": "SELECT name, phone, email, createdAt, updatedAt FROM waiverSignatures ORDER BY createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute SELECT name, phone, email, createdAt, updatedAt FROM waiverSignatures ORDER BY createdAt DESC;",
+  "rows": [
+    {
+      "name": "Mya mohammed",
+      "phone": "7134446277",
+      "email": "myita2001@gmail.com",
+      "createdAt": "2026-02-20 02:25:28",
+      "updatedAt": "2026-02-20 02:25:28"
+    },
+    {
+      "name": "Angir",
+      "phone": "8325716619",
+      "email": "alorenarodriguez27@gmail.com",
+      "createdAt": "2026-02-20 02:24:29",
+      "updatedAt": "2026-02-20 02:24:29"
+    },
+    {
+      "name": "Gianni Tavares",
+      "phone": "8089975037",
+      "email": "giiaaak100@gmail.com",
+      "createdAt": "2026-02-20 02:24:09",
+      "updatedAt": "2026-02-20 02:24:09"
+    },
+    {
+      "name": "Kleila Mari",
+      "phone": "2816627799",
+      "email": "kleilamari502@gmail.com",
+      "createdAt": "2026-02-20 02:24:01",
+      "updatedAt": "2026-02-20 02:24:01"
+    },
+    {
+      "name": "Brittney jarrett",
+      "phone": "3462088957",
+      "email": "brittneyjackson1999@yahoo.com",
+      "createdAt": "2026-02-20 02:21:09",
+      "updatedAt": "2026-02-20 02:21:09"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\tphone\temail\tcreatedAt\tupdatedAt\nMya mohammed\t7134446277\tmyita2001@gmail.com\t2026-02-20 02:25:28\t2026-02-20 02:25:28\nAngir\t8325716619\talorenarodriguez27@gmail.com\t2026-02-20 02:24:29\t2026-02-20 02:24:29\nGianni Tavares\t8089975037\tgiiaaak100@gmail.com\t2026-02-20 02:24:09\t2026-02-20 02:24:09\nKleila Mari\t2816627799\tkleilamari502@gmail.com\t2026-02-20 02:24:01\t2026-02-20 02:24:01\nBrittney jarrett\t3462088957\tbrittneyjackson1999@yahoo.com\t2026-02-20 02:21:09\t2026-02-20 02:21:09\n",
+  "stderr": "",
+  "execution_time_ms": 87
+}

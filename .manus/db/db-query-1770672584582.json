@@ -1,0 +1,18 @@
+{
+  "query": "SELECT \n  COUNT(*) as total_leads,\n  SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END) as new_leads,\n  SUM(CASE WHEN status = 'contacted' THEN 1 ELSE 0 END) as contacted,\n  SUM(CASE WHEN status = 'scheduled' THEN 1 ELSE 0 END) as scheduled,\n  SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,\n  SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled\nFROM trialSignups;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute SELECT \n  COUNT(*) as total_leads,\n  SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END) as new_leads,\n  SUM(CASE WHEN status = 'contacted' THEN 1 ELSE 0 END) as contacted,\n  SUM(CASE WHEN status = 'scheduled' THEN 1 ELSE 0 END) as scheduled,\n  SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,\n  SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled\nFROM trialSignups;",
+  "rows": [
+    {
+      "total_leads": "16",
+      "new_leads": "15",
+      "contacted": "1",
+      "scheduled": "0",
+      "completed": "0",
+      "cancelled": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_leads\tnew_leads\tcontacted\tscheduled\tcompleted\tcancelled\n16\t15\t1\t0\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 362
+}

@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM trialSignups WHERE Field = 'segment';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute SHOW COLUMNS FROM trialSignups WHERE Field = 'segment';",
+  "rows": [
+    {
+      "Field": "segment",
+      "Type": "enum('Kids 3-5','Kids 6-12','Teens','Adult Karate','Kickboxing','Not sure')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nsegment\tenum('Kids 3-5','Kids 6-12','Teens','Adult Karate','Kickboxing','Not sure')\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 148
+}

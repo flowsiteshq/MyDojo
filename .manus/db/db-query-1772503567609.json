@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `streakMilestones` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `enrollmentId` int NOT NULL,\n  `milestone` int NOT NULL,\n  `emailSentTo` varchar(320),\n  `emailSent` int NOT NULL DEFAULT 0,\n  `streakAtMilestone` int NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `streakMilestones_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute CREATE TABLE IF NOT EXISTS `streakMilestones` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `enrollmentId` int NOT NULL,\n  `milestone` int NOT NULL,\n  `emailSentTo` varchar(320),\n  `emailSent` int NOT NULL DEFAULT 0,\n  `streakAtMilestone` int NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `streakMilestones_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 453
+}

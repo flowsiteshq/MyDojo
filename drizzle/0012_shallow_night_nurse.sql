@@ -1,0 +1,1 @@
+ALTER TABLE `leadMagnetLeads` ADD `phone` varchar(20);

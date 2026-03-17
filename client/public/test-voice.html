@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #e63946;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #d62839;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f1f1f1;
+            border-radius: 8px;
+            min-height: 100px;
+        }
+        .log {
+            margin: 5px 0;
+            padding: 5px;
+            background: white;
+            border-left: 3px solid #e63946;
+        }
+    </style>
+</head>
+<body>
+    <h1>Voice Chat Test</h1>
+    <p>Click the button to test the text-to-speech functionality:</p>
+    
+    <button onclick="testVoice()">Test Voice Response</button>
+    
+    <div id="status">
+        <strong>Status:</strong> Ready
+    </div>
+
+    <script>
+        function log(message) {
+            const status = document.getElementById('status');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log';
+            logEntry.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            status.appendChild(logEntry);
+            console.log(message);
+        }
+
+        async function testVoice() {
+            log('Starting voice test...');
+            
+            try {
+                log('Calling text-to-speech API...');
+                const response = await fetch('/api/trpc/ai.textToSpeech', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        "0": {
+                            "json": {
+                                "text": 'Hello! This is a test of the voice chat feature. If you can hear this, the integration is working correctly.'
+                            }
+                        }
+                    })
+                });
+                
+                log('Response status: ' + response.status);
+                const data = await response.json();
+                log('Response received: ' + JSON.stringify(data).substring(0, 100) + '...');
+                
+                if (data.result && data.result.data && data.result.data.json && data.result.data.json.audio) {
+                    log('Audio data found, creating audio element...');
+                    const audioBase64 = data.result.data.json.audio;
+                    
+                    // Convert base64 to blob
+                    const audioBlob = new Blob(
+                        [Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0))],
+                        { type: 'audio/mpeg' }
+                    );
+                    
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    
+                    audio.onplay = () => log('✅ Audio started playing!');
+                    audio.onended = () => {
+                        log('✅ Audio finished playing');
+                        URL.revokeObjectURL(audioUrl);
+                    };
+                    audio.onerror = (e) => log('❌ Audio error: ' + e);
+                    
+                    log('Playing audio...');
+                    await audio.play();
+                } else {
+                    log('❌ No audio data in response');
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

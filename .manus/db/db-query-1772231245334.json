@@ -1,0 +1,61 @@
+{
+  "query": "SELECT * FROM membershipPackages LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute SELECT * FROM membershipPackages LIMIT 3;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Foundation",
+      "durationMonths": "12",
+      "monthlyPrice": "149.00",
+      "totalPrice": "2339.00",
+      "registrationFee": "98.00",
+      "downPayment": "294.00",
+      "description": "Month-to-month program for beginners. Cancel with 60-day notice.",
+      "benefits": "[\"1 White Traditional Karate Gi\", \"2x 30min Martial Arts Classes Weekly\", \"$49 Certification Fee\", \"Access to Basic Curriculum\", \"Progression Tracking\"]",
+      "invitationOnly": "0",
+      "isActive": "1",
+      "stripeProductId": "prod_U1OczOd1tQCoef",
+      "stripePriceId": "price_1T3LpSL2gHbMVosgFiPeywMw",
+      "createdAt": "2026-02-20 22:05:14",
+      "updatedAt": "2026-02-21 19:27:02"
+    },
+    {
+      "id": "2",
+      "name": "Black Belt",
+      "durationMonths": "36",
+      "monthlyPrice": "199.00",
+      "totalPrice": "8700.00",
+      "registrationFee": "98.00",
+      "downPayment": "294.00",
+      "description": "Month-to-month comprehensive program. Cancel with 60-day notice.",
+      "benefits": "[\"1 Traditional Red Karate Gi\", \"3x 60min Martial Arts Classes Weekly\", \"$49 Certification Fee\", \"Access to Advance Curriculum\", \"Community Events\", \"Guest Seminars\"]",
+      "invitationOnly": "0",
+      "isActive": "1",
+      "stripeProductId": "prod_U1Ocd9X9l1aOlm",
+      "stripePriceId": "price_1T3LpTL2gHbMVosgsJPASdep",
+      "createdAt": "2026-02-20 22:05:14",
+      "updatedAt": "2026-02-21 19:27:03"
+    },
+    {
+      "id": "3",
+      "name": "Leadership",
+      "durationMonths": "12",
+      "monthlyPrice": "249.00",
+      "totalPrice": "3000.00",
+      "registrationFee": "98.00",
+      "downPayment": "294.00",
+      "description": "Month-to-month elite program (invitation only). Cancel with 60-day notice.",
+      "benefits": "[\"1 Traditional Black Karate Gi\", \"Unlimited Classes Weekly\", \"$49 Certification Fee\", \"Community Events\", \"Guest Seminars\", \"Competition Support\", \"Leadership Classes & Seminars\", \"Access to exclusive Leadership Curriculum\"]",
+      "invitationOnly": "1",
+      "isActive": "1",
+      "stripeProductId": "prod_U1OclvTLAAhkVB",
+      "stripePriceId": "price_1T3LpUL2gHbMVosgHtblyo7s",
+      "createdAt": "2026-02-20 22:05:14",
+      "updatedAt": "2026-02-21 19:27:05"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdurationMonths\tmonthlyPrice\ttotalPrice\tregistrationFee\tdownPayment\tdescription\tbenefits\tinvitationOnly\tisActive\tstripeProductId\tstripePriceId\tcreatedAt\tupdatedAt\n1\tFoundation\t12\t149.00\t2339.00\t98.00\t294.00\tMonth-to-month program for beginners. Cancel with 60-day notice.\t[\"1 White Traditional Karate Gi\", \"2x 30min Martial Arts Classes Weekly\", \"$49 Certification Fee\", \"Access to Basic Curriculum\", \"Progression Tracking\"]\t0\t1\tprod_U1OczOd1tQCoef\tprice_1T3LpSL2gHbMVosgFiPeywMw\t2026-02-20 22:05:14\t2026-02-21 19:27:02\n2\tBlack Belt\t36\t199.00\t8700.00\t98.00\t294.00\tMonth-to-month comprehensive program. Cancel with 60-day notice.\t[\"1 Traditional Red Karate Gi\", \"3x 60min Martial Arts Classes Weekly\", \"$49 Certification Fee\", \"Access to Advance Curriculum\", \"Community Events\", \"Guest Seminars\"]\t0\t1\tprod_U1Ocd9X9l1aOlm\tprice_1T3LpTL2gHbMVosgsJPASdep\t2026-02-20 22:05:14\t2026-02-21 19:27:03\n3\tLeadership\t12\t249.00\t3000.00\t98.00\t294.00\tMonth-to-month elite program (invitation only). Cancel with 60-day notice.\t[\"1 Traditional Black Karate Gi\", \"Unlimited Classes Weekly\", \"$49 Certification Fee\", \"Community Events\", \"Guest Seminars\", \"Competition Support\", \"Leadership Classes & Seminars\", \"Access to exclusive Leadership Curriculum\"]\t1\t1\tprod_U1OclvTLAAhkVB\tprice_1T3LpUL2gHbMVosgHtblyo7s\t2026-02-20 22:05:14\t2026-02-21 19:27:05\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}
