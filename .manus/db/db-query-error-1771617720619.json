@@ -1,8 +1,0 @@
-{
-  "query": "INSERT INTO trialSignups (name, phone, program, location, status, source, introCountRequired, introCountBooked, bookingRequestId) VALUES ('Test User', '281-818-9288', 'Core Kids', 'Tomball HQ', 'new', 'test', 2, 2, 'test-booking-123');",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute INSERT INTO trialSignups (name, phone, program, location, status, source, introCountRequired, introCountBooked, bookingRequestId) VALUES ('Test User', '281-818-9288', 'Core Kids', 'Tomball HQ', 'new', 'test', 2, 2, 'test-booking-123');",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1265 (01000) at line 1: Data truncated for column 'program' at row 1"
-  ]
-}

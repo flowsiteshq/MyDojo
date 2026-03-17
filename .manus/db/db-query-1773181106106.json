@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS `childProfiles` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `userId` int NOT NULL,\n  `name` varchar(255) NOT NULL,\n  `dateOfBirth` varchar(10),\n  `program` enum('Little Ninjas','Dragon Kids','Teens','Adult Karate','Kickboxing','After School','Summer Camp','Not Sure') NOT NULL DEFAULT 'Not Sure',\n  `photoUrl` varchar(1000),\n  `photoKey` varchar(500),\n  `notes` text,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `childProfiles_id` PRIMARY KEY(`id`)\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute CREATE TABLE IF NOT EXISTS `childProfiles` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `userId` int NOT NULL,\n  `name` varchar(255) NOT NULL,\n  `dateOfBirth` varchar(10),\n  `program` enum('Little Ninjas','Dragon Kids','Teens','Adult Karate','Kickboxing','After School','Summer Camp','Not Sure') NOT NULL DEFAULT 'Not Sure',\n  `photoUrl` varchar(1000),\n  `photoKey` varchar(500),\n  `notes` text,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `childProfiles_id` PRIMARY KEY(`id`)\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 1443
-}

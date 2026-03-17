@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS `attendance` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `studentId` int NOT NULL,\n  `enrollmentId` int,\n  `classId` int,\n  `locationId` varchar(255) NOT NULL DEFAULT 'Tomball HQ',\n  `checkInTimestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `checkInDate` varchar(10) NOT NULL,\n  `beltRankAtCheckIn` varchar(50),\n  `xpAwarded` int NOT NULL DEFAULT 0,\n  `source` enum('kiosk','staff','admin','mobile') NOT NULL DEFAULT 'kiosk',\n  `programType` varchar(100),\n  `notes` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT `attendance_id` PRIMARY KEY(`id`)\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute CREATE TABLE IF NOT EXISTS `attendance` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `studentId` int NOT NULL,\n  `enrollmentId` int,\n  `classId` int,\n  `locationId` varchar(255) NOT NULL DEFAULT 'Tomball HQ',\n  `checkInTimestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `checkInDate` varchar(10) NOT NULL,\n  `beltRankAtCheckIn` varchar(50),\n  `xpAwarded` int NOT NULL DEFAULT 0,\n  `source` enum('kiosk','staff','admin','mobile') NOT NULL DEFAULT 'kiosk',\n  `programType` varchar(100),\n  `notes` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  CONSTRAINT `attendance_id` PRIMARY KEY(`id`)\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 230
-}

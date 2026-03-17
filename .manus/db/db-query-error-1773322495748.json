@@ -1,8 +1,0 @@
-{
-  "query": "SELECT id, member_id, class_id, check_in_time, check_out_time, status, created_at FROM attendance ORDER BY created_at DESC LIMIT 20;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute SELECT id, member_id, class_id, check_in_time, check_out_time, status, created_at FROM attendance ORDER BY created_at DESC LIMIT 20;",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1054 (42S22) at line 1: Unknown column 'member_id' in 'field list'"
-  ]
-}

@@ -1,9 +1,0 @@
-{
-  "query": "INSERT INTO trialSignups (name, email, phone, program, location, preferredContactMethod, message, status, source, createdAt, updatedAt) VALUES ('Manus Test Lead', 'manus-dojoflow-test@example.com', '281-555-1234', 'Core Kids', 'Tomball HQ', 'email', 'Testing Dojo Flow sync from Manus', 'new', 'chatbot', NOW(), NOW());",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute INSERT INTO trialSignups (name, email, phone, program, location, preferredContactMethod, message, status, source, createdAt, updatedAt) VALUES ('Manus Test Lead', 'manus-dojoflow-test@example.com', '281-555-1234', 'Core Kids', 'Tomball HQ', 'email', 'Testing Dojo Flow sync from Manus', 'new', 'chatbot', NOW(), NOW());",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 378
-}

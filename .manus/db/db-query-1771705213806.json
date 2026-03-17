@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS `membershipChangeRequests` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `enrollmentId` int NOT NULL,\n  `userId` int NOT NULL,\n  `requestType` enum('pause', 'cancel') NOT NULL,\n  `reason` text NOT NULL,\n  `status` enum('pending', 'approved', 'denied') NOT NULL DEFAULT 'pending',\n  `reviewedBy` int,\n  `adminNotes` text,\n  `reviewedAt` timestamp,\n  `effectiveDate` timestamp,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `membershipChangeRequests_id` PRIMARY KEY(`id`)\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute CREATE TABLE IF NOT EXISTS `membershipChangeRequests` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `enrollmentId` int NOT NULL,\n  `userId` int NOT NULL,\n  `requestType` enum('pause', 'cancel') NOT NULL,\n  `reason` text NOT NULL,\n  `status` enum('pending', 'approved', 'denied') NOT NULL DEFAULT 'pending',\n  `reviewedBy` int,\n  `adminNotes` text,\n  `reviewedAt` timestamp,\n  `effectiveDate` timestamp,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  `updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `membershipChangeRequests_id` PRIMARY KEY(`id`)\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 265
-}

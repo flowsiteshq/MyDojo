@@ -1,8 +1,0 @@
-{
-  "query": "\nALTER TABLE enrollments \nADD COLUMN dateOfBirth VARCHAR(10) AFTER beltAchievedDate,\nADD COLUMN totalXP INT DEFAULT 0 NOT NULL AFTER dateOfBirth,\nADD COLUMN currentStreak INT DEFAULT 0 NOT NULL AFTER totalXP,\nADD COLUMN longestStreak INT DEFAULT 0 NOT NULL AFTER currentStreak,\nADD COLUMN lastCheckInDate VARCHAR(10) AFTER longestStreak,\nADD COLUMN photoUrl TEXT AFTER lastCheckInDate;\n",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute \nALTER TABLE enrollments \nADD COLUMN dateOfBirth VARCHAR(10) AFTER beltAchievedDate,\nADD COLUMN totalXP INT DEFAULT 0 NOT NULL AFTER dateOfBirth,\nADD COLUMN currentStreak INT DEFAULT 0 NOT NULL AFTER totalXP,\nADD COLUMN longestStreak INT DEFAULT 0 NOT NULL AFTER currentStreak,\nADD COLUMN lastCheckInDate VARCHAR(10) AFTER longestStreak,\nADD COLUMN photoUrl TEXT AFTER lastCheckInDate;\n",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1054 (42S22) at line 2: Unknown column 'dateofbirth' in 'enrollments'"
-  ]
-}

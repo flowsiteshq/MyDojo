@@ -1,8 +1,0 @@
-{
-  "query": "\n-- Update testimonials table program values\nUPDATE testimonials SET program = 'Dragon Kids' WHERE program = 'Core Kids';\n\n-- Update trialSignups table program values\nUPDATE trialSignups SET program = 'Dragon Kids' WHERE program = 'Core Kids';\n\n-- Update classSchedule table program values (if any exist)\nUPDATE classSchedule SET program = 'Dragon Kids' WHERE program = 'Core Kids';\n",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute \n-- Update testimonials table program values\nUPDATE testimonials SET program = 'Dragon Kids' WHERE program = 'Core Kids';\n\n-- Update trialSignups table program values\nUPDATE trialSignups SET program = 'Dragon Kids' WHERE program = 'Core Kids';\n\n-- Update classSchedule table program values (if any exist)\nUPDATE classSchedule SET program = 'Dragon Kids' WHERE program = 'Core Kids';\n",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1265 (01000) at line 3: Data truncated for column '%s' at row %d"
-  ]
-}

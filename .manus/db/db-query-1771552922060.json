@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS `waiverSignatures` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `name` varchar(255) NOT NULL,\n  `phone` varchar(20) NOT NULL,\n  `email` varchar(320) NOT NULL,\n  `ipAddress` varchar(45),\n  `waiverVersion` varchar(50) NOT NULL DEFAULT '2026-02',\n  `acceptedLiability` int NOT NULL DEFAULT 1,\n  `acceptedPhotoConsent` int NOT NULL DEFAULT 1,\n  `signedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `waiverSignatures_id` PRIMARY KEY(`id`)\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute CREATE TABLE IF NOT EXISTS `waiverSignatures` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `name` varchar(255) NOT NULL,\n  `phone` varchar(20) NOT NULL,\n  `email` varchar(320) NOT NULL,\n  `ipAddress` varchar(45),\n  `waiverVersion` varchar(50) NOT NULL DEFAULT '2026-02',\n  `acceptedLiability` int NOT NULL DEFAULT 1,\n  `acceptedPhotoConsent` int NOT NULL DEFAULT 1,\n  `signedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `waiverSignatures_id` PRIMARY KEY(`id`)\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 508
-}

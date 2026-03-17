@@ -1,9 +1,0 @@
-{
-  "query": "ALTER TABLE trialSignups MODIFY COLUMN email varchar(320) NULL;\nALTER TABLE trialSignups ADD COLUMN segment ENUM('Kids 3-5', 'Kids 6-12', 'Teens', 'Adults', 'Not sure') AFTER program;\nALTER TABLE trialSignups ADD COLUMN goal ENUM('Confidence', 'Discipline', 'Fitness', 'Self-defense', 'Bullying help', 'Weight loss') AFTER segment;\nALTER TABLE trialSignups ADD COLUMN preferredDays ENUM('Weekdays', 'Weekends', 'Either') AFTER goal;\nALTER TABLE trialSignups ADD COLUMN scheduledTime timestamp NULL AFTER preferredDays;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute ALTER TABLE trialSignups MODIFY COLUMN email varchar(320) NULL;\nALTER TABLE trialSignups ADD COLUMN segment ENUM('Kids 3-5', 'Kids 6-12', 'Teens', 'Adults', 'Not sure') AFTER program;\nALTER TABLE trialSignups ADD COLUMN goal ENUM('Confidence', 'Discipline', 'Fitness', 'Self-defense', 'Bullying help', 'Weight loss') AFTER segment;\nALTER TABLE trialSignups ADD COLUMN preferredDays ENUM('Weekdays', 'Weekends', 'Either') AFTER goal;\nALTER TABLE trialSignups ADD COLUMN scheduledTime timestamp NULL AFTER preferredDays;",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 2617
-}

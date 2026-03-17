@@ -1,9 +1,0 @@
-{
-  "query": "UPDATE `membershipPackages` SET \n  monthlyPrice = CASE \n    WHEN name = 'Foundation' THEN 149.00\n    WHEN name = 'Black Belt' THEN 199.00\n    WHEN name = 'Leadership' THEN 249.00\n  END,\n  registrationFee = 98.00,\n  downPayment = 294.00,\n  description = CASE\n    WHEN name = 'Foundation' THEN 'Month-to-month program for beginners. Cancel with 60-day notice.'\n    WHEN name = 'Black Belt' THEN 'Month-to-month comprehensive program. Cancel with 60-day notice.'\n    WHEN name = 'Leadership' THEN 'Month-to-month elite program (invitation only). Cancel with 60-day notice.'\n  END\nWHERE name IN ('Foundation', 'Black Belt', 'Leadership');",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute UPDATE `membershipPackages` SET \n  monthlyPrice = CASE \n    WHEN name = 'Foundation' THEN 149.00\n    WHEN name = 'Black Belt' THEN 199.00\n    WHEN name = 'Leadership' THEN 249.00\n  END,\n  registrationFee = 98.00,\n  downPayment = 294.00,\n  description = CASE\n    WHEN name = 'Foundation' THEN 'Month-to-month program for beginners. Cancel with 60-day notice.'\n    WHEN name = 'Black Belt' THEN 'Month-to-month comprehensive program. Cancel with 60-day notice.'\n    WHEN name = 'Leadership' THEN 'Month-to-month elite program (invitation only). Cancel with 60-day notice.'\n  END\nWHERE name IN ('Foundation', 'Black Belt', 'Leadership');",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 83
-}

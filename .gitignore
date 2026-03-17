@@ -108,3 +108,7 @@ temp/
 
 # Utility scripts (not needed in production)
 scripts/
+
+# Manus internal DB query logs (large files, not needed in production)
+.manus/db/
+.manus-logs/

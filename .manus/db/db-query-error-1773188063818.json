@@ -1,8 +1,0 @@
-{
-  "query": "UPDATE enrollments SET beltRank = 'White Belt 3 Yellow Stripes' WHERE id = 150001;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute UPDATE enrollments SET beltRank = 'White Belt 3 Yellow Stripes' WHERE id = 150001;",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1406 (22001) at line 1: Data Too Long, field len 18, data len 27"
-  ]
-}

@@ -1,9 +1,0 @@
-{
-  "query": "\n-- Add new segment values\nALTER TABLE trialSignups MODIFY COLUMN segment ENUM('Kids 3-5', 'Kids 6-12', 'Teens', 'Adults', 'Adult Karate', 'Kickboxing', 'Not sure');\n\n-- Update existing \"Adults\" segment to \"Adult Karate\"\nUPDATE trialSignups SET segment = 'Adult Karate' WHERE segment = 'Adults';\n\n-- Remove \"Adults\" from enum\nALTER TABLE trialSignups MODIFY COLUMN segment ENUM('Kids 3-5', 'Kids 6-12', 'Teens', 'Adult Karate', 'Kickboxing', 'Not sure');\n",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute \n-- Add new segment values\nALTER TABLE trialSignups MODIFY COLUMN segment ENUM('Kids 3-5', 'Kids 6-12', 'Teens', 'Adults', 'Adult Karate', 'Kickboxing', 'Not sure');\n\n-- Update existing \"Adults\" segment to \"Adult Karate\"\nUPDATE trialSignups SET segment = 'Adult Karate' WHERE segment = 'Adults';\n\n-- Remove \"Adults\" from enum\nALTER TABLE trialSignups MODIFY COLUMN segment ENUM('Kids 3-5', 'Kids 6-12', 'Teens', 'Adult Karate', 'Kickboxing', 'Not sure');\n",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 1029
-}

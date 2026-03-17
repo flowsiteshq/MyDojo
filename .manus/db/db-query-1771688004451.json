@@ -1,9 +1,0 @@
-{
-  "query": "CREATE TABLE IF NOT EXISTS `staffCallbacks` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `phone` varchar(20) NOT NULL,\n  `name` varchar(255),\n  `email` varchar(255),\n  `reason` varchar(500) NOT NULL,\n  `program` varchar(100),\n  `status` enum('pending', 'in_progress', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',\n  `staffNotes` text,\n  `completedAt` timestamp NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `staffCallbacks_id` PRIMARY KEY(`id`)\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute CREATE TABLE IF NOT EXISTS `staffCallbacks` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `phone` varchar(20) NOT NULL,\n  `name` varchar(255),\n  `email` varchar(255),\n  `reason` varchar(500) NOT NULL,\n  `program` varchar(100),\n  `status` enum('pending', 'in_progress', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',\n  `staffNotes` text,\n  `completedAt` timestamp NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `staffCallbacks_id` PRIMARY KEY(`id`)\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 293
-}

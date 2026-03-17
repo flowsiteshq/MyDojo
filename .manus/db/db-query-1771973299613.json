@@ -1,9 +1,0 @@
-{
-  "query": "INSERT INTO trialSignups (name, phone, email, program, location, status, scheduledTime, introCountRequired, introCountCompleted, createdAt, updatedAt) \nVALUES \n('Alex Johnson', '555-0123', 'alex.johnson@email.com', 'Little Ninjas', 'Tomball HQ', 'scheduled', NOW(), 2, 0, NOW(), NOW()),\n('Sarah Martinez', '555-0456', 'sarah.m@email.com', 'Dragon Kids', 'Tomball HQ', 'scheduled', DATE_ADD(NOW(), INTERVAL 2 HOUR), 2, 0, NOW(), NOW()),\n('Mike Chen', '555-0789', 'mike.chen@email.com', 'Adult Karate', 'Tomball HQ', 'scheduled', DATE_ADD(NOW(), INTERVAL 4 HOUR), 0, 0, NOW(), NOW());",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute INSERT INTO trialSignups (name, phone, email, program, location, status, scheduledTime, introCountRequired, introCountCompleted, createdAt, updatedAt) \nVALUES \n('Alex Johnson', '555-0123', 'alex.johnson@email.com', 'Little Ninjas', 'Tomball HQ', 'scheduled', NOW(), 2, 0, NOW(), NOW()),\n('Sarah Martinez', '555-0456', 'sarah.m@email.com', 'Dragon Kids', 'Tomball HQ', 'scheduled', DATE_ADD(NOW(), INTERVAL 2 HOUR), 2, 0, NOW(), NOW()),\n('Mike Chen', '555-0789', 'mike.chen@email.com', 'Adult Karate', 'Tomball HQ', 'scheduled', DATE_ADD(NOW(), INTERVAL 4 HOUR), 0, 0, NOW(), NOW());",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 195
-}

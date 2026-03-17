@@ -1,9 +1,0 @@
-{
-  "query": "\nALTER TABLE enrollments \nADD COLUMN beltRank ENUM('No Belt', 'White Belt', 'Yellow Belt', 'Orange Belt', 'Green Belt', 'Advanced Green', 'Blue Belt', 'Advanced Blue', 'Purple Belt', 'Advanced Purple', 'Brown Belt', 'Advanced Brown', 'Probationary Black', 'Black Belt 1st Dan', 'Black Belt 2nd Dan', 'Black Belt 3rd Dan', 'Black Belt 4th Dan', 'Black Belt 5th Dan', 'Black Belt 6th Dan') NOT NULL DEFAULT 'No Belt',\nADD COLUMN beltAchievedDate TIMESTAMP NULL;\n",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute \nALTER TABLE enrollments \nADD COLUMN beltRank ENUM('No Belt', 'White Belt', 'Yellow Belt', 'Orange Belt', 'Green Belt', 'Advanced Green', 'Blue Belt', 'Advanced Blue', 'Purple Belt', 'Advanced Purple', 'Brown Belt', 'Advanced Brown', 'Probationary Black', 'Black Belt 1st Dan', 'Black Belt 2nd Dan', 'Black Belt 3rd Dan', 'Black Belt 4th Dan', 'Black Belt 5th Dan', 'Black Belt 6th Dan') NOT NULL DEFAULT 'No Belt',\nADD COLUMN beltAchievedDate TIMESTAMP NULL;\n",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 817
-}

@@ -1,9 +1,0 @@
-{
-  "query": "ALTER TABLE users MODIFY COLUMN role ENUM('user', 'admin', 'staff') NOT NULL DEFAULT 'user';\n\nCREATE TABLE IF NOT EXISTS staffInvites (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  email VARCHAR(320) NOT NULL,\n  name VARCHAR(255),\n  token VARCHAR(128) NOT NULL UNIQUE,\n  inviteRole ENUM('staff', 'admin') NOT NULL DEFAULT 'staff',\n  invitedBy INT NOT NULL,\n  accepted INT NOT NULL DEFAULT 0,\n  acceptedAt TIMESTAMP NULL,\n  acceptedByUserId INT NULL,\n  expiresAt TIMESTAMP NOT NULL,\n  createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP\n);",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user aYsLc9eZnrL9DEu.7de40140e08f --database Lu5Er8YqGDyrsXYnbeua3C --execute ALTER TABLE users MODIFY COLUMN role ENUM('user', 'admin', 'staff') NOT NULL DEFAULT 'user';\n\nCREATE TABLE IF NOT EXISTS staffInvites (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  email VARCHAR(320) NOT NULL,\n  name VARCHAR(255),\n  token VARCHAR(128) NOT NULL UNIQUE,\n  inviteRole ENUM('staff', 'admin') NOT NULL DEFAULT 'staff',\n  invitedBy INT NOT NULL,\n  accepted INT NOT NULL DEFAULT 0,\n  acceptedAt TIMESTAMP NULL,\n  acceptedByUserId INT NULL,\n  expiresAt TIMESTAMP NOT NULL,\n  createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP\n);",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 534
-}
