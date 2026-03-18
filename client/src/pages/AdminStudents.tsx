@@ -37,7 +37,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Search, MoreVertical, Users, UserCheck, UserX, Clock, Pencil, Camera, X, Upload, Award, ChevronRight, History, Mail, CheckCircle } from "lucide-react";
+import { Search, MoreVertical, Users, UserCheck, UserX, Clock, Pencil, Camera, X, Upload, Award, ChevronRight, History, Mail, CheckCircle, CalendarPlus, CalendarCheck } from "lucide-react";
 import { toast } from "sonner";
 import { BELT_RANKS as BELT_RANKS_CONST, nextBeltRank, requiresBeltExam } from "@shared/const";
 
@@ -170,6 +170,25 @@ export default function AdminStudents() {
   const [promoteStudent, setPromoteStudent] = useState<Student | null>(null);
   const [promoteNotes, setPromoteNotes] = useState("");
   const [showPromotionHistory, setShowPromotionHistory] = useState<Student | null>(null);
+
+  // Book Appointment dialog state
+  const [bookAptStudent, setBookAptStudent] = useState<Student | null>(null);
+  const [aptDate, setAptDate] = useState("");
+  const [aptTime, setAptTime] = useState("12:00");
+  const [aptInstructor, setAptInstructor] = useState("");
+  const [aptNotes, setAptNotes] = useState("");
+
+  const bookAppointment = trpc.studentAppointments.book.useMutation({
+    onSuccess: () => {
+      toast.success("Appointment booked! Student will receive an SMS reminder 2 hours before class.");
+      setBookAptStudent(null);
+      setAptDate("");
+      setAptTime("12:00");
+      setAptInstructor("");
+      setAptNotes("");
+    },
+    onError: (err) => toast.error(err.message),
+  });
 
   const { data: students = [], isLoading, refetch } = trpc.admin.getAllStudents.useQuery({
     search: search || undefined,
@@ -486,6 +505,16 @@ export default function AdminStudents() {
                             <DropdownMenuItem onClick={() => openEdit(student as Student)}>
                               <Pencil className="h-4 w-4 mr-2" />
                               Edit Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setBookAptStudent(student as Student);
+                                setAptDate(new Date().toISOString().slice(0, 10));
+                              }}
+                              className="text-blue-700 focus:text-blue-800 focus:bg-blue-50"
+                            >
+                              <CalendarPlus className="h-4 w-4 mr-2 text-blue-600" />
+                              Book Appointment
                             </DropdownMenuItem>
                             {/* Promote Belt — only shown if there's a next belt */}
                             {nextBelt && (
@@ -911,6 +940,95 @@ export default function AdminStudents() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPromotionHistory(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Book Appointment Dialog */}
+      <Dialog open={!!bookAptStudent} onOpenChange={(open) => { if (!open) setBookAptStudent(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarCheck className="h-5 w-5 text-blue-600" />
+              Book Appointment
+            </DialogTitle>
+            <DialogDescription>
+              Schedule a class for <strong>{bookAptStudent?.name}</strong>. They will receive an SMS reminder 2 hours before class.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="apt-date">Date *</Label>
+                <Input
+                  id="apt-date"
+                  type="date"
+                  value={aptDate}
+                  onChange={(e) => setAptDate(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="apt-time">Time *</Label>
+                <Input
+                  id="apt-time"
+                  type="time"
+                  value={aptTime}
+                  onChange={(e) => setAptTime(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="apt-program">Program</Label>
+              <p className="mt-1 text-sm text-gray-600 bg-gray-50 rounded px-3 py-2">
+                {bookAptStudent?.program ?? "—"}
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="apt-instructor">Instructor (optional)</Label>
+              <Input
+                id="apt-instructor"
+                placeholder="e.g. Sensei Mike"
+                value={aptInstructor}
+                onChange={(e) => setAptInstructor(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="apt-notes">Notes (optional)</Label>
+              <Textarea
+                id="apt-notes"
+                placeholder="Any special notes for this appointment..."
+                value={aptNotes}
+                onChange={(e) => setAptNotes(e.target.value)}
+                className="mt-1"
+                rows={2}
+              />
+            </div>
+            <p className="text-xs text-gray-500 bg-blue-50 rounded p-2">
+              📱 An SMS reminder will automatically be sent to {bookAptStudent?.phone ?? "the student"} 2 hours before the class.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBookAptStudent(null)}>Cancel</Button>
+            <Button
+              disabled={!aptDate || !aptTime || bookAppointment.isPending}
+              onClick={() => {
+                if (!bookAptStudent || !aptDate || !aptTime) return;
+                const scheduledTime = new Date(`${aptDate}T${aptTime}:00`);
+                bookAppointment.mutate({
+                  studentId: bookAptStudent.id,
+                  studentName: bookAptStudent.name,
+                  studentPhone: bookAptStudent.phone ?? "",
+                  program: bookAptStudent.program,
+                  scheduledTime,
+                  instructor: aptInstructor || undefined,
+                  notes: aptNotes || undefined,
+                });
+              }}
+            >
+              {bookAppointment.isPending ? "Booking…" : "Book Appointment"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

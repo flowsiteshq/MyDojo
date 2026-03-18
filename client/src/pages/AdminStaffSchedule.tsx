@@ -122,9 +122,9 @@ export default function AdminStaffSchedule() {
 
   // Group classes by day
   const classesByDay = useMemo(() => {
-    const grouped: Record<string, typeof scheduleData.classes> = {};
+    const grouped: Record<string, Array<{id: number; dayOfWeek: string; startTime: string; program: string; location: string; isActive: number | null}>> = {};
     DAYS.forEach(d => { grouped[d] = []; });
-    scheduleData?.classes.forEach(c => {
+    (scheduleData?.classes ?? []).forEach(c => {
       if (grouped[c.dayOfWeek]) grouped[c.dayOfWeek].push(c);
     });
     return grouped;
@@ -132,8 +132,8 @@ export default function AdminStaffSchedule() {
 
   // Index assignments by classScheduleId
   const assignmentsByClass = useMemo(() => {
-    const map: Record<number, typeof scheduleData.assignments> = {};
-    scheduleData?.assignments.forEach(a => {
+    const map: Record<number, Array<{id: number; classScheduleId: number; staffUserId: number; staffName: string; role: string}>> = {};
+    (scheduleData?.assignments ?? []).forEach(a => {
       if (!map[a.classScheduleId]) map[a.classScheduleId] = [];
       map[a.classScheduleId].push(a);
     });

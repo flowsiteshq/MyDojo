@@ -239,6 +239,13 @@
       "when": 1773865559751,
       "tag": "0033_parched_kylun",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "5",
+      "when": 1773876984216,
+      "tag": "0034_curious_nemesis",
+      "breakpoints": true
     }
   ]
 }

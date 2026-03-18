@@ -1324,3 +1324,36 @@ export const staffAvailability = mysqlTable("staffAvailability", {
 });
 export type StaffAvailability = typeof staffAvailability.$inferSelect;
 export type InsertStaffAvailability = typeof staffAvailability.$inferInsert;
+
+// ─── Student Appointments ─────────────────────────────────────────────────────
+/**
+ * Tracks booked class appointments for enrolled students.
+ * Used to send 2-hour SMS reminders before each class.
+ */
+export const studentAppointments = mysqlTable("studentAppointments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to the student */
+  studentId: int("studentId").notNull(),
+  /** Student name (denormalized for display speed) */
+  studentName: varchar("studentName", { length: 255 }).notNull(),
+  /** Student phone number (denormalized for SMS) */
+  studentPhone: varchar("studentPhone", { length: 20 }).notNull(),
+  /** Program / class type */
+  program: varchar("program", { length: 100 }).notNull(),
+  /** Scheduled class date and time (UTC) */
+  scheduledTime: timestamp("scheduledTime").notNull(),
+  /** Location */
+  location: varchar("location", { length: 255 }).default("HQ - Tomball").notNull(),
+  /** Instructor name */
+  instructor: varchar("instructor", { length: 255 }),
+  /** Appointment status */
+  status: mysqlEnum("status", ["scheduled", "completed", "cancelled", "no_show"]).default("scheduled").notNull(),
+  /** When the 2-hour reminder SMS was sent (null = not yet sent) */
+  reminderSentAt: timestamp("reminderSentAt"),
+  /** Staff notes */
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type StudentAppointment = typeof studentAppointments.$inferSelect;
+export type InsertStudentAppointment = typeof studentAppointments.$inferInsert;

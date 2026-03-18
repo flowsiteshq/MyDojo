@@ -4093,6 +4093,50 @@ Please enter your card details below to complete your registration securely. Tot
           .set(updateFields)
           .where(eq(schema.trialSignups.id, input.id));
 
+        // ── Auto-convert to student when moved to "enrolled" ──────────────────
+        if (input.pipelineStage === 'enrolled') {
+          // Fetch the full lead record
+          const [lead] = await db
+            .select()
+            .from(schema.trialSignups)
+            .where(eq(schema.trialSignups.id, input.id))
+            .limit(1);
+
+          if (lead) {
+            // Check if a student record already exists for this lead
+            const [existingStudent] = await db
+              .select({ id: schema.students.id })
+              .from(schema.students)
+              .where(eq(schema.students.leadId, input.id))
+              .limit(1);
+
+            if (!existingStudent) {
+              // Map lead program to student program enum
+              const programMap: Record<string, string> = {
+                'Little Ninjas': 'Little Ninjas',
+                'Dragon Kids': 'Dragon Kids',
+                'Teens': 'Teens',
+                'Adult Karate': 'Adult Karate',
+                'Kickboxing': 'Kickboxing',
+                'After School': 'After School',
+                'Summer Camp': 'Summer Camp',
+                'Not Sure': 'Dragon Kids', // default fallback
+              };
+              const studentProgram = (programMap[lead.program] ?? 'Dragon Kids') as 'Little Ninjas' | 'Dragon Kids' | 'Teens' | 'Adult Karate' | 'Kickboxing' | 'After School' | 'Summer Camp';
+
+              await db.insert(schema.students).values({
+                leadId: input.id,
+                name: lead.name,
+                program: studentProgram,
+                status: 'active',
+                location: lead.location ?? 'Tomball HQ',
+              });
+
+              console.log(`[LeadConvert] Lead #${input.id} (${lead.name}) auto-converted to student record.`);
+            }
+          }
+        }
+
         return { success: true };
       }),
 
@@ -6844,6 +6888,95 @@ Please enter your card details below to complete your registration securely. Tot
             notes: input.notes ?? null,
           })
           .where(eq(schema.staffAvailability.id, input.availabilityId));
+        return { success: true };
+      }),
+  }),
+
+  // ─── Student Appointments ─────────────────────────────────────────────────
+  studentAppointments: router({
+    // List all appointments for a student
+    listByStudent: protectedProcedure
+      .input(z.object({ studentId: z.number() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        return db
+          .select()
+          .from(schema.studentAppointments)
+          .where(eq(schema.studentAppointments.studentId, input.studentId))
+          .orderBy(sql`${schema.studentAppointments.scheduledTime} DESC`);
+      }),
+
+    // List upcoming appointments (admin view)
+    listUpcoming: protectedProcedure
+      .query(async () => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        return db
+          .select()
+          .from(schema.studentAppointments)
+          .where(
+            sql`${schema.studentAppointments.status} = 'scheduled'
+                AND ${schema.studentAppointments.scheduledTime} >= NOW()`
+          )
+          .orderBy(sql`${schema.studentAppointments.scheduledTime} ASC`);
+      }),
+
+    // Book a new appointment for a student
+    book: protectedProcedure
+      .input(z.object({
+        studentId: z.number(),
+        studentName: z.string(),
+        studentPhone: z.string(),
+        program: z.string(),
+        scheduledTime: z.date(),
+        location: z.string().optional(),
+        instructor: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const result = await db.insert(schema.studentAppointments).values({
+          studentId: input.studentId,
+          studentName: input.studentName,
+          studentPhone: input.studentPhone,
+          program: input.program,
+          scheduledTime: input.scheduledTime,
+          location: input.location ?? 'HQ - Tomball',
+          instructor: input.instructor ?? null,
+          notes: input.notes ?? null,
+          status: 'scheduled',
+        });
+        return { success: true, id: Number((result as any).insertId) };
+      }),
+
+    // Update appointment status
+    updateStatus: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(['scheduled', 'completed', 'cancelled', 'no_show']),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        await db
+          .update(schema.studentAppointments)
+          .set({ status: input.status })
+          .where(eq(schema.studentAppointments.id, input.id));
+        return { success: true };
+      }),
+
+    // Cancel an appointment
+    cancel: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        await db
+          .update(schema.studentAppointments)
+          .set({ status: 'cancelled' })
+          .where(eq(schema.studentAppointments.id, input.id));
         return { success: true };
       }),
   }),

@@ -11,6 +11,7 @@ import { startDojoFlowSyncJob } from "../dojoFlowSyncJob";
 import { runIntroReminderJob } from "../introReminderJob";
 import { runGHLSyncJob } from "../ghlSyncJob";
 import { runNoShowFollowUpJob } from "../noShowFollowUpJob";
+import { runStudentReminderJob } from "../studentReminderJob";
 import { handleStripeWebhook } from "../stripeWebhook";
 import { handleGHLWebhook } from "../ghlWebhook";
 import { handleFacebookWebhook, verifyFacebookWebhook } from "../facebookWebhook";
@@ -125,6 +126,14 @@ async function startServer() {
       runNoShowFollowUpJob().catch(console.error);
     }, 30 * 60 * 1000); // every 30 minutes
     console.log("[NoShowFollowUp] Scheduled to run every 30 minutes.");
+
+    // Start student appointment 2-hour reminder SMS job — runs every 15 minutes
+    // Texts enrolled students whose class is ~2 hours away
+    runStudentReminderJob().catch(console.error); // run once at startup
+    setInterval(() => {
+      runStudentReminderJob().catch(console.error);
+    }, 15 * 60 * 1000); // every 15 minutes
+    console.log("[StudentReminder] Scheduled to run every 15 minutes.");
   });
 }
 
