@@ -261,10 +261,10 @@ export function ChatGPTChatbot({ onClose }: { onClose: () => void }) {
       case "show_schedule":
         try {
           const mockSlots = [
-            { dayOfWeek: "Monday", formattedDate: "Feb 19", formattedTime: "5:30 PM", isoDateTime: "2026-02-19T17:30:00" },
-            { dayOfWeek: "Tuesday", formattedDate: "Feb 20", formattedTime: "5:30 PM", isoDateTime: "2026-02-20T17:30:00" },
-            { dayOfWeek: "Wednesday", formattedDate: "Feb 21", formattedTime: "5:30 PM", isoDateTime: "2026-02-21T17:30:00" },
-            { dayOfWeek: "Thursday", formattedDate: "Feb 22", formattedTime: "5:30 PM", isoDateTime: "2026-02-22T17:30:00" },
+            { dayOfWeek: "Monday", formattedDate: "Feb 19", formattedTime: "5:00 PM", isoDateTime: "2026-02-19T17:00:00" },
+            { dayOfWeek: "Tuesday", formattedDate: "Feb 20", formattedTime: "5:00 PM", isoDateTime: "2026-02-20T17:00:00" },
+            { dayOfWeek: "Wednesday", formattedDate: "Feb 21", formattedTime: "5:00 PM", isoDateTime: "2026-02-21T17:00:00" },
+            { dayOfWeek: "Thursday", formattedDate: "Feb 22", formattedTime: "5:00 PM", isoDateTime: "2026-02-22T17:00:00" },
             { dayOfWeek: "Saturday", formattedDate: "Feb 24", formattedTime: "10:00 AM", isoDateTime: "2026-02-24T10:00:00" },
             { dayOfWeek: "Saturday", formattedDate: "Feb 24", formattedTime: "11:00 AM", isoDateTime: "2026-02-24T11:00:00" },
           ];

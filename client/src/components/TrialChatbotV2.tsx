@@ -177,7 +177,7 @@ export function TrialChatbotV2({ isOpen, onClose }: { isOpen: boolean; onClose: 
           const mockTimes: TimeSlot[] = [
             { id: "1", time: "5:00 PM", date: "Mon, Feb 17", display: "Mon, Feb 17 at 5:00 PM" },
             { id: "2", time: "6:00 PM", date: "Tue, Feb 18", display: "Tue, Feb 18 at 6:00 PM" },
-            { id: "3", time: "5:30 PM", date: "Wed, Feb 19", display: "Wed, Feb 19 at 5:30 PM" },
+            { id: "3", time: "5:00 PM", date: "Wed, Feb 19", display: "Wed, Feb 19 at 5:00 PM" },
             { id: "4", time: "4:00 PM", date: "Sat, Feb 22", display: "Sat, Feb 22 at 4:00 PM" },
           ];
           

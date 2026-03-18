@@ -369,7 +369,7 @@ export function FullScreenChatIOS({
         if (userData.requiresIntro) {
           setTimeout(() => {
             addAssistantMessage(
-              "Perfect! 🥋\n\nFor kids programs, we require 2 intro orientation classes before regular classes. These help your child get comfortable with our dojo and instructors.\n\nIntro classes are Monday-Thursday at 5:30 PM. Let's book your first intro!"
+              "Perfect! 🥋\n\nFor kids programs, we require 2 intro orientation classes before regular classes. These help your child get comfortable with our dojo and instructors.\n\nIntro classes are Monday-Thursday at 5:00 PM. Let's book your first intro!"
             );
             setStep("showIntroTimes");
           }, 1200);
@@ -504,16 +504,16 @@ export function FullScreenChatIOS({
   ];
 
   const introTimes = [
-    { value: "mon-5:30pm", label: "Monday 5:30 PM" },
-    { value: "tue-5:30pm", label: "Tuesday 5:30 PM" },
-    { value: "wed-5:30pm", label: "Wednesday 5:30 PM" },
-    { value: "thu-5:30pm", label: "Thursday 5:30 PM" },
+    { value: "mon-5:00pm", label: "Monday 5:00 PM" },
+    { value: "tue-5:00pm", label: "Tuesday 5:00 PM" },
+    { value: "wed-5:00pm", label: "Wednesday 5:00 PM" },
+    { value: "thu-5:00pm", label: "Thursday 5:00 PM" },
   ];
 
   const mockTimes = [
     { value: "mon-5pm", label: "Monday 5:00 PM" },
     { value: "wed-6pm", label: "Wednesday 6:00 PM" },
-    { value: "fri-5:30pm", label: "Friday 5:30 PM" },
+    { value: "fri-5:00pm", label: "Friday 5:00 PM" },
     { value: "sat-10am", label: "Saturday 10:00 AM" },
   ];
 

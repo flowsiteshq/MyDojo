@@ -409,11 +409,11 @@ export default function Kickboxing() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 max-w-6xl mx-auto">
             {[
-              { day: "Monday", times: ["6:00 AM", "5:30 PM", "6:30 PM"] },
-              { day: "Tuesday", times: ["6:00 AM", "5:30 PM", "6:30 PM"] },
-              { day: "Wednesday", times: ["6:00 AM", "5:30 PM", "6:30 PM"] },
-              { day: "Thursday", times: ["6:00 AM", "5:30 PM", "6:30 PM"] },
-              { day: "Friday", times: ["6:00 AM", "5:30 PM"] },
+              { day: "Monday", times: ["6:00 AM", "12:00 PM", "5:00 PM", "7:00 PM"] },
+              { day: "Tuesday", times: ["6:00 AM", "5:00 PM", "7:00 PM"] },
+              { day: "Wednesday", times: ["6:00 AM", "12:00 PM", "5:00 PM", "7:00 PM"] },
+              { day: "Thursday", times: ["6:00 AM", "5:00 PM", "7:00 PM"] },
+              { day: "Friday", times: ["6:00 AM", "12:00 PM", "5:00 PM"] },
               { day: "Saturday", times: ["9:00 AM", "10:30 AM"] },
               { day: "Sunday", times: ["9:00 AM", "10:30 AM"] }
             ].map((schedule, index) => (
@@ -487,7 +487,7 @@ export default function Kickboxing() {
                 <div>
                   <h4 className="text-xl font-heading font-bold mb-2">Studio Hours</h4>
                   <p className="text-gray-300">
-                    Monday - Friday: 5:30 AM - 8:30 PM<br />
+                    Monday - Friday: 6:00 AM - 8:00 PM<br />
                     Saturday - Sunday: 8:00 AM - 12:00 PM
                   </p>
                 </div>

@@ -1775,3 +1775,5 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 - [x] Add real-time Active Now indicator to admin sidebar footer showing current check-ins
 - [ ] Fix QR code enrollment flow - route to enrollment page instead of free trial page
 - [ ] Fix FluidPay payment integration not working
+- [ ] Update class schedule: Mon/Wed/Fri add 12 noon Kickboxing + 12 noon Kids class; 5:30 PM Kickboxing → 5:00 PM; 6:30 PM Kickboxing → 7:00 PM
+- [x] Update class schedule: 5:30PM→5:00PM intro class, 6:30PM→7:00PM kickboxing, add Mon/Wed/Fri noon Kickboxing and Dragon Kids & Teens

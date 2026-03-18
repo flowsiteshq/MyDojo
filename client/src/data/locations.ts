@@ -56,9 +56,11 @@ export const locations: Location[] = [
       {
         day: "Monday",
         classes: [
+          { time: "12:00 PM", name: "Kickboxing (Dojo 2)", ageGroup: "Ages 18+" },
+          { time: "12:00 PM", name: "Dragon Kids & Teens", ageGroup: "Ages 5-17" },
           { time: "4:00 PM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
           { time: "5:00 PM", name: "Little Ninjas", ageGroup: "Ages 3-5" },
-          { time: "5:30 PM", name: "Intro Class", ageGroup: "New Students" },
+          { time: "5:00 PM", name: "Intro Class", ageGroup: "New Students" },
           { time: "6:00 PM", name: "Teen Warriors", ageGroup: "Ages 12-17" },
           { time: "7:00 PM", name: "Kickboxing (Dojo 2)", ageGroup: "Ages 18+" }
         ]
@@ -68,7 +70,7 @@ export const locations: Location[] = [
         classes: [
           { time: "4:00 PM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
           { time: "5:00 PM", name: "Little Ninjas", ageGroup: "Ages 3-5" },
-          { time: "5:30 PM", name: "Intro Class", ageGroup: "New Students" },
+          { time: "5:00 PM", name: "Intro Class", ageGroup: "New Students" },
           { time: "6:00 PM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
           { time: "7:00 PM", name: "Adult Karate + Kickboxing", ageGroup: "Ages 18+" },
           { time: "8:00 PM", name: "Kickboxing (Dojo 2)", ageGroup: "Ages 18+" }
@@ -78,10 +80,11 @@ export const locations: Location[] = [
         day: "Wednesday",
         classes: [
           { time: "12:00 PM", name: "Kickboxing (Dojo 2)", ageGroup: "Ages 18+" },
+          { time: "12:00 PM", name: "Dragon Kids & Teens", ageGroup: "Ages 5-17" },
           { time: "2:00 PM", name: "Little Ninjas & Me", ageGroup: "Ages 3-5" },
           { time: "4:00 PM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
           { time: "5:00 PM", name: "Little Ninjas", ageGroup: "Ages 3-5" },
-          { time: "5:30 PM", name: "Intro Class", ageGroup: "New Students" },
+          { time: "5:00 PM", name: "Intro Class", ageGroup: "New Students" },
           { time: "6:00 PM", name: "Teen Warriors", ageGroup: "Ages 12-17" },
           { time: "7:00 PM", name: "Advanced/Black Belt + Kickboxing", ageGroup: "Ages 18+" }
         ]
@@ -92,7 +95,7 @@ export const locations: Location[] = [
           { time: "12:00 PM", name: "Women's Self-Defense", ageGroup: "Women 18+" },
           { time: "4:00 PM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
           { time: "5:00 PM", name: "Little Ninjas", ageGroup: "Ages 3-5" },
-          { time: "5:30 PM", name: "Intro Class", ageGroup: "New Students" },
+          { time: "5:00 PM", name: "Intro Class", ageGroup: "New Students" },
           { time: "6:00 PM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
           { time: "7:00 PM", name: "Adult Karate + Kickboxing", ageGroup: "Ages 18+" },
           { time: "8:00 PM", name: "Kickboxing (Dojo 2)", ageGroup: "Ages 18+" }
@@ -102,6 +105,7 @@ export const locations: Location[] = [
         day: "Friday",
         classes: [
           { time: "12:00 PM", name: "Kickboxing (Dojo 2)", ageGroup: "Ages 18+" },
+          { time: "12:00 PM", name: "Dragon Kids & Teens", ageGroup: "Ages 5-17" },
           { time: "2:00 PM", name: "Little Ninjas & Me", ageGroup: "Ages 3-5" },
           { time: "5:00 PM", name: "Leadership", ageGroup: "Advanced Students" },
           { time: "6:00 PM", name: "Sparring", ageGroup: "Advanced Students" },
