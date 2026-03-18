@@ -33,6 +33,7 @@ const SummerCamp = lazy(() => import("./pages/SummerCamp"));
 const LeadCapture = lazy(() => import("./pages/LeadCapture"));
 const Testimonials = lazy(() => import("./pages/Testimonials"));
 const Kickboxing = lazy(() => import("./pages/Kickboxing"));
+const Homeschool = lazy(() => import("./pages/Homeschool"));
 const Waiver = lazy(() => import("./pages/Waiver"));
 const MemberDashboard = lazy(() => import("./pages/MemberDashboard2"));
 const InstructorDashboard = lazy(() => import("./pages/InstructorDashboard"));
@@ -134,6 +135,7 @@ function Router() {
               <Route path="/" component={Home} />
               <Route path="/programs" component={Programs} />
               <Route path="/programs/kickboxing" component={Kickboxing} />
+              <Route path="/homeschool" component={Homeschool} />
               <Route path="/waiver" component={Waiver} />
               <Route path="/programs/:slug" component={ProgramDetail} />
               <Route path="/summer-camp" component={SummerCamp} />

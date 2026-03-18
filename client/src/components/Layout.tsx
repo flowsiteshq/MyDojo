@@ -20,6 +20,7 @@ const PROGRAM_LINKS = [
   { name: "Kickboxing", path: "/programs#kickboxing", description: "All ages" },
   { name: "After School", path: "/programs#after-school", description: "Ages 5–12" },
   { name: "Summer Camp", path: "/summer-camp", description: "Seasonal" },
+  { name: "Homeschool", path: "/homeschool", description: "Noon classes daily" },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -94,7 +95,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { name: "Learning Center", path: "/blog" },
   ];
 
-  const isOnPrograms = location === "/programs" || location === "/summer-camp" || location.startsWith("/programs");
+  const isOnPrograms = location === "/programs" || location === "/summer-camp" || location === "/homeschool" || location.startsWith("/programs");
 
   return (
     <div className="min-h-screen flex flex-col font-sans relative">
