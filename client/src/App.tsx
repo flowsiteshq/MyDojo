@@ -62,10 +62,36 @@ const Join = lazy(() => import("./pages/Join"));
 const BuyDayPass = lazy(() => import("./pages/BuyDayPass"));
 const Enroll = lazy(() => import("./pages/Enroll"));
 
-// Loading component
+// Loading component — subtle fade-in bar at the top, no jarring red circle
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-white">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+  <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+    {/* Top progress bar */}
+    <div className="fixed top-0 left-0 right-0 h-1 bg-gray-100 z-50">
+      <div
+        className="h-full bg-[#E10600]"
+        style={{
+          animation: "pageload-bar 1.2s ease-in-out infinite",
+          width: "60%",
+          marginLeft: "-10%",
+        }}
+      />
+    </div>
+    {/* Centered logo mark */}
+    <div className="flex flex-col items-center gap-3 opacity-80">
+      <img
+        src="/images/logo-full-black.png"
+        alt="MyDojo"
+        className="h-14 w-auto"
+        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+      />
+    </div>
+    <style>{`
+      @keyframes pageload-bar {
+        0%   { transform: translateX(-100%); }
+        50%  { transform: translateX(100%); }
+        100% { transform: translateX(300%); }
+      }
+    `}</style>
   </div>
 );
 function Router() {
