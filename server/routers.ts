@@ -6658,6 +6658,195 @@ Please enter your card details below to complete your registration securely. Tot
         .orderBy(desc(schema.childProfiles.createdAt));
     }),
   }),
+
+  // ─── Staff Schedule & Availability ───────────────────────────────────────
+  staffSchedule: router({
+    getWeeklySchedule: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
+        throw new TRPCError({ code: 'FORBIDDEN' });
+      }
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      const classes = await db
+        .select()
+        .from(schema.classSchedule)
+        .where(eq(schema.classSchedule.isActive, 1))
+        .orderBy(
+          sql`FIELD(${schema.classSchedule.dayOfWeek},'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')`,
+          asc(schema.classSchedule.startTime)
+        );
+      const assignments = await db
+        .select()
+        .from(schema.staffScheduleAssignments)
+        .where(eq(schema.staffScheduleAssignments.isActive, 1));
+      return { classes, assignments };
+    }),
+
+    getStaffList: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
+        throw new TRPCError({ code: 'FORBIDDEN' });
+      }
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      return db
+        .select({ id: schema.users.id, name: schema.users.name, email: schema.users.email, role: schema.users.role })
+        .from(schema.users)
+        .where(or(eq(schema.users.role, 'admin'), eq(schema.users.role, 'staff')))
+        .orderBy(asc(schema.users.name));
+    }),
+
+    assignStaff: protectedProcedure
+      .input(z.object({
+        classScheduleId: z.number(),
+        staffUserId: z.number(),
+        staffName: z.string(),
+        role: z.enum(['primary', 'backup']).default('primary'),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const existing = await db
+          .select()
+          .from(schema.staffScheduleAssignments)
+          .where(and(
+            eq(schema.staffScheduleAssignments.classScheduleId, input.classScheduleId),
+            eq(schema.staffScheduleAssignments.staffUserId, input.staffUserId),
+          ))
+          .limit(1);
+        if (existing.length > 0) {
+          await db
+            .update(schema.staffScheduleAssignments)
+            .set({ role: input.role, isActive: 1 })
+            .where(eq(schema.staffScheduleAssignments.id, existing[0].id));
+          return { success: true };
+        }
+        await db.insert(schema.staffScheduleAssignments).values({
+          classScheduleId: input.classScheduleId,
+          staffUserId: input.staffUserId,
+          staffName: input.staffName,
+          role: input.role,
+          isActive: 1,
+        });
+        return { success: true };
+      }),
+
+    removeAssignment: protectedProcedure
+      .input(z.object({ assignmentId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        await db
+          .update(schema.staffScheduleAssignments)
+          .set({ isActive: 0 })
+          .where(eq(schema.staffScheduleAssignments.id, input.assignmentId));
+        return { success: true };
+      }),
+
+    getAvailability: protectedProcedure
+      .input(z.object({ startDate: z.string(), endDate: z.string() }))
+      .query(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        return db
+          .select()
+          .from(schema.staffAvailability)
+          .where(and(
+            sql`${schema.staffAvailability.date} >= ${input.startDate}`,
+            sql`${schema.staffAvailability.date} <= ${input.endDate}`,
+          ))
+          .orderBy(asc(schema.staffAvailability.date));
+      }),
+
+    markUnavailable: protectedProcedure
+      .input(z.object({
+        date: z.string(),
+        classScheduleId: z.number().optional(),
+        reason: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const baseConditions = [
+          eq(schema.staffAvailability.staffUserId, ctx.user.id),
+          eq(schema.staffAvailability.date, input.date),
+        ];
+        const existing = await db
+          .select()
+          .from(schema.staffAvailability)
+          .where(and(...baseConditions))
+          .limit(1);
+        if (existing.length > 0) {
+          await db
+            .update(schema.staffAvailability)
+            .set({ status: 'needs_cover', reason: input.reason ?? null })
+            .where(eq(schema.staffAvailability.id, existing[0].id));
+        } else {
+          await db.insert(schema.staffAvailability).values({
+            staffUserId: ctx.user.id,
+            staffName: ctx.user.name ?? ctx.user.email,
+            date: input.date,
+            classScheduleId: input.classScheduleId ?? null,
+            status: 'needs_cover',
+            reason: input.reason ?? null,
+          });
+        }
+        return { success: true };
+      }),
+
+    removeUnavailable: protectedProcedure
+      .input(z.object({ availabilityId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const record = await db
+          .select()
+          .from(schema.staffAvailability)
+          .where(eq(schema.staffAvailability.id, input.availabilityId))
+          .limit(1);
+        if (!record.length) throw new TRPCError({ code: 'NOT_FOUND' });
+        if (ctx.user.role !== 'admin' && record[0].staffUserId !== ctx.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        await db
+          .delete(schema.staffAvailability)
+          .where(eq(schema.staffAvailability.id, input.availabilityId));
+        return { success: true };
+      }),
+
+    assignCover: protectedProcedure
+      .input(z.object({
+        availabilityId: z.number(),
+        coverStaffUserId: z.number(),
+        coverStaffName: z.string(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        await db
+          .update(schema.staffAvailability)
+          .set({
+            status: 'covered',
+            coverStaffUserId: input.coverStaffUserId,
+            coverStaffName: input.coverStaffName,
+            notes: input.notes ?? null,
+          })
+          .where(eq(schema.staffAvailability.id, input.availabilityId));
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

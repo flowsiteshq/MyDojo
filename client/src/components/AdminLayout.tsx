@@ -21,6 +21,7 @@ import {
   Menu,
   X,
   Activity,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { trpc } from "@/lib/trpc";
@@ -162,6 +163,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   // Admin-only tools
   const adminOnlyNavItems = [
     { href: "/admin/staff", label: "Staff", icon: UserPlus },
+    { href: "/admin/staff-schedule", label: "Staff Schedule", icon: CalendarDays },
     { href: "/admin/packages", label: "Packages", icon: PackageIcon },
     { href: "/admin/audit-log", label: "Audit Log", icon: ShieldAlert },
     { href: "/admin/billing", label: "Billing & Webhooks", icon: Webhook },

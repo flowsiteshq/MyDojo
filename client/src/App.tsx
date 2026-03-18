@@ -50,6 +50,7 @@ const AdminAttendance = lazy(() => import("./pages/AdminAttendance"));
 const AdminClasses = lazy(() => import("./pages/AdminClasses"));
 const AdminMilestones = lazy(() => import("./pages/AdminMilestones"));
 const AdminStaff = lazy(() => import("./pages/AdminStaff"));
+const AdminStaffSchedule = lazy(() => import("./pages/AdminStaffSchedule"));
 const AdminPromoBlast = lazy(() => import("./pages/AdminPromoBlast"));
 const AdminMessages = lazy(() => import("./pages/AdminMessages"));
 const AdminAuditLog = lazy(() => import("./pages/AdminAuditLog"));
@@ -119,6 +120,7 @@ function Router() {
         <Route path="/admin/classes" component={AdminClasses} />
         <Route path="/admin/milestones" component={AdminMilestones} />
         <Route path="/admin/staff" component={AdminStaff} />
+        <Route path="/admin/staff-schedule" component={AdminStaffSchedule} />
         <Route path="/admin/promo-blast" component={AdminPromoBlast} />
         <Route path="/admin/messages" component={AdminMessages} />
         <Route path="/admin/audit-log" component={AdminAuditLog} />

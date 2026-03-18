@@ -232,6 +232,13 @@
       "when": 1773863671186,
       "tag": "0032_white_wildside",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "5",
+      "when": 1773865559751,
+      "tag": "0033_parched_kylun",
+      "breakpoints": true
     }
   ]
 }

@@ -1271,3 +1271,56 @@ export const mealPlans = mysqlTable("mealPlans", {
 });
 export type MealPlan = typeof mealPlans.$inferSelect;
 export type InsertMealPlan = typeof mealPlans.$inferInsert;
+
+/**
+ * Staff schedule assignments.
+ * Links a staff member (user) to a recurring class schedule slot as the primary instructor or backup.
+ */
+export const staffScheduleAssignments = mysqlTable("staffScheduleAssignments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The class schedule slot this assignment is for */
+  classScheduleId: int("classScheduleId").notNull(),
+  /** The staff user assigned to this class */
+  staffUserId: int("staffUserId").notNull(),
+  /** Display name of the staff member (denormalized for speed) */
+  staffName: varchar("staffName", { length: 255 }).notNull(),
+  /** Role in this class: primary instructor or backup/cover */
+  role: mysqlEnum("role", ["primary", "backup"]).default("primary").notNull(),
+  /** Whether this assignment is currently active */
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type StaffScheduleAssignment = typeof staffScheduleAssignments.$inferSelect;
+export type InsertStaffScheduleAssignment = typeof staffScheduleAssignments.$inferInsert;
+
+/**
+ * Staff availability overrides.
+ * Staff members mark specific dates when they are unavailable or need their class covered.
+ * Admins can assign a cover instructor.
+ */
+export const staffAvailability = mysqlTable("staffAvailability", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The staff user this availability record is for */
+  staffUserId: int("staffUserId").notNull(),
+  /** Display name (denormalized) */
+  staffName: varchar("staffName", { length: 255 }).notNull(),
+  /** The specific date this override applies to (YYYY-MM-DD) */
+  date: varchar("date", { length: 10 }).notNull(),
+  /** The class schedule slot affected (null = entire day unavailable) */
+  classScheduleId: int("classScheduleId"),
+  /** Status of this availability record */
+  status: mysqlEnum("status", ["unavailable", "needs_cover", "covered"]).default("needs_cover").notNull(),
+  /** Reason for unavailability (optional) */
+  reason: varchar("reason", { length: 500 }),
+  /** The staff user who will cover this class (if covered) */
+  coverStaffUserId: int("coverStaffUserId"),
+  /** Cover staff display name (denormalized) */
+  coverStaffName: varchar("coverStaffName", { length: 255 }),
+  /** Admin notes about this coverage */
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type StaffAvailability = typeof staffAvailability.$inferSelect;
+export type InsertStaffAvailability = typeof staffAvailability.$inferInsert;
