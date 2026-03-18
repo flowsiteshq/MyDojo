@@ -250,7 +250,28 @@ export type InsertChatMessage = typeof chatMessages.$inferInsert;
 export const classSchedule = mysqlTable("classSchedule", {
   id: int("id").autoincrement().primaryKey(),
   /** Program name */
-  program: mysqlEnum("program", ["Little Ninjas", "Dragon Kids", "Teens", "Adult Karate", "Kickboxing", "After School", "Summer Camp"]).notNull(),
+  program: mysqlEnum("program", [
+    "Little Ninjas",
+    "Little Ninjas & Me",
+    "Dragon Kids",
+    "Dragon Kids & Teens",
+    "Teens",
+    "Teen Warriors",
+    "Adult Karate",
+    "Adult Karate + Kickboxing",
+    "Kickboxing",
+    "After School",
+    "Summer Camp",
+    "Intro Class",
+    "Leadership",
+    "Sparring",
+    "Weapons Class",
+    "Women's Self-Defense",
+    "Advanced/Black Belt + Kickboxing",
+    "Family Class",
+    "Instructor Training",
+    "Demo/Competition Team"
+  ]).notNull(),
   /** Location name */
   location: varchar("location", { length: 255 }).notNull(),
   /** Day of week (Monday, Tuesday, etc.) */

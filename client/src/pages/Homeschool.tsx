@@ -21,12 +21,6 @@ export default function Homeschool() {
       ],
     },
     {
-      day: "Tuesday",
-      classes: [
-        { time: "12:00 PM", name: "Intro Class", ageGroup: "New Students", color: "bg-green-100 text-green-700 border-green-200" },
-      ],
-    },
-    {
       day: "Wednesday",
       classes: [
         { time: "12:00 PM", name: "Kickboxing (Dojo 2)", ageGroup: "Ages 18+", color: "bg-red-100 text-red-700 border-red-200" },
@@ -36,13 +30,7 @@ export default function Homeschool() {
     {
       day: "Thursday",
       classes: [
-        { time: "12:00 PM", name: "Intro Class", ageGroup: "New Students", color: "bg-green-100 text-green-700 border-green-200" },
-      ],
-    },
-    {
-      day: "Friday",
-      classes: [
-        { time: "12:00 PM", name: "Kickboxing (Dojo 2)", ageGroup: "Ages 18+", color: "bg-red-100 text-red-700 border-red-200" },
+        { time: "12:00 PM", name: "Women's Self-Defense", ageGroup: "Women 18+", color: "bg-pink-100 text-pink-700 border-pink-200" },
         { time: "12:00 PM", name: "Dragon Kids & Teens", ageGroup: "Ages 5–17", color: "bg-blue-100 text-blue-700 border-blue-200" },
       ],
     },
@@ -93,7 +81,7 @@ export default function Homeschool() {
       ages: "Ages 5–17",
       description:
         "Our flagship kids program teaches traditional martial arts with a modern approach. Students progress through belt ranks, building confidence, discipline, and physical fitness along the way.",
-      image: "/images/program-core-kids.jpg",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/tomball-training-floor_0dcd41df.jpg",
       highlights: ["Belt rank progression", "Character development", "Focus & discipline", "Self-defense techniques"],
     },
     {
@@ -101,7 +89,7 @@ export default function Homeschool() {
       ages: "Ages 18+",
       description:
         "A high-energy, full-body workout that combines real kickboxing techniques with cardio conditioning. Perfect for homeschool parents who want to train while their kids are in class!",
-      image: "/images/featured-kickboxing.jpg",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/tomball-kickboxing-room_e92f87da.jpg",
       highlights: ["Burn 600–800 calories", "Real martial arts techniques", "All fitness levels welcome", "Train alongside your kids"],
     },
   ];
@@ -113,9 +101,14 @@ export default function Homeschool() {
         "Not at all! Our noon classes welcome complete beginners. Our instructors are experienced in working with students of all backgrounds and will meet your child exactly where they are.",
     },
     {
+      question: "Which days are the homeschool noon classes?",
+      answer:
+        "Homeschool noon classes run Monday, Wednesday, and Thursday at 12:00 PM. Dragon Kids & Teens is available all three days, Kickboxing (Dojo 2) runs Monday and Wednesday, and Women's Self-Defense is on Thursday.",
+    },
+    {
       question: "Can I train while my child is in class?",
       answer:
-        "Yes! We offer simultaneous noon Kickboxing for adults and Dragon Kids & Teens classes on Monday, Wednesday, and Friday — so the whole family can train together at the same time.",
+        "Yes! We offer simultaneous noon Kickboxing for adults and Dragon Kids & Teens classes on Monday and Wednesday — so the whole family can train together at the same time.",
     },
     {
       question: "How do I enroll my homeschooled child?",
@@ -142,8 +135,8 @@ export default function Homeschool() {
   return (
     <div className="flex flex-col w-full overflow-x-hidden">
       <SEO
-        title="Homeschool Martial Arts Program | MyDojo – Noon Classes Daily"
-        description="MyDojo offers daily noon classes designed for homeschool families in Tomball, TX. Dragon Kids & Teens and Adult Kickboxing at 12:00 PM Monday–Friday. Book a free trial today!"
+        title="Homeschool Martial Arts Program | MyDojo – Noon Classes Mon/Wed/Thu"
+        description="MyDojo offers noon classes for homeschool families in Tomball, TX. Dragon Kids & Teens and Adult Kickboxing at 12:00 PM Monday, Wednesday & Thursday. Book a free trial today!"
         keywords="homeschool martial arts, homeschool karate, noon classes, homeschool fitness, Tomball TX martial arts, kids martial arts"
       />
 
@@ -151,7 +144,7 @@ export default function Homeschool() {
       <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden bg-black">
         <div className="absolute inset-0">
           <img
-            src="/images/program-core-kids.jpg"
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/tomball-main-floor_284d59f6.jpg"
             alt="Homeschool Martial Arts"
             className="w-full h-full object-cover opacity-40"
           />
@@ -207,9 +200,9 @@ export default function Homeschool() {
             variants={fadeIn}
             className="text-center mb-14"
           >
-            <h2 className="text-primary font-bold tracking-widest uppercase mb-2 text-sm">Daily Schedule</h2>
+            <h2 className="text-primary font-bold tracking-widest uppercase mb-2 text-sm">Weekly Schedule</h2>
             <h3 className="text-4xl md:text-5xl font-heading font-bold text-black">
-              NOON CLASSES, <span className="text-primary">EVERY WEEKDAY</span>
+              NOON CLASSES <span className="text-primary">MON · WED · THU</span>
             </h3>
             <p className="text-gray-600 text-lg mt-4 max-w-2xl mx-auto">
               No more waiting until after school. Our midday classes are designed specifically so homeschool families can
@@ -217,7 +210,7 @@ export default function Homeschool() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {noonClasses.map((day, i) => (
               <motion.div
                 key={day.day}
@@ -367,7 +360,7 @@ export default function Homeschool() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
               { value: "12 PM", label: "Daily Start Time" },
-              { value: "5 Days", label: "Available Per Week" },
+              { value: "3 Days", label: "Mon · Wed · Thu" },
               { value: "All Ages", label: "Kids, Teens & Adults" },
               { value: "Free", label: "First Trial Class" },
             ].map((stat, i) => (
@@ -424,7 +417,7 @@ export default function Homeschool() {
       <section className="py-28 bg-black relative overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="/images/program-teens-adults-branded.png"
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/tomball-main-floor_284d59f6.jpg"
             alt="Join MyDojo"
             className="w-full h-full object-cover opacity-20"
           />

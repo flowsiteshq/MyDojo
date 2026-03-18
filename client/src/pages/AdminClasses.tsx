@@ -11,7 +11,28 @@ import { toast } from "sonner";
 import { Plus, Edit2, Trash2, Calendar, Clock, MapPin, User, ToggleLeft, ToggleRight } from "lucide-react";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
-const PROGRAMS = ["Little Ninjas", "Dragon Kids", "Teens", "Adult Karate", "Kickboxing", "After School", "Summer Camp"] as const;
+const PROGRAMS = [
+  "Little Ninjas",
+  "Little Ninjas & Me",
+  "Dragon Kids",
+  "Dragon Kids & Teens",
+  "Teens",
+  "Teen Warriors",
+  "Adult Karate",
+  "Adult Karate + Kickboxing",
+  "Kickboxing",
+  "After School",
+  "Summer Camp",
+  "Intro Class",
+  "Leadership",
+  "Sparring",
+  "Weapons Class",
+  "Women's Self-Defense",
+  "Advanced/Black Belt + Kickboxing",
+  "Family Class",
+  "Instructor Training",
+  "Demo/Competition Team",
+] as const;
 
 const DAY_ORDER: Record<string, number> = {
   Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3,
@@ -20,12 +41,25 @@ const DAY_ORDER: Record<string, number> = {
 
 const PROGRAM_COLORS: Record<string, string> = {
   "Little Ninjas": "bg-yellow-100 text-yellow-800 border-yellow-200",
+  "Little Ninjas & Me": "bg-yellow-100 text-yellow-800 border-yellow-200",
   "Dragon Kids": "bg-orange-100 text-orange-800 border-orange-200",
+  "Dragon Kids & Teens": "bg-orange-100 text-orange-800 border-orange-200",
   "Teens": "bg-blue-100 text-blue-800 border-blue-200",
+  "Teen Warriors": "bg-blue-100 text-blue-800 border-blue-200",
   "Adult Karate": "bg-red-100 text-red-800 border-red-200",
+  "Adult Karate + Kickboxing": "bg-red-100 text-red-800 border-red-200",
   "Kickboxing": "bg-purple-100 text-purple-800 border-purple-200",
+  "Advanced/Black Belt + Kickboxing": "bg-purple-100 text-purple-800 border-purple-200",
   "After School": "bg-green-100 text-green-800 border-green-200",
   "Summer Camp": "bg-cyan-100 text-cyan-800 border-cyan-200",
+  "Intro Class": "bg-teal-100 text-teal-800 border-teal-200",
+  "Leadership": "bg-indigo-100 text-indigo-800 border-indigo-200",
+  "Sparring": "bg-rose-100 text-rose-800 border-rose-200",
+  "Weapons Class": "bg-gray-100 text-gray-800 border-gray-200",
+  "Women's Self-Defense": "bg-pink-100 text-pink-800 border-pink-200",
+  "Family Class": "bg-lime-100 text-lime-800 border-lime-200",
+  "Instructor Training": "bg-amber-100 text-amber-800 border-amber-200",
+  "Demo/Competition Team": "bg-violet-100 text-violet-800 border-violet-200",
 };
 
 type ClassForm = {

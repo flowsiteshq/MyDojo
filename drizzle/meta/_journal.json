@@ -225,6 +225,13 @@
       "when": 1773668790688,
       "tag": "0031_bent_turbo",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "5",
+      "when": 1773863671186,
+      "tag": "0032_white_wildside",
+      "breakpoints": true
     }
   ]
 }

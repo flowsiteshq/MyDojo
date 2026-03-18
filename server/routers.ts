@@ -5151,7 +5151,16 @@ Please enter your card details below to complete your registration securely. Tot
     // Create a class schedule (admin)
     createClass: protectedProcedure
       .input(z.object({
-        program: z.enum(['Little Ninjas', 'Dragon Kids', 'Teens', 'Adult Karate', 'Kickboxing', 'After School', 'Summer Camp']),
+        program: z.enum([
+          'Little Ninjas', 'Little Ninjas & Me',
+          'Dragon Kids', 'Dragon Kids & Teens',
+          'Teens', 'Teen Warriors',
+          'Adult Karate', 'Adult Karate + Kickboxing',
+          'Kickboxing', 'Advanced/Black Belt + Kickboxing',
+          'After School', 'Summer Camp',
+          'Intro Class', 'Leadership', 'Sparring', 'Weapons Class',
+          "Women's Self-Defense", 'Family Class', 'Instructor Training', 'Demo/Competition Team'
+        ]),
         location: z.string().min(1),
         dayOfWeek: z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']),
         startTime: z.string().min(1),
@@ -5177,7 +5186,16 @@ Please enter your card details below to complete your registration securely. Tot
     updateClass: protectedProcedure
       .input(z.object({
         id: z.number(),
-        program: z.enum(['Little Ninjas', 'Dragon Kids', 'Teens', 'Adult Karate', 'Kickboxing', 'After School', 'Summer Camp']).optional(),
+        program: z.enum([
+          'Little Ninjas', 'Little Ninjas & Me',
+          'Dragon Kids', 'Dragon Kids & Teens',
+          'Teens', 'Teen Warriors',
+          'Adult Karate', 'Adult Karate + Kickboxing',
+          'Kickboxing', 'Advanced/Black Belt + Kickboxing',
+          'After School', 'Summer Camp',
+          'Intro Class', 'Leadership', 'Sparring', 'Weapons Class',
+          "Women's Self-Defense", 'Family Class', 'Instructor Training', 'Demo/Competition Team'
+        ]).optional(),
         location: z.string().min(1).optional(),
         dayOfWeek: z.enum(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']).optional(),
         startTime: z.string().min(1).optional(),
