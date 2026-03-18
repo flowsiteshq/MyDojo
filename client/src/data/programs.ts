@@ -179,5 +179,29 @@ export const programs: Program[] = [
       "Socialization"
     ],
     schedule: "Monday - Friday until 6:30 PM."
+  },
+  {
+    id: "homeschool",
+    title: "Homeschool Program",
+    ages: "All Ages",
+    duration: "45–60 Minutes",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/tomball-main-floor_284d59f6.jpg",
+    description: "Daily noon classes designed specifically for homeschool families. Train at 12:00 PM on Monday, Wednesday, and Thursday — the perfect fit for your homeschool schedule.",
+    longDescription: "MyDojo's Homeschool Program gives homeschool families a structured, midday martial arts class that fits naturally into their school day. Classes run Monday, Wednesday, and Thursday at 12:00 PM. Dragon Kids & Teens trains alongside Adult Kickboxing on Monday and Wednesday, so the whole family can train together. Thursday features Women's Self-Defense alongside Dragon Kids & Teens. Students build discipline, fitness, self-defense skills, and social connections — all while earning physical education credit for their curriculum.",
+    benefits: [
+      "Noon classes Mon, Wed & Thu",
+      "Whole family trains together",
+      "PE credit for your curriculum",
+      "Small group, personal attention",
+      "Social connection for kids"
+    ],
+    features: [
+      "Dragon Kids & Teens (Ages 5–17)",
+      "Adult Kickboxing (Ages 18+)",
+      "Women's Self-Defense (Thu)",
+      "Belt rank progression",
+      "Homeschool co-op discounts available"
+    ],
+    schedule: "Monday, Wednesday & Thursday at 12:00 PM."
   }
 ];

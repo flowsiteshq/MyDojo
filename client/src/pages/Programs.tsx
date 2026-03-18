@@ -59,7 +59,7 @@ export default function Programs() {
             >
               {/* Image Side */}
               <div className="w-full lg:w-1/2">
-                <Link href={`/programs/${program.id}`}>
+                <Link href={program.id === 'homeschool' ? '/homeschool' : `/programs/${program.id}`}>
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl h-[400px] group cursor-pointer">
                     <img 
                       src={program.image} 
@@ -72,7 +72,7 @@ export default function Programs() {
                     
                     {/* Floating Badge */}
                     <div className="absolute top-6 right-6 bg-primary text-white px-6 py-3 rounded-lg shadow-lg font-bold font-heading text-lg transform rotate-3 group-hover:rotate-0 transition-transform duration-300">
-                      Free Trial Available
+                      {program.id === 'homeschool' ? 'Noon Classes' : 'Free Trial Available'}
                     </div>
                   </div>
                 </Link>
@@ -90,7 +90,7 @@ export default function Programs() {
                   </span>
                 </div>
                 
-                <Link href={`/programs/${program.id}`}>
+                <Link href={program.id === 'homeschool' ? '/homeschool' : `/programs/${program.id}`}>
                   <h2 className="text-4xl md:text-5xl font-heading font-bold mb-6 text-black hover:text-primary transition-colors cursor-pointer">
                     {program.title}
                   </h2>
@@ -112,12 +112,12 @@ export default function Programs() {
                 </div>
 
                 <div className="flex flex-wrap gap-4">
-                  <Link href={`/programs/${program.id}`}>
+                  <Link href={program.id === 'homeschool' ? '/homeschool' : `/programs/${program.id}`}>
                     <Button className="bg-black hover:bg-primary text-white px-8 py-6 h-auto font-heading uppercase tracking-wider text-lg transition-colors">
                       Learn More <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
-                  <Link href={`/programs/${program.id}#lead-form`}>
+                  <Link href={program.id === 'homeschool' ? '/homeschool' : `/programs/${program.id}#lead-form`}>
                     <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white px-8 py-6 h-auto font-heading uppercase tracking-wider text-lg transition-colors">
                       Free Trial
                     </Button>
