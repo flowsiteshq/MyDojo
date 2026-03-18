@@ -61,8 +61,8 @@ export const locations: Location[] = [
           { time: "4:00 PM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
           { time: "5:00 PM", name: "Little Ninjas", ageGroup: "Ages 3-5" },
           { time: "5:00 PM", name: "Intro Class", ageGroup: "New Students" },
-          { time: "6:00 PM", name: "Teen Warriors", ageGroup: "Ages 12-17" },
-          { time: "7:00 PM", name: "Kickboxing (Dojo 2)", ageGroup: "Ages 18+" }
+          { time: "6:00 PM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
+          { time: "7:00 PM", name: "Teens & Adults", ageGroup: "Ages 12+" }
         ]
       },
       {
@@ -72,8 +72,7 @@ export const locations: Location[] = [
           { time: "5:00 PM", name: "Little Ninjas", ageGroup: "Ages 3-5" },
           { time: "5:00 PM", name: "Intro Class", ageGroup: "New Students" },
           { time: "6:00 PM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
-          { time: "7:00 PM", name: "Adult Karate + Kickboxing", ageGroup: "Ages 18+" },
-          { time: "8:00 PM", name: "Kickboxing (Dojo 2)", ageGroup: "Ages 18+" }
+          { time: "7:00 PM", name: "Teens & Adults", ageGroup: "Ages 12+" }
         ]
       },
       {
@@ -85,8 +84,8 @@ export const locations: Location[] = [
           { time: "4:00 PM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
           { time: "5:00 PM", name: "Little Ninjas", ageGroup: "Ages 3-5" },
           { time: "5:00 PM", name: "Intro Class", ageGroup: "New Students" },
-          { time: "6:00 PM", name: "Teen Warriors", ageGroup: "Ages 12-17" },
-          { time: "7:00 PM", name: "Advanced/Black Belt + Kickboxing", ageGroup: "Ages 18+" }
+          { time: "6:00 PM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
+          { time: "7:00 PM", name: "Teens & Adults", ageGroup: "Ages 12+" }
         ]
       },
       {
@@ -97,8 +96,7 @@ export const locations: Location[] = [
           { time: "5:00 PM", name: "Little Ninjas", ageGroup: "Ages 3-5" },
           { time: "5:00 PM", name: "Intro Class", ageGroup: "New Students" },
           { time: "6:00 PM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
-          { time: "7:00 PM", name: "Adult Karate + Kickboxing", ageGroup: "Ages 18+" },
-          { time: "8:00 PM", name: "Kickboxing (Dojo 2)", ageGroup: "Ages 18+" }
+          { time: "7:00 PM", name: "Teens & Adults", ageGroup: "Ages 12+" }
         ]
       },
       {
