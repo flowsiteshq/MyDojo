@@ -2,6 +2,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
+import { AdminLayout } from "@/components/AdminLayout";
 import {
   DollarSign,
   CheckCircle,
@@ -253,7 +254,8 @@ export default function AdminCommissions() {
   const totalPaid = commissions?.filter(c => c.status === "paid").reduce((s, c) => s + c.bonusAmountCents, 0) ?? 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <AdminLayout>
+    <div className="bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -444,5 +446,6 @@ export default function AdminCommissions() {
         />
       )}
     </div>
+    </AdminLayout>
   );
 }

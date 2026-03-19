@@ -1,6 +1,7 @@
 import { useState } from "react";
 // Promo Blast v1.1 - St. Patrick's Day campaign
 import { trpc } from "@/lib/trpc";
+import { AdminLayout } from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -75,6 +76,7 @@ export default function AdminPromoBlast() {
   };
 
   return (
+    <AdminLayout>
     <div className="p-6 max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
@@ -209,5 +211,6 @@ export default function AdminPromoBlast() {
         </div>
       )}
     </div>
+    </AdminLayout>
   );
 }

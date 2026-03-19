@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import { AdminLayout } from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ export default function AdminMilestones() {
   const uniqueStudents = new Set(milestones?.map((m) => m.emailSentTo)).size;
 
   return (
+    <AdminLayout>
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div>
@@ -195,5 +197,6 @@ export default function AdminMilestones() {
         </CardContent>
       </Card>
     </div>
+    </AdminLayout>
   );
 }

@@ -3,6 +3,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { AdminLayout } from "@/components/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -372,7 +373,8 @@ export default function AdminEnrollments() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <AdminLayout>
+    <div className="bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
         <div className="container max-w-7xl mx-auto px-4 py-6">
@@ -647,5 +649,6 @@ export default function AdminEnrollments() {
         }}
       />
     </div>
+    </AdminLayout>
   );
 }

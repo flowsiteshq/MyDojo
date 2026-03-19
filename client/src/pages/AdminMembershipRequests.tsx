@@ -1,6 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
+import { AdminLayout } from "@/components/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -115,7 +116,8 @@ export default function AdminMembershipRequests() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
+    <AdminLayout>
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
       <div className="container max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -280,5 +282,6 @@ export default function AdminMembershipRequests() {
         </Dialog>
       </div>
     </div>
+    </AdminLayout>
   );
 }

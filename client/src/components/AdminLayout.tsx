@@ -242,7 +242,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Role badge */}
       {(!isCollapsed || mobile) && (
-        <div className="px-5 pt-3 pb-1">
+        <div className="px-5 pt-2 pb-1">
           <span
             className={`text-xs font-semibold px-2 py-0.5 rounded ${
               isAdmin ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"
@@ -254,7 +254,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-2 py-2 space-y-0 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href;
@@ -265,8 +265,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               title={isCollapsed && !mobile ? item.label : undefined}
               className={`flex items-center gap-3 rounded-lg transition-colors group relative ${
                 isCollapsed && !mobile
-                  ? "justify-center px-2 py-3"
-                  : "px-3 py-2.5"
+                  ? "justify-center px-2 py-2"
+                  : "px-3 py-1.5"
               } ${
                 isActive
                   ? "bg-[#E10600] text-white"
