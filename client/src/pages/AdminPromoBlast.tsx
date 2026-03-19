@@ -12,11 +12,6 @@ import { Megaphone, Send, Users, UserCheck, Loader2, CheckCircle2, AlertCircle }
 
 const TEMPLATES = [
   {
-    name: "🍀 St. Patrick's Day",
-    leadMessage: "🍀 Lucky you found us! This St. Patrick's Day, sign up for Kickboxing, Karate, or Summer Camp at MyDojo and receive 50% off enrollment + a FREE trial class for the whole family. All ages welcome! Offer ends March 17th. Call (877) 4-MYDOJO or visit mydojoma.com 🥋",
-    staffMessage: "🍀 St. Patrick's Day Promo is LIVE! We're offering 50% off enrollment + FREE trial class for Kickboxing, Karate & Summer Camp (all ages). Share with everyone you know! Let's fill those classes! 💪 - MyDojo Team",
-  },
-  {
     name: "🥊 Kickboxing Special",
     leadMessage: "🥊 Ready to burn up to 800 calories in one class? MyDojo's Adult Kickboxing is now enrolling! Get your first month FREE when you sign up this week. All fitness levels welcome. Call (877) 4-MYDOJO or visit mydojoma.com to claim your spot!",
     staffMessage: "🥊 Kickboxing promo is live! First month FREE for new enrollments this week. Push it to your contacts and let's fill the class! 💪 - MyDojo Team",
