@@ -1,0 +1,20 @@
+CREATE TABLE `socialPosts` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`message` text NOT NULL,
+	`imageUrl` varchar(1024),
+	`imageKey` varchar(512),
+	`platforms` enum('facebook','instagram','both') NOT NULL DEFAULT 'both',
+	`status` enum('draft','scheduled','published','failed') NOT NULL DEFAULT 'draft',
+	`scheduledFor` timestamp,
+	`publishedAt` timestamp,
+	`facebookPostId` varchar(255),
+	`instagramPostId` varchar(255),
+	`errorMessage` text,
+	`likes` int DEFAULT 0,
+	`comments` int DEFAULT 0,
+	`shares` int DEFAULT 0,
+	`createdByName` varchar(255),
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `socialPosts_id` PRIMARY KEY(`id`)
+);

@@ -1357,3 +1357,44 @@ export const studentAppointments = mysqlTable("studentAppointments", {
 });
 export type StudentAppointment = typeof studentAppointments.$inferSelect;
 export type InsertStudentAppointment = typeof studentAppointments.$inferInsert;
+
+// ─── Social Media Posts ───────────────────────────────────────────────────────
+/**
+ * Tracks social media posts created and published from the admin panel.
+ * Supports Facebook and Instagram via the Facebook Graph API.
+ */
+export const socialPosts = mysqlTable("socialPosts", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Post caption / message text */
+  message: text("message").notNull(),
+  /** S3 URL of the attached image (if any) */
+  imageUrl: varchar("imageUrl", { length: 1024 }),
+  /** S3 key for the image */
+  imageKey: varchar("imageKey", { length: 512 }),
+  /** Platforms to post to */
+  platforms: mysqlEnum("platforms", ["facebook", "instagram", "both"]).default("both").notNull(),
+  /** Post status */
+  status: mysqlEnum("status", ["draft", "scheduled", "published", "failed"]).default("draft").notNull(),
+  /** When to publish (null = publish immediately) */
+  scheduledFor: timestamp("scheduledFor"),
+  /** When the post was actually published */
+  publishedAt: timestamp("publishedAt"),
+  /** Facebook post ID returned by the Graph API */
+  facebookPostId: varchar("facebookPostId", { length: 255 }),
+  /** Instagram media ID returned by the Graph API */
+  instagramPostId: varchar("instagramPostId", { length: 255 }),
+  /** Error message if publishing failed */
+  errorMessage: text("errorMessage"),
+  /** Facebook likes count (refreshed periodically) */
+  likes: int("likes").default(0),
+  /** Facebook comments count */
+  comments: int("comments").default(0),
+  /** Facebook shares count */
+  shares: int("shares").default(0),
+  /** Admin who created the post */
+  createdByName: varchar("createdByName", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SocialPost = typeof socialPosts.$inferSelect;
+export type InsertSocialPost = typeof socialPosts.$inferInsert;

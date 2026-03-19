@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import { postToFacebook, postToInstagram, getFacebookPostStats, isFacebookConfigured, isInstagramConfigured } from "./socialMedia";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
@@ -6979,7 +6980,174 @@ Please enter your card details below to complete your registration securely. Tot
           .where(eq(schema.studentAppointments.id, input.id));
         return { success: true };
       }),
+   }),
+
+  // ─── Social Media ─────────────────────────────────────────────────────────────
+  socialMedia: router({
+    // Check if credentials are configured
+    getConfig: protectedProcedure
+      .query(() => ({
+        facebookConfigured: isFacebookConfigured(),
+        instagramConfigured: isInstagramConfigured(),
+      })),
+
+    // List all posts
+    listPosts: protectedProcedure
+      .input(z.object({
+        status: z.enum(['draft', 'scheduled', 'published', 'failed', 'all']).default('all'),
+        limit: z.number().min(1).max(100).default(50),
+      }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const query = db.select().from(schema.socialPosts);
+        if (input.status !== 'all') {
+          return query
+            .where(eq(schema.socialPosts.status, input.status))
+            .orderBy(sql`${schema.socialPosts.createdAt} DESC`)
+            .limit(input.limit);
+        }
+        return query
+          .orderBy(sql`${schema.socialPosts.createdAt} DESC`)
+          .limit(input.limit);
+      }),
+
+    // Create a draft post
+    createDraft: protectedProcedure
+      .input(z.object({
+        message: z.string().min(1).max(63206),
+        imageUrl: z.string().url().optional(),
+        imageKey: z.string().optional(),
+        platforms: z.enum(['facebook', 'instagram', 'both']).default('both'),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const result = await db.insert(schema.socialPosts).values({
+          message: input.message,
+          imageUrl: input.imageUrl ?? null,
+          imageKey: input.imageKey ?? null,
+          platforms: input.platforms,
+          status: 'draft',
+          createdByName: ctx.user.name ?? ctx.user.email,
+        });
+        return { success: true, id: Number((result as any).insertId) };
+      }),
+
+    // Publish immediately
+    publishNow: protectedProcedure
+      .input(z.object({
+        message: z.string().min(1).max(63206),
+        imageUrl: z.string().url().optional(),
+        imageKey: z.string().optional(),
+        platforms: z.enum(['facebook', 'instagram', 'both']).default('both'),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+        let facebookPostId: string | null = null;
+        let instagramPostId: string | null = null;
+        let errorMessage: string | null = null;
+        let status: 'published' | 'failed' = 'published';
+
+        try {
+          if (input.platforms === 'facebook' || input.platforms === 'both') {
+            facebookPostId = await postToFacebook(input.message, input.imageUrl);
+          }
+          if ((input.platforms === 'instagram' || input.platforms === 'both') && input.imageUrl) {
+            instagramPostId = await postToInstagram(input.message, input.imageUrl);
+          }
+        } catch (err: unknown) {
+          errorMessage = err instanceof Error ? err.message : String(err);
+          status = 'failed';
+        }
+
+        const result = await db.insert(schema.socialPosts).values({
+          message: input.message,
+          imageUrl: input.imageUrl ?? null,
+          imageKey: input.imageKey ?? null,
+          platforms: input.platforms,
+          status,
+          publishedAt: status === 'published' ? new Date() : null,
+          facebookPostId: facebookPostId ?? null,
+          instagramPostId: instagramPostId ?? null,
+          errorMessage: errorMessage ?? null,
+          createdByName: ctx.user.name ?? ctx.user.email,
+        });
+
+        if (status === 'failed') {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: errorMessage ?? 'Failed to publish post' });
+        }
+        return { success: true, id: Number((result as any).insertId), facebookPostId, instagramPostId };
+      }),
+
+    // Schedule a post for later
+    schedulePost: protectedProcedure
+      .input(z.object({
+        message: z.string().min(1).max(63206),
+        imageUrl: z.string().url().optional(),
+        imageKey: z.string().optional(),
+        platforms: z.enum(['facebook', 'instagram', 'both']).default('both'),
+        scheduledFor: z.date(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        if (input.scheduledFor <= new Date()) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Scheduled time must be in the future' });
+        }
+        const result = await db.insert(schema.socialPosts).values({
+          message: input.message,
+          imageUrl: input.imageUrl ?? null,
+          imageKey: input.imageKey ?? null,
+          platforms: input.platforms,
+          status: 'scheduled',
+          scheduledFor: input.scheduledFor,
+          createdByName: ctx.user.name ?? ctx.user.email,
+        });
+        return { success: true, id: Number((result as any).insertId) };
+      }),
+
+    // Delete a post (draft or failed only)
+    deletePost: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        await db.delete(schema.socialPosts).where(eq(schema.socialPosts.id, input.id));
+        return { success: true };
+      }),
+
+    // Refresh engagement stats for a published post
+    refreshStats: protectedProcedure
+      .input(z.object({ id: z.number(), facebookPostId: z.string() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const stats = await getFacebookPostStats(input.facebookPostId);
+        await db
+          .update(schema.socialPosts)
+          .set({ likes: stats.likes, comments: stats.comments, shares: stats.shares })
+          .where(eq(schema.socialPosts.id, input.id));
+        return stats;
+      }),
+
+    // Upload image for a post (returns S3 URL)
+    uploadImage: protectedProcedure
+      .input(z.object({
+        base64: z.string(),
+        mimeType: z.enum(['image/jpeg', 'image/png', 'image/gif', 'image/webp']),
+        filename: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { storagePut } = await import('./storage');
+        const buffer = Buffer.from(input.base64, 'base64');
+        const suffix = Date.now().toString(36);
+        const key = `social-posts/${suffix}-${input.filename}`;
+        const { url } = await storagePut(key, buffer, input.mimeType);
+        return { url, key };
+      }),
   }),
 });
-
 export type AppRouter = typeof appRouter;

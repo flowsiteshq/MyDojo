@@ -12,6 +12,7 @@ import { runIntroReminderJob } from "../introReminderJob";
 import { runGHLSyncJob } from "../ghlSyncJob";
 import { runNoShowFollowUpJob } from "../noShowFollowUpJob";
 import { runStudentReminderJob } from "../studentReminderJob";
+import { runSocialPostJob } from "../socialPostJob";
 import { handleStripeWebhook } from "../stripeWebhook";
 import { handleGHLWebhook } from "../ghlWebhook";
 import { handleFacebookWebhook, verifyFacebookWebhook } from "../facebookWebhook";
@@ -134,6 +135,14 @@ async function startServer() {
       runStudentReminderJob().catch(console.error);
     }, 15 * 60 * 1000); // every 15 minutes
     console.log("[StudentReminder] Scheduled to run every 15 minutes.");
+
+    // Start social post scheduler job — runs every 5 minutes
+    // Publishes scheduled social media posts when their time arrives
+    runSocialPostJob().catch(console.error); // run once at startup
+    setInterval(() => {
+      runSocialPostJob().catch(console.error);
+    }, 5 * 60 * 1000); // every 5 minutes
+    console.log("[SocialPostJob] Scheduled to run every 5 minutes.");
   });
 }
 
