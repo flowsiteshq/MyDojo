@@ -1,5 +1,6 @@
 import { COOKIE_NAME } from "@shared/const";
 import { postToFacebook, postToInstagram, getFacebookPostStats, isFacebookConfigured, isInstagramConfigured } from "./socialMedia";
+import { getCalendarTasksForMonth, getCalendarTasksForUser, createCalendarTask, updateCalendarTask, deleteCalendarTask, createTimeOffRequest, getTimeOffRequestsForUser, getAllTimeOffRequests, updateTimeOffRequest, getApprovedTimeOffForMonth } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
@@ -7147,6 +7148,144 @@ Please enter your card details below to complete your registration securely. Tot
         const key = `social-posts/${suffix}-${input.filename}`;
         const { url } = await storagePut(key, buffer, input.mimeType);
         return { url, key };
+      }),
+  }),
+
+  // ─── Staff Calendar ────────────────────────────────────────────────────────
+  calendar: router({
+    getTasksForMonth: protectedProcedure
+      .input(z.object({ year: z.number(), month: z.number() }))
+      .query(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        const tasks = await getCalendarTasksForMonth(input.year, input.month);
+        const timeOff = await getApprovedTimeOffForMonth(input.year, input.month);
+        return { tasks, timeOff };
+      }),
+
+    getMyTasks: protectedProcedure
+      .input(z.object({ year: z.number(), month: z.number() }))
+      .query(async ({ input, ctx }) => {
+        return getCalendarTasksForUser(ctx.user.id, input.year, input.month);
+      }),
+
+    createTask: protectedProcedure
+      .input(z.object({
+        title: z.string().min(1).max(255),
+        description: z.string().optional(),
+        taskDate: z.date(),
+        startTime: z.string().optional(),
+        endTime: z.string().optional(),
+        assignedToUserId: z.number().optional(),
+        assignedToName: z.string().optional(),
+        category: z.enum(['class', 'meeting', 'cleaning', 'event', 'training', 'other']).default('other'),
+        priority: z.enum(['low', 'medium', 'high']).default('medium'),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        await createCalendarTask({
+          ...input,
+          createdByUserId: ctx.user.id,
+          createdByName: ctx.user.name ?? ctx.user.email,
+          status: 'pending',
+        });
+        return { success: true };
+      }),
+
+    updateTask: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().min(1).max(255).optional(),
+        description: z.string().optional(),
+        taskDate: z.date().optional(),
+        startTime: z.string().optional(),
+        endTime: z.string().optional(),
+        assignedToUserId: z.number().nullable().optional(),
+        assignedToName: z.string().nullable().optional(),
+        category: z.enum(['class', 'meeting', 'cleaning', 'event', 'training', 'other']).optional(),
+        priority: z.enum(['low', 'medium', 'high']).optional(),
+        status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']).optional(),
+        staffNotes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { id, ...updates } = input;
+        if (ctx.user.role === 'staff') {
+          const allowed: Record<string, unknown> = {};
+          if (updates.status !== undefined) allowed.status = updates.status;
+          if (updates.staffNotes !== undefined) allowed.staffNotes = updates.staffNotes;
+          await updateCalendarTask(id, allowed as any);
+        } else if (ctx.user.role === 'admin') {
+          await updateCalendarTask(id, updates as any);
+        } else {
+          throw new TRPCError({ code: 'FORBIDDEN' });
+        }
+        return { success: true };
+      }),
+
+    deleteTask: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        await deleteCalendarTask(input.id);
+        return { success: true };
+      }),
+
+    requestTimeOff: protectedProcedure
+      .input(z.object({
+        startDate: z.date(),
+        endDate: z.date(),
+        reason: z.string().optional(),
+        type: z.enum(['vacation', 'sick', 'personal', 'emergency', 'other']).default('personal'),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await createTimeOffRequest({
+          userId: ctx.user.id,
+          userName: ctx.user.name ?? ctx.user.email,
+          userEmail: ctx.user.email,
+          ...input,
+          status: 'pending',
+        });
+        return { success: true };
+      }),
+
+    getMyTimeOff: protectedProcedure
+      .query(async ({ ctx }) => {
+        return getTimeOffRequestsForUser(ctx.user.id);
+      }),
+
+    getAllTimeOff: protectedProcedure
+      .query(async ({ ctx }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        return getAllTimeOffRequests();
+      }),
+
+    reviewTimeOff: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(['approved', 'denied']),
+        adminNotes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        await updateTimeOffRequest(input.id, {
+          status: input.status,
+          adminNotes: input.adminNotes,
+          reviewedByUserId: ctx.user.id,
+          reviewedByName: ctx.user.name ?? ctx.user.email,
+          reviewedAt: new Date(),
+        });
+        return { success: true };
+      }),
+
+    getStaffList: protectedProcedure
+      .query(async ({ ctx }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        const db = await getDb();
+        if (!db) return [];
+        return db.select({ id: schema.users.id, name: schema.users.name, email: schema.users.email, role: schema.users.role })
+          .from(schema.users)
+          .where(inArray(schema.users.role, ['staff', 'admin']));
       }),
   }),
 });

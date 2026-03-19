@@ -703,3 +703,105 @@ export async function recordCheckIn(data: {
     isBirthday,
   };
 }
+
+// ─── Staff Calendar DB Helpers ─────────────────────────────────────────────────
+
+export async function getCalendarTasksForMonth(year: number, month: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { calendarTasks } = await import("../drizzle/schema");
+  const { between } = await import("drizzle-orm");
+  const start = new Date(year, month - 1, 1);
+  const end = new Date(year, month, 0, 23, 59, 59);
+  return db.select().from(calendarTasks)
+    .where(between(calendarTasks.taskDate, start, end))
+    .orderBy(calendarTasks.taskDate);
+}
+
+export async function getCalendarTasksForUser(userId: number, year: number, month: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { calendarTasks } = await import("../drizzle/schema");
+  const { between, or, isNull } = await import("drizzle-orm");
+  const start = new Date(year, month - 1, 1);
+  const end = new Date(year, month, 0, 23, 59, 59);
+  return db.select().from(calendarTasks)
+    .where(
+      and(
+        between(calendarTasks.taskDate, start, end),
+        or(eq(calendarTasks.assignedToUserId, userId), isNull(calendarTasks.assignedToUserId))
+      )
+    )
+    .orderBy(calendarTasks.taskDate);
+}
+
+export async function createCalendarTask(task: import("../drizzle/schema").InsertCalendarTask) {
+  const db = await getDb();
+  if (!db) return null;
+  const { calendarTasks } = await import("../drizzle/schema");
+  const [result] = await db.insert(calendarTasks).values(task);
+  return result;
+}
+
+export async function updateCalendarTask(id: number, updates: Partial<import("../drizzle/schema").InsertCalendarTask>) {
+  const db = await getDb();
+  if (!db) return;
+  const { calendarTasks } = await import("../drizzle/schema");
+  await db.update(calendarTasks).set(updates).where(eq(calendarTasks.id, id));
+}
+
+export async function deleteCalendarTask(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  const { calendarTasks } = await import("../drizzle/schema");
+  await db.delete(calendarTasks).where(eq(calendarTasks.id, id));
+}
+
+export async function createTimeOffRequest(req: import("../drizzle/schema").InsertTimeOffRequest) {
+  const db = await getDb();
+  if (!db) return null;
+  const { timeOffRequests } = await import("../drizzle/schema");
+  const [result] = await db.insert(timeOffRequests).values(req);
+  return result;
+}
+
+export async function getTimeOffRequestsForUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { timeOffRequests } = await import("../drizzle/schema");
+  return db.select().from(timeOffRequests)
+    .where(eq(timeOffRequests.userId, userId))
+    .orderBy(desc(timeOffRequests.createdAt));
+}
+
+export async function getAllTimeOffRequests() {
+  const db = await getDb();
+  if (!db) return [];
+  const { timeOffRequests } = await import("../drizzle/schema");
+  return db.select().from(timeOffRequests)
+    .orderBy(desc(timeOffRequests.createdAt));
+}
+
+export async function updateTimeOffRequest(id: number, updates: Partial<import("../drizzle/schema").InsertTimeOffRequest>) {
+  const db = await getDb();
+  if (!db) return;
+  const { timeOffRequests } = await import("../drizzle/schema");
+  await db.update(timeOffRequests).set(updates).where(eq(timeOffRequests.id, id));
+}
+
+export async function getApprovedTimeOffForMonth(year: number, month: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { timeOffRequests } = await import("../drizzle/schema");
+  const { lte, gte } = await import("drizzle-orm");
+  const start = new Date(year, month - 1, 1);
+  const end = new Date(year, month, 0, 23, 59, 59);
+  return db.select().from(timeOffRequests)
+    .where(
+      and(
+        eq(timeOffRequests.status, "approved"),
+        lte(timeOffRequests.startDate, end),
+        gte(timeOffRequests.endDate, start)
+      )
+    );
+}

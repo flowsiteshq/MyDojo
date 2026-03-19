@@ -1398,3 +1398,68 @@ export const socialPosts = mysqlTable("socialPosts", {
 });
 export type SocialPost = typeof socialPosts.$inferSelect;
 export type InsertSocialPost = typeof socialPosts.$inferInsert;
+
+// ─── Staff Calendar ────────────────────────────────────────────────────────────
+
+/** Tasks/events assigned by admin to staff members on specific dates */
+export const calendarTasks = mysqlTable("calendarTasks", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Title of the task or event */
+  title: varchar("title", { length: 255 }).notNull(),
+  /** Optional detailed description */
+  description: text("description"),
+  /** The date this task is assigned to (UTC timestamp) */
+  taskDate: timestamp("taskDate").notNull(),
+  /** Start time (HH:MM 24h) */
+  startTime: varchar("startTime", { length: 5 }),
+  /** End time (HH:MM 24h) */
+  endTime: varchar("endTime", { length: 5 }),
+  /** Assigned staff user ID (null = all staff) */
+  assignedToUserId: int("assignedToUserId"),
+  /** Name of the assigned staff member (denormalized for display) */
+  assignedToName: varchar("assignedToName", { length: 255 }),
+  /** Task category */
+  category: mysqlEnum("category", ["class", "meeting", "cleaning", "event", "training", "other"]).default("other").notNull(),
+  /** Task priority */
+  priority: mysqlEnum("priority", ["low", "medium", "high"]).default("medium").notNull(),
+  /** Task completion status */
+  status: mysqlEnum("status", ["pending", "in_progress", "completed", "cancelled"]).default("pending").notNull(),
+  /** Admin who created the task */
+  createdByUserId: int("createdByUserId").notNull(),
+  createdByName: varchar("createdByName", { length: 255 }),
+  /** Optional notes from the assigned staff member */
+  staffNotes: text("staffNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CalendarTask = typeof calendarTasks.$inferSelect;
+export type InsertCalendarTask = typeof calendarTasks.$inferInsert;
+
+/** Time-off requests submitted by staff members */
+export const timeOffRequests = mysqlTable("timeOffRequests", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Staff member requesting time off */
+  userId: int("userId").notNull(),
+  userName: varchar("userName", { length: 255 }).notNull(),
+  userEmail: varchar("userEmail", { length: 320 }).notNull(),
+  /** Start date of the time-off period */
+  startDate: timestamp("startDate").notNull(),
+  /** End date of the time-off period */
+  endDate: timestamp("endDate").notNull(),
+  /** Reason for the request */
+  reason: text("reason"),
+  /** Type of time off */
+  type: mysqlEnum("type", ["vacation", "sick", "personal", "emergency", "other"]).default("personal").notNull(),
+  /** Admin approval status */
+  status: mysqlEnum("status", ["pending", "approved", "denied"]).default("pending").notNull(),
+  /** Admin who reviewed the request */
+  reviewedByUserId: int("reviewedByUserId"),
+  reviewedByName: varchar("reviewedByName", { length: 255 }),
+  /** Admin notes on the decision */
+  adminNotes: text("adminNotes"),
+  reviewedAt: timestamp("reviewedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type TimeOffRequest = typeof timeOffRequests.$inferSelect;
+export type InsertTimeOffRequest = typeof timeOffRequests.$inferInsert;
