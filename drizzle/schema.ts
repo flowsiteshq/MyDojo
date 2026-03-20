@@ -1482,3 +1482,36 @@ export const arcadeScores = mysqlTable("arcadeScores", {
 });
 export type ArcadeScore = typeof arcadeScores.$inferSelect;
 export type InsertArcadeScore = typeof arcadeScores.$inferInsert;
+
+// ── Intro Offer Purchases ──────────────────────────────────────────────────
+/**
+ * Tracks first-time participant intro offer purchases.
+ * Two packages: $29/3 classes ("starter") and $49/5 classes ("explorer").
+ */
+export const introOfferPurchases = mysqlTable("introOfferPurchases", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Customer name */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Customer email */
+  email: varchar("email", { length: 320 }).notNull(),
+  /** Customer phone */
+  phone: varchar("phone", { length: 30 }),
+  /** Package: "starter" ($29/3 classes) or "explorer" ($49/5 classes) */
+  packageId: mysqlEnum("packageId", ["starter", "explorer"]).notNull(),
+  /** Amount charged in cents */
+  amountCents: int("amountCents").notNull(),
+  /** Number of classes included */
+  classesIncluded: int("classesIncluded").notNull(),
+  /** Classes remaining (decremented on each check-in) */
+  classesRemaining: int("classesRemaining").notNull(),
+  /** FluidPay transaction ID */
+  fpTransactionId: varchar("fpTransactionId", { length: 255 }),
+  /** Payment status */
+  status: mysqlEnum("status", ["pending", "paid", "failed"]).default("pending").notNull(),
+  /** Expiry date (30 days from purchase) */
+  expiresAt: timestamp("expiresAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type IntroOfferPurchase = typeof introOfferPurchases.$inferSelect;
+export type InsertIntroOfferPurchase = typeof introOfferPurchases.$inferInsert;

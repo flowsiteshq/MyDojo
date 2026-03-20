@@ -381,18 +381,42 @@ export default function Kickboxing() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-5xl md:text-7xl font-heading font-bold mb-6">
-              SPECIAL INTRO OFFER: $29
+            <h2 className="text-5xl md:text-7xl font-heading font-bold mb-4">
+              SPECIAL INTRO OFFER
             </h2>
-            <p className="text-2xl md:text-3xl mb-8 max-w-3xl mx-auto">
-              Get 3 kickboxing classes + FREE gloves + nutrition guide
+            <p className="text-2xl md:text-3xl mb-10 max-w-3xl mx-auto">
+              First-time participants only — choose your package
             </p>
-            <a href="https://checkout.dojo-flow.ai/b/4gM9AS1Evfwgfgn7rm9Zm00" target="_blank" rel="noopener noreferrer">
-              <Button className="bg-white text-primary hover:bg-black hover:text-white text-xl px-12 py-8 h-auto font-heading uppercase tracking-wider shadow-2xl transform hover:scale-105 transition-all">
-                PURCHASE NOW
-              </Button>
-            </a>
-            <p className="text-white/90 mt-6 text-lg italic">For first-time clients only. Limit one per person.</p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-8">
+              {/* Starter Pack */}
+              <a href="/intro-offer?package=starter" className="group block w-full sm:w-auto">
+                <div className="relative bg-white/10 border-2 border-white/30 hover:border-white rounded-2xl p-8 text-center transition-all duration-300 hover:scale-105 hover:bg-white/20 min-w-[220px]">
+                  <div className="text-4xl mb-3">🥋</div>
+                  <div className="text-5xl font-black mb-1">$29</div>
+                  <div className="text-xl font-bold mb-2">3 Classes</div>
+                  <div className="text-white/70 text-sm">Starter Pack</div>
+                  <div className="mt-4 bg-white text-primary font-black uppercase tracking-wider px-6 py-3 rounded-xl text-sm group-hover:bg-black group-hover:text-white transition-colors">
+                    Get Started
+                  </div>
+                </div>
+              </a>
+              {/* Explorer Pack */}
+              <a href="/intro-offer?package=explorer" className="group block w-full sm:w-auto">
+                <div className="relative bg-yellow-500/20 border-2 border-yellow-400/60 hover:border-yellow-400 rounded-2xl p-8 text-center transition-all duration-300 hover:scale-105 hover:bg-yellow-500/30 min-w-[220px]">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-yellow-400 text-black text-xs font-black uppercase tracking-wider px-4 py-1 rounded-full">
+                    Best Value
+                  </div>
+                  <div className="text-4xl mb-3">⭐</div>
+                  <div className="text-5xl font-black mb-1">$49</div>
+                  <div className="text-xl font-bold mb-2">5 Classes</div>
+                  <div className="text-white/70 text-sm">Explorer Pack</div>
+                  <div className="mt-4 bg-yellow-400 text-black font-black uppercase tracking-wider px-6 py-3 rounded-xl text-sm group-hover:bg-yellow-300 transition-colors">
+                    Best Deal
+                  </div>
+                </div>
+              </a>
+            </div>
+            <p className="text-white/80 text-lg italic">For first-time clients only. Valid 30 days. No commitment.</p>
           </motion.div>
         </div>
       </section>
@@ -438,9 +462,9 @@ export default function Kickboxing() {
           </div>
 
           <div className="text-center mt-12">
-            <a href="https://checkout.dojo-flow.ai/b/4gM9AS1Evfwgfgn7rm9Zm00" target="_blank" rel="noopener noreferrer">
+            <a href="/intro-offer">
               <Button className="bg-primary hover:bg-primary/90 text-white text-lg px-10 py-6 h-auto font-heading uppercase tracking-wider">
-                BOOK YOUR CLASS
+                GET INTRO OFFER
               </Button>
             </a>
           </div>
@@ -615,9 +639,9 @@ export default function Kickboxing() {
             <p className="text-2xl md:text-3xl text-white/90 mb-12 max-w-3xl mx-auto">
               Join our high-energy kickboxing community and transform your body and mind. Your first class is FREE!
             </p>
-            <a href="https://checkout.dojo-flow.ai/b/4gM9AS1Evfwgfgn7rm9Zm00" target="_blank" rel="noopener noreferrer">
+            <a href="/intro-offer">
               <Button className="bg-white text-primary hover:bg-black hover:text-white text-xl px-12 py-8 h-auto font-heading uppercase tracking-wider shadow-2xl transform hover:scale-105 transition-all">
-                Get Your $29 Trial
+                Get Intro Offer — From $29
               </Button>
             </a>
             <p className="text-white/80 mt-6 text-lg">No experience necessary • All fitness levels welcome • Cancel anytime</p>

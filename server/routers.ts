@@ -3817,6 +3817,99 @@ Please enter your card details below to complete your registration securely. Tot
           transactionId: txn.id,
         };
       }),
+
+    // ── Intro Offer Checkout (FluidPay) ──────────────────────────────────────
+    // Packages: starter ($29/3 classes) | explorer ($49/5 classes)
+    purchaseIntroOffer: publicProcedure
+      .input(z.object({
+        token: z.string().min(1),
+        name: z.string().min(1),
+        email: z.string().email(),
+        phone: z.string().optional(),
+        packageId: z.enum(['starter', 'explorer']),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+
+        const PACKAGES = {
+          starter:  { amountCents: 2900, classesIncluded: 3,  label: 'Intro Offer – 3 Classes' },
+          explorer: { amountCents: 4900, classesIncluded: 5,  label: 'Intro Offer – 5 Classes' },
+        };
+        const pkg = PACKAGES[input.packageId];
+
+        const fluidPayKey = process.env.FLUIDPAY_SECRET_KEY;
+        if (!fluidPayKey) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
+
+        // Charge via FluidPay REST API
+        const chargeRes = await fetch('https://app.fluidpay.com/api/transaction', {
+          method: 'POST',
+          headers: { 'Authorization': fluidPayKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'sale',
+            amount: pkg.amountCents,
+            payment_method: { token: input.token },
+            billing_address: {
+              first_name: input.name.split(' ')[0],
+              last_name: input.name.split(' ').slice(1).join(' ') || '',
+              email: input.email,
+            },
+            order_id: `intro-${input.packageId}-${Date.now()}`,
+            description: `MyDojo ${pkg.label}`,
+          }),
+        });
+
+        const chargeBody = await chargeRes.json() as {
+          status: string;
+          msg: string;
+          data?: { id: string; status: string; response_body?: { card?: { response_text?: string } } };
+        };
+
+        if (chargeBody.status !== 'success' || !chargeBody.data) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: chargeBody.msg || 'Payment failed' });
+        }
+        const txn = chargeBody.data;
+        if (txn.status !== 'approved') {
+          const declineMsg = txn.response_body?.card?.response_text || `Transaction ${txn.status}`;
+          throw new TRPCError({ code: 'BAD_REQUEST', message: `Payment declined: ${declineMsg}` });
+        }
+
+        // Record the purchase
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 30); // 30 days to use classes
+
+        await db.insert(schema.introOfferPurchases).values({
+          name: input.name,
+          email: input.email,
+          phone: input.phone,
+          packageId: input.packageId,
+          amountCents: pkg.amountCents,
+          classesIncluded: pkg.classesIncluded,
+          classesRemaining: pkg.classesIncluded,
+          fpTransactionId: txn.id,
+          status: 'paid',
+          expiresAt,
+        } as any);
+
+        // Notify owner
+        try {
+          const { notifyOwner } = await import('./_core/notification');
+          await notifyOwner({
+            title: `New Intro Offer Purchase – ${pkg.label}`,
+            content: `${input.name} (${input.email}) purchased the ${pkg.label} for $${(pkg.amountCents / 100).toFixed(2)}. Transaction ID: ${txn.id}`,
+          });
+        } catch {}
+
+        return {
+          success: true,
+          name: input.name,
+          packageId: input.packageId,
+          classesIncluded: pkg.classesIncluded,
+          amountCents: pkg.amountCents,
+          transactionId: txn.id,
+          expiresAt,
+        };
+      }),
   }),
   // Admin router for management dashboard
   admin: router({    // Get all intro appointments

@@ -267,6 +267,13 @@
       "when": 1773967365338,
       "tag": "0037_noisy_khan",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "5",
+      "when": 1774012369910,
+      "tag": "0038_flashy_bushwacker",
+      "breakpoints": true
     }
   ]
 }
