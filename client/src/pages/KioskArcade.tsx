@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { Trophy, Zap, Target, Layers, Gamepad2, ArrowLeft, Medal } from "lucide-react";
+import { Trophy, Zap, Target, Layers, Gamepad2, ArrowLeft } from "lucide-react";
 import GameTargetBlitz from "@/games/GameTargetBlitz";
 import GameReactionStrike from "@/games/GameReactionStrike";
 import GameBeltMemory from "@/games/GameBeltMemory";
@@ -59,8 +60,113 @@ const GAMES = [
   },
 ];
 
+// ── Inactivity timer hook ─────────────────────────────────────────────────
+function useInactivityRedirect(
+  enabled: boolean,
+  timeoutSecs: number,
+  onRedirect: () => void
+) {
+  const [countdown, setCountdown] = useState(timeoutSecs);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const reset = useCallback(() => {
+    setCountdown(timeoutSecs);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (!enabled) return;
+
+    intervalRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) return 0;
+        return prev - 1;
+      });
+    }, 1000);
+
+    timerRef.current = setTimeout(() => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      onRedirect();
+    }, timeoutSecs * 1000);
+  }, [enabled, timeoutSecs, onRedirect]);
+
+  useEffect(() => {
+    if (!enabled) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      setCountdown(timeoutSecs);
+      return;
+    }
+    reset();
+    const events = ["touchstart", "touchmove", "mousedown", "mousemove", "keydown", "scroll"];
+    events.forEach((e) => window.addEventListener(e, reset, { passive: true }));
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      events.forEach((e) => window.removeEventListener(e, reset));
+    };
+  }, [enabled, reset]);
+
+  return countdown;
+}
+
+// ── Inactivity countdown bar ──────────────────────────────────────────────
+function InactivityBar({
+  countdown,
+  maxSecs,
+  onGoNow,
+}: {
+  countdown: number;
+  maxSecs: number;
+  onGoNow: () => void;
+}) {
+  const pct = Math.max(0, (countdown / maxSecs) * 100);
+  const urgent = countdown <= 10;
+
+  return (
+    <div
+      className="fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center"
+      style={{ background: "rgba(0,0,0,0.90)", borderTop: "1px solid rgba(255,255,255,0.1)" }}
+    >
+      {/* Progress bar */}
+      <div className="w-full h-1.5" style={{ background: "rgba(255,255,255,0.1)" }}>
+        <div
+          className="h-full transition-all duration-1000 ease-linear"
+          style={{
+            width: `${pct}%`,
+            background: urgent ? "#e10600" : "#22c55e",
+          }}
+        />
+      </div>
+      <div className="flex items-center justify-between w-full px-6 py-3">
+        <p className="text-sm">
+          {urgent ? (
+            <span className="text-red-400 font-bold animate-pulse">
+              Returning to check-in in {countdown}s…
+            </span>
+          ) : (
+            <span className="text-white/50">
+              Auto-returning in{" "}
+              <span className="text-white font-semibold">{countdown}s</span>
+            </span>
+          )}
+        </p>
+        <button
+          onClick={onGoNow}
+          className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold uppercase tracking-wider text-white transition-all active:scale-95"
+          style={{ background: "linear-gradient(135deg, #e10600, #ff4400)" }}
+        >
+          <ArrowLeft className="w-4 h-4" /> Check-In
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Check-in gate ──────────────────────────────────────────────────────────
-function CheckInGate({ onCheckedIn, onSkip }: {
+function CheckInGate({
+  onCheckedIn,
+  onSkip,
+}: {
   onCheckedIn: (student: CheckedInStudent) => void;
   onSkip: () => void;
 }) {
@@ -94,12 +200,16 @@ function CheckInGate({ onCheckedIn, onSkip }: {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8"
-      style={{ background: "radial-gradient(ellipse at center, #1a0000 0%, #000 100%)" }}>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-8 pb-20"
+      style={{ background: "radial-gradient(ellipse at center, #1a0000 0%, #000 100%)" }}
+    >
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="text-7xl mb-4">🎮</div>
-          <h1 className="text-white font-black text-4xl uppercase tracking-wider mb-2">Dojo Arcade</h1>
+          <h1 className="text-white font-black text-4xl uppercase tracking-wider mb-2">
+            Dojo Arcade
+          </h1>
           <p className="text-white/60">Enter your name or phone to track your scores</p>
         </div>
 
@@ -107,16 +217,22 @@ function CheckInGate({ onCheckedIn, onSkip }: {
           <input
             type="text"
             value={query}
-            onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && handleSearch()}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="Name or phone number..."
             className="flex-1 px-4 py-3 rounded-xl text-white placeholder-white/30 text-lg outline-none"
-            style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
+            style={{
+              background: "rgba(255,255,255,0.1)",
+              border: "1px solid rgba(255,255,255,0.2)",
+            }}
             autoFocus
           />
-          <button onClick={handleSearch} disabled={loading}
+          <button
+            onClick={handleSearch}
+            disabled={loading}
             className="px-6 py-3 rounded-xl font-bold text-white uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50"
-            style={{ background: "linear-gradient(135deg, #e10600, #ff4400)" }}>
+            style={{ background: "linear-gradient(135deg, #e10600, #ff4400)" }}
+          >
             {loading ? "..." : "Find"}
           </button>
         </div>
@@ -126,19 +242,30 @@ function CheckInGate({ onCheckedIn, onSkip }: {
         {results.length > 0 && (
           <div className="space-y-2 mb-6">
             {results.map((r, i) => (
-              <button key={i}
-                onClick={() => onCheckedIn({
-                  enrollmentId: r.id,
-                  name: r.studentName || r.customerName || r.name || "Student",
-                })}
+              <button
+                key={i}
+                onClick={() =>
+                  onCheckedIn({
+                    enrollmentId: r.id,
+                    name: r.studentName || r.customerName || r.name || "Student",
+                  })
+                }
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all active:scale-98"
-                style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}>
-                <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-lg text-white"
-                  style={{ background: "linear-gradient(135deg, #e10600, #ff4400)" }}>
+                style={{
+                  background: "rgba(255,255,255,0.1)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                }}
+              >
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center font-black text-lg text-white"
+                  style={{ background: "linear-gradient(135deg, #e10600, #ff4400)" }}
+                >
                   {(r.studentName || r.customerName || r.name || "?").charAt(0)}
                 </div>
                 <div>
-                  <p className="text-white font-bold">{r.studentName || r.customerName || r.name}</p>
+                  <p className="text-white font-bold">
+                    {r.studentName || r.customerName || r.name}
+                  </p>
                   <p className="text-white/40 text-sm">{r.program || "Member"}</p>
                 </div>
                 <ArrowLeft className="ml-auto w-5 h-5 text-white/40 rotate-180" />
@@ -147,9 +274,14 @@ function CheckInGate({ onCheckedIn, onSkip }: {
           </div>
         )}
 
-        <button onClick={onSkip}
+        <button
+          onClick={onSkip}
           className="w-full py-3 rounded-xl font-bold text-white/50 uppercase tracking-wider transition-all active:scale-95"
-          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+          }}
+        >
           Play as Guest
         </button>
       </div>
@@ -169,7 +301,6 @@ function GameMenu({
   onLeaderboard: () => void;
   onBack: () => void;
 }) {
-  // Fetch student's personal high scores
   const { data: studentScores } = trpc.arcade.getStudentScores.useQuery(
     { enrollmentId: student?.enrollmentId ?? 0 },
     { enabled: !!student?.enrollmentId }
@@ -187,44 +318,61 @@ function GameMenu({
   }, [studentScores]);
 
   return (
-    <div className="min-h-screen flex flex-col p-6"
-      style={{ background: "radial-gradient(ellipse at center, #0d0d0d 0%, #000 100%)" }}>
+    <div
+      className="min-h-screen flex flex-col p-6 pb-24"
+      style={{ background: "radial-gradient(ellipse at center, #0d0d0d 0%, #000 100%)" }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <button onClick={onBack}
-          className="flex items-center gap-2 text-white/50 hover:text-white text-sm uppercase tracking-wider transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-white/50 hover:text-white text-sm uppercase tracking-wider transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Check-In
         </button>
         <div className="text-center">
-          <h1 className="text-white font-black text-2xl uppercase tracking-wider">🎮 Dojo Arcade</h1>
+          <h1 className="text-white font-black text-2xl uppercase tracking-wider">
+            🎮 Dojo Arcade
+          </h1>
           {student && (
-            <p className="text-white/50 text-sm">Playing as <span className="text-white font-bold">{student.name}</span></p>
+            <p className="text-white/50 text-sm">
+              Playing as{" "}
+              <span className="text-white font-bold">{student.name}</span>
+            </p>
           )}
         </div>
-        <button onClick={onLeaderboard}
-          className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 text-sm uppercase tracking-wider transition-colors">
+        <button
+          onClick={onLeaderboard}
+          className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 text-sm uppercase tracking-wider transition-colors"
+        >
           <Trophy className="w-4 h-4" /> Board
         </button>
       </div>
 
       {/* Game grid */}
       <div className="grid grid-cols-2 gap-4 flex-1">
-        {GAMES.map(game => {
+        {GAMES.map((game) => {
           const hs = highScoreMap[game.id] ?? 0;
           return (
-            <button key={game.id} onClick={() => onSelectGame(game.id)}
+            <button
+              key={game.id}
+              onClick={() => onSelectGame(game.id)}
               className="relative rounded-2xl p-6 flex flex-col items-center gap-3 text-center transition-all active:scale-95 overflow-hidden"
               style={{
                 background: `linear-gradient(135deg, ${game.color}20 0%, rgba(0,0,0,0.8) 100%)`,
                 border: `2px solid ${game.color}40`,
                 boxShadow: `0 0 20px ${game.glow}`,
-              }}>
-              {/* Glow orb */}
-              <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-20 blur-2xl"
-                style={{ background: game.color, transform: "translate(30%, -30%)" }} />
+              }}
+            >
+              <div
+                className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-20 blur-2xl"
+                style={{ background: game.color, transform: "translate(30%, -30%)" }}
+              />
               <div className="text-5xl">{game.emoji}</div>
               <div>
-                <p className="text-white font-black text-lg uppercase tracking-wide">{game.name}</p>
+                <p className="text-white font-black text-lg uppercase tracking-wide">
+                  {game.name}
+                </p>
                 <p className="text-white/50 text-xs mt-0.5">{game.desc}</p>
               </div>
               {hs > 0 && (
@@ -248,14 +396,18 @@ function Leaderboard({ onBack }: { onBack: () => void }) {
     limit: 10,
   });
 
-  const game = GAMES.find(g => g.id === activeGame)!;
+  const game = GAMES.find((g) => g.id === activeGame)!;
 
   return (
-    <div className="min-h-screen flex flex-col p-6"
-      style={{ background: "radial-gradient(ellipse at center, #0d0d0d 0%, #000 100%)" }}>
+    <div
+      className="min-h-screen flex flex-col p-6 pb-24"
+      style={{ background: "radial-gradient(ellipse at center, #0d0d0d 0%, #000 100%)" }}
+    >
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={onBack}
-          className="flex items-center gap-2 text-white/50 hover:text-white text-sm uppercase tracking-wider transition-colors">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-white/50 hover:text-white text-sm uppercase tracking-wider transition-colors"
+        >
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
         <h1 className="text-white font-black text-2xl uppercase tracking-wider flex-1 text-center">
@@ -266,14 +418,17 @@ function Leaderboard({ onBack }: { onBack: () => void }) {
 
       {/* Game tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-        {GAMES.map(g => (
-          <button key={g.id} onClick={() => setActiveGame(g.id)}
+        {GAMES.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => setActiveGame(g.id)}
             className="flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm uppercase tracking-wider transition-all"
             style={{
               background: activeGame === g.id ? g.color : "rgba(255,255,255,0.08)",
               color: activeGame === g.id ? "#fff" : "rgba(255,255,255,0.5)",
               border: `1px solid ${activeGame === g.id ? g.color : "rgba(255,255,255,0.1)"}`,
-            }}>
+            }}
+          >
             {g.emoji} {g.name}
           </button>
         ))}
@@ -295,12 +450,14 @@ function Leaderboard({ onBack }: { onBack: () => void }) {
             const medals = ["🥇", "🥈", "🥉"];
             const medal = medals[i] ?? `#${i + 1}`;
             return (
-              <div key={s.id}
+              <div
+                key={s.id}
                 className="flex items-center gap-4 px-5 py-4 rounded-xl"
                 style={{
                   background: i === 0 ? `${game.color}20` : "rgba(255,255,255,0.05)",
                   border: `1px solid ${i === 0 ? `${game.color}40` : "rgba(255,255,255,0.08)"}`,
-                }}>
+                }}
+              >
                 <span className="text-2xl w-8 text-center">{medal}</span>
                 <div className="flex-1">
                   <p className="text-white font-bold">{s.studentName}</p>
@@ -309,7 +466,9 @@ function Leaderboard({ onBack }: { onBack: () => void }) {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-black text-xl" style={{ color: game.color }}>{s.score}</p>
+                  <p className="font-black text-xl" style={{ color: game.color }}>
+                    {s.score}
+                  </p>
                   <p className="text-white/30 text-xs">pts</p>
                 </div>
               </div>
@@ -326,8 +485,18 @@ export default function KioskArcade() {
   const [screen, setScreen] = useState<ArcadeScreen>("checkin");
   const [student, setStudent] = useState<CheckedInStudent | null>(null);
   const [activeGame, setActiveGame] = useState<GameId | null>(null);
+  const [, setLocation] = useLocation();
 
   const saveScore = trpc.arcade.saveScore.useMutation();
+
+  // Redirect back to check-in screen
+  const handleReturnToCheckIn = useCallback(() => {
+    setLocation("/check-in");
+  }, [setLocation]);
+
+  // Only run inactivity timer when NOT actively playing a game
+  const inactivityEnabled = screen !== "playing";
+  const countdown = useInactivityRedirect(inactivityEnabled, 30, handleReturnToCheckIn);
 
   const handleCheckedIn = (s: CheckedInStudent) => {
     setStudent(s);
@@ -346,7 +515,7 @@ export default function KioskArcade() {
 
   const handleGameOver = async (score: number) => {
     if (!activeGame) return;
-    const game = GAMES.find(g => g.id === activeGame)!;
+    const game = GAMES.find((g) => g.id === activeGame)!;
     if (student) {
       try {
         await saveScore.mutateAsync({
@@ -363,7 +532,6 @@ export default function KioskArcade() {
         console.error("Failed to save score:", e);
       }
     }
-    // Stay on the game's gameover screen — game component handles "play again" / "back"
   };
 
   const handleBackToMenu = () => {
@@ -373,21 +541,28 @@ export default function KioskArcade() {
 
   // ── Render ──
   if (screen === "checkin") {
-    return <CheckInGate onCheckedIn={handleCheckedIn} onSkip={handleSkip} />;
+    return (
+      <div className="relative">
+        <CheckInGate onCheckedIn={handleCheckedIn} onSkip={handleSkip} />
+        <InactivityBar countdown={countdown} maxSecs={30} onGoNow={handleReturnToCheckIn} />
+      </div>
+    );
   }
 
   if (screen === "leaderboard") {
-    return <Leaderboard onBack={() => setScreen("menu")} />;
+    return (
+      <div className="relative">
+        <Leaderboard onBack={() => setScreen("menu")} />
+        <InactivityBar countdown={countdown} maxSecs={30} onGoNow={handleReturnToCheckIn} />
+      </div>
+    );
   }
 
   if (screen === "playing" && activeGame) {
-    const game = GAMES.find(g => g.id === activeGame)!;
-    const highScore = 0; // Could fetch from student scores if needed
-
     const commonProps = {
       onGameOver: handleGameOver,
       onBack: handleBackToMenu,
-      highScore,
+      highScore: 0,
     };
 
     return (
@@ -400,12 +575,16 @@ export default function KioskArcade() {
     );
   }
 
+  // Game menu screen
   return (
-    <GameMenu
-      student={student}
-      onSelectGame={handleSelectGame}
-      onLeaderboard={() => setScreen("leaderboard")}
-      onBack={() => setScreen("checkin")}
-    />
+    <div className="relative">
+      <GameMenu
+        student={student}
+        onSelectGame={handleSelectGame}
+        onLeaderboard={() => setScreen("leaderboard")}
+        onBack={handleReturnToCheckIn}
+      />
+      <InactivityBar countdown={countdown} maxSecs={30} onGoNow={handleReturnToCheckIn} />
+    </div>
   );
 }
