@@ -2,13 +2,13 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, Clock, Calendar, User, MapPin, QrCode } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { CheckCircle2, Clock, Calendar, User, MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
-import { QRScanner } from "@/components/QRScanner";
 
 export default function CheckIn() {
   const [checkingIn, setCheckingIn] = useState<number | null>(null);
-  const [showScanner, setShowScanner] = useState(false);
+  const [searchName, setSearchName] = useState("");
 
   // Get today's classes
   const { data: classes, isLoading, refetch } = trpc.attendance.getTodayClasses.useQuery();
@@ -65,24 +65,19 @@ export default function CheckIn() {
           <p className="text-gray-400 text-lg">
             {todayName}, {todayDate}
           </p>
-          <div className="mt-6">
-            <Button
-              onClick={() => setShowScanner(true)}
-              className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-6 text-lg"
-            >
-              <QrCode className="h-6 w-6 mr-2" />
-              Scan QR Code
-            </Button>
+          <div className="mt-6 max-w-md mx-auto">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search your name to check in..."
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                className="pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400 text-lg py-6"
+              />
+            </div>
           </div>
         </div>
-
-        {/* QR Scanner Modal */}
-        {showScanner && (
-          <QRScanner
-            onClose={() => setShowScanner(false)}
-            onSuccess={() => refetch()}
-          />
-        )}
 
         {/* Classes List */}
         {!classes || classes.length === 0 ? (

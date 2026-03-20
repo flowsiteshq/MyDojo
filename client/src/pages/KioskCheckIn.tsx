@@ -3,9 +3,8 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { QRScanner } from "@/components/QRScanner";
 import confetti from "canvas-confetti";
-import { Cake, Trophy, Flame, Star, QrCode, Phone, User, Camera, Ticket } from "lucide-react";
+import { Cake, Trophy, Flame, Star, Phone, User, Ticket, Search } from "lucide-react";
 import { soundManager } from "@/lib/soundManager";
 import { KioskAdminLock } from "@/components/KioskAdminLock";
 import { KioskDayPass } from "@/components/KioskDayPass";
@@ -75,7 +74,6 @@ export default function KioskCheckIn() {
   const [searchName, setSearchName] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [selectedClass, setSelectedClass] = useState<any>(null);
-  const [showQRScanner, setShowQRScanner] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(0);
   const [showFlashOverlay, setShowFlashOverlay] = useState(false);
   const [checkedInStudent, setCheckedInStudent] = useState<any>(null);
@@ -122,7 +120,6 @@ export default function KioskCheckIn() {
       alert("Check-in failed. Please try again or see staff for assistance.");
     }
   });
-  const checkInViaQRMutation = trpc.attendance.checkInViaQR.useMutation();
   const introCheckInMutation = trpc.kiosk.introCheckIn.useMutation();
 
   const handlePhoneSearch = async () => {
@@ -199,7 +196,6 @@ export default function KioskCheckIn() {
     setSearchName("");
     setSelectedStudent(null);
     setSelectedClass(null);
-    setShowQRScanner(false);
     setCountdownSeconds(0);
     setSearchResults([]);
     setSearchError(null);
@@ -234,18 +230,6 @@ export default function KioskCheckIn() {
     } catch (error) {
       console.error("Check-in failed:", error);
       // Error handling is done in onError callback
-    }
-  };
-
-  const handleQRScan = async (qrCode: string) => {
-    try {
-      const result = await checkInViaQRMutation.mutateAsync({ qrData: qrCode });
-      // soundManager.play("success");
-      // QR scan successful, go to success screen directly
-      setScreen("success");
-    } catch (error) {
-      console.error("QR check-in failed:", error);
-      // soundManager.play("error");
     }
   };
 
@@ -432,19 +416,7 @@ export default function KioskCheckIn() {
               {/* Target Blitz mini-game */}
               <KioskMiniGame />
 
-              {/* QR Scan button below the game */}
-              <button
-                onClick={() => setShowQRScanner(true)}
-                className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-bold text-white text-lg uppercase tracking-wider transition-all active:scale-95"
-                style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  boxShadow: '0 0 20px rgba(255,255,255,0.05)',
-                }}
-              >
-                <Camera className="w-6 h-6 text-white/70" />
-                Or Scan Your QR Code
-              </button>
+
             </div>
 
             {/* Check-in Notice */}
@@ -658,22 +630,7 @@ export default function KioskCheckIn() {
           </div>
         </div>
 
-        {/* QR Scanner Modal */}
-        {showQRScanner && (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-8">
-            <div className="bg-white rounded-3xl p-8 max-w-2xl w-full">
-              <h2 className="text-3xl font-black text-gray-900 mb-6 text-center">SCAN YOUR QR CODE</h2>
-              <QRScanner onScan={handleQRScan} />
-              <Button
-                onClick={() => setShowQRScanner(false)}
-                variant="outline"
-                className="w-full mt-6"
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
+
       </>
     );
   }
@@ -724,22 +681,7 @@ export default function KioskCheckIn() {
           <h2 className="text-4xl font-black text-white mb-8 text-center drop-shadow-[0_0_40px_rgba(225,6,0,0.9)]">HOW WOULD YOU LIKE TO CHECK IN?</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <button
-              onClick={() => setIdentMethod("qr")}
-              className={`p-8 rounded-2xl border-2 transition-all hover:scale-105 ${
-                identMethod === "qr"
-                  ? "border-[#E10600] bg-[#E10600]/30"
-                  : "border-[#E10600]/40 bg-black/40 hover:bg-black/60"
-              }`}
-              style={identMethod === "qr" ? {
-                boxShadow: '0 0 40px rgba(225, 6, 0, 0.8), inset 0 0 20px rgba(225, 6, 0, 0.2)'
-              } : {
-                boxShadow: '0 0 20px rgba(225, 6, 0, 0.3)'
-              }}
-            >
-              <QrCode className="w-16 h-16 mx-auto mb-4 text-white drop-shadow-lg" />
-              <p className="text-white font-bold text-center drop-shadow-lg">QR Code</p>
-            </button>
+
             
             <button
               onClick={() => setIdentMethod("phone")}
@@ -851,11 +793,7 @@ export default function KioskCheckIn() {
             </div>
           )}
 
-          {identMethod === "qr" && (
-            <div className="bg-white/5 rounded-2xl p-8">
-              <QRScanner onScan={handleQRScan} />
-            </div>
-          )}
+
 
           <Button
             onClick={handleReset}
