@@ -8,7 +8,6 @@ import { Cake, Trophy, Flame, Star, Phone, User, Ticket, Search } from "lucide-r
 import { soundManager } from "@/lib/soundManager";
 import { KioskAdminLock } from "@/components/KioskAdminLock";
 import { KioskDayPass } from "@/components/KioskDayPass";
-import { KioskMiniGame } from "@/components/KioskMiniGame";
 import { KioskEnrollQR } from "@/components/KioskEnrollQR";
 
 type KioskScreen = "idle" | "identification" | "confirmation" | "success" | "dayPass" | "enroll";
@@ -411,12 +410,26 @@ export default function KioskCheckIn() {
                 </div>
               </button>
             </div>
-            {/* MINI GAME + QR SCAN PANEL */}
-            <div className="max-w-2xl mx-auto w-full mb-8 space-y-4">
-              {/* Target Blitz mini-game */}
-              <KioskMiniGame />
-
-
+            {/* ARCADE BUTTON */}
+            <div className="max-w-3xl mx-auto w-full mb-6">
+              <a
+                href="/arcade"
+                className="w-full group relative overflow-hidden rounded-2xl p-px transition-all duration-300 hover:scale-105 block"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(168,85,247,0.5) 0%, rgba(59,130,246,0.3) 100%)',
+                  boxShadow: '0 0 30px rgba(168,85,247,0.3)'
+                }}
+              >
+                <div className="relative bg-black/60 backdrop-blur-xl rounded-2xl py-5 px-10 flex items-center justify-center gap-4 border border-purple-500/30">
+                  <span className="text-3xl">🎮</span>
+                  <span className="text-2xl font-black text-white uppercase tracking-wider">
+                    Play Arcade Games
+                  </span>
+                  <span className="ml-auto bg-purple-500/30 text-purple-300 text-sm font-bold px-3 py-1 rounded-full border border-purple-500/40">
+                    4 Games
+                  </span>
+                </div>
+              </a>
             </div>
 
             {/* Check-in Notice */}

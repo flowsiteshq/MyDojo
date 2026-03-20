@@ -1,4 +1,4 @@
-import { boolean, int, json, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal } from "drizzle-orm/mysql-core";
+import { boolean, bigint, int, json, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -1463,3 +1463,22 @@ export const timeOffRequests = mysqlTable("timeOffRequests", {
 });
 export type TimeOffRequest = typeof timeOffRequests.$inferSelect;
 export type InsertTimeOffRequest = typeof timeOffRequests.$inferInsert;
+
+
+// ── Arcade Game Scores ──────────────────────────────────────────────────────
+/** Stores game scores from the kiosk arcade, linked to student enrollment */
+export const arcadeScores = mysqlTable("arcadeScores", {
+  id: int("id").autoincrement().primaryKey(),
+  enrollmentId: int("enrollment_id").notNull(),
+  studentName: varchar("student_name", { length: 255 }).notNull(),
+  gameId: varchar("game_id", { length: 50 }).notNull(), // "target-blitz" | "reaction-strike" | "belt-memory" | "combo-rush"
+  gameName: varchar("game_name", { length: 100 }).notNull(),
+  score: int("score").notNull().default(0),
+  level: int("level").default(1),
+  duration: int("duration").default(0), // seconds played
+  checkedIn: int("checked_in").default(0), // 1 if this game session also triggered a check-in
+  playedAt: bigint("played_at", { mode: "number" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export type ArcadeScore = typeof arcadeScores.$inferSelect;
+export type InsertArcadeScore = typeof arcadeScores.$inferInsert;

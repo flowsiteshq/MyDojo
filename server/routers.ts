@@ -7288,5 +7288,77 @@ Please enter your card details below to complete your registration securely. Tot
           .where(inArray(schema.users.role, ['staff', 'admin']));
       }),
   }),
+
+  // ── Arcade ──────────────────────────────────────────────────────────────
+  arcade: router({
+    /** Save a game score after a student finishes a game */
+    saveScore: publicProcedure
+      .input(z.object({
+        enrollmentId: z.number(),
+        studentName: z.string(),
+        gameId: z.string(),
+        gameName: z.string(),
+        score: z.number(),
+        level: z.number().optional().default(1),
+        duration: z.number().optional().default(0),
+        checkedIn: z.number().optional().default(0),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB not available' });
+        await db.insert(schema.arcadeScores).values({
+          enrollmentId: input.enrollmentId,
+          studentName: input.studentName,
+          gameId: input.gameId,
+          gameName: input.gameName,
+          score: input.score,
+          level: input.level ?? 1,
+          duration: input.duration ?? 0,
+          checkedIn: input.checkedIn ?? 0,
+          playedAt: Date.now(),
+        });
+        return { success: true };
+      }),
+
+    /** Get top scores for a specific game (leaderboard) */
+    getLeaderboard: publicProcedure
+      .input(z.object({
+        gameId: z.string(),
+        limit: z.number().optional().default(10),
+      }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return [];
+        return db.select()
+          .from(schema.arcadeScores)
+          .where(eq(schema.arcadeScores.gameId, input.gameId))
+          .orderBy(desc(schema.arcadeScores.score))
+          .limit(input.limit);
+      }),
+
+    /** Get all scores for a specific student */
+    getStudentScores: publicProcedure
+      .input(z.object({ enrollmentId: z.number() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return [];
+        return db.select()
+          .from(schema.arcadeScores)
+          .where(eq(schema.arcadeScores.enrollmentId, input.enrollmentId))
+          .orderBy(desc(schema.arcadeScores.playedAt))
+          .limit(50);
+      }),
+
+    /** Get all-time top scores across all games */
+    getAllTimeLeaderboard: publicProcedure
+      .query(async () => {
+        const db = await getDb();
+        if (!db) return [];
+        return db.select()
+          .from(schema.arcadeScores)
+          .orderBy(desc(schema.arcadeScores.score))
+          .limit(20);
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;
