@@ -72,8 +72,8 @@ export default function SummerCamp() {
     },
     { 
       dates: "July 24-28", 
-      theme: "Water Warriors Week", 
-      fieldTrip: "Water Park Day!",
+      theme: "Water Gun Fun Week", 
+      fieldTrip: "Water Gun Battle Day!",
       available: true,
       color: "from-cyan-400 to-blue-500",
       image: "/images/camp-weeks/water-park.jpg"
