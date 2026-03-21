@@ -76,7 +76,7 @@ export default function SummerCamp() {
       fieldTrip: "Water Gun Battle Day!",
       available: true,
       color: "from-cyan-400 to-blue-500",
-      image: "/images/camp-weeks/water-park.jpg"
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/water-gun-fun_20404a48.jpg"
     },
     { 
       dates: "July 31 - Aug 4", 
