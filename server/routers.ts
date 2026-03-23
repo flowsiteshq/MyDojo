@@ -7635,5 +7635,140 @@ Please enter your card details below to complete your registration securely. Tot
           .where(or(eq(schema.users.role, 'staff'), eq(schema.users.role, 'admin')));
       }),
   }),
+
+  // ── Family Discount Router ─────────────────────────────────────────────────
+  family: router({
+    /** Create a new family group and charge the one-time $99 registration fee via FluidPay */
+    createFamilyGroup: publicProcedure
+      .input(z.object({
+        primaryContactName: z.string().min(2),
+        primaryContactEmail: z.string().email(),
+        primaryContactPhone: z.string().optional(),
+        cardToken: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
+        const FLUIDPAY_KEY = process.env.FLUIDPAY_SECRET_KEY || '';
+        // 1. Create customer vault
+        const vaultRes = await fetch(`${FLUIDPAY_API_URL}/api/customer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': FLUIDPAY_KEY },
+          body: JSON.stringify({
+            description: `Family: ${input.primaryContactName}`,
+            payment_method: { card: { token_id: input.cardToken } },
+          }),
+        });
+        const vaultData = await vaultRes.json() as any;
+        const fpCustomerId = vaultData?.data?.id;
+        if (!fpCustomerId) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create payment vault' });
+        // 2. Charge $99 family registration fee
+        const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': FLUIDPAY_KEY },
+          body: JSON.stringify({
+            type: 'sale',
+            amount: 9900,
+            currency: 'USD',
+            payment_method: { customer: { id: fpCustomerId } },
+            billing_address: {
+              first_name: input.primaryContactName.split(' ')[0],
+              last_name: input.primaryContactName.split(' ').slice(1).join(' ') || 'Family',
+              email: input.primaryContactEmail,
+            },
+            order_id: `FAMILY-REG-${Date.now()}`,
+            description: 'MyDojo Family Registration Fee',
+          }),
+        });
+        const chargeData = await chargeRes.json() as any;
+        if (chargeData?.data?.status !== 'pending_settlement' && chargeData?.data?.status !== 'approved') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: chargeData?.msg || 'Payment failed. Please check your card details.' });
+        }
+        const txId = chargeData?.data?.id;
+        // 3. Save family group
+        const [result] = await db.insert(schema.familyGroups).values({
+          primaryContactName: input.primaryContactName,
+          primaryContactEmail: input.primaryContactEmail,
+          primaryContactPhone: input.primaryContactPhone,
+          registrationFeePaid: 1,
+          registrationFeeTransactionId: txId,
+          registrationFeeAmount: '99.00',
+          registrationFeePaidAt: new Date(),
+          fluidpayCustomerId: fpCustomerId,
+        });
+        const familyGroupId = (result as any).insertId;
+        return { familyGroupId, fpCustomerId, txId, success: true };
+      }),
+
+    /** Look up a family group by email */
+    getFamilyGroupByEmail: publicProcedure
+      .input(z.object({ email: z.string().email() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return null;
+        const groups = await db.select().from(schema.familyGroups)
+          .where(eq(schema.familyGroups.primaryContactEmail, input.email))
+          .limit(1);
+        if (!groups.length) return null;
+        const group = groups[0];
+        const members = await db.select().from(schema.familyGroupMembers)
+          .where(eq(schema.familyGroupMembers.familyGroupId, group.id));
+        return { ...group, members };
+      }),
+
+    /** Add an enrollment to a family group (2nd+ members get 50% off) */
+    addMemberToFamilyGroup: publicProcedure
+      .input(z.object({
+        familyGroupId: z.number(),
+        enrollmentId: z.number(),
+        originalMonthlyAmount: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        const existing = await db.select().from(schema.familyGroupMembers)
+          .where(eq(schema.familyGroupMembers.familyGroupId, input.familyGroupId));
+        const memberOrder = existing.length + 1;
+        const hasDiscount = memberOrder >= 2 ? 1 : 0;
+        const discountedMonthlyAmount = hasDiscount ? (input.originalMonthlyAmount * 0.5).toFixed(2) : null;
+        await db.insert(schema.familyGroupMembers).values({
+          familyGroupId: input.familyGroupId,
+          enrollmentId: input.enrollmentId,
+          memberOrder,
+          hasDiscount,
+          discountedMonthlyAmount: discountedMonthlyAmount ?? undefined,
+          originalMonthlyAmount: input.originalMonthlyAmount.toFixed(2),
+        });
+        return {
+          memberOrder,
+          hasDiscount: !!hasDiscount,
+          discountedMonthlyAmount: hasDiscount ? input.originalMonthlyAmount * 0.5 : input.originalMonthlyAmount,
+        };
+      }),
+
+    /** Admin: list all family groups with member counts */
+    adminListFamilyGroups: protectedProcedure
+      .input(z.object({ search: z.string().optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        const db = await getDb();
+        if (!db) return [];
+        const groups = await db.select().from(schema.familyGroups).orderBy(desc(schema.familyGroups.createdAt));
+        const result = await Promise.all(groups.map(async (g) => {
+          const members = await db.select().from(schema.familyGroupMembers)
+            .where(eq(schema.familyGroupMembers.familyGroupId, g.id));
+          return { ...g, memberCount: members.length, members };
+        }));
+        if (input?.search) {
+          const s = input.search.toLowerCase();
+          return result.filter(g =>
+            g.primaryContactName.toLowerCase().includes(s) ||
+            g.primaryContactEmail.toLowerCase().includes(s)
+          );
+        }
+        return result;
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

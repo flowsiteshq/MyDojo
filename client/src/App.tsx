@@ -44,6 +44,7 @@ const CheckIn = lazy(() => import("./pages/CheckIn"));
 const KioskCheckIn = lazy(() => import("./pages/KioskCheckIn"));
 const KioskArcade = lazy(() => import("./pages/KioskArcade"));
 const IntroOfferCheckout = lazy(() => import("./pages/IntroOfferCheckout"));
+const FamilyEnrollment = lazy(() => import("./pages/FamilyEnrollment"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminIntroAppointments = lazy(() => import("./pages/AdminIntroAppointments"));
@@ -65,6 +66,7 @@ const StaffInviteAccept = lazy(() => import("./pages/StaffInviteAccept"));
 const AdminCommissions = lazy(() => import("./pages/AdminCommissions"));
 const StaffClockIn = lazy(() => import("./pages/StaffClockIn"));
 const AdminStaffHours = lazy(() => import("./pages/AdminStaffHours"));
+const AdminFamilyGroups = lazy(() => import("./pages/AdminFamilyGroups"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Join = lazy(() => import("./pages/Join"));
 const BuyDayPass = lazy(() => import("./pages/BuyDayPass"));
@@ -115,6 +117,7 @@ function Router() {
         <Route path="/check-in" component={KioskCheckIn} />
         <Route path="/arcade" component={KioskArcade} />
         <Route path="/intro-offer" component={IntroOfferCheckout} />
+        <Route path="/family-enrollment" component={FamilyEnrollment} />
         
         {/* Student dashboard without Layout */}
         <Route path="/dashboard" component={MemberDashboard} />
@@ -140,6 +143,7 @@ function Router() {
         <Route path="/staff-invite" component={StaffInviteAccept} />
         <Route path="/admin/commissions" component={AdminCommissions} />
         <Route path="/admin/staff-hours" component={AdminStaffHours} />
+        <Route path="/admin/family-groups" component={AdminFamilyGroups} />
         <Route path="/staff-clock-in" component={StaffClockIn} />
         
         {/* All other routes with Layout */}

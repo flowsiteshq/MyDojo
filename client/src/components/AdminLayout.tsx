@@ -168,6 +168,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/staff", label: "Staff", icon: UserPlus },
     { href: "/admin/staff-schedule", label: "Staff Schedule", icon: CalendarDays },
     { href: "/admin/staff-hours", label: "Staff Hours", icon: Clock },
+    { href: "/admin/family-groups", label: "Family Groups", icon: Users },
     { href: "/admin/calendar", label: "Staff Calendar", icon: Calendar },
     { href: "/admin/packages", label: "Packages", icon: PackageIcon },
     { href: "/admin/audit-log", label: "Audit Log", icon: ShieldAlert },

@@ -1566,3 +1566,56 @@ export const shiftClasses = mysqlTable("shiftClasses", {
 });
 export type ShiftClass = typeof shiftClasses.$inferSelect;
 export type InsertShiftClass = typeof shiftClasses.$inferInsert;
+
+/**
+ * Family groups table.
+ * Groups multiple enrollments under one family account.
+ * - One-time $99 family registration fee covers all members.
+ * - 2nd+ family members get 50% off monthly tuition.
+ */
+export const familyGroups = mysqlTable("familyGroups", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Primary contact name */
+  primaryContactName: varchar("primaryContactName", { length: 255 }).notNull(),
+  /** Primary contact email */
+  primaryContactEmail: varchar("primaryContactEmail", { length: 255 }).notNull(),
+  /** Primary contact phone */
+  primaryContactPhone: varchar("primaryContactPhone", { length: 20 }),
+  /** Whether the one-time $99 family registration fee has been paid */
+  registrationFeePaid: int("registrationFeePaid").default(0).notNull(),
+  /** FluidPay transaction ID for the $99 family registration fee */
+  registrationFeeTransactionId: varchar("registrationFeeTransactionId", { length: 255 }),
+  /** Amount charged for registration */
+  registrationFeeAmount: decimal("registrationFeeAmount", { precision: 10, scale: 2 }).default('99.00'),
+  /** Date registration fee was paid */
+  registrationFeePaidAt: timestamp("registrationFeePaidAt"),
+  /** FluidPay customer vault ID (shared across family) */
+  fluidpayCustomerId: varchar("fluidpayCustomerId", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type FamilyGroup = typeof familyGroups.$inferSelect;
+export type InsertFamilyGroup = typeof familyGroups.$inferInsert;
+
+/**
+ * Family group members table.
+ * Links enrollments to a family group and tracks discount status.
+ */
+export const familyGroupMembers = mysqlTable("familyGroupMembers", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to family group */
+  familyGroupId: int("familyGroupId").notNull(),
+  /** Reference to enrollment */
+  enrollmentId: int("enrollmentId").notNull(),
+  /** Member order within family (1 = primary/full price, 2+ = 50% off) */
+  memberOrder: int("memberOrder").notNull().default(1),
+  /** Whether this member receives the 50% family discount on monthly tuition */
+  hasDiscount: int("hasDiscount").default(0).notNull(),
+  /** Discounted monthly amount after 50% off */
+  discountedMonthlyAmount: decimal("discountedMonthlyAmount", { precision: 10, scale: 2 }),
+  /** Original monthly amount before discount */
+  originalMonthlyAmount: decimal("originalMonthlyAmount", { precision: 10, scale: 2 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type FamilyGroupMember = typeof familyGroupMembers.$inferSelect;
+export type InsertFamilyGroupMember = typeof familyGroupMembers.$inferInsert;

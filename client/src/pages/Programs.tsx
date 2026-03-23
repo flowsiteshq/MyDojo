@@ -129,6 +129,38 @@ export default function Programs() {
         </div>
       </div>
 
+      {/* Family Discount Banner */}
+      <section className="py-16 bg-black text-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 bg-red-600/20 border border-red-500/40 rounded-full px-4 py-2 mb-6">
+              <span className="text-red-300 text-sm font-bold uppercase tracking-wider">👨‍👩‍👧‍👦 Family Savings Program</span>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black mb-4">TRAIN TOGETHER,{" "}<span className="text-red-500">SAVE TOGETHER</span></h2>
+            <p className="text-white/70 text-lg mb-8 max-w-2xl mx-auto">
+              Enroll your whole family and unlock exclusive savings — one registration fee covers everyone, and your 2nd family member gets 50% off monthly tuition.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-left">
+              <div className="bg-red-900/30 border border-red-500/30 rounded-xl p-6">
+                <div className="text-3xl font-black text-red-400 mb-2">50% OFF</div>
+                <div className="font-bold text-lg mb-1">2nd Family Member's Monthly Tuition</div>
+                <p className="text-white/60 text-sm">Every additional family member enrolls at half the monthly tuition — every month, for the life of their membership.</p>
+              </div>
+              <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-6">
+                <div className="text-3xl font-black text-yellow-400 mb-2">$99</div>
+                <div className="font-bold text-lg mb-1">One Family Registration Fee</div>
+                <p className="text-white/60 text-sm">One $99 registration fee covers your entire family — no per-person fees, no matter how many members enroll.</p>
+              </div>
+            </div>
+            <Link href="/family-enrollment">
+              <Button className="bg-red-600 hover:bg-red-700 text-white font-black text-lg px-10 py-6 h-auto uppercase tracking-wider">
+                Create Family Account — $99 One-Time Fee
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Uniform Guide */}
       <UniformGuide />
 

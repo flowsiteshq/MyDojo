@@ -281,6 +281,13 @@
       "when": 1774277393392,
       "tag": "0039_absurd_paibok",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "5",
+      "when": 1774308983098,
+      "tag": "0040_open_betty_ross",
+      "breakpoints": true
     }
   ]
 }
