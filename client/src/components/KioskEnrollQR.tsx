@@ -2,7 +2,8 @@
  * KioskEnrollQR.tsx
  * Shows a program selector, then a QR code on the kiosk that students
  * scan with their phone to open the enrollment page pre-filled with
- * their chosen program.
+ * their chosen program. Includes a Family Plan option that links to
+ * /family-enrollment for the $99 family registration + 50% off 2nd member.
  */
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
@@ -13,12 +14,13 @@ interface KioskEnrollQRProps {
 }
 
 const PROGRAMS = [
-  { id: "Summer Camp",    label: "Summer Camp",    emoji: "☀️",  color: "from-yellow-500/40 to-orange-500/30", border: "border-yellow-500/40", badge: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" },
-  { id: "Kickboxing",     label: "Kickboxing",      emoji: "🥊",  color: "from-red-600/40 to-red-800/30",      border: "border-red-500/40",    badge: "bg-red-500/20 text-red-300 border-red-500/30" },
-  { id: "Little Ninjas",  label: "Little Ninjas",   emoji: "🥷",  color: "from-purple-500/40 to-purple-800/30", border: "border-purple-500/40", badge: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
-  { id: "Dragon Kids",    label: "Dragon Kids",     emoji: "🐉",  color: "from-blue-500/40 to-blue-800/30",    border: "border-blue-500/40",   badge: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
-  { id: "Teens",          label: "Teens",           emoji: "⚡",  color: "from-cyan-500/40 to-cyan-800/30",    border: "border-cyan-500/40",   badge: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" },
-  { id: "Adult Karate",   label: "Adult Karate",    emoji: "🥋",  color: "from-green-600/40 to-green-900/30",  border: "border-green-500/40",  badge: "bg-green-500/20 text-green-300 border-green-500/30" },
+  { id: "Summer Camp",    label: "Summer Camp",    emoji: "☀️",  color: "from-yellow-500/40 to-orange-500/30", border: "border-yellow-500/40", familyPlan: false },
+  { id: "Kickboxing",     label: "Kickboxing",      emoji: "🥊",  color: "from-red-600/40 to-red-800/30",      border: "border-red-500/40",    familyPlan: false },
+  { id: "Little Ninjas",  label: "Little Ninjas",   emoji: "🥷",  color: "from-purple-500/40 to-purple-800/30", border: "border-purple-500/40", familyPlan: false },
+  { id: "Dragon Kids",    label: "Dragon Kids",     emoji: "🐉",  color: "from-blue-500/40 to-blue-800/30",    border: "border-blue-500/40",   familyPlan: false },
+  { id: "Teens",          label: "Teens",           emoji: "⚡",  color: "from-cyan-500/40 to-cyan-800/30",    border: "border-cyan-500/40",   familyPlan: false },
+  { id: "Adult Karate",   label: "Adult Karate",    emoji: "🥋",  color: "from-green-600/40 to-green-900/30",  border: "border-green-500/40",  familyPlan: false },
+  { id: "Family Plan",    label: "Family Plan",     emoji: "👨‍👩‍👧‍👦",  color: "from-amber-500/40 to-orange-600/30",  border: "border-amber-500/40",  familyPlan: true  },
 ];
 
 export function KioskEnrollQR({ onClose }: KioskEnrollQRProps) {
@@ -29,10 +31,16 @@ export function KioskEnrollQR({ onClose }: KioskEnrollQRProps) {
   // Build the enrollment URL when a program is selected
   useEffect(() => {
     const base = window.location.origin;
-    if (selectedProgram) {
-      setEnrollUrl(`${base}/enroll?program=${encodeURIComponent(selectedProgram)}`);
-    } else {
+    if (!selectedProgram) {
       setEnrollUrl(`${base}/enroll`);
+      return;
+    }
+    const prog = PROGRAMS.find((p) => p.id === selectedProgram);
+    if (prog?.familyPlan) {
+      // Family Plan → dedicated family enrollment page
+      setEnrollUrl(`${base}/family-enrollment`);
+    } else {
+      setEnrollUrl(`${base}/enroll?program=${encodeURIComponent(selectedProgram)}`);
     }
   }, [selectedProgram]);
 
@@ -113,18 +121,31 @@ export function KioskEnrollQR({ onClose }: KioskEnrollQRProps) {
                 <button
                   key={p.id}
                   onClick={() => setSelectedProgram(p.id)}
-                  className={`group relative overflow-hidden rounded-2xl p-px transition-all duration-200 active:scale-95 hover:scale-105`}
+                  className={`group relative overflow-hidden rounded-2xl p-px transition-all duration-200 active:scale-95 hover:scale-105 ${
+                    p.familyPlan ? "col-span-2" : ""
+                  }`}
                   style={{
-                    background: `linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)`,
+                    background: p.familyPlan
+                      ? "linear-gradient(135deg, rgba(251,191,36,0.3) 0%, rgba(234,88,12,0.2) 100%)"
+                      : "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)",
                   }}
                 >
                   <div
-                    className={`relative bg-gradient-to-br ${p.color} backdrop-blur-xl rounded-2xl py-5 px-4 flex flex-col items-center gap-2 border ${p.border}`}
+                    className={`relative bg-gradient-to-br ${p.color} backdrop-blur-xl rounded-2xl py-5 px-4 flex ${
+                      p.familyPlan ? "flex-row justify-center gap-4" : "flex-col"
+                    } items-center gap-2 border ${p.border}`}
                   >
                     <span className="text-4xl">{p.emoji}</span>
-                    <span className="text-base font-black text-white uppercase tracking-wide text-center leading-tight">
-                      {p.label}
-                    </span>
+                    <div className={p.familyPlan ? "text-left" : "text-center"}>
+                      <span className="text-base font-black text-white uppercase tracking-wide leading-tight block">
+                        {p.label}
+                      </span>
+                      {p.familyPlan && (
+                        <span className="text-xs text-amber-300 font-semibold mt-0.5 block">
+                          $99 family reg · 50% off 2nd member
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </button>
               ))}
@@ -154,22 +175,37 @@ export function KioskEnrollQR({ onClose }: KioskEnrollQRProps) {
               <h2 className="text-2xl font-black text-white uppercase tracking-wider">
                 {prog.label}
               </h2>
-              <p className="text-white/50 text-sm mt-1">
-                Scan with your phone to enroll
-              </p>
+              {prog.familyPlan ? (
+                <div className="mt-2 space-y-1">
+                  <p className="text-amber-300 text-sm font-semibold">
+                    $99 one-time family registration fee
+                  </p>
+                  <p className="text-amber-200/70 text-xs">
+                    50% off monthly tuition for 2nd family member
+                  </p>
+                </div>
+              ) : (
+                <p className="text-white/50 text-sm mt-1">
+                  Scan with your phone to enroll
+                </p>
+              )}
             </div>
 
             {/* QR Code */}
             <div
               className="bg-white rounded-2xl p-5 shadow-2xl"
-              style={{ boxShadow: "0 0 40px rgba(34,197,94,0.4)" }}
+              style={{
+                boxShadow: prog.familyPlan
+                  ? "0 0 40px rgba(251,191,36,0.5)"
+                  : "0 0 40px rgba(34,197,94,0.4)",
+              }}
             >
               {enrollUrl ? (
                 <QRCodeSVG
                   value={enrollUrl}
                   size={200}
                   bgColor="#ffffff"
-                  fgColor="#000d05"
+                  fgColor={prog.familyPlan ? "#78350f" : "#000d05"}
                   level="M"
                   includeMargin={false}
                 />
@@ -184,18 +220,32 @@ export function KioskEnrollQR({ onClose }: KioskEnrollQRProps) {
             <div
               className="flex items-start gap-3 rounded-2xl p-4 border w-full"
               style={{
-                background: "rgba(34,197,94,0.08)",
-                borderColor: "rgba(34,197,94,0.25)",
+                background: prog.familyPlan
+                  ? "rgba(251,191,36,0.08)"
+                  : "rgba(34,197,94,0.08)",
+                borderColor: prog.familyPlan
+                  ? "rgba(251,191,36,0.25)"
+                  : "rgba(34,197,94,0.25)",
               }}
             >
-              <Smartphone className="w-6 h-6 text-green-400 flex-shrink-0 mt-0.5" />
+              <Smartphone
+                className={`w-6 h-6 flex-shrink-0 mt-0.5 ${
+                  prog.familyPlan ? "text-amber-400" : "text-green-400"
+                }`}
+              />
               <div>
-                <p className="text-white font-semibold text-sm">How to enroll:</p>
+                <p className="text-white font-semibold text-sm">
+                  {prog.familyPlan ? "How to sign up for the Family Plan:" : "How to enroll:"}
+                </p>
                 <ol className="text-white/60 text-sm mt-1 space-y-0.5 list-decimal list-inside">
                   <li>Open your phone's camera app</li>
                   <li>Point it at the QR code above</li>
                   <li>Tap the link that appears</li>
-                  <li>Complete enrollment on your phone</li>
+                  {prog.familyPlan ? (
+                    <li>Complete the family registration on your phone</li>
+                  ) : (
+                    <li>Complete enrollment on your phone</li>
+                  )}
                 </ol>
               </div>
             </div>
