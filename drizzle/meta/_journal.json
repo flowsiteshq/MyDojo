@@ -274,6 +274,13 @@
       "when": 1774012369910,
       "tag": "0038_flashy_bushwacker",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "5",
+      "when": 1774277393392,
+      "tag": "0039_absurd_paibok",
+      "breakpoints": true
     }
   ]
 }

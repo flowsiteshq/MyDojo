@@ -23,6 +23,7 @@ import {
   Activity,
   CalendarDays,
   Share2,
+  Clock,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { trpc } from "@/lib/trpc";
@@ -166,6 +167,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const adminOnlyNavItems = [
     { href: "/admin/staff", label: "Staff", icon: UserPlus },
     { href: "/admin/staff-schedule", label: "Staff Schedule", icon: CalendarDays },
+    { href: "/admin/staff-hours", label: "Staff Hours", icon: Clock },
     { href: "/admin/calendar", label: "Staff Calendar", icon: Calendar },
     { href: "/admin/packages", label: "Packages", icon: PackageIcon },
     { href: "/admin/audit-log", label: "Audit Log", icon: ShieldAlert },

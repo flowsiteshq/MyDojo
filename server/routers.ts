@@ -7453,5 +7453,187 @@ Please enter your card details below to complete your registration securely. Tot
           .limit(20);
       }),
   }),
+
+  // ─── Staff Time Tracking ─────────────────────────────────────────────────
+  staffTime: router({
+    /** Clock in — opens a new shift for the authenticated staff member */
+    clockIn: protectedProcedure
+      .input(z.object({ location: z.string().optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        // Check if already clocked in
+        const open = await db.select()
+          .from(schema.staffShifts)
+          .where(and(
+            eq(schema.staffShifts.staffUserId, ctx.user.id),
+            isNull(schema.staffShifts.clockOutAt)
+          ))
+          .limit(1);
+        if (open.length > 0) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Already clocked in' });
+        const [shift] = await db.insert(schema.staffShifts).values({
+          staffUserId: ctx.user.id,
+          staffName: ctx.user.name ?? ctx.user.email,
+          clockInAt: Date.now(),
+          location: input.location ?? 'HQ',
+        }).$returningId();
+        return { shiftId: shift.id };
+      }),
+
+    /** Clock out — closes the open shift and calculates total minutes */
+    clockOut: protectedProcedure
+      .input(z.object({ notes: z.string().optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        const [open] = await db.select()
+          .from(schema.staffShifts)
+          .where(and(
+            eq(schema.staffShifts.staffUserId, ctx.user.id),
+            isNull(schema.staffShifts.clockOutAt)
+          ))
+          .limit(1);
+        if (!open) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Not clocked in' });
+        const now = Date.now();
+        const totalMinutes = Math.round((now - open.clockInAt) / 60000);
+        await db.update(schema.staffShifts)
+          .set({ clockOutAt: now, totalMinutes, notes: input.notes ?? null, updatedAt: new Date() })
+          .where(eq(schema.staffShifts.id, open.id));
+        return { shiftId: open.id, totalMinutes };
+      }),
+
+    /** Get the current open shift for the logged-in staff member */
+    getActiveShift: protectedProcedure
+      .query(async ({ ctx }) => {
+        const db = await getDb();
+        if (!db) return null;
+        const [open] = await db.select()
+          .from(schema.staffShifts)
+          .where(and(
+            eq(schema.staffShifts.staffUserId, ctx.user.id),
+            isNull(schema.staffShifts.clockOutAt)
+          ))
+          .limit(1);
+        if (!open) return null;
+        const classes = await db.select()
+          .from(schema.shiftClasses)
+          .where(eq(schema.shiftClasses.shiftId, open.id))
+          .orderBy(asc(schema.shiftClasses.classStartAt));
+        return { shift: open, classes };
+      }),
+
+    /** Log a class taught during the current open shift */
+    logClass: protectedProcedure
+      .input(z.object({
+        program: z.string().min(1),
+        classStartAt: z.number(),
+        studentCount: z.number().int().min(0).optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        const [open] = await db.select()
+          .from(schema.staffShifts)
+          .where(and(
+            eq(schema.staffShifts.staffUserId, ctx.user.id),
+            isNull(schema.staffShifts.clockOutAt)
+          ))
+          .limit(1);
+        if (!open) throw new TRPCError({ code: 'BAD_REQUEST', message: 'No active shift — clock in first' });
+        await db.insert(schema.shiftClasses).values({
+          shiftId: open.id,
+          staffUserId: ctx.user.id,
+          program: input.program,
+          classStartAt: input.classStartAt,
+          studentCount: input.studentCount ?? null,
+          notes: input.notes ?? null,
+        });
+        return { ok: true };
+      }),
+
+    /** Delete a logged class from the current open shift */
+    deleteClass: protectedProcedure
+      .input(z.object({ classId: z.number().int() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        await db.delete(schema.shiftClasses)
+          .where(and(
+            eq(schema.shiftClasses.id, input.classId),
+            eq(schema.shiftClasses.staffUserId, ctx.user.id)
+          ));
+        return { ok: true };
+      }),
+
+    /** Admin: get all shifts with optional filters */
+    adminGetShifts: protectedProcedure
+      .input(z.object({
+        staffUserId: z.number().int().optional(),
+        from: z.number().optional(),
+        to: z.number().optional(),
+        limit: z.number().int().min(1).max(200).default(100),
+      }))
+      .query(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        const db = await getDb();
+        if (!db) return [];
+        const conditions = [];
+        if (input.staffUserId) conditions.push(eq(schema.staffShifts.staffUserId, input.staffUserId));
+        if (input.from) conditions.push(sql`${schema.staffShifts.clockInAt} >= ${input.from}`);
+        if (input.to) conditions.push(sql`${schema.staffShifts.clockInAt} <= ${input.to}`);
+        const shifts = await db.select()
+          .from(schema.staffShifts)
+          .where(conditions.length ? and(...conditions) : undefined)
+          .orderBy(desc(schema.staffShifts.clockInAt))
+          .limit(input.limit);
+        // Attach classes for each shift
+        const shiftIds = shifts.map(s => s.id);
+        const classes = shiftIds.length
+          ? await db.select().from(schema.shiftClasses).where(inArray(schema.shiftClasses.shiftId, shiftIds))
+          : [];
+        return shifts.map(s => ({
+          ...s,
+          classes: classes.filter(c => c.shiftId === s.id),
+        }));
+      }),
+
+    /** Admin: get summary of hours per staff member for a date range */
+    adminGetHoursSummary: protectedProcedure
+      .input(z.object({
+        from: z.number().optional(),
+        to: z.number().optional(),
+      }))
+      .query(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        const db = await getDb();
+        if (!db) return [];
+        const conditions = [];
+        if (input.from) conditions.push(sql`${schema.staffShifts.clockInAt} >= ${input.from}`);
+        if (input.to) conditions.push(sql`${schema.staffShifts.clockInAt} <= ${input.to}`);
+        conditions.push(isNotNull(schema.staffShifts.clockOutAt));
+        const rows = await db.select({
+          staffUserId: schema.staffShifts.staffUserId,
+          staffName: schema.staffShifts.staffName,
+          totalMinutes: sql<number>`SUM(${schema.staffShifts.totalMinutes})`,
+          shiftCount: sql<number>`COUNT(*)`,
+        })
+          .from(schema.staffShifts)
+          .where(and(...conditions))
+          .groupBy(schema.staffShifts.staffUserId, schema.staffShifts.staffName);
+        return rows;
+      }),
+
+    /** Admin: get all staff members (users with role staff or admin) */
+    adminGetStaffList: protectedProcedure
+      .query(async ({ ctx }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        const db = await getDb();
+        if (!db) return [];
+        return db.select({ id: schema.users.id, name: schema.users.name, email: schema.users.email, role: schema.users.role })
+          .from(schema.users)
+          .where(or(eq(schema.users.role, 'staff'), eq(schema.users.role, 'admin')));
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

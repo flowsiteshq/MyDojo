@@ -1515,3 +1515,54 @@ export const introOfferPurchases = mysqlTable("introOfferPurchases", {
 });
 export type IntroOfferPurchase = typeof introOfferPurchases.$inferSelect;
 export type InsertIntroOfferPurchase = typeof introOfferPurchases.$inferInsert;
+
+// ─── Staff Time Tracking ────────────────────────────────────────────────────
+
+/**
+ * Staff shifts — records each time a staff member clocks in and out.
+ * A shift is "open" when clockOutAt is NULL.
+ */
+export const staffShifts = mysqlTable("staffShifts", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Staff user ID */
+  staffUserId: int("staffUserId").notNull(),
+  /** Staff name at time of clock-in (denormalized for display) */
+  staffName: varchar("staffName", { length: 255 }).notNull(),
+  /** When the staff member clocked in (UTC ms) */
+  clockInAt: bigint("clockInAt", { mode: "number" }).notNull(),
+  /** When the staff member clocked out (NULL = still on shift) */
+  clockOutAt: bigint("clockOutAt", { mode: "number" }),
+  /** Total minutes worked — calculated on clock-out */
+  totalMinutes: int("totalMinutes"),
+  /** Optional notes added at clock-out */
+  notes: text("notes"),
+  /** Location */
+  location: varchar("location", { length: 255 }).default("HQ"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type StaffShift = typeof staffShifts.$inferSelect;
+export type InsertStaffShift = typeof staffShifts.$inferInsert;
+
+/**
+ * Classes taught during a shift.
+ * A staff member can log one or more classes per shift.
+ */
+export const shiftClasses = mysqlTable("shiftClasses", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Parent shift */
+  shiftId: int("shiftId").notNull(),
+  /** Staff user ID (denormalized for easy querying) */
+  staffUserId: int("staffUserId").notNull(),
+  /** Program name */
+  program: varchar("program", { length: 255 }).notNull(),
+  /** Class start time (UTC ms) */
+  classStartAt: bigint("classStartAt", { mode: "number" }).notNull(),
+  /** Student count for this class (optional) */
+  studentCount: int("studentCount"),
+  /** Any notes about the class */
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ShiftClass = typeof shiftClasses.$inferSelect;
+export type InsertShiftClass = typeof shiftClasses.$inferInsert;
