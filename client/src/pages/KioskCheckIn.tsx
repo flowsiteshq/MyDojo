@@ -432,6 +432,24 @@ export default function KioskCheckIn() {
               </a>
             </div>
 
+            {/* STAFF CLOCK-IN SHORTCUT */}
+            <div className="max-w-3xl mx-auto w-full mb-4">
+              <a
+                href="/staff-clock-in"
+                className="w-full group relative overflow-hidden rounded-xl p-px transition-all duration-300 hover:scale-105 block"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(251,191,36,0.4) 0%, rgba(234,88,12,0.3) 100%)',
+                  boxShadow: '0 0 20px rgba(251,191,36,0.15)'
+                }}
+              >
+                <div className="relative bg-black/50 backdrop-blur-xl rounded-xl py-3 px-8 flex items-center justify-center gap-3 border border-yellow-500/25">
+                  <span className="text-xl">⏱️</span>
+                  <span className="text-base font-bold text-yellow-200/80 uppercase tracking-widest">
+                    Staff Clock In / Out
+                  </span>
+                </div>
+              </a>
+            </div>
             {/* Check-in Notice */}
             <p className="text-center text-white/60 text-sm mb-6">Check-in opens 15 minutes before class.</p>
 
