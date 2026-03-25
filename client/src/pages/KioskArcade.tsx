@@ -6,10 +6,11 @@ import GameTargetBlitz from "@/games/GameTargetBlitz";
 import GameReactionStrike from "@/games/GameReactionStrike";
 import GameBeltMemory from "@/games/GameBeltMemory";
 import GameComboRush from "@/games/GameComboRush";
+import GameNinjaMaze from "@/games/GameNinjaMaze";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type ArcadeScreen = "checkin" | "menu" | "playing" | "leaderboard";
-type GameId = "target-blitz" | "reaction-strike" | "belt-memory" | "combo-rush";
+type GameId = "target-blitz" | "reaction-strike" | "belt-memory" | "combo-rush" | "ninja-maze";
 
 interface CheckedInStudent {
   enrollmentId: number;
@@ -56,6 +57,16 @@ const GAMES = [
     color: "#22c55e",
     glow: "rgba(34,197,94,0.6)",
     bg: "from-green-950 to-black",
+    icon: Gamepad2,
+  },
+  {
+    id: "ninja-maze" as GameId,
+    name: "Ninja Maze",
+    desc: "Pac-Man style dojo maze adventure!",
+    emoji: "🥷",
+    color: "#a855f7",
+    glow: "rgba(168,85,247,0.8)",
+    bg: "from-purple-950 to-black",
     icon: Gamepad2,
   },
 ];
@@ -571,6 +582,7 @@ export default function KioskArcade() {
         {activeGame === "reaction-strike" && <GameReactionStrike {...commonProps} />}
         {activeGame === "belt-memory" && <GameBeltMemory {...commonProps} />}
         {activeGame === "combo-rush" && <GameComboRush {...commonProps} />}
+        {activeGame === "ninja-maze" && <GameNinjaMaze {...commonProps} />}
       </div>
     );
   }
