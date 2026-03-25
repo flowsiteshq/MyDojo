@@ -1,13 +1,16 @@
 /**
- * GameNinjaMaze.tsx
- * Pac-Man style martial arts maze game for the MyDojo kiosk.
+ * GameNinjaMaze.tsx — Pac-Man style martial arts maze game (EFFECTS EDITION)
  *
- * 🥷 Ninja (player) collects belt tokens and power-ups through a dojo maze.
- * 👹 Enemy Senseis chase the ninja — collect a power star to turn them into ghosts!
- * Lives: 3  |  Levels: speed & enemies increase each level  |  Score saved on game over.
- *
- * Ghost fix: Ghosts spawn on open corridor cells and use BFS pathfinding to exit
- * and chase the player. Each ghost has a unique scatter target so they spread out.
+ * NEW EFFECTS:
+ * 🎆 Particle explosions on pellet collect, ghost eat, and ninja death
+ * 📳 Screen shake on death and power-up
+ * 💥 Floating score pop-ups (+10, +50, +200, COMBO x4!)
+ * 🌟 Power-up radial glow pulse when star is collected
+ * 👻 Ghost death burst (color-matched particle spray)
+ * 🔥 Ninja movement trail (fading footprints)
+ * ⚡ Combo multiplier display (x2, x4, x8 ghost chain)
+ * 🌈 Scared ghost flicker + color shift
+ * 🏯 Animated maze walls (subtle breathing glow)
  */
 import { useEffect, useRef, useState, useCallback } from "react";
 import { RotateCcw, ArrowLeft, Trophy } from "lucide-react";
@@ -19,7 +22,6 @@ interface Props {
 }
 
 // ── Maze layout ────────────────────────────────────────────────────────────
-// 0 = wall, 1 = pellet, 2 = power pellet, 3 = empty corridor
 const COLS = 21;
 const ROWS = 21;
 
@@ -56,104 +58,93 @@ const DIRS: Record<string, Dir> = {
 };
 const DIR_LIST = Object.values(DIRS);
 
-interface Entity {
-  x: number;
-  y: number;
-  dir: Dir;
-  nextDir: Dir;
-}
+interface Entity { x: number; y: number; dir: Dir; nextDir: Dir; }
 
 interface Ghost {
-  x: number;
-  y: number;
-  dir: Dir;
-  scared: boolean;
-  eaten: boolean;
-  color: string;
-  emoji: string;
-  // BFS target for scatter mode
+  x: number; y: number; dir: Dir;
+  scared: boolean; eaten: boolean;
+  color: string; emoji: string;
   scatterTarget: { x: number; y: number };
-  // release delay in ms — stagger ghost exits
-  releaseDelay: number;
-  released: boolean;
+  releaseDelay: number; released: boolean;
+}
+
+// ── Effect types ───────────────────────────────────────────────────────────
+interface Particle {
+  x: number; y: number;
+  vx: number; vy: number;
+  life: number; maxLife: number;
+  color: string; size: number;
+  gravity: number;
+}
+
+interface ScorePopup {
+  x: number; y: number;
+  text: string; color: string;
+  life: number; maxLife: number;
+  scale: number;
+}
+
+interface TrailDot {
+  x: number; y: number;
+  life: number; maxLife: number;
 }
 
 const GHOST_COLORS = ["#FF4444", "#FFB8FF", "#00FFFF", "#FFB852"];
 const GHOST_EMOJIS = ["👹", "👺", "🤡", "💀"];
 
-// Ghosts spawn on open corridor cells spread across the maze
 const GHOST_SPAWN: { x: number; y: number }[] = [
-  { x: 9,  y: 10 },  // center
-  { x: 11, y: 10 },  // center-right
-  { x: 9,  y: 11 },  // center-bottom-left
-  { x: 11, y: 11 },  // center-bottom-right
+  { x: 9,  y: 10 },
+  { x: 11, y: 10 },
+  { x: 9,  y: 11 },
+  { x: 11, y: 11 },
 ];
 
-// Scatter corners — each ghost retreats to a different corner
 const SCATTER_TARGETS = [
-  { x: 1,  y: 1  },  // top-left
-  { x: 19, y: 1  },  // top-right
-  { x: 1,  y: 19 },  // bottom-left
-  { x: 19, y: 19 },  // bottom-right
+  { x: 1,  y: 1  },
+  { x: 19, y: 1  },
+  { x: 1,  y: 19 },
+  { x: 19, y: 19 },
 ];
 
-// Stagger ghost releases: 0, 3, 6, 9 seconds
 const RELEASE_DELAYS = [0, 3000, 6000, 9000];
-
 const CELL = 28;
 const SPEED = 0.09;
 const GHOST_SPEED = 0.07;
 const SCARED_DURATION = 8000;
 
-function deepCopyMaze(m: number[][]): number[][] {
-  return m.map(row => [...row]);
-}
-
+function deepCopyMaze(m: number[][]): number[][] { return m.map(row => [...row]); }
 function countPellets(maze: number[][]): number {
   let n = 0;
   for (const row of maze) for (const c of row) if (c === 1 || c === 2) n++;
   return n;
 }
-
 function isWalkable(maze: number[][], col: number, row: number): boolean {
-  const r = Math.round(row);
-  const c = Math.round(col);
+  const r = Math.round(row); const c = Math.round(col);
   if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return false;
   return maze[r][c] !== 0;
 }
-
 function canMove(maze: number[][], x: number, y: number, dir: Dir): boolean {
   return isWalkable(maze, x + dir.x * 0.6, y + dir.y * 0.6);
 }
-
-// BFS to find best next direction toward target
 function bfsDir(maze: number[][], fromX: number, fromY: number, toX: number, toY: number, currentDir: Dir): Dir {
-  const sx = Math.round(fromX);
-  const sy = Math.round(fromY);
-  const tx = Math.round(toX);
-  const ty = Math.round(toY);
+  const sx = Math.round(fromX); const sy = Math.round(fromY);
+  const tx = Math.round(toX);   const ty = Math.round(toY);
   if (sx === tx && sy === ty) return currentDir;
-
-  // BFS
   const visited = new Set<string>();
   const queue: { x: number; y: number; firstDir: Dir }[] = [];
   visited.add(`${sx},${sy}`);
-
   for (const d of DIR_LIST) {
-    const nx = sx + d.x;
-    const ny = sy + d.y;
+    const nx = sx + d.x; const ny = sy + d.y;
     if (isWalkable(maze, nx, ny) && !visited.has(`${nx},${ny}`)) {
       visited.add(`${nx},${ny}`);
       queue.push({ x: nx, y: ny, firstDir: d });
     }
   }
-
   while (queue.length > 0) {
     const cur = queue.shift()!;
     if (cur.x === tx && cur.y === ty) return cur.firstDir;
     for (const d of DIR_LIST) {
-      const nx = cur.x + d.x;
-      const ny = cur.y + d.y;
+      const nx = cur.x + d.x; const ny = cur.y + d.y;
       const key = `${nx},${ny}`;
       if (isWalkable(maze, nx, ny) && !visited.has(key)) {
         visited.add(key);
@@ -166,46 +157,72 @@ function bfsDir(maze: number[][], fromX: number, fromY: number, toX: number, toY
 
 function makeGhosts(): Ghost[] {
   return GHOST_SPAWN.map((pos, i) => ({
-    x: pos.x,
-    y: pos.y,
-    dir: DIRS.up,
-    scared: false,
-    eaten: false,
-    color: GHOST_COLORS[i],
-    emoji: GHOST_EMOJIS[i],
+    x: pos.x, y: pos.y, dir: DIRS.up,
+    scared: false, eaten: false,
+    color: GHOST_COLORS[i], emoji: GHOST_EMOJIS[i],
     scatterTarget: SCATTER_TARGETS[i],
     releaseDelay: RELEASE_DELAYS[i],
-    released: i === 0, // first ghost releases immediately
+    released: i === 0,
   }));
+}
+
+// ── Particle helpers ───────────────────────────────────────────────────────
+function spawnParticles(
+  particles: Particle[],
+  cx: number, cy: number,
+  count: number,
+  color: string,
+  speed = 3,
+  size = 4,
+  gravity = 0.1,
+  life = 600
+) {
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+    const spd = speed * (0.5 + Math.random());
+    particles.push({
+      x: cx, y: cy,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd,
+      life, maxLife: life,
+      color, size: size * (0.5 + Math.random()),
+      gravity,
+    });
+  }
+}
+
+function spawnScorePopup(popups: ScorePopup[], cx: number, cy: number, text: string, color: string) {
+  popups.push({ x: cx, y: cy, text, color, life: 900, maxLife: 900, scale: 1.4 });
 }
 
 export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Effect state (kept in refs to avoid re-renders)
+  const particlesRef = useRef<Particle[]>([]);
+  const popupsRef    = useRef<ScorePopup[]>([]);
+  const trailRef     = useRef<TrailDot[]>([]);
+  const shakeRef     = useRef({ x: 0, y: 0, intensity: 0, duration: 0 });
+  const powerGlowRef = useRef({ active: false, timer: 0, x: 0, y: 0 });
+
   const stateRef = useRef({
     maze: deepCopyMaze(BASE_MAZE),
     totalPellets: countPellets(BASE_MAZE),
     pelletsLeft: countPellets(BASE_MAZE),
     player: { x: 10, y: 16, dir: DIRS.left, nextDir: DIRS.left } as Entity,
     ghosts: makeGhosts(),
-    score: 0,
-    lives: 3,
-    level: 1,
-    scaredTimer: 0,
-    ghostEatMultiplier: 1,
-    gameOver: false,
-    won: false,
-    dying: false,
-    dyingTimer: 0,
-    elapsedMs: 0,   // total ms since game started — used for ghost release timing
-    frameCount: 0,
-    started: false,
+    score: 0, lives: 3, level: 1,
+    scaredTimer: 0, ghostEatMultiplier: 1,
+    gameOver: false, won: false, dying: false, dyingTimer: 0,
+    elapsedMs: 0, frameCount: 0, started: false,
   });
 
   const [displayScore, setDisplayScore] = useState(0);
   const [displayLives, setDisplayLives] = useState(3);
   const [displayLevel, setDisplayLevel] = useState(1);
-  const [phase, setPhase] = useState<"ready" | "playing" | "dying" | "gameover" | "levelup">("ready");
-  const animRef = useRef<number>(0);
+  const [comboDisplay, setComboDisplay] = useState(0);
+  const [phase, setPhase] = useState<"ready"|"playing"|"dying"|"gameover"|"levelup">("ready");
+  const animRef    = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
   // ── Key handling ──────────────────────────────────────────────────────────
@@ -249,151 +266,247 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
     s.pelletsLeft = s.totalPellets;
     s.player = { x: 10, y: 16, dir: DIRS.left, nextDir: DIRS.left };
     s.ghosts = makeGhosts();
-    s.scaredTimer = 0;
-    s.ghostEatMultiplier = 1;
-    s.dying = false;
-    s.dyingTimer = 0;
-    s.elapsedMs = 0;
-    s.won = false;
+    s.scaredTimer = 0; s.ghostEatMultiplier = 1;
+    s.dying = false; s.dyingTimer = 0; s.elapsedMs = 0; s.won = false;
     if (!keepScore) { s.score = 0; s.lives = 3; s.level = 1; }
+    particlesRef.current = [];
+    popupsRef.current = [];
+    trailRef.current = [];
+    shakeRef.current = { x: 0, y: 0, intensity: 0, duration: 0 };
+    powerGlowRef.current = { active: false, timer: 0, x: 0, y: 0 };
   }, []);
 
   // ── Ghost movement ────────────────────────────────────────────────────────
   function moveGhost(ghost: Ghost, maze: number[][], playerX: number, playerY: number, level: number, dt: number) {
     if (!ghost.released) return;
-
     const speed = (GHOST_SPEED + level * 0.004) * (dt / 16.67);
-
-    // Snap to grid when close enough to center
-    const cx = Math.round(ghost.x);
-    const cy = Math.round(ghost.y);
+    const cx = Math.round(ghost.x); const cy = Math.round(ghost.y);
     const atCenter = Math.abs(ghost.x - cx) < speed * 1.5 && Math.abs(ghost.y - cy) < speed * 1.5;
 
     if (atCenter) {
-      ghost.x = cx;
-      ghost.y = cy;
-
-      // Choose next direction via BFS
-      let targetX: number, targetY: number;
+      ghost.x = cx; ghost.y = cy;
       if (ghost.scared) {
-        // Run away — pick random open direction
         const possible = DIR_LIST.filter(d => isWalkable(maze, cx + d.x, cy + d.y));
-        if (possible.length > 0) {
-          ghost.dir = possible[Math.floor(Math.random() * possible.length)];
-        }
+        if (possible.length > 0) ghost.dir = possible[Math.floor(Math.random() * possible.length)];
         ghost.x += ghost.dir.x * speed;
         ghost.y += ghost.dir.y * speed;
         return;
-      } else {
-        // Chase player (with 80% probability) or scatter (20%)
-        if (Math.random() < 0.8) {
-          targetX = playerX;
-          targetY = playerY;
-        } else {
-          targetX = ghost.scatterTarget.x;
-          targetY = ghost.scatterTarget.y;
-        }
       }
-
+      let targetX: number, targetY: number;
+      if (Math.random() < 0.8) { targetX = playerX; targetY = playerY; }
+      else { targetX = ghost.scatterTarget.x; targetY = ghost.scatterTarget.y; }
       const bestDir = bfsDir(maze, cx, cy, targetX, targetY, ghost.dir);
-      // Verify the chosen direction is actually walkable
       if (isWalkable(maze, cx + bestDir.x, cy + bestDir.y)) {
         ghost.dir = bestDir;
       } else {
-        // Fallback: pick any walkable direction
         const possible = DIR_LIST.filter(d => isWalkable(maze, cx + d.x, cy + d.y));
         if (possible.length > 0) ghost.dir = possible[Math.floor(Math.random() * possible.length)];
       }
     }
-
-    // Move in current direction
     const nx = ghost.x + ghost.dir.x * speed;
     const ny = ghost.y + ghost.dir.y * speed;
-    if (isWalkable(maze, nx, ny)) {
-      ghost.x = nx;
-      ghost.y = ny;
-    } else {
-      // Snap and pick new direction
-      ghost.x = Math.round(ghost.x);
-      ghost.y = Math.round(ghost.y);
+    if (isWalkable(maze, nx, ny)) { ghost.x = nx; ghost.y = ny; }
+    else {
+      ghost.x = Math.round(ghost.x); ghost.y = Math.round(ghost.y);
       const possible = DIR_LIST.filter(d => isWalkable(maze, ghost.x + d.x, ghost.y + d.y));
       if (possible.length > 0) ghost.dir = possible[Math.floor(Math.random() * possible.length)];
     }
   }
 
   // ── Draw ──────────────────────────────────────────────────────────────────
-  function draw(ctx: CanvasRenderingContext2D, now: number) {
+  function draw(ctx: CanvasRenderingContext2D, now: number, dt: number) {
     const s = stateRef.current;
     const W = COLS * CELL;
     const H = ROWS * CELL;
 
+    // Screen shake
+    const shake = shakeRef.current;
+    if (shake.duration > 0) {
+      shake.duration -= dt;
+      shake.x = (Math.random() - 0.5) * shake.intensity;
+      shake.y = (Math.random() - 0.5) * shake.intensity;
+      if (shake.duration <= 0) { shake.x = 0; shake.y = 0; shake.intensity = 0; }
+    }
+
+    ctx.save();
+    ctx.translate(shake.x, shake.y);
+
+    // Background
     ctx.fillStyle = "#0a0a1a";
     ctx.fillRect(0, 0, W, H);
 
+    // Power glow radial burst
+    const pg = powerGlowRef.current;
+    if (pg.active) {
+      pg.timer -= dt;
+      if (pg.timer <= 0) { pg.active = false; }
+      else {
+        const progress = 1 - pg.timer / 1200;
+        const radius = progress * W * 0.8;
+        const alpha = (1 - progress) * 0.35;
+        const grad = ctx.createRadialGradient(pg.x, pg.y, 0, pg.x, pg.y, radius);
+        grad.addColorStop(0, `rgba(255,215,0,${alpha})`);
+        grad.addColorStop(0.5, `rgba(255,140,0,${alpha * 0.5})`);
+        grad.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+      }
+    }
+
+    // Maze walls & pellets
+    const wallGlow = 0.5 + 0.5 * Math.sin(now / 2000); // subtle breathing
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         const v = s.maze[r][c];
-        const px = c * CELL;
-        const py = r * CELL;
+        const px = c * CELL; const py = r * CELL;
         if (v === 0) {
           ctx.fillStyle = "#1a0a2e";
           ctx.fillRect(px, py, CELL, CELL);
-          ctx.strokeStyle = "#4a1a8e";
+          ctx.strokeStyle = `rgba(74,26,142,${0.4 + wallGlow * 0.3})`;
           ctx.lineWidth = 1;
           ctx.strokeRect(px + 1, py + 1, CELL - 2, CELL - 2);
         } else if (v === 1) {
+          // Belt token pellet with subtle glow
+          ctx.shadowColor = "#ffd700";
+          ctx.shadowBlur = 6;
           ctx.fillStyle = "#ffd700";
           ctx.beginPath();
           ctx.arc(px + CELL / 2, py + CELL / 2, 3, 0, Math.PI * 2);
           ctx.fill();
+          ctx.shadowBlur = 0;
         } else if (v === 2) {
-          const pulse = 0.6 + 0.4 * Math.sin(now / 300);
-          ctx.font = `${14 * pulse}px serif`;
+          const pulse = 0.7 + 0.3 * Math.sin(now / 250);
+          const starSize = 14 * pulse;
+          // Glow ring around power star
+          ctx.shadowColor = "#ffd700";
+          ctx.shadowBlur = 15 * pulse;
+          ctx.font = `${starSize}px serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText("⭐", px + CELL / 2, py + CELL / 2);
+          ctx.shadowBlur = 0;
         }
       }
     }
 
+    // Ninja trail
+    const trail = trailRef.current;
+    for (let i = trail.length - 1; i >= 0; i--) {
+      const t = trail[i];
+      t.life -= dt;
+      if (t.life <= 0) { trail.splice(i, 1); continue; }
+      const alpha = (t.life / t.maxLife) * 0.5;
+      ctx.globalAlpha = alpha;
+      ctx.font = `${Math.round(CELL * 0.5)}px serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("👣", t.x * CELL + CELL / 2, t.y * CELL + CELL / 2);
+      ctx.globalAlpha = 1;
+    }
+
     // Ghosts
     for (const g of s.ghosts) {
-      if (g.eaten) continue;
-      if (!g.released) continue;
-      const px = g.x * CELL;
-      const py = g.y * CELL;
+      if (g.eaten || !g.released) continue;
+      const px = g.x * CELL; const py = g.y * CELL;
       ctx.font = `${CELL - 4}px serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       if (g.scared) {
-        const flash = s.scaredTimer < 2000 && Math.floor(now / 300) % 2 === 0;
-        ctx.globalAlpha = flash ? 0.4 : 1;
+        const flash = s.scaredTimer < 2000 && Math.floor(now / 250) % 2 === 0;
+        // Scared ghost color shift
+        const scaredProgress = 1 - s.scaredTimer / SCARED_DURATION;
+        ctx.globalAlpha = flash ? 0.35 : 1;
+        // Draw a colored circle behind the ghost when scared
+        if (!flash) {
+          const scaredColor = scaredProgress > 0.7 ? "#ff4444" : "#4444ff";
+          ctx.shadowColor = scaredColor;
+          ctx.shadowBlur = 12;
+        }
         ctx.fillText("👻", px + CELL / 2, py + CELL / 2);
+        ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
       } else {
+        // Normal ghost with color glow
+        ctx.shadowColor = g.color;
+        ctx.shadowBlur = 10;
         ctx.fillText(g.emoji, px + CELL / 2, py + CELL / 2);
+        ctx.shadowBlur = 0;
       }
     }
 
     // Player ninja
-    if (!s.dying || s.dyingTimer < 800) {
-      const px = s.player.x * CELL;
-      const py = s.player.y * CELL;
-      const spin = s.dying ? (s.dyingTimer / 800) * Math.PI * 4 : 0;
+    if (!s.dying || s.dyingTimer < 900) {
+      const px = s.player.x * CELL; const py = s.player.y * CELL;
+      const spin = s.dying ? (s.dyingTimer / 900) * Math.PI * 6 : 0;
+      const scale = s.dying ? Math.max(0, 1 - s.dyingTimer / 900) : 1;
       ctx.save();
       ctx.translate(px + CELL / 2, py + CELL / 2);
       ctx.rotate(spin);
+      ctx.scale(scale, scale);
+      // Ninja glow
+      ctx.shadowColor = "#a855f7";
+      ctx.shadowBlur = s.dying ? 0 : 12;
       ctx.font = `${CELL - 2}px serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("🥷", 0, 0);
+      ctx.shadowBlur = 0;
       ctx.restore();
     }
+
+    // Particles
+    const particles = particlesRef.current;
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.life -= dt;
+      if (p.life <= 0) { particles.splice(i, 1); continue; }
+      p.x += p.vx * (dt / 16.67);
+      p.y += p.vy * (dt / 16.67);
+      p.vy += p.gravity * (dt / 16.67);
+      p.vx *= 0.97;
+      const alpha = p.life / p.maxLife;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    // Score popups
+    const popups = popupsRef.current;
+    for (let i = popups.length - 1; i >= 0; i--) {
+      const pop = popups[i];
+      pop.life -= dt;
+      if (pop.life <= 0) { popups.splice(i, 1); continue; }
+      const progress = 1 - pop.life / pop.maxLife;
+      const alpha = pop.life / pop.maxLife;
+      const scale = pop.scale * (1 + progress * 0.3);
+      pop.y -= 0.8 * (dt / 16.67); // float upward
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(pop.x, pop.y);
+      ctx.scale(scale, scale);
+      ctx.font = `bold ${14}px 'Arial', sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = pop.color;
+      ctx.shadowColor = pop.color;
+      ctx.shadowBlur = 8;
+      ctx.fillText(pop.text, 0, 0);
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+
+    ctx.restore(); // end shake transform
   }
 
   // ── Game loop ─────────────────────────────────────────────────────────────
   const loop = useCallback((now: number) => {
-    const dt = Math.min(now - lastTimeRef.current, 50); // cap dt at 50ms to avoid huge jumps
+    const dt = Math.min(now - lastTimeRef.current, 50);
     lastTimeRef.current = now;
     const s = stateRef.current;
     const canvas = canvasRef.current;
@@ -402,8 +515,17 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
 
     if (s.dying) {
       s.dyingTimer += dt;
-      draw(ctx, now);
-      if (s.dyingTimer > 1200) {
+      // Spawn death particles on first frame
+      if (s.dyingTimer < dt * 2) {
+        const px = s.player.x * CELL + CELL / 2;
+        const py = s.player.y * CELL + CELL / 2;
+        spawnParticles(particlesRef.current, px, py, 24, "#ff4444", 5, 5, 0.15, 800);
+        spawnParticles(particlesRef.current, px, py, 16, "#ff8800", 3, 3, 0.1, 600);
+        spawnParticles(particlesRef.current, px, py, 8, "#ffffff", 2, 2, 0.05, 400);
+        shakeRef.current = { x: 0, y: 0, intensity: 10, duration: 500 };
+      }
+      draw(ctx, now, dt);
+      if (s.dyingTimer > 1400) {
         s.lives--;
         if (s.lives <= 0) {
           s.gameOver = true;
@@ -413,9 +535,7 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
         }
         s.player = { x: 10, y: 16, dir: DIRS.left, nextDir: DIRS.left };
         s.ghosts = makeGhosts();
-        s.elapsedMs = 0;
-        s.dying = false;
-        s.dyingTimer = 0;
+        s.elapsedMs = 0; s.dying = false; s.dyingTimer = 0;
         setDisplayLives(s.lives);
         setPhase("playing");
       }
@@ -424,7 +544,7 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
     }
 
     if (!s.started || s.gameOver) {
-      draw(ctx, now);
+      draw(ctx, now, dt);
       animRef.current = requestAnimationFrame(loop);
       return;
     }
@@ -435,10 +555,7 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
     for (const g of s.ghosts) {
       if (!g.released && s.elapsedMs >= g.releaseDelay) {
         g.released = true;
-        // Move ghost to a corridor exit point
-        g.x = 10;
-        g.y = 8;
-        g.dir = DIRS.up;
+        g.x = 10; g.y = 8; g.dir = DIRS.up;
       }
     }
 
@@ -453,9 +570,15 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
       if (p.x >= COLS) p.x = 0;
     }
 
+    // Ninja trail (add a dot every ~8 frames)
+    s.frameCount++;
+    if (s.frameCount % 8 === 0) {
+      trailRef.current.push({ x: p.x, y: p.y, life: 400, maxLife: 400 });
+      if (trailRef.current.length > 20) trailRef.current.shift();
+    }
+
     // Collect pellets
-    const pr = Math.round(p.y);
-    const pc = Math.round(p.x);
+    const pr = Math.round(p.y); const pc = Math.round(p.x);
     if (pr >= 0 && pr < ROWS && pc >= 0 && pc < COLS) {
       const cell = s.maze[pr][pc];
       if (cell === 1) {
@@ -463,6 +586,10 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
         s.score += 10;
         s.pelletsLeft--;
         setDisplayScore(s.score);
+        // Small pellet collect particles
+        const cx = pc * CELL + CELL / 2; const cy = pr * CELL + CELL / 2;
+        spawnParticles(particlesRef.current, cx, cy, 6, "#ffd700", 2, 2, 0.05, 300);
+        spawnScorePopup(popupsRef.current, cx, cy - 10, "+10", "#ffd700");
       } else if (cell === 2) {
         s.maze[pr][pc] = 3;
         s.score += 50;
@@ -471,6 +598,15 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
         s.ghostEatMultiplier = 1;
         for (const g of s.ghosts) { g.scared = true; g.eaten = false; }
         setDisplayScore(s.score);
+        setComboDisplay(0);
+        // Big power-up burst
+        const cx = pc * CELL + CELL / 2; const cy = pr * CELL + CELL / 2;
+        spawnParticles(particlesRef.current, cx, cy, 30, "#ffd700", 6, 6, 0.12, 800);
+        spawnParticles(particlesRef.current, cx, cy, 20, "#ff8800", 4, 4, 0.08, 600);
+        spawnParticles(particlesRef.current, cx, cy, 10, "#ffffff", 3, 3, 0.05, 400);
+        spawnScorePopup(popupsRef.current, cx, cy - 15, "⭐ POWER UP! +50", "#ffd700");
+        shakeRef.current = { x: 0, y: 0, intensity: 5, duration: 200 };
+        powerGlowRef.current = { active: true, timer: 1200, x: cx, y: cy };
       }
     }
 
@@ -480,6 +616,7 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
       if (s.scaredTimer <= 0) {
         s.scaredTimer = 0;
         for (const g of s.ghosts) g.scared = false;
+        setComboDisplay(0);
       }
     }
 
@@ -496,12 +633,23 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
       if (dist < 0.75) {
         if (g.scared) {
           g.eaten = true;
-          s.score += 200 * s.ghostEatMultiplier;
+          const pts = 200 * s.ghostEatMultiplier;
+          s.score += pts;
           s.ghostEatMultiplier *= 2;
           setDisplayScore(s.score);
+          setComboDisplay(s.ghostEatMultiplier);
+          // Ghost death burst
+          const gx = g.x * CELL + CELL / 2; const gy = g.y * CELL + CELL / 2;
+          spawnParticles(particlesRef.current, gx, gy, 20, g.color, 5, 5, 0.08, 700);
+          spawnParticles(particlesRef.current, gx, gy, 10, "#ffffff", 3, 2, 0.05, 400);
+          const comboText = s.ghostEatMultiplier > 2
+            ? `COMBO x${s.ghostEatMultiplier / 2}! +${pts}`
+            : `+${pts}`;
+          spawnScorePopup(popupsRef.current, gx, gy - 15, comboText,
+            s.ghostEatMultiplier > 4 ? "#ff4444" : s.ghostEatMultiplier > 2 ? "#ff8800" : "#00ffff");
+          shakeRef.current = { x: 0, y: 0, intensity: 4, duration: 150 };
         } else {
-          s.dying = true;
-          s.dyingTimer = 0;
+          s.dying = true; s.dyingTimer = 0;
           setPhase("dying");
         }
       }
@@ -514,13 +662,18 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
       setPhase("levelup");
       s.started = false;
       resetLevel(true);
-      setTimeout(() => {
-        s.started = true;
-        setPhase("playing");
-      }, 2000);
+      // Level up burst
+      const cx = COLS * CELL / 2; const cy = ROWS * CELL / 2;
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          spawnParticles(particlesRef.current, cx + (Math.random()-0.5)*200, cy + (Math.random()-0.5)*200,
+            15, ["#ffd700","#ff4444","#00ffff","#a855f7","#ff8800"][i], 4, 4, 0.06, 700);
+        }, i * 150);
+      }
+      setTimeout(() => { s.started = true; setPhase("playing"); }, 2500);
     }
 
-    draw(ctx, now);
+    draw(ctx, now, dt);
     animRef.current = requestAnimationFrame(loop);
   }, [onGameOver, resetLevel]);
 
@@ -533,9 +686,7 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
   const startGame = () => {
     resetLevel(false);
     stateRef.current.started = true;
-    setDisplayScore(0);
-    setDisplayLives(3);
-    setDisplayLevel(1);
+    setDisplayScore(0); setDisplayLives(3); setDisplayLevel(1); setComboDisplay(0);
     setPhase("playing");
   };
 
@@ -557,7 +708,7 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
         >
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-5">
           <div className="flex items-center gap-1">
             {Array.from({ length: 3 }).map((_, i) => (
               <span key={i} className={`text-xl ${i < displayLives ? "opacity-100" : "opacity-20"}`}>🥷</span>
@@ -571,6 +722,12 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
             <p className="text-purple-400 font-black text-2xl">{displayLevel}</p>
             <p className="text-white/40 text-xs">LEVEL</p>
           </div>
+          {comboDisplay > 2 && (
+            <div className="text-center animate-pulse">
+              <p className="text-red-400 font-black text-xl">x{comboDisplay / 2}</p>
+              <p className="text-white/40 text-xs">COMBO</p>
+            </div>
+          )}
           <div className="flex items-center gap-1 text-amber-400">
             <Trophy className="w-4 h-4" />
             <span className="font-bold text-sm">{Math.max(highScore, displayScore).toLocaleString()}</span>
@@ -591,14 +748,15 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
         {phase === "ready" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl"
             style={{ background: "rgba(0,0,0,0.82)" }}>
-            <div className="text-7xl mb-4">🥷</div>
+            <div className="text-7xl mb-4" style={{ filter: "drop-shadow(0 0 20px #a855f7)" }}>🥷</div>
             <h2 className="text-4xl font-black text-white uppercase tracking-widest mb-2">NINJA MAZE</h2>
             <p className="text-purple-300 text-lg mb-1">Collect all belt tokens</p>
-            <p className="text-white/50 text-sm mb-6">Avoid the Senseis — grab ⭐ to turn them into ghosts!</p>
+            <p className="text-white/50 text-sm mb-6">Grab ⭐ to power up — then eat the Senseis for combo points!</p>
             <div className="flex gap-6 mb-8 text-sm text-white/60">
               <span>🥋 = 10 pts</span>
               <span>⭐ = 50 pts</span>
               <span>👻 = 200+ pts</span>
+              <span>🔥 Combos = 2x/4x/8x</span>
             </div>
             <button
               onClick={startGame}
@@ -607,14 +765,14 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
             >
               START GAME
             </button>
-            <p className="text-white/30 text-xs mt-4">Use arrow keys, swipe, or D-pad to move</p>
+            <p className="text-white/30 text-xs mt-4">Arrow keys · Swipe · D-pad</p>
           </div>
         )}
 
         {phase === "levelup" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl"
             style={{ background: "rgba(0,0,0,0.7)" }}>
-            <div className="text-6xl mb-3">🏆</div>
+            <div className="text-6xl mb-3" style={{ filter: "drop-shadow(0 0 20px #ffd700)" }}>🏆</div>
             <h2 className="text-3xl font-black text-yellow-400 uppercase tracking-widest">LEVEL {displayLevel}!</h2>
             <p className="text-white/60 mt-2">Senseis are getting faster...</p>
           </div>
@@ -622,8 +780,8 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
 
         {phase === "dying" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl pointer-events-none"
-            style={{ background: "rgba(200,0,0,0.15)" }}>
-            <div className="text-5xl animate-bounce">💥</div>
+            style={{ background: "rgba(200,0,0,0.12)" }}>
+            <div className="text-5xl" style={{ animation: "none" }}>💥</div>
           </div>
         )}
 
