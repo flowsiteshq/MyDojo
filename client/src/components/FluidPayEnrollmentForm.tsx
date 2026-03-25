@@ -133,9 +133,11 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError }: F
     : waiveEnrollmentFee
       ? Math.max(0, (enrollmentData.downPayment || 0) - enrollmentFee)
       : (enrollmentData.downPayment || 0);
+  // waive_down_payment only removes the one-time enrollment/registration fee ($99),
+  // NOT the first month's tuition — so the student still pays their first month.
   const promoDiscount = appliedPromo
     ? appliedPromo.discountType === "waive_down_payment"
-      ? baseAmount
+      ? enrollmentFee  // only waive the $99 registration fee
       : appliedPromo.discountType === "percent"
         ? baseAmount * (appliedPromo.discountValue / 100)
         : Math.min(appliedPromo.discountValue, baseAmount)
