@@ -2,12 +2,15 @@
  * GameNinjaMaze.tsx
  * Pac-Man style martial arts maze game for the MyDojo kiosk.
  *
- * 🥷 Ninja (player) collects belt tokens (🥋) and power-ups (⭐) through a dojo maze.
- * 👹 Enemy Senseis chase the ninja — collect a power star to turn them into ghosts and eat them!
+ * 🥷 Ninja (player) collects belt tokens and power-ups through a dojo maze.
+ * 👹 Enemy Senseis chase the ninja — collect a power star to turn them into ghosts!
  * Lives: 3  |  Levels: speed & enemies increase each level  |  Score saved on game over.
+ *
+ * Ghost fix: Ghosts spawn on open corridor cells and use BFS pathfinding to exit
+ * and chase the player. Each ghost has a unique scatter target so they spread out.
  */
 import { useEffect, useRef, useState, useCallback } from "react";
-import { RotateCcw, ArrowLeft, Trophy, Heart } from "lucide-react";
+import { RotateCcw, ArrowLeft, Trophy } from "lucide-react";
 
 interface Props {
   onGameOver: (score: number) => void;
@@ -16,7 +19,7 @@ interface Props {
 }
 
 // ── Maze layout ────────────────────────────────────────────────────────────
-// 0 = wall, 1 = pellet, 2 = power pellet, 3 = empty, 4 = ghost house door
+// 0 = wall, 1 = pellet, 2 = power pellet, 3 = empty corridor
 const COLS = 21;
 const ROWS = 21;
 
@@ -30,9 +33,9 @@ const BASE_MAZE: number[][] = [
   [0,1,1,1,1,0,1,1,1,0,0,0,1,1,1,0,1,1,1,1,0],
   [0,0,0,0,1,0,0,0,3,0,0,0,3,0,0,0,1,0,0,0,0],
   [0,0,0,0,1,0,3,3,3,3,3,3,3,3,3,0,1,0,0,0,0],
-  [0,0,0,0,1,0,3,0,0,4,4,4,0,0,3,0,1,0,0,0,0],
+  [0,0,0,0,1,0,3,0,3,3,3,3,3,0,3,0,1,0,0,0,0],
   [1,1,1,1,1,3,3,0,3,3,3,3,3,0,3,3,1,1,1,1,1],
-  [0,0,0,0,1,0,3,0,0,0,0,0,0,0,3,0,1,0,0,0,0],
+  [0,0,0,0,1,0,3,0,3,3,3,3,3,0,3,0,1,0,0,0,0],
   [0,0,0,0,1,0,3,3,3,3,3,3,3,3,3,0,1,0,0,0,0],
   [0,0,0,0,1,0,3,0,0,0,0,0,0,0,3,0,1,0,0,0,0],
   [0,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,0],
@@ -51,10 +54,11 @@ const DIRS: Record<string, Dir> = {
   left:  { x: -1, y: 0 },
   right: { x: 1, y: 0 },
 };
+const DIR_LIST = Object.values(DIRS);
 
 interface Entity {
-  x: number;  // grid col (float for smooth movement)
-  y: number;  // grid row (float)
+  x: number;
+  y: number;
   dir: Dir;
   nextDir: Dir;
 }
@@ -67,18 +71,39 @@ interface Ghost {
   eaten: boolean;
   color: string;
   emoji: string;
+  // BFS target for scatter mode
+  scatterTarget: { x: number; y: number };
+  // release delay in ms — stagger ghost exits
+  releaseDelay: number;
+  released: boolean;
 }
 
 const GHOST_COLORS = ["#FF4444", "#FFB8FF", "#00FFFF", "#FFB852"];
 const GHOST_EMOJIS = ["👹", "👺", "🤡", "💀"];
-const GHOST_START = [
-  { x: 9, y: 9 }, { x: 10, y: 9 }, { x: 11, y: 9 }, { x: 10, y: 10 },
+
+// Ghosts spawn on open corridor cells spread across the maze
+const GHOST_SPAWN: { x: number; y: number }[] = [
+  { x: 9,  y: 10 },  // center
+  { x: 11, y: 10 },  // center-right
+  { x: 9,  y: 11 },  // center-bottom-left
+  { x: 11, y: 11 },  // center-bottom-right
 ];
 
-const CELL = 28; // px per cell
-const SPEED = 0.08; // cells per frame
-const GHOST_SPEED = 0.065;
-const SCARED_DURATION = 8000; // ms
+// Scatter corners — each ghost retreats to a different corner
+const SCATTER_TARGETS = [
+  { x: 1,  y: 1  },  // top-left
+  { x: 19, y: 1  },  // top-right
+  { x: 1,  y: 19 },  // bottom-left
+  { x: 19, y: 19 },  // bottom-right
+];
+
+// Stagger ghost releases: 0, 3, 6, 9 seconds
+const RELEASE_DELAYS = [0, 3000, 6000, 9000];
+
+const CELL = 28;
+const SPEED = 0.09;
+const GHOST_SPEED = 0.07;
+const SCARED_DURATION = 8000;
 
 function deepCopyMaze(m: number[][]): number[][] {
   return m.map(row => [...row]);
@@ -94,14 +119,64 @@ function isWalkable(maze: number[][], col: number, row: number): boolean {
   const r = Math.round(row);
   const c = Math.round(col);
   if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return false;
-  const v = maze[r][c];
-  return v !== 0 && v !== 4;
+  return maze[r][c] !== 0;
 }
 
 function canMove(maze: number[][], x: number, y: number, dir: Dir): boolean {
-  const nx = x + dir.x * 0.5;
-  const ny = y + dir.y * 0.5;
-  return isWalkable(maze, nx, ny);
+  return isWalkable(maze, x + dir.x * 0.6, y + dir.y * 0.6);
+}
+
+// BFS to find best next direction toward target
+function bfsDir(maze: number[][], fromX: number, fromY: number, toX: number, toY: number, currentDir: Dir): Dir {
+  const sx = Math.round(fromX);
+  const sy = Math.round(fromY);
+  const tx = Math.round(toX);
+  const ty = Math.round(toY);
+  if (sx === tx && sy === ty) return currentDir;
+
+  // BFS
+  const visited = new Set<string>();
+  const queue: { x: number; y: number; firstDir: Dir }[] = [];
+  visited.add(`${sx},${sy}`);
+
+  for (const d of DIR_LIST) {
+    const nx = sx + d.x;
+    const ny = sy + d.y;
+    if (isWalkable(maze, nx, ny) && !visited.has(`${nx},${ny}`)) {
+      visited.add(`${nx},${ny}`);
+      queue.push({ x: nx, y: ny, firstDir: d });
+    }
+  }
+
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    if (cur.x === tx && cur.y === ty) return cur.firstDir;
+    for (const d of DIR_LIST) {
+      const nx = cur.x + d.x;
+      const ny = cur.y + d.y;
+      const key = `${nx},${ny}`;
+      if (isWalkable(maze, nx, ny) && !visited.has(key)) {
+        visited.add(key);
+        queue.push({ x: nx, y: ny, firstDir: cur.firstDir });
+      }
+    }
+  }
+  return currentDir;
+}
+
+function makeGhosts(): Ghost[] {
+  return GHOST_SPAWN.map((pos, i) => ({
+    x: pos.x,
+    y: pos.y,
+    dir: DIRS.up,
+    scared: false,
+    eaten: false,
+    color: GHOST_COLORS[i],
+    emoji: GHOST_EMOJIS[i],
+    scatterTarget: SCATTER_TARGETS[i],
+    releaseDelay: RELEASE_DELAYS[i],
+    released: i === 0, // first ghost releases immediately
+  }));
 }
 
 export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) {
@@ -111,13 +186,7 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
     totalPellets: countPellets(BASE_MAZE),
     pelletsLeft: countPellets(BASE_MAZE),
     player: { x: 10, y: 16, dir: DIRS.left, nextDir: DIRS.left } as Entity,
-    ghosts: GHOST_START.map((pos, i) => ({
-      x: pos.x, y: pos.y,
-      dir: DIRS.up,
-      scared: false, eaten: false,
-      color: GHOST_COLORS[i],
-      emoji: GHOST_EMOJIS[i],
-    })) as Ghost[],
+    ghosts: makeGhosts(),
     score: 0,
     lives: 3,
     level: 1,
@@ -127,27 +196,27 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
     won: false,
     dying: false,
     dyingTimer: 0,
+    elapsedMs: 0,   // total ms since game started — used for ghost release timing
     frameCount: 0,
     started: false,
   });
+
   const [displayScore, setDisplayScore] = useState(0);
   const [displayLives, setDisplayLives] = useState(3);
   const [displayLevel, setDisplayLevel] = useState(1);
   const [phase, setPhase] = useState<"ready" | "playing" | "dying" | "gameover" | "levelup">("ready");
   const animRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
-  const keysRef = useRef<Set<string>>(new Set());
 
   // ── Key handling ──────────────────────────────────────────────────────────
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      keysRef.current.add(e.key);
       const s = stateRef.current;
       if (!s.started || s.gameOver || s.dying) return;
-      if (e.key === "ArrowUp")    s.player.nextDir = DIRS.up;
-      if (e.key === "ArrowDown")  s.player.nextDir = DIRS.down;
-      if (e.key === "ArrowLeft")  s.player.nextDir = DIRS.left;
-      if (e.key === "ArrowRight") s.player.nextDir = DIRS.right;
+      if (e.key === "ArrowUp")    { e.preventDefault(); s.player.nextDir = DIRS.up; }
+      if (e.key === "ArrowDown")  { e.preventDefault(); s.player.nextDir = DIRS.down; }
+      if (e.key === "ArrowLeft")  { e.preventDefault(); s.player.nextDir = DIRS.left; }
+      if (e.key === "ArrowRight") { e.preventDefault(); s.player.nextDir = DIRS.right; }
     };
     window.addEventListener("keydown", down);
     return () => window.removeEventListener("keydown", down);
@@ -179,64 +248,75 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
     s.totalPellets = countPellets(BASE_MAZE);
     s.pelletsLeft = s.totalPellets;
     s.player = { x: 10, y: 16, dir: DIRS.left, nextDir: DIRS.left };
-    s.ghosts = GHOST_START.map((pos, i) => ({
-      x: pos.x, y: pos.y,
-      dir: DIRS.up,
-      scared: false, eaten: false,
-      color: GHOST_COLORS[i],
-      emoji: GHOST_EMOJIS[i],
-    }));
+    s.ghosts = makeGhosts();
     s.scaredTimer = 0;
     s.ghostEatMultiplier = 1;
     s.dying = false;
     s.dyingTimer = 0;
+    s.elapsedMs = 0;
     s.won = false;
     if (!keepScore) { s.score = 0; s.lives = 3; s.level = 1; }
   }, []);
 
-  // ── Ghost AI ──────────────────────────────────────────────────────────────
-  function moveGhost(ghost: Ghost, maze: number[][], playerX: number, playerY: number, level: number) {
-    const speed = GHOST_SPEED + level * 0.005;
-    // Try to move in current dir; if blocked, pick new dir
-    const nx = ghost.x + ghost.dir.x * speed;
-    const ny = ghost.y + ghost.dir.y * speed;
-    const blocked = !isWalkable(maze, nx, ny);
+  // ── Ghost movement ────────────────────────────────────────────────────────
+  function moveGhost(ghost: Ghost, maze: number[][], playerX: number, playerY: number, level: number, dt: number) {
+    if (!ghost.released) return;
 
-    if (!blocked) {
-      ghost.x = nx;
-      ghost.y = ny;
-      // At grid center, maybe change direction (chase or scatter)
-      const cx = Math.round(ghost.x);
-      const cy = Math.round(ghost.y);
-      if (Math.abs(ghost.x - cx) < speed && Math.abs(ghost.y - cy) < speed) {
-        ghost.x = cx; ghost.y = cy;
-        // Choose next direction
-        const possible = Object.values(DIRS).filter(d => {
-          const rev = ghost.dir.x === -d.x && ghost.dir.y === -d.y;
-          if (rev) return false;
-          return isWalkable(maze, cx + d.x, cy + d.y);
-        });
-        if (possible.length === 0) {
-          // reverse
-          ghost.dir = { x: -ghost.dir.x, y: -ghost.dir.y };
-        } else if (ghost.scared) {
-          // random when scared
+    const speed = (GHOST_SPEED + level * 0.004) * (dt / 16.67);
+
+    // Snap to grid when close enough to center
+    const cx = Math.round(ghost.x);
+    const cy = Math.round(ghost.y);
+    const atCenter = Math.abs(ghost.x - cx) < speed * 1.5 && Math.abs(ghost.y - cy) < speed * 1.5;
+
+    if (atCenter) {
+      ghost.x = cx;
+      ghost.y = cy;
+
+      // Choose next direction via BFS
+      let targetX: number, targetY: number;
+      if (ghost.scared) {
+        // Run away — pick random open direction
+        const possible = DIR_LIST.filter(d => isWalkable(maze, cx + d.x, cy + d.y));
+        if (possible.length > 0) {
           ghost.dir = possible[Math.floor(Math.random() * possible.length)];
+        }
+        ghost.x += ghost.dir.x * speed;
+        ghost.y += ghost.dir.y * speed;
+        return;
+      } else {
+        // Chase player (with 80% probability) or scatter (20%)
+        if (Math.random() < 0.8) {
+          targetX = playerX;
+          targetY = playerY;
         } else {
-          // Chase player
-          const sorted = possible.sort((a, b) => {
-            const da = Math.hypot(cx + a.x - playerX, cy + a.y - playerY);
-            const db = Math.hypot(cx + b.x - playerX, cy + b.y - playerY);
-            return da - db;
-          });
-          ghost.dir = sorted[0];
+          targetX = ghost.scatterTarget.x;
+          targetY = ghost.scatterTarget.y;
         }
       }
+
+      const bestDir = bfsDir(maze, cx, cy, targetX, targetY, ghost.dir);
+      // Verify the chosen direction is actually walkable
+      if (isWalkable(maze, cx + bestDir.x, cy + bestDir.y)) {
+        ghost.dir = bestDir;
+      } else {
+        // Fallback: pick any walkable direction
+        const possible = DIR_LIST.filter(d => isWalkable(maze, cx + d.x, cy + d.y));
+        if (possible.length > 0) ghost.dir = possible[Math.floor(Math.random() * possible.length)];
+      }
+    }
+
+    // Move in current direction
+    const nx = ghost.x + ghost.dir.x * speed;
+    const ny = ghost.y + ghost.dir.y * speed;
+    if (isWalkable(maze, nx, ny)) {
+      ghost.x = nx;
+      ghost.y = ny;
     } else {
-      // Snap to grid and pick new dir
+      // Snap and pick new direction
       ghost.x = Math.round(ghost.x);
       ghost.y = Math.round(ghost.y);
-      const possible = Object.values(DIRS).filter(d => isWalkable(maze, ghost.x + d.x, ghost.y + d.y));
+      const possible = DIR_LIST.filter(d => isWalkable(maze, ghost.x + d.x, ghost.y + d.y));
       if (possible.length > 0) ghost.dir = possible[Math.floor(Math.random() * possible.length)];
     }
   }
@@ -247,40 +327,31 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
     const W = COLS * CELL;
     const H = ROWS * CELL;
 
-    // Background
     ctx.fillStyle = "#0a0a1a";
     ctx.fillRect(0, 0, W, H);
 
-    // Maze walls & pellets
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         const v = s.maze[r][c];
         const px = c * CELL;
         const py = r * CELL;
         if (v === 0) {
-          // Wall — dojo tile
           ctx.fillStyle = "#1a0a2e";
           ctx.fillRect(px, py, CELL, CELL);
           ctx.strokeStyle = "#4a1a8e";
           ctx.lineWidth = 1;
           ctx.strokeRect(px + 1, py + 1, CELL - 2, CELL - 2);
         } else if (v === 1) {
-          // Belt token pellet
           ctx.fillStyle = "#ffd700";
           ctx.beginPath();
           ctx.arc(px + CELL / 2, py + CELL / 2, 3, 0, Math.PI * 2);
           ctx.fill();
         } else if (v === 2) {
-          // Power pellet — pulsing star
           const pulse = 0.6 + 0.4 * Math.sin(now / 300);
           ctx.font = `${14 * pulse}px serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText("⭐", px + CELL / 2, py + CELL / 2);
-        } else if (v === 4) {
-          // Ghost house door
-          ctx.fillStyle = "#ff69b4";
-          ctx.fillRect(px + 4, py + CELL / 2 - 2, CELL - 8, 4);
         }
       }
     }
@@ -288,13 +359,13 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
     // Ghosts
     for (const g of s.ghosts) {
       if (g.eaten) continue;
+      if (!g.released) continue;
       const px = g.x * CELL;
       const py = g.y * CELL;
       ctx.font = `${CELL - 4}px serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       if (g.scared) {
-        // Flashing when about to un-scare
         const flash = s.scaredTimer < 2000 && Math.floor(now / 300) % 2 === 0;
         ctx.globalAlpha = flash ? 0.4 : 1;
         ctx.fillText("👻", px + CELL / 2, py + CELL / 2);
@@ -322,7 +393,7 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
 
   // ── Game loop ─────────────────────────────────────────────────────────────
   const loop = useCallback((now: number) => {
-    const dt = now - lastTimeRef.current;
+    const dt = Math.min(now - lastTimeRef.current, 50); // cap dt at 50ms to avoid huge jumps
     lastTimeRef.current = now;
     const s = stateRef.current;
     const canvas = canvasRef.current;
@@ -340,13 +411,9 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
           onGameOver(s.score);
           return;
         }
-        // Reset positions only
         s.player = { x: 10, y: 16, dir: DIRS.left, nextDir: DIRS.left };
-        s.ghosts = GHOST_START.map((pos, i) => ({
-          x: pos.x, y: pos.y, dir: DIRS.up,
-          scared: false, eaten: false,
-          color: GHOST_COLORS[i], emoji: GHOST_EMOJIS[i],
-        }));
+        s.ghosts = makeGhosts();
+        s.elapsedMs = 0;
         s.dying = false;
         s.dyingTimer = 0;
         setDisplayLives(s.lives);
@@ -362,14 +429,26 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
       return;
     }
 
+    s.elapsedMs += dt;
+
+    // Release ghosts on schedule
+    for (const g of s.ghosts) {
+      if (!g.released && s.elapsedMs >= g.releaseDelay) {
+        g.released = true;
+        // Move ghost to a corridor exit point
+        g.x = 10;
+        g.y = 8;
+        g.dir = DIRS.up;
+      }
+    }
+
     // Move player
     const p = s.player;
-    const speed = SPEED + s.level * 0.005;
+    const speed = (SPEED + s.level * 0.005) * (dt / 16.67);
     if (canMove(s.maze, p.x, p.y, p.nextDir)) p.dir = p.nextDir;
     if (canMove(s.maze, p.x, p.y, p.dir)) {
       p.x += p.dir.x * speed;
       p.y += p.dir.y * speed;
-      // Tunnel wrap
       if (p.x < 0) p.x = COLS - 1;
       if (p.x >= COLS) p.x = 0;
     }
@@ -407,22 +486,20 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
     // Move ghosts
     for (const g of s.ghosts) {
       if (g.eaten) continue;
-      moveGhost(g, s.maze, p.x, p.y, s.level);
+      moveGhost(g, s.maze, p.x, p.y, s.level, dt);
     }
 
     // Collision detection
     for (const g of s.ghosts) {
-      if (g.eaten) continue;
+      if (g.eaten || !g.released) continue;
       const dist = Math.hypot(g.x - p.x, g.y - p.y);
-      if (dist < 0.7) {
+      if (dist < 0.75) {
         if (g.scared) {
-          // Eat ghost
           g.eaten = true;
           s.score += 200 * s.ghostEatMultiplier;
           s.ghostEatMultiplier *= 2;
           setDisplayScore(s.score);
         } else {
-          // Ninja dies
           s.dying = true;
           s.dyingTimer = 0;
           setPhase("dying");
@@ -447,7 +524,6 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
     animRef.current = requestAnimationFrame(loop);
   }, [onGameOver, resetLevel]);
 
-  // ── Start game loop ───────────────────────────────────────────────────────
   useEffect(() => {
     lastTimeRef.current = performance.now();
     animRef.current = requestAnimationFrame(loop);
@@ -482,23 +558,19 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
         <div className="flex items-center gap-6">
-          {/* Lives */}
           <div className="flex items-center gap-1">
             {Array.from({ length: 3 }).map((_, i) => (
               <span key={i} className={`text-xl ${i < displayLives ? "opacity-100" : "opacity-20"}`}>🥷</span>
             ))}
           </div>
-          {/* Score */}
           <div className="text-center">
             <p className="text-yellow-400 font-black text-2xl tabular-nums">{displayScore.toLocaleString()}</p>
             <p className="text-white/40 text-xs">SCORE</p>
           </div>
-          {/* Level */}
           <div className="text-center">
             <p className="text-purple-400 font-black text-2xl">{displayLevel}</p>
             <p className="text-white/40 text-xs">LEVEL</p>
           </div>
-          {/* High score */}
           <div className="flex items-center gap-1 text-amber-400">
             <Trophy className="w-4 h-4" />
             <span className="font-bold text-sm">{Math.max(highScore, displayScore).toLocaleString()}</span>
@@ -516,7 +588,6 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
           style={{ border: "2px solid rgba(138,43,226,0.6)", boxShadow: "0 0 40px rgba(138,43,226,0.4)" }}
         />
 
-        {/* Ready overlay */}
         {phase === "ready" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl"
             style={{ background: "rgba(0,0,0,0.82)" }}>
@@ -536,11 +607,10 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
             >
               START GAME
             </button>
-            <p className="text-white/30 text-xs mt-4">Use arrow keys or swipe to move</p>
+            <p className="text-white/30 text-xs mt-4">Use arrow keys, swipe, or D-pad to move</p>
           </div>
         )}
 
-        {/* Level up overlay */}
         {phase === "levelup" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl"
             style={{ background: "rgba(0,0,0,0.7)" }}>
@@ -550,7 +620,6 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
           </div>
         )}
 
-        {/* Dying overlay */}
         {phase === "dying" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl pointer-events-none"
             style={{ background: "rgba(200,0,0,0.15)" }}>
@@ -558,7 +627,6 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
           </div>
         )}
 
-        {/* Game over overlay */}
         {phase === "gameover" && (
           <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl"
             style={{ background: "rgba(0,0,0,0.88)" }}>
@@ -591,12 +659,12 @@ export default function GameNinjaMaze({ onGameOver, onBack, highScore }: Props) 
         )}
       </div>
 
-      {/* D-pad for touch */}
+      {/* D-pad */}
       <div className="mt-3 grid grid-cols-3 gap-1" style={{ width: 120 }}>
         {[
-          { label: "↑", dir: "up", col: 2, row: 1 },
-          { label: "←", dir: "left", col: 1, row: 2 },
-          { label: "↓", dir: "down", col: 2, row: 3 },
+          { label: "↑", dir: "up",    col: 2, row: 1 },
+          { label: "←", dir: "left",  col: 1, row: 2 },
+          { label: "↓", dir: "down",  col: 2, row: 3 },
           { label: "→", dir: "right", col: 3, row: 2 },
         ].map(({ label, dir, col, row }) => (
           <button

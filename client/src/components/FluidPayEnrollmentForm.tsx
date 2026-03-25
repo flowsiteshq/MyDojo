@@ -103,15 +103,44 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError }: F
   const tokenizerInstanceRef = useRef<{ submit: (amount?: string) => void } | null>(null);
   const scriptLoadedRef = useRef(false);
   const tokenizerInitializedRef = useRef(false);
+  // Promo code state
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discountType: string; discountValue: number; description: string } | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const validatePromo = trpc.promo.validate.useMutation();
+  const markPromoUsed = trpc.promo.markUsed.useMutation();
+  const handleApplyPromo = async () => {
+    if (!promoInput.trim()) return;
+    setPromoError(null);
+    setPromoLoading(true);
+    try {
+      const result = await validatePromo.mutateAsync({ code: promoInput.trim() });
+      setAppliedPromo(result);
+      toast.success(`Promo code applied: ${result.description}`);
+    } catch (e: any) {
+      setPromoError(e?.message || "Invalid promo code");
+    } finally {
+      setPromoLoading(false);
+    }
+  };
 
   const isSummerCamp = enrollmentData.type === "summer_camp";
   const waiveEnrollmentFee = !isSummerCamp && (enrollmentData.waiveEnrollmentFee ?? false);
   const enrollmentFee = enrollmentData.enrollmentFee ?? 99;
-  const totalAmount = isSummerCamp
+  const baseAmount = isSummerCamp
     ? (enrollmentData.totalAmount || 298)
     : waiveEnrollmentFee
       ? Math.max(0, (enrollmentData.downPayment || 0) - enrollmentFee)
       : (enrollmentData.downPayment || 0);
+  const promoDiscount = appliedPromo
+    ? appliedPromo.discountType === "waive_down_payment"
+      ? baseAmount
+      : appliedPromo.discountType === "percent"
+        ? baseAmount * (appliedPromo.discountValue / 100)
+        : Math.min(appliedPromo.discountValue, baseAmount)
+    : 0;
+  const totalAmount = Math.max(0, baseAmount - promoDiscount);
 
   const createEnrollmentMutation = trpc.member.createEnrollmentCheckout.useMutation({
     onSuccess: () => {
@@ -292,6 +321,36 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError }: F
             </div>
           )}
 
+          {/* Promo code input */}
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-gray-700 flex items-center gap-1.5"><Tag className="w-4 h-4" /> Promo Code</p>
+            {appliedPromo ? (
+              <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-green-800 font-bold text-sm">{appliedPromo.code}</p>
+                  <p className="text-green-700 text-xs">{appliedPromo.description}</p>
+                </div>
+                <button onClick={() => setAppliedPromo(null)} className="text-green-600 hover:text-green-800 text-xs underline">Remove</button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={promoInput}
+                  onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(null); }}
+                  onKeyDown={e => e.key === 'Enter' && handleApplyPromo()}
+                  placeholder="Enter promo code"
+                  className="flex-1 border-2 border-gray-200 rounded-lg px-3 py-2 text-sm font-mono uppercase focus:outline-none focus:border-primary"
+                />
+                <Button type="button" variant="outline" onClick={handleApplyPromo} disabled={promoLoading || !promoInput.trim()} className="shrink-0">
+                  {promoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                </Button>
+              </div>
+            )}
+            {promoError && <p className="text-red-600 text-xs flex items-center gap-1"><AlertCircle className="w-3 h-3" />{promoError}</p>}
+          </div>
+
           {/* Order summary */}
           <div className="bg-gray-50 border border-gray-200 rounded-xl px-5 py-4 space-y-2">
             <p className="font-bold text-gray-900 text-base">
@@ -332,9 +391,15 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError }: F
                 )}
               </>
             )}
+            {appliedPromo && promoDiscount > 0 && (
+              <div className="flex justify-between text-sm text-green-700 font-medium">
+                <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Promo ({appliedPromo.code})</span>
+                <span>-${promoDiscount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-gray-900 text-base border-t border-gray-200 pt-2 mt-1">
               <span>Total due today</span>
-              <span>${totalAmount.toFixed(2)}</span>
+              <span>{totalAmount === 0 ? <span className="text-green-600 font-bold">FREE</span> : `$${totalAmount.toFixed(2)}`}</span>
             </div>
             {!isSummerCamp && (
               <p className="text-xs text-gray-400">
@@ -365,7 +430,36 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError }: F
             </div>
           )}
 
-          {tokenizerReady && !errorMessage && (
+          {totalAmount === 0 ? (
+            <Button
+              onClick={() => {
+                if (appliedPromo) markPromoUsed.mutate({ code: appliedPromo.code });
+                createEnrollmentMutation.mutate({
+                  token: "PROMO_FREE",
+                  packageId: enrollmentData.packageId || 0,
+                  customerName: enrollmentData.customerName,
+                  customerEmail: enrollmentData.customerEmail,
+                  customerPhone: enrollmentData.customerPhone,
+                  studentName: enrollmentData.studentName || enrollmentData.childName || enrollmentData.customerName,
+                  isSummerCamp: isSummerCamp,
+                  summerCampWeek: enrollmentData.weekLabel,
+                  waiveEnrollmentFee: true,
+                  waiverReason: `Promo code: ${appliedPromo?.code}`,
+                  agreementSignature: agreementSig?.signedName,
+                  agreementSignedAt: agreementSig?.signedAt?.toISOString(),
+                });
+              }}
+              disabled={isSubmitting}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg"
+              style={{ minHeight: 60 }}
+            >
+              {isSubmitting ? (
+                <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Processing…</>
+              ) : (
+                "Complete Enrollment — FREE"
+              )}
+            </Button>
+          ) : tokenizerReady && !errorMessage ? (
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
@@ -378,7 +472,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError }: F
                 `Pay $${totalAmount.toFixed(2)} & Complete Enrollment`
               )}
             </Button>
-          )}
+          ) : null}
 
           <div className="flex items-center justify-center gap-2 text-sm text-gray-400 pb-2">
             <Lock className="w-4 h-4" />

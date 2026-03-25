@@ -1619,3 +1619,35 @@ export const familyGroupMembers = mysqlTable("familyGroupMembers", {
 });
 export type FamilyGroupMember = typeof familyGroupMembers.$inferSelect;
 export type InsertFamilyGroupMember = typeof familyGroupMembers.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Promo Codes
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Promo codes that can be applied during enrollment to discount or waive the down payment.
+ */
+export const promoCodes = mysqlTable("promoCodes", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The code students/staff enter (case-insensitive) */
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  /** Human-readable description of what this code does */
+  description: varchar("description", { length: 255 }).notNull(),
+  /** Type of discount: percent off, fixed amount off, or full down payment waiver */
+  discountType: mysqlEnum("discountType", ["percent", "fixed", "waive_down_payment"]).notNull().default("percent"),
+  /** Discount value: percentage (0-100) or fixed dollar amount */
+  discountValue: decimal("discountValue", { precision: 10, scale: 2 }).notNull().default("0.00"),
+  /** Maximum number of times this code can be used (null = unlimited) */
+  maxUses: int("maxUses"),
+  /** Number of times this code has been used */
+  usedCount: int("usedCount").notNull().default(0),
+  /** Unix timestamp (ms) when the code expires (null = never) */
+  expiresAt: bigint("expiresAt", { mode: "number" }),
+  /** Whether the code is currently active */
+  active: int("active").notNull().default(1),
+  /** Who created this code */
+  createdBy: varchar("createdBy", { length: 255 }).notNull().default("admin"),
+  createdAt: bigint("createdAt", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updatedAt", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type PromoCode = typeof promoCodes.$inferSelect;
+export type InsertPromoCode = typeof promoCodes.$inferInsert;

@@ -7770,5 +7770,96 @@ Please enter your card details below to complete your registration securely. Tot
         return result;
       }),
   }),
+
+  // ── Promo Codes ────────────────────────────────────────────────────────────
+  promo: router({
+    /** Validate a promo code and return discount details */
+    validate: publicProcedure
+      .input(z.object({ code: z.string() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        const code = input.code.trim().toUpperCase();
+        const [promo] = await db.select().from(schema.promoCodes)
+          .where(eq(schema.promoCodes.code, code))
+          .limit(1);
+        if (!promo) throw new TRPCError({ code: 'NOT_FOUND', message: 'Invalid promo code' });
+        if (!promo.active) throw new TRPCError({ code: 'BAD_REQUEST', message: 'This promo code is no longer active' });
+        if (promo.expiresAt && Date.now() > promo.expiresAt) throw new TRPCError({ code: 'BAD_REQUEST', message: 'This promo code has expired' });
+        if (promo.maxUses !== null && promo.usedCount >= promo.maxUses) throw new TRPCError({ code: 'BAD_REQUEST', message: 'This promo code has reached its maximum uses' });
+        return {
+          id: promo.id,
+          code: promo.code,
+          description: promo.description,
+          discountType: promo.discountType,
+          discountValue: parseFloat(promo.discountValue as string),
+        };
+      }),
+
+    /** Mark a promo code as used (called after successful enrollment) */
+    markUsed: publicProcedure
+      .input(z.object({ code: z.string() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return { success: false };
+        const code = input.code.trim().toUpperCase();
+        await db.update(schema.promoCodes)
+          .set({ usedCount: sql`usedCount + 1`, updatedAt: Date.now() })
+          .where(eq(schema.promoCodes.code, code));
+        return { success: true };
+      }),
+
+    /** Admin: list all promo codes */
+    adminList: protectedProcedure
+      .query(async ({ ctx }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        const db = await getDb();
+        if (!db) return [];
+        return db.select().from(schema.promoCodes).orderBy(desc(schema.promoCodes.createdAt));
+      }),
+
+    /** Admin: create a new promo code */
+    adminCreate: protectedProcedure
+      .input(z.object({
+        code: z.string().min(3).max(50),
+        description: z.string().min(3).max(255),
+        discountType: z.enum(['percent', 'fixed', 'waive_down_payment']),
+        discountValue: z.number().min(0).max(100),
+        maxUses: z.number().optional(),
+        expiresAt: z.number().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        const code = input.code.trim().toUpperCase();
+        await db.insert(schema.promoCodes).values({
+          code,
+          description: input.description,
+          discountType: input.discountType,
+          discountValue: input.discountValue.toFixed(2),
+          maxUses: input.maxUses ?? null,
+          expiresAt: input.expiresAt ?? null,
+          active: 1,
+          createdBy: ctx.user.name ?? ctx.user.email ?? 'admin',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        return { success: true, code };
+      }),
+
+    /** Admin: toggle active status of a promo code */
+    adminToggle: protectedProcedure
+      .input(z.object({ id: z.number(), active: z.boolean() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+        await db.update(schema.promoCodes)
+          .set({ active: input.active ? 1 : 0, updatedAt: Date.now() })
+          .where(eq(schema.promoCodes.id, input.id));
+        return { success: true };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;
