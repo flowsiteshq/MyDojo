@@ -610,6 +610,15 @@ export default function MemberDashboard2() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showFreezeDialog, setShowFreezeDialog] = useState(false);
+  const [showAddKickboxingDialog, setShowAddKickboxingDialog] = useState(false);
+  const [kickboxingStep, setKickboxingStep] = useState<"info" | "payment" | "success">("info");
+  const [kickboxingMemberName, setKickboxingMemberName] = useState("");
+  const [kickboxingMemberEmail, setKickboxingMemberEmail] = useState("");
+  const [kickboxingMemberPhone, setKickboxingMemberPhone] = useState("");
+  const [kickboxingTokenizerReady, setKickboxingTokenizerReady] = useState(false);
+  const kickboxingTokenizerRef = useRef<any>(null);
+  const kickboxingTokenizerInitRef = useRef(false);
+  const [kickboxingIsSubmitting, setKickboxingIsSubmitting] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [freezeStartDate, setFreezeStartDate] = useState("");
   const [freezeEndDate, setFreezeEndDate] = useState("");
@@ -690,6 +699,69 @@ export default function MemberDashboard2() {
     },
     onError: (err) => alert("Error: " + err.message),
   });
+
+  const addKickboxingMutation = trpc.family.addFamilyKickboxingMember.useMutation({
+    onSuccess: () => {
+      setKickboxingStep("success");
+      setKickboxingIsSubmitting(false);
+    },
+    onError: (err) => {
+      setKickboxingIsSubmitting(false);
+      alert("Payment failed: " + err.message);
+    },
+  });
+
+  // Load FluidPay tokenizer when kickboxing payment step is shown
+  useEffect(() => {
+    if (!showAddKickboxingDialog || kickboxingStep !== "payment") return;
+    if (kickboxingTokenizerInitRef.current) return;
+    const initTokenizer = () => {
+      if (!window.Tokenizer) return;
+      kickboxingTokenizerInitRef.current = true;
+      const publicKey = import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "";
+      const instance = new window.Tokenizer({
+        apikey: publicKey,
+        container: "#kickboxing-tokenizer-container",
+        submission: (resp: { token?: string; status?: string; error?: string }) => {
+          if (!resp.token || resp.status === "error") {
+            alert(resp.error || "Card tokenization failed. Please check your card details.");
+            setKickboxingIsSubmitting(false);
+            return;
+          }
+          addKickboxingMutation.mutate({
+            memberName: kickboxingMemberName,
+            memberEmail: kickboxingMemberEmail,
+            memberPhone: kickboxingMemberPhone || undefined,
+            cardToken: resp.token,
+          });
+        },
+        onLoad: () => setKickboxingTokenizerReady(true),
+        settings: {
+          payment: { types: ["card"] },
+          styles: {
+            body: { "font-family": "inherit", "background-color": "transparent" },
+            inputs: { "border-radius": "8px", "border": "2px solid #e2e8f0", "padding": "14px 16px", "font-size": "16px" },
+          },
+        },
+      });
+      kickboxingTokenizerRef.current = instance;
+    };
+    if (window.Tokenizer) {
+      initTokenizer();
+    } else {
+      const existing = document.getElementById("fluidpay-tokenizer-script");
+      if (!existing) {
+        const script = document.createElement("script");
+        script.id = "fluidpay-tokenizer-script";
+        script.src = "https://app.fluidpay.com/tokenizer/tokenizer.js";
+        script.async = true;
+        script.onload = initTokenizer;
+        document.head.appendChild(script);
+      } else {
+        existing.addEventListener("load", initTokenizer);
+      }
+    }
+  }, [showAddKickboxingDialog, kickboxingStep]);
 
   const { data: enrollment, isLoading: enrollmentLoading } = trpc.member.getEnrollment.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -1412,6 +1484,29 @@ export default function MemberDashboard2() {
                       )
                     )}
 
+                    {/* Add Family Member to Kickboxing */}
+                    <button
+                      onClick={() => {
+                        setKickboxingStep("info");
+                        setKickboxingMemberName("");
+                        setKickboxingMemberEmail("");
+                        setKickboxingMemberPhone("");
+                        setKickboxingTokenizerReady(false);
+                        kickboxingTokenizerInitRef.current = false;
+                        kickboxingTokenizerRef.current = null;
+                        setShowAddKickboxingDialog(true);
+                      }}
+                      className={`flex items-center gap-3 p-4 rounded-xl border transition-colors text-left ${
+                        isDark ? 'border-orange-900/40 hover:bg-orange-950/20' : 'border-orange-100 hover:bg-orange-50'
+                      }`}
+                    >
+                      <Users className="h-5 w-5 text-orange-500 shrink-0" />
+                      <div>
+                        <p className={`font-semibold text-sm ${isDark ? 'text-orange-300' : 'text-orange-700'}`}>Add Family Member to Kickboxing</p>
+                        <p className={`text-xs ${isDark ? 'text-orange-400/60' : 'text-orange-500'}`}>$49/month — discounted family rate</p>
+                      </div>
+                    </button>
+
                     {/* Cancel */}
                     {!myEnrollment.cancellationRequestedAt && (
                       <button
@@ -1426,6 +1521,158 @@ export default function MemberDashboard2() {
                           <p className={`text-xs ${isDark ? 'text-red-400/60' : 'text-red-500'}`}>30-day notice required. One final payment will be charged.</p>
                         </div>
                       </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Add Family Member to Kickboxing Dialog ── */}
+            {showAddKickboxingDialog && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className={`w-full max-w-lg rounded-2xl shadow-2xl ${isDark ? 'bg-zinc-900 border border-white/10' : 'bg-white'}`}>
+                  {/* Header */}
+                  <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e5e7eb' }}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                        <Users className="h-5 w-5 text-orange-500" />
+                      </div>
+                      <div>
+                        <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Add Family Member to Kickboxing</h3>
+                        <p className={`text-xs ${isDark ? 'text-white/50' : 'text-gray-500'}`}>Discounted family rate: $49/month</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setShowAddKickboxingDialog(false)} className={`p-2 rounded-full ${isDark ? 'hover:bg-white/10 text-white/50' : 'hover:bg-gray-100 text-gray-400'}`}>
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <div className="p-6">
+                    {/* Step: Info */}
+                    {kickboxingStep === "info" && (
+                      <div className="space-y-4">
+                        <div className={`p-4 rounded-xl ${isDark ? 'bg-orange-950/30 border border-orange-800/30' : 'bg-orange-50 border border-orange-200'}`}>
+                          <p className={`text-sm font-semibold mb-1 ${isDark ? 'text-orange-300' : 'text-orange-800'}`}>Family Kickboxing Add-On</p>
+                          <p className={`text-xs ${isDark ? 'text-orange-400/80' : 'text-orange-700'}`}>
+                            Add a family member to our kickboxing program at the exclusive family rate of $49/month (regular price $99/month). First month billed today, then monthly on the same date.
+                          </p>
+                        </div>
+                        <div>
+                          <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-white/70' : 'text-gray-700'}`}>Member's Full Name *</label>
+                          <input
+                            type="text"
+                            value={kickboxingMemberName}
+                            onChange={(e) => setKickboxingMemberName(e.target.value)}
+                            placeholder="Jane Doe"
+                            className={`w-full rounded-xl border px-4 py-3 text-sm ${isDark ? 'bg-white/5 border-white/10 text-white placeholder-white/30' : 'border-gray-200 text-gray-900'}`}
+                          />
+                        </div>
+                        <div>
+                          <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-white/70' : 'text-gray-700'}`}>Member's Email *</label>
+                          <input
+                            type="email"
+                            value={kickboxingMemberEmail}
+                            onChange={(e) => setKickboxingMemberEmail(e.target.value)}
+                            placeholder="jane@example.com"
+                            className={`w-full rounded-xl border px-4 py-3 text-sm ${isDark ? 'bg-white/5 border-white/10 text-white placeholder-white/30' : 'border-gray-200 text-gray-900'}`}
+                          />
+                        </div>
+                        <div>
+                          <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-white/70' : 'text-gray-700'}`}>Member's Phone (optional)</label>
+                          <input
+                            type="tel"
+                            value={kickboxingMemberPhone}
+                            onChange={(e) => setKickboxingMemberPhone(e.target.value)}
+                            placeholder="(555) 000-0000"
+                            className={`w-full rounded-xl border px-4 py-3 text-sm ${isDark ? 'bg-white/5 border-white/10 text-white placeholder-white/30' : 'border-gray-200 text-gray-900'}`}
+                          />
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                          <button
+                            onClick={() => setShowAddKickboxingDialog(false)}
+                            className={`flex-1 py-3 rounded-xl font-semibold text-sm border ${isDark ? 'border-white/10 text-white/70 hover:bg-white/5' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (!kickboxingMemberName.trim() || !kickboxingMemberEmail.trim()) {
+                                alert("Please fill in the required fields.");
+                                return;
+                              }
+                              setKickboxingStep("payment");
+                            }}
+                            className="flex-1 py-3 rounded-xl font-semibold text-sm bg-orange-500 hover:bg-orange-600 text-white"
+                          >
+                            Continue to Payment
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step: Payment */}
+                    {kickboxingStep === "payment" && (
+                      <div className="space-y-4">
+                        <div className={`p-3 rounded-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                          <p className={`text-sm font-medium ${isDark ? 'text-white/70' : 'text-gray-600'}`}>Adding: <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{kickboxingMemberName}</span></p>
+                          <p className={`text-sm ${isDark ? 'text-white/50' : 'text-gray-500'}`}>{kickboxingMemberEmail}</p>
+                        </div>
+                        <div className={`p-4 rounded-xl ${isDark ? 'bg-green-950/30 border border-green-800/30' : 'bg-green-50 border border-green-200'}`}>
+                          <p className={`text-sm font-bold ${isDark ? 'text-green-300' : 'text-green-800'}`}>$49.00 billed today</p>
+                          <p className={`text-xs ${isDark ? 'text-green-400/80' : 'text-green-700'}`}>Then $49/month recurring on the same date each month. Cancel anytime.</p>
+                        </div>
+                        <div>
+                          <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-white/70' : 'text-gray-700'}`}>Card Details</label>
+                          <div id="kickboxing-tokenizer-container" className={`rounded-xl border min-h-[80px] ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white'}`} />
+                          {!kickboxingTokenizerReady && (
+                            <p className={`text-xs mt-2 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Loading secure payment form...</p>
+                          )}
+                        </div>
+                        <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-white/40' : 'text-gray-400'}`}>
+                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                          Secured by FluidPay — your card data is encrypted and never stored on our servers.
+                        </div>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => setKickboxingStep("info")}
+                            className={`flex-1 py-3 rounded-xl font-semibold text-sm border ${isDark ? 'border-white/10 text-white/70 hover:bg-white/5' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+                          >
+                            Back
+                          </button>
+                          <button
+                            disabled={kickboxingIsSubmitting || !kickboxingTokenizerReady}
+                            onClick={() => {
+                              if (!kickboxingTokenizerRef.current) return;
+                              setKickboxingIsSubmitting(true);
+                              kickboxingTokenizerRef.current.submit();
+                            }}
+                            className="flex-1 py-3 rounded-xl font-semibold text-sm bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {kickboxingIsSubmitting ? "Processing..." : "Pay $49.00"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step: Success */}
+                    {kickboxingStep === "success" && (
+                      <div className="text-center py-4 space-y-4">
+                        <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto">
+                          <Check className="h-8 w-8 text-green-500" />
+                        </div>
+                        <div>
+                          <h4 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Welcome to Kickboxing!</h4>
+                          <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-600'}`}>
+                            <strong>{kickboxingMemberName}</strong> has been added to the kickboxing program at $49/month. A confirmation will be sent to {kickboxingMemberEmail}.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setShowAddKickboxingDialog(false)}
+                          className="w-full py-3 rounded-xl font-semibold text-sm bg-green-500 hover:bg-green-600 text-white"
+                        >
+                          Done
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>

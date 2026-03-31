@@ -7747,6 +7747,137 @@ Please enter your card details below to complete your registration securely. Tot
         };
       }),
 
+    /** Add a family member to kickboxing at the discounted $49/month family rate */
+    addFamilyKickboxingMember: protectedProcedure
+      .input(z.object({
+        memberName: z.string().min(2, 'Name is required'),
+        memberEmail: z.string().email('Valid email required'),
+        memberPhone: z.string().optional(),
+        cardToken: z.string().min(1, 'Payment token is required'),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
+        const FLUIDPAY_SECRET_KEY = process.env.FLUIDPAY_SECRET_KEY;
+        if (!FLUIDPAY_SECRET_KEY) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
+        const fpHeaders = { 'Authorization': FLUIDPAY_SECRET_KEY, 'Content-Type': 'application/json' };
+        // Look up the family group by the logged-in user's email
+        const groups = await db.select().from(schema.familyGroups)
+          .where(eq(schema.familyGroups.primaryContactEmail, ctx.user.email))
+          .limit(1);
+        if (!groups.length) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'No family group found for your account. Please create a family group first at /family-enrollment.' });
+        }
+        const familyGroup = groups[0];
+        // Step 1: Create customer vault with the new card token
+        const nameParts = input.memberName.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        const vaultRes = await fetch(`${FLUIDPAY_API_URL}/api/vault/customer`, {
+          method: 'POST',
+          headers: fpHeaders,
+          body: JSON.stringify({
+            description: `MyDojo Kickboxing Family Member: ${input.memberName}`,
+            default_payment: { token: input.cardToken },
+            default_billing_address: {
+              first_name: firstName,
+              last_name: lastName,
+              email: input.memberEmail,
+              phone: (input.memberPhone || '').replace(/\D/g, ''),
+            },
+          }),
+        });
+        const vaultData = await vaultRes.json() as any;
+        if (vaultData.status !== 'success') {
+          console.error('[FluidPay] Vault creation failed:', vaultData);
+          throw new TRPCError({ code: 'BAD_REQUEST', message: vaultData.msg || 'Failed to save payment method' });
+        }
+        const fpCustomerId = vaultData.data.id;
+        // Step 2: Charge first month ($49)
+        const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
+          method: 'POST',
+          headers: fpHeaders,
+          body: JSON.stringify({
+            type: 'sale',
+            amount: 4900,
+            currency: 'USD',
+            payment_method: { customer: { id: fpCustomerId } },
+            billing_address: { first_name: firstName, last_name: lastName, email: input.memberEmail },
+            order_id: `KICKBOXING-FAMILY-${Date.now()}`,
+            description: `MyDojo Kickboxing Family Add-On - ${input.memberName} (First Month)`,
+          }),
+        });
+        const chargeData = await chargeRes.json() as any;
+        if (chargeData.status !== 'success' || !chargeData.data) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: chargeData.msg || 'Payment failed' });
+        }
+        const txn = chargeData.data;
+        if (txn.status !== 'approved' && txn.status !== 'pending_settlement') {
+          const declineMsg = txn.response_body?.card?.processor_response_text || `Transaction ${txn.status}`;
+          throw new TRPCError({ code: 'BAD_REQUEST', message: `Payment declined: ${declineMsg}` });
+        }
+        const fpTransactionId = txn.id;
+        // Step 3: Create recurring subscription for monthly billing ($49/month)
+        const nextMonthDate = new Date();
+        nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+        const startDate = nextMonthDate.toISOString().slice(0, 10);
+        const subscriptionRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
+          method: 'POST',
+          headers: fpHeaders,
+          body: JSON.stringify({
+            description: `MyDojo Kickboxing Family Add-On - ${input.memberName}`,
+            customer: { id: fpCustomerId },
+            amount: 4900,
+            billing_cycle_interval: 1,
+            billing_frequency: 'monthly',
+            billing_days: '1',
+            next_bill_date: startDate,
+          }),
+        });
+        const subscriptionData = await subscriptionRes.json() as any;
+        let fpSubscriptionId: string | null = null;
+        if (subscriptionData.status === 'success') {
+          fpSubscriptionId = subscriptionData.data?.id || null;
+        } else {
+          console.error('[FluidPay] Kickboxing subscription creation failed:', subscriptionData);
+        }
+        // Step 4: Save the add-on record
+        const insertResult = await db.insert(schema.familyKickboxingAddOns).values({
+          familyGroupId: familyGroup.id,
+          memberName: input.memberName,
+          memberEmail: input.memberEmail,
+          memberPhone: input.memberPhone || null,
+          monthlyAmount: '49.00',
+          fluidpayCustomerId: fpCustomerId,
+          fluidpaySubscriptionId: fpSubscriptionId,
+          firstChargeTransactionId: fpTransactionId,
+          status: 'active',
+        });
+        const addOnId = (insertResult as any).insertId;
+        // Step 5: Notify owner
+        try {
+          const { notifyOwner } = await import('./_core/notification');
+          await notifyOwner({
+            title: 'New Family Kickboxing Add-On',
+            content: `${ctx.user.name || ctx.user.email} added ${input.memberName} (${input.memberEmail}) to kickboxing at $49/month. Transaction: ${fpTransactionId}`,
+          });
+        } catch {}
+        return { success: true, addOnId, transactionId: fpTransactionId, subscriptionId: fpSubscriptionId };
+      }),
+    /** Get all kickboxing add-ons for the current user's family group */
+    getFamilyKickboxingAddOns: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const groups = await db.select().from(schema.familyGroups)
+        .where(eq(schema.familyGroups.primaryContactEmail, ctx.user.email))
+        .limit(1);
+      if (!groups.length) return [];
+      const addOns = await db.select().from(schema.familyKickboxingAddOns)
+        .where(eq(schema.familyKickboxingAddOns.familyGroupId, groups[0].id))
+        .orderBy(desc(schema.familyKickboxingAddOns.createdAt));
+      return addOns;
+    }),
     /** Admin: list all family groups with member counts */
     adminListFamilyGroups: protectedProcedure
       .input(z.object({ search: z.string().optional() }).optional())

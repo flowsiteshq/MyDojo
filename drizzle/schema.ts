@@ -1651,3 +1651,38 @@ export const promoCodes = mysqlTable("promoCodes", {
 });
 export type PromoCode = typeof promoCodes.$inferSelect;
 export type InsertPromoCode = typeof promoCodes.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Family Kickboxing Add-Ons
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Tracks family members who have been added to the kickboxing program
+ * at the discounted $49/month family rate.
+ * This is separate from the main enrollment flow — it's a lightweight add-on
+ * for existing family group members who want to join kickboxing.
+ */
+export const familyKickboxingAddOns = mysqlTable("familyKickboxingAddOns", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to the family group */
+  familyGroupId: int("familyGroupId").notNull(),
+  /** Name of the new family member being added */
+  memberName: varchar("memberName", { length: 255 }).notNull(),
+  /** Email of the new family member */
+  memberEmail: varchar("memberEmail", { length: 320 }).notNull(),
+  /** Phone of the new family member */
+  memberPhone: varchar("memberPhone", { length: 20 }),
+  /** Monthly rate charged ($49 discounted family rate) */
+  monthlyAmount: decimal("monthlyAmount", { precision: 10, scale: 2 }).notNull().default('49.00'),
+  /** FluidPay customer vault ID for this member */
+  fluidpayCustomerId: varchar("fluidpayCustomerId", { length: 255 }),
+  /** FluidPay recurring subscription ID for monthly billing */
+  fluidpaySubscriptionId: varchar("fluidpaySubscriptionId", { length: 255 }),
+  /** FluidPay transaction ID for the first month's charge */
+  firstChargeTransactionId: varchar("firstChargeTransactionId", { length: 255 }),
+  /** Status of this add-on subscription */
+  status: mysqlEnum("status", ["active", "cancelled", "paused"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type FamilyKickboxingAddOn = typeof familyKickboxingAddOns.$inferSelect;
+export type InsertFamilyKickboxingAddOn = typeof familyKickboxingAddOns.$inferInsert;
