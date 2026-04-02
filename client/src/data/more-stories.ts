@@ -236,5 +236,48 @@ export const moreStories: BlogPost[] = [
     readTime: '3 min read',
     imageUrl: 'https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/BSFVAnfGzQhEByhL.jpg',
     category: 'Culture'
+  },
+  {
+    id: 'martial-arts-enhances-sports',
+    title: 'It\'s Not One or the Other: How Martial Arts Makes Your Athlete Better at Football, Baseball & Soccer',
+    slug: 'martial-arts-enhances-football-baseball-soccer',
+    excerpt: 'Think your child has to choose between martial arts and their favorite sport? Think again. The discipline, agility, and mental toughness built on the mat translate directly to the field — and the best athletes know it.',
+    content: `
+      <p>Every season, parents face the same question: "Should my child stick with their sport, or try martial arts?" The answer might surprise you — it\'s not a choice at all. Martial arts and team sports like football, baseball, and soccer aren\'t competing for your child\'s athletic future. They\'re building it together.</p>
+
+      <p>Some of the greatest athletes in the world — from NFL stars to World Cup champions — cross-train in martial arts not as a side hobby, but as a deliberate performance strategy. Here\'s why.</p>
+
+      <h2>Football: Explosiveness, Balance & Mental Toughness</h2>
+      <p>Football is a game of controlled aggression. Every snap demands explosive power, split-second decisions, and the ability to absorb contact without losing your footing. These are exactly the qualities that martial arts training develops.</p>
+      <p>In the dojo, students practice <strong>stances and footwork</strong> that build the same hip stability a running back needs to cut through a defensive line. Blocking drills develop the same core tension a lineman uses at the point of attack. And perhaps most importantly, martial arts teaches athletes how to <strong>stay calm under pressure</strong> — to think clearly when the game is on the line and the crowd is loud.</p>
+      <p>The mental resilience forged through belt testing and sparring — where you have to perform under stress, push through discomfort, and never quit — is exactly the mindset coaches are trying to build in their players. On the mat, we train that mindset every single class.</p>
+
+      <h2>Baseball: Timing, Hip Rotation & Focus</h2>
+      <p>At its core, baseball is a sport of precision and timing. A batter has less than half a second to decide whether to swing — and the difference between a strikeout and a home run often comes down to hip rotation and weight transfer. Sound familiar? It should. Those are the same mechanics we drill in every karate and kickboxing class.</p>
+      <p>A proper punch or kick requires <strong>perfect hip rotation</strong>, loading power from the ground up through the core and into the strike. A baseball swing works the same way. Martial arts training builds this kinetic chain naturally, giving young athletes a physical edge they can\'t get from batting practice alone.</p>
+      <p>Beyond the physical, baseball demands extraordinary <strong>mental focus</strong>. A pitcher must block out the noise of a full stadium and execute a precise movement on demand. An outfielder must track a fly ball while sprinting at full speed. The focused attention trained in the dojo — where students must be fully present or risk getting hit — develops exactly this kind of concentration. We call it "active mindfulness," and it\'s a skill that transfers directly to the diamond.</p>
+
+      <h2>Soccer: Agility, Spatial Awareness & Composure</h2>
+      <p>Soccer players are some of the most well-rounded athletes in the world. They need cardiovascular endurance, technical footwork, spatial awareness of 21 other players, and the composure to execute under pressure. Martial arts training sharpens every one of these qualities.</p>
+      <p>The <strong>agility ladder drills and footwork patterns</strong> in martial arts directly improve a soccer player\'s first step and change of direction. Defensive positioning in karate — reading an opponent\'s body language to anticipate their next move — is the same skill a defender uses to read a striker\'s hips before they shoot.</p>
+      <p>And when it comes to composure? A soccer player who has stood in front of a sparring partner and learned to stay calm, breathe, and execute under pressure has a psychological advantage that no amount of cone drills can provide. The dojo teaches athletes to <strong>compete without panic</strong> — and that\'s a game-changer in overtime.</p>
+
+      <h2>The Secret Weapon: What All Three Sports Share</h2>
+      <p>Football, baseball, and soccer all reward the same core attributes: <strong>discipline, body awareness, mental toughness, and the ability to perform under pressure</strong>. These are not coincidentally the exact qualities that martial arts is specifically designed to develop.</p>
+      <p>At MyDojo, we see it all the time. The kid who starts training with us in the fall comes back in the spring and their coach is asking what they did differently over the offseason. Their footwork is sharper. Their reaction time is faster. They\'re more coachable, more focused, and they don\'t rattle when the game gets tight.</p>
+      <p>The answer isn\'t a secret — it\'s the mat.</p>
+
+      <h2>It\'s Not One or the Other — It\'s Both</h2>
+      <p>We never ask a child to give up their sport to train with us. We ask them to bring their sport with them. Because everything they learn on the mat — the discipline, the timing, the mental edge — goes right back onto the field, the court, and the diamond.</p>
+      <p>The best athletes in the world don\'t specialize in one thing. They build a foundation of athletic excellence that makes them better at everything they do. Martial arts is that foundation.</p>
+      <p>Whether your child is a quarterback, a shortstop, or a striker — the dojo will make them better. Not instead of their sport. <em>Because of it.</em></p>
+
+      <p style="margin-top: 2rem; font-weight: bold; font-size: 1.1rem;">Ready to give your athlete the edge? <a href="/locations" style="color: #e11d48;">Book a free trial class at MyDojo today.</a></p>
+    `,
+    author: 'Coach Vincent Holmes',
+    date: 'April 2, 2026',
+    readTime: '6 min read',
+    imageUrl: 'https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/martial-arts-sports-crosstraining_0d4be133.jpg',
+    category: 'Performance & Athletics'
   }
 ];
