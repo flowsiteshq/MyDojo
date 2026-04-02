@@ -903,7 +903,7 @@ export default function MemberDashboard2() {
 
   // Detect if this member is in a kickboxing program
   const memberProgram = (enrollment as any)?.enrollment?.program ?? "";
-  const isKickboxing = memberProgram.toLowerCase().includes("kickbox");
+  const isKickboxing = true; // Show kickboxing add-on to all enrolled members
 
   const navItems = [
     { id: "dashboard", label: "Dashboard" },
