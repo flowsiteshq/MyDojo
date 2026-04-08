@@ -302,6 +302,13 @@
       "when": 1774996496497,
       "tag": "0042_high_banshee",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "5",
+      "when": 1775607887295,
+      "tag": "0043_shiny_alex_wilder",
+      "breakpoints": true
     }
   ]
 }

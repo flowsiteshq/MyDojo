@@ -2434,7 +2434,18 @@ Please enter your card details below to complete your registration securely. Tot
           transactionId: fpTransactionId ?? null,
           waiverReason: input.waiveEnrollmentFee ? (input.waiverReason || 'Enrollment fee waived') : undefined,
         }).catch(err => console.error('[Email] Enrollment confirmation fire-and-forget error:', err));
-
+        // Step 6: Notify staff via SMS (fire-and-forget)
+        import('./notifyStaffNewEnrollment').then(({ notifyStaffNewEnrollment }) => {
+          notifyStaffNewEnrollment({
+            studentName: input.studentName || input.customerName,
+            customerName: input.customerName,
+            customerEmail: input.customerEmail,
+            customerPhone: input.customerPhone,
+            packageName,
+            amountCharged,
+            program: pkg?.name ?? undefined,
+          }).catch(() => {});
+        }).catch(() => {});
         return {
           success: true,
           enrollmentId,
@@ -2444,8 +2455,7 @@ Please enter your card details below to complete your registration securely. Tot
           amountCharged,
         };
       }),
-
-    // ── Request to Cancel ──────────────────────────────────────────────────
+    // ── Request to Cancel ────────────────────────────────────────────────────
     requestCancellation: protectedProcedure
       .input(z.object({
         enrollmentId: z.number(),
@@ -7863,6 +7873,18 @@ Please enter your card details below to complete your registration securely. Tot
             content: `${ctx.user.name || ctx.user.email} added ${input.memberName} (${input.memberEmail}) to kickboxing at $49/month. Transaction: ${fpTransactionId}`,
           });
         } catch {}
+        // Step 6: Notify staff via SMS (fire-and-forget)
+        import('./notifyStaffNewEnrollment').then(({ notifyStaffNewEnrollment }) => {
+          notifyStaffNewEnrollment({
+            studentName: input.memberName,
+            customerName: ctx.user.name || ctx.user.email,
+            customerEmail: ctx.user.email,
+            customerPhone: input.memberPhone,
+            packageName: 'Family Kickboxing Add-On',
+            amountCharged: 49.00,
+            program: 'Kickboxing',
+          }).catch(() => {});
+        }).catch(() => {});
         return { success: true, addOnId, transactionId: fpTransactionId, subscriptionId: fpSubscriptionId };
       }),
     /** Get all kickboxing add-ons for the current user's family group */

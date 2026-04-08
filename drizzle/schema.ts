@@ -33,6 +33,8 @@ export const users = mysqlTable("users", {
   phone: varchar("phone", { length: 20 }),
   /** Whether this user wants to receive SMS when a new lead comes in (staff/admin only) */
   leadSmsNotify: int("leadSmsNotify").default(1).notNull(), // 1 = enabled, 0 = disabled
+  /** Whether this user wants to receive SMS when a new student enrolls (staff/admin only) */
+  enrollSmsNotify: int("enrollSmsNotify").default(1).notNull(), // 1 = enabled, 0 = disabled
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
