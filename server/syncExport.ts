@@ -15,10 +15,11 @@ import { eq, desc } from "drizzle-orm";
 export async function handleSyncExport(req: Request, res: Response) {
   // --- Auth check ---
   const authHeader = req.headers["authorization"] ?? "";
+  const xApiKey = req.headers["x-api-key"] ?? "";
   const queryKey = typeof req.query.api_key === "string" ? req.query.api_key : "";
   const providedKey = authHeader.startsWith("Bearer ")
     ? authHeader.slice(7).trim()
-    : queryKey;
+    : (xApiKey as string) || queryKey;
 
   const SYNC_EXPORT_API_KEY = process.env.SYNC_EXPORT_API_KEY;
 
