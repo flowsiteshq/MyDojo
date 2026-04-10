@@ -18,6 +18,7 @@ import { handleGHLWebhook } from "../ghlWebhook";
 import { handleFacebookWebhook, verifyFacebookWebhook } from "../facebookWebhook";
 import { handleFluidPayWebhook } from "../fluidpayWebhook";
 import { handleSitemap } from "../sitemap";
+import { handleSyncExport } from "../syncExport";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -69,6 +70,10 @@ async function startServer() {
 
   // Dynamic XML sitemap — served before Vite/static middleware so it takes priority
   app.get("/sitemap.xml", handleSitemap);
+
+  // Secure sync-export endpoint — returns all intro appointments and students as JSON
+  // Protected by SYNC_EXPORT_API_KEY (Authorization: Bearer <key> or ?api_key=<key>)
+  app.get("/api/sync-export", handleSyncExport);
   
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
