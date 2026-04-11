@@ -375,59 +375,91 @@ export interface RenewalSuccessParams {
   packageName: string;
   amountCharged: number;
   transactionId?: string | null;
+  /** Date the payment was processed (defaults to now if omitted) */
+  paymentDate?: Date | null;
 }
 
 function buildRenewalSuccessHtml(p: RenewalSuccessParams): string {
+  const paymentDateStr = p.paymentDate
+    ? p.paymentDate.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        timeZone: "America/Chicago",
+      })
+    : new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        timeZone: "America/Chicago",
+      });
+
   const txNote = p.transactionId
-    ? `<p style="margin:0 0 24px;font-size:13px;color:#9ca3af;">Transaction ID: ${p.transactionId}</p>`
+    ? `<tr><td style="padding:10px 0;color:#6b7280;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Transaction ID</td><td style="padding:10px 0;color:#9ca3af;font-size:13px;text-align:right;">${p.transactionId}</td></tr>`
     : "";
+
   const greeting =
     p.studentName && p.studentName !== p.customerName
-      ? `Hi ${p.customerName},<br/>This is a receipt for ${p.studentName}&#39;s monthly membership payment.`
-      : `Hi ${p.customerName},<br/>This is a receipt for your monthly membership payment.`;
+      ? `Hi ${p.customerName}, this is a receipt for <strong>${p.studentName}</strong>&#39;s monthly membership payment.`
+      : `Hi ${p.customerName}, this is a receipt for your monthly membership payment.`;
 
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Payment Received — MyDojo</title></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Payment Receipt — MyDojo</title></head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:40px 16px;">
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-  <tr><td style="background:#16a34a;padding:32px 40px;text-align:center;">
-    <p style="margin:0;font-size:28px;font-weight:900;color:#ffffff;letter-spacing:2px;text-transform:uppercase;">MYDOJO</p>
-    <p style="margin:6px 0 0;font-size:13px;color:#bbf7d0;letter-spacing:1px;text-transform:uppercase;">Payment Received</p>
+
+  <!-- Header -->
+  <tr><td style="background:linear-gradient(135deg,#15803d 0%,#16a34a 100%);padding:36px 40px;text-align:center;">
+    <p style="margin:0 0 4px;font-size:32px;font-weight:900;color:#ffffff;letter-spacing:3px;text-transform:uppercase;">MYDOJO</p>
+    <p style="margin:0;font-size:12px;color:#bbf7d0;letter-spacing:2px;text-transform:uppercase;">Payment Receipt</p>
   </td></tr>
-  <tr><td style="padding:40px 40px 32px;">
-    <p style="margin:0 0 20px;font-size:17px;color:#111827;line-height:1.6;">${greeting}</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin:0 0 28px;">
+
+  <!-- Checkmark banner -->
+  <tr><td style="background:#f0fdf4;border-bottom:1px solid #dcfce7;padding:20px 40px;text-align:center;">
+    <p style="margin:0;font-size:22px;font-weight:800;color:#15803d;">&#10003; Payment Confirmed</p>
+    <p style="margin:4px 0 0;font-size:14px;color:#4ade80;">${paymentDateStr}</p>
+  </td></tr>
+
+  <!-- Body -->
+  <tr><td style="padding:36px 40px 28px;">
+    <p style="margin:0 0 24px;font-size:16px;color:#374151;line-height:1.7;">${greeting}</p>
+
+    <!-- Receipt table -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin:0 0 28px;">
       <tr style="background:#f9fafb;">
-        <td style="padding:12px 16px;font-size:13px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.8px;">Description</td>
-        <td style="padding:12px 16px;font-size:13px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.8px;text-align:right;">Amount</td>
+        <td colspan="2" style="padding:12px 20px;font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;">Receipt Details</td>
       </tr>
-      <tr style="border-top:1px solid #e5e7eb;"><td colspan="2" style="padding:0 16px;">
-        <table width="100%" cellpadding="0" cellspacing="0">
-          <tr>
-            <td style="padding:12px 0;color:#374151;font-size:15px;">Monthly membership — ${p.packageName}</td>
-            <td style="padding:12px 0;color:#374151;font-size:15px;text-align:right;">$${p.amountCharged.toFixed(2)}</td>
-          </tr>
-          <tr style="border-top:2px solid #e5e7eb;">
-            <td style="padding:12px 0 8px;font-size:16px;font-weight:700;color:#111827;">Total charged</td>
-            <td style="padding:12px 0 8px;font-size:16px;font-weight:700;color:#16a34a;text-align:right;">$${p.amountCharged.toFixed(2)}</td>
-          </tr>
-        </table>
+      <tr style="border-top:1px solid #e5e7eb;">
+        <td style="padding:14px 20px;color:#374151;font-size:15px;">Monthly membership &mdash; ${p.packageName}</td>
+        <td style="padding:14px 20px;color:#374151;font-size:15px;text-align:right;font-weight:600;">$${p.amountCharged.toFixed(2)}</td>
+      </tr>
+      <tr style="border-top:2px solid #e5e7eb;background:#f9fafb;">
+        <td style="padding:14px 20px;font-size:16px;font-weight:700;color:#111827;">Total Charged</td>
+        <td style="padding:14px 20px;font-size:16px;font-weight:800;color:#16a34a;text-align:right;">$${p.amountCharged.toFixed(2)}</td>
+      </tr>
+      ${txNote}
+    </table>
+
+    <!-- Portal link -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border-radius:10px;margin:0 0 28px;">
+      <tr><td style="padding:18px 24px;">
+        <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.5px;">View Payment History</p>
+        <p style="margin:0 0 14px;font-size:14px;color:#1e40af;line-height:1.6;">You can view all your past payments anytime in your student portal.</p>
+        <a href="https://www.mydojoma.com/member-dashboard" style="display:inline-block;background:#2563eb;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:12px 28px;border-radius:8px;">View My Portal &rarr;</a>
       </td></tr>
     </table>
-    ${txNote}
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
-      <tr><td align="center">
-        <a href="https://www.mydojoma.com" style="display:inline-block;background:#16a34a;color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:8px;letter-spacing:0.5px;">Visit MyDojo &#8594;</a>
-      </td></tr>
-    </table>
-    <p style="margin:0;font-size:16px;color:#374151;line-height:1.6;">See you on the mat!<br/><strong>The MyDojo Team</strong></p>
+
+    <p style="margin:0;font-size:15px;color:#374151;line-height:1.7;">Thank you for being part of the MyDojo family. See you on the mat!<br/><br/><strong>The MyDojo Team</strong></p>
   </td></tr>
+
+  <!-- Footer -->
   <tr><td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
-    <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">MyDojo Martial Arts &amp; Fitness &#183; Tomball, TX<br/>Questions? Call us at (877) 4-MYDOJO</p>
+    <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.8;">MyDojo Martial Arts &amp; Fitness &bull; Tomball, TX<br/>Questions? Call us at (877) 4-MYDOJO &bull; <a href="https://www.mydojoma.com" style="color:#16a34a;text-decoration:none;">www.mydojoma.com</a></p>
   </td></tr>
+
 </table>
 </td></tr>
 </table>

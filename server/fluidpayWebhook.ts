@@ -98,6 +98,7 @@ function verifyFluidPaySignature(
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
 const SUCCESSFUL_STATUSES = new Set([
+  "approved",
   "settled",
   "pending_settlement",
   "authorized",
@@ -240,17 +241,35 @@ async function handleRenewalSuccess(
         eq(schema.paymentFailures.enrollmentId, enrollment.id)
       );
 
+    // Look up the membership package name for a descriptive receipt
+    let packageName = "Membership";
+    if (enrollment.membershipPackageId) {
+      try {
+        const [pkg] = await db!
+          .select({ name: schema.membershipPackages.name })
+          .from(schema.membershipPackages)
+          .where(eq(schema.membershipPackages.id, enrollment.membershipPackageId))
+          .limit(1);
+        if (pkg?.name) packageName = pkg.name;
+      } catch {
+        // Non-critical — fall back to generic name
+      }
+    }
+
     // Send renewal receipt email (non-blocking)
     const amountDollars = (envelope.data?.amount ?? 0) / 100;
+    const paymentDate = envelope.action_at
+      ? new Date(envelope.action_at)
+      : new Date();
+
     sendRenewalSuccessEmail({
       toEmail: enrollment.customerEmail,
       customerName: enrollment.customerName,
       studentName: enrollment.studentName ?? enrollment.customerName,
-      packageName: enrollment.membershipPackageId
-        ? `Membership #${enrollment.membershipPackageId}`
-        : "Membership",
+      packageName,
       amountCharged: amountDollars,
       transactionId: envelope.transaction_id ?? null,
+      paymentDate,
     }).catch(err =>
       console.error("[FluidPay Webhook] Renewal email error:", err)
     );
