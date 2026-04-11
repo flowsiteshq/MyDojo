@@ -117,7 +117,7 @@ export async function getMemberPaymentHistory(
           .where(
             and(
               inArray(webhookEvents.fpSubscriptionId, fpSubIds),
-              inArray(webhookEvents.eventStatus, ["approved", "complete", "success", "settled"])
+              inArray(webhookEvents.eventStatus, ["approved", "complete", "success", "settled", "pending_settlement", "authorized"])
             )
           )
           .orderBy(desc(webhookEvents.createdAt))

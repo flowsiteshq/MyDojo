@@ -708,7 +708,7 @@ function PaymentHistorySection({ isDark }: { isDark: boolean }) {
 
 export default function MemberDashboard2() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "curriculum" | "progress" | "messages" | "children" | "meal_plan">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "curriculum" | "progress" | "messages" | "children" | "meal_plan" | "billing">("dashboard");
   const [profileOpen, setProfileOpen] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showFreezeDialog, setShowFreezeDialog] = useState(false);
@@ -1014,7 +1014,8 @@ export default function MemberDashboard2() {
     { id: "progress", label: "Progress" },
     { id: "messages", label: "Messages" },
     { id: "children", label: "My Children" },
-  ] as const;
+    { id: "billing", label: "Billing" },
+  ];
 
   return (
     <div
@@ -1256,6 +1257,14 @@ export default function MemberDashboard2() {
           <div className={`rounded-2xl border ${t.borderSubtle} p-6`}
             style={isDark ? { background: "rgba(28,18,18,0.85)", backdropFilter: "blur(12px)" } : { background: "#fff" }}>
             <MyChildren isDark={isDark} />
+          </div>
+        )}
+
+        {/* ── BILLING TAB ── */}
+        {activeTab === "billing" && (
+          <div className="space-y-4">
+            <h2 className={`text-xl font-black uppercase tracking-wider ${t.textPrimary}`}>Payment History</h2>
+            <PaymentHistorySection isDark={isDark} />
           </div>
         )}
 
@@ -1955,6 +1964,7 @@ export default function MemberDashboard2() {
           { id: "progress", label: "Progress", Icon: BarChart2 },
           { id: "messages", label: "Messages", Icon: Mail },
           { id: "children", label: "Children", Icon: Baby },
+          { id: "billing", label: "Billing", Icon: CreditCard },
         ] as const).map(({ id, label, Icon }) => {
           const isActive = activeTab === id;
           return (
