@@ -1,6 +1,6 @@
 import { getDb } from "./db";
-import { enrollments, membershipPackages, classSchedule } from "../drizzle/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { enrollments, membershipPackages, classSchedule, webhookEvents } from "../drizzle/schema";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY!, {
@@ -66,54 +66,144 @@ export async function getMemberClassSchedules(packageName: string, location: str
   return schedules.filter(schedule => programs.includes(schedule.program));
 }
 
+export type PaymentHistoryItem = {
+  id: string;
+  type: "payment" | "invoice" | "fluidpay";
+  amount: number;
+  currency: string;
+  status: string;
+  description: string;
+  created: Date;
+  invoiceUrl?: string | null;
+};
+
 /**
- * Get member's payment history from Stripe
+ * Get member's full payment history.
+ * Primary source: FluidPay webhook events (for most students).
+ * Fallback: Stripe payment intents + invoices (for legacy students).
  */
-export async function getMemberPaymentHistory(stripeCustomerId: string) {
+export async function getMemberPaymentHistory(
+  customerEmail: string,
+  stripeCustomerId?: string | null
+): Promise<PaymentHistoryItem[]> {
+  const payments: PaymentHistoryItem[] = [];
+
+  // ── 1. FluidPay webhook events ────────────────────────────────────────────
   try {
-    // Fetch payment intents for this customer
-    const paymentIntents = await stripe.paymentIntents.list({
-      customer: stripeCustomerId,
-      limit: 10,
-    });
+    const db = await getDb();
+    if (db) {
+      // Find all enrollments for this customer to get their FluidPay subscription IDs
+      const memberEnrollments = await db
+        .select({
+          id: enrollments.id,
+          fluidpaySubscriptionId: enrollments.fluidpaySubscriptionId,
+          fluidpayCustomerId: enrollments.fluidpayCustomerId,
+          downPaymentAmount: enrollments.downPaymentAmount,
+          createdAt: enrollments.createdAt,
+        })
+        .from(enrollments)
+        .where(eq(enrollments.customerEmail, customerEmail))
+        .orderBy(desc(enrollments.createdAt));
 
-    // Fetch invoices for subscription payments
-    const invoices = await stripe.invoices.list({
-      customer: stripeCustomerId,
-      limit: 10,
-    });
+      const fpSubIds = memberEnrollments
+        .map(e => e.fluidpaySubscriptionId)
+        .filter((id): id is string => !!id);
 
-    // Combine and format payment history
-    const payments = [
-      ...paymentIntents.data.map(pi => ({
-        id: pi.id,
-        type: "payment" as const,
-        amount: pi.amount / 100, // Convert cents to dollars
-        currency: pi.currency.toUpperCase(),
-        status: pi.status,
-        description: pi.description || "Down Payment",
-        created: new Date(pi.created * 1000),
-      })),
-      ...invoices.data.map(inv => ({
-        id: inv.id,
-        type: "invoice" as const,
-        amount: (inv.amount_paid || 0) / 100,
-        currency: (inv.currency || "usd").toUpperCase(),
-        status: inv.status || "unknown",
-        description: inv.description || "Monthly Membership",
-        created: new Date(inv.created * 1000),
-        invoiceUrl: inv.hosted_invoice_url,
-      })),
-    ];
+      if (fpSubIds.length > 0) {
+        // Pull all approved webhook events for these subscriptions
+        const events = await db
+          .select()
+          .from(webhookEvents)
+          .where(
+            and(
+              inArray(webhookEvents.fpSubscriptionId, fpSubIds),
+              inArray(webhookEvents.eventStatus, ["approved", "complete", "success", "settled"])
+            )
+          )
+          .orderBy(desc(webhookEvents.createdAt))
+          .limit(60);
 
-    // Sort by date descending
-    payments.sort((a, b) => b.created.getTime() - a.created.getTime());
+        for (const evt of events) {
+          if (!evt.amountCents || evt.amountCents <= 0) continue;
+          payments.push({
+            id: `fp-${evt.id}`,
+            type: "fluidpay",
+            amount: evt.amountCents / 100,
+            currency: "USD",
+            status: "paid",
+            description: "Monthly Membership",
+            created: evt.createdAt,
+          });
+        }
+      }
 
-    return payments;
-  } catch (error) {
-    console.error("[Member Dashboard] Error fetching payment history:", error);
-    return [];
+      // Add the down payment from each enrollment record (initial charge)
+      for (const enr of memberEnrollments) {
+        const amt = parseFloat((enr.downPaymentAmount as string) ?? "0");
+        if (amt > 0) {
+          payments.push({
+            id: `fp-down-${enr.id}`,
+            type: "fluidpay",
+            amount: amt,
+            currency: "USD",
+            status: "paid",
+            description: "Enrollment / Down Payment",
+            created: enr.createdAt ?? new Date(),
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[Member Dashboard] Error fetching FluidPay payment history:", err);
   }
+
+  // ── 2. Stripe (legacy / fallback) ────────────────────────────────────────
+  if (stripeCustomerId) {
+    try {
+      const [piList, invList] = await Promise.all([
+        stripe.paymentIntents.list({ customer: stripeCustomerId, limit: 20 }),
+        stripe.invoices.list({ customer: stripeCustomerId, limit: 20 }),
+      ]);
+
+      payments.push(
+        ...piList.data
+          .filter(pi => pi.status === "succeeded")
+          .map(pi => ({
+            id: pi.id,
+            type: "payment" as const,
+            amount: pi.amount / 100,
+            currency: pi.currency.toUpperCase(),
+            status: "paid",
+            description: pi.description || "Down Payment",
+            created: new Date(pi.created * 1000),
+          })),
+        ...invList.data
+          .filter(inv => inv.status === "paid")
+          .map(inv => ({
+            id: inv.id,
+            type: "invoice" as const,
+            amount: (inv.amount_paid || 0) / 100,
+            currency: (inv.currency || "usd").toUpperCase(),
+            status: "paid",
+            description: inv.description || "Monthly Membership",
+            created: new Date(inv.created * 1000),
+            invoiceUrl: inv.hosted_invoice_url,
+          }))
+      );
+    } catch (error) {
+      console.error("[Member Dashboard] Error fetching Stripe payment history:", error);
+    }
+  }
+
+  // Sort by date descending and deduplicate
+  const seen = new Set<string>();
+  return payments
+    .sort((a, b) => b.created.getTime() - a.created.getTime())
+    .filter(p => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
 }
 
 /**

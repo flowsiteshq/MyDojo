@@ -36,6 +36,9 @@ import {
   Camera,
   Upload,
   Check,
+  CreditCard,
+  Receipt,
+  ChevronUp,
 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { getLoginUrl } from "@/const";
@@ -600,6 +603,105 @@ function ProgressTab({ isDark }: { isDark: boolean }) {
           </div>
         )}
       </Card>
+    </div>
+  );
+}
+
+// ─── Payment History Section ─────────────────────────────────────────────────
+function PaymentHistorySection({ isDark }: { isDark: boolean }) {
+  const t = useTokens(isDark);
+  const { isAuthenticated } = useAuth();
+  const [expanded, setExpanded] = useState(false);
+
+  const { data: payments, isLoading } = trpc.member.getPaymentHistory.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+
+  const displayedPayments = expanded ? (payments ?? []) : (payments ?? []).slice(0, 5);
+
+  const formatAmount = (amount: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+
+  const formatDate = (date: Date | string) =>
+    new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+
+  return (
+    <div>
+      <h3 className={`font-bold text-sm uppercase tracking-wider ${t.textMuted} mb-4`}>Payment History</h3>
+      <div
+        className={`rounded-2xl border shadow-sm ${t.cardBorder} overflow-hidden`}
+        style={isDark ? { background: "rgba(28, 18, 18, 0.85)", backdropFilter: "blur(12px)" } : { background: "#fff" }}
+      >
+        {isLoading ? (
+          <div className="flex items-center justify-center py-10">
+            <div className="w-6 h-6 border-2 border-[#E11D2A] border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : !payments || payments.length === 0 ? (
+          <div className={`flex flex-col items-center justify-center py-10 gap-3 ${t.textSecondary}`}>
+            <Receipt className="h-10 w-10 opacity-30" />
+            <p className="text-sm">No payment records found</p>
+          </div>
+        ) : (
+          <>
+            {/* Header row */}
+            <div
+              className={`grid grid-cols-3 gap-4 px-5 py-3 text-xs font-semibold uppercase tracking-wider border-b ${t.textMuted} ${t.borderSubtle}`}
+            >
+              <span>Date</span>
+              <span>Description</span>
+              <span className="text-right">Amount</span>
+            </div>
+            {/* Payment rows */}
+            {displayedPayments.map((p) => (
+              <div
+                key={p.id}
+                className={`grid grid-cols-3 gap-4 px-5 py-4 border-b last:border-b-0 ${t.borderSubtle} ${t.bgHover} transition-colors`}
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                      isDark ? "bg-green-500/15" : "bg-green-50"
+                    }`}
+                  >
+                    <CreditCard className="h-4 w-4 text-green-500" />
+                  </div>
+                  <span className={`text-sm ${t.textSecondary}`}>{formatDate(p.created)}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className={`text-sm ${t.textPrimary}`}>{p.description}</span>
+                </div>
+                <div className="flex items-center justify-end gap-2">
+                  <span className={`text-sm font-semibold ${isDark ? "text-green-400" : "text-green-600"}`}>
+                    {formatAmount(p.amount)}
+                  </span>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      isDark ? "bg-green-500/15 text-green-400" : "bg-green-50 text-green-600"
+                    }`}
+                  >
+                    Paid
+                  </span>
+                </div>
+              </div>
+            ))}
+            {/* Show more / less */}
+            {payments.length > 5 && (
+              <button
+                onClick={() => setExpanded((e) => !e)}
+                className={`w-full flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
+                  isDark ? "text-white/50 hover:text-white hover:bg-white/5" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                }`}
+              >
+                {expanded ? (
+                  <><ChevronUp className="h-4 w-4" /> Show less</>
+                ) : (
+                  <><ChevronDown className="h-4 w-4" /> Show all {payments.length} payments</>
+                )}
+              </button>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -1813,7 +1915,10 @@ export default function MemberDashboard2() {
               </div>
             )}
 
-            {/* Row 5: Training Resources */}
+            {/* Row 5: Payment History */}
+            <PaymentHistorySection isDark={isDark} />
+
+            {/* Row 6: Training Resources */}
             <div>
               <h3 className={`font-bold text-sm uppercase tracking-wider ${t.textMuted} mb-4`}>Training Resources</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
