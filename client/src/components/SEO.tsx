@@ -19,7 +19,7 @@ export default function SEO({
   image = "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/qYVQxVSfHBmyqxTB.jpg",
   keywords = "martial arts, karate, kickboxing, self defense, fitness, kids martial arts, adult martial arts, Tomball martial arts, Texas martial arts, Little Ninjas, Dragon Kids, teen martial arts, after school program"
 }: SEOProps) {
-  const siteUrl = typeof window !== 'undefined' ? window.location.origin : "https://mydojoma.manus.space";
+  const siteUrl = "https://www.mydojoma.com";
   const fullTitle = `${title} | ${name}`;
   const fullImage = image.startsWith("http") ? image : `${siteUrl}${image}`;
   const url = canonical || (typeof window !== 'undefined' ? window.location.href : siteUrl);

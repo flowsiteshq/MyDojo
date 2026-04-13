@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Flame, Heart, Zap, Users, Music, Lightbulb } from "lucide-react";
 import { motion } from "framer-motion";
 import { openIntakeChatbot } from "@/lib/chatbot";
+import SEO from "@/components/SEO";
 
 export default function Kickboxing() {
   const fadeIn = {
@@ -13,6 +14,12 @@ export default function Kickboxing() {
 
   return (
     <div className="flex flex-col w-full">
+      <SEO
+        title="Kickboxing Classes in Tomball, TX"
+        description="High-energy kickboxing classes in Tomball, TX. Burn up to 800 calories in 45 minutes. Real martial arts techniques + cardio conditioning for all fitness levels. Try your first class for $29!"
+        canonical="/programs/kickboxing"
+        keywords="kickboxing Tomball TX, kickboxing classes Tomball, cardio kickboxing near me, kickboxing near me Tomball, fitness kickboxing 77377"
+      />
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center justify-center bg-zinc-900 overflow-hidden">
         <div className="absolute inset-0">

@@ -4,10 +4,17 @@ import { Calendar, User, ArrowRight, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { blogPosts } from "@/data/blog-posts";
+import SEO from "@/components/SEO";
 
 export default function Blog() {
   return (
     <div className="flex flex-col min-h-screen">
+      <SEO
+        title="Martial Arts Blog | Tips, Training &amp; News - Tomball TX"
+        description="Expert martial arts tips, training advice, and dojo news from MyDojo in Tomball, TX. Learn about karate, kickboxing, kids martial arts, self-defense, and fitness."
+        canonical="/blog"
+        keywords="martial arts blog Tomball, karate tips, kickboxing training, kids martial arts tips, self defense advice"
+      />
       {/* Hero Section */}
       <section className="relative py-20 bg-black overflow-hidden">
         <div className="absolute inset-0 z-0">
