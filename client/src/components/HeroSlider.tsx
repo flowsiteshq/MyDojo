@@ -10,7 +10,7 @@ import { useLocationContext } from "@/contexts/LocationContext";
 const slides = [
   {
     id: 1,
-    image: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/zIDoaCehCnpgStnX.jpg",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero1_1d3d63d3.webp",
 
     title: "FUN. FIT.",
     highlight: "STRONG.",
@@ -19,7 +19,7 @@ const slides = [
   },
   {
     id: 2,
-    image: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/tlUXUuBPYHXCQoOD.jpg",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero2_cef79f5f.webp",
 
     title: "UNLEASH YOUR",
     highlight: "POTENTIAL.",
@@ -28,7 +28,7 @@ const slides = [
   },
   {
     id: 3,
-    image: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/KsKIrIzsdElltAKx.jpg",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero3_6fed392b.webp",
 
     title: "EMPOWER",
     highlight: "YOURSELF.",
@@ -37,7 +37,7 @@ const slides = [
   },
   {
     id: 4,
-    image: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/KukjRoGgDzvifvHU.jpg",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero4_98841652.webp",
 
     title: "CONFIDENCE",
     highlight: "FOR LIFE.",
@@ -46,7 +46,7 @@ const slides = [
   },
   {
     id: 5,
-    image: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/QCDmgxbjdlfUOCPT.jpg",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero5_e53b2006.webp",
 
     title: "COMMUNITY",
     highlight: "DRIVEN.",
@@ -55,7 +55,7 @@ const slides = [
   },
   {
     id: 6,
-    image: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/GGgzogAzEZfRZNKu.jpg",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero6_32ad6fad.webp",
 
     title: "TRAIN LIKE",
     highlight: "A PRO.",
@@ -160,6 +160,8 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
           <img
             src={slides[currentSlide].image}
             alt={slides[currentSlide].title}
+            loading={currentSlide === 0 ? "eager" : "lazy"}
+            fetchPriority={currentSlide === 0 ? "high" : "low"}
             className={`w-full h-full object-cover ${
               slides[currentSlide].position === "top" ? "object-top" : "object-center"
             }`}

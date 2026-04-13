@@ -140,7 +140,7 @@ export default function Home() {
 
               <Link href="/about">
                 <Button variant="link" className="text-black font-bold uppercase tracking-wider p-0 hover:text-primary transition-colors group">
-                  Learn More About Us <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  About MyDojo Martial Arts <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
             </motion.div>
@@ -153,7 +153,7 @@ export default function Home() {
               className="relative"
             >
               <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl">
-                <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/PHdwSCDNmhhqpBnQ.png" alt="MyDojo Community" loading="lazy" className="w-full h-auto" />
+                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/community_7e1d84a3.webp" alt="MyDojo Community" loading="lazy" className="w-full h-auto" />
               </div>
               {/* Decorative elements */}
               <div className="absolute -bottom-6 -right-6 w-full h-full border-2 border-primary rounded-2xl z-0"></div>
@@ -169,7 +169,7 @@ export default function Home() {
       {/* Featured Program Section */}
       <section className="py-24 bg-zinc-900 relative overflow-hidden">
         <div className="absolute inset-0">
-          <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/fqJvsNaCyZStNXye.jpg" alt="Adult Kickboxing" loading="lazy" className="w-full h-full object-cover opacity-40" />
+          <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/kickboxing-bg_d4fcc4c5.webp" alt="Adult Kickboxing" loading="lazy" className="w-full h-full object-cover opacity-40" />
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
         </div>
         <div className="container mx-auto px-4 relative z-10">
@@ -191,7 +191,7 @@ export default function Home() {
               </Link>
               <Link href="/programs">
                 <Button variant="outline" className="border-white text-white hover:bg-white hover:text-black text-lg px-8 py-6 h-auto font-heading uppercase tracking-wider">
-                  Learn More
+                  View Kickboxing Classes in Tomball
                 </Button>
               </Link>
             </div>
@@ -245,7 +245,7 @@ export default function Home() {
               className="group relative overflow-hidden rounded-xl bg-zinc-900 h-[500px] shadow-2xl"
             >
               <div className="absolute inset-0">
-                <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/CRAvhHhQitQViikb.jpg" alt="Little Ninjas" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
+                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/little-ninjas_25d41024.webp" alt="Little Ninjas" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
               </div>
               <div className="absolute bottom-0 left-0 w-full p-8">
@@ -257,7 +257,7 @@ export default function Home() {
                 </p>
                 <Link href="/programs">
                   <Button className="bg-transparent border border-white/30 hover:bg-primary hover:border-primary text-white w-full uppercase tracking-wider">
-                    Learn More
+                    Little Ninjas Karate Program
                   </Button>
                 </Link>
               </div>
@@ -283,7 +283,7 @@ export default function Home() {
               className="group relative overflow-hidden rounded-xl bg-zinc-900 h-[500px] shadow-2xl"
             >
               <div className="absolute inset-0">
-                <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/jRfpjBmwhTaRoIDg.jpg" alt="Dragon Kids" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
+                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/core-kids_baf3bc26.webp" alt="Dragon Kids" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
               </div>
               <div className="absolute bottom-0 left-0 w-full p-8">
@@ -295,7 +295,7 @@ export default function Home() {
                 </p>
                 <Link href="/programs">
                   <Button className="bg-transparent border border-white/30 hover:bg-primary hover:border-primary text-white w-full uppercase tracking-wider">
-                    Learn More
+                    Core Kids Martial Arts Program
                   </Button>
                 </Link>
               </div>
@@ -321,7 +321,7 @@ export default function Home() {
               className="group relative overflow-hidden rounded-xl bg-zinc-900 h-[500px] shadow-2xl"
             >
               <div className="absolute inset-0">
-                <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/BDzwdVVYGfFwFaEO.png" alt="Adults & Teens" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
+                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/teens-adults_e35f9895.webp" alt="Adults & Teens" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
               </div>
               <div className="absolute bottom-0 left-0 w-full p-8">
@@ -333,7 +333,7 @@ export default function Home() {
                 </p>
                 <Link href="/programs">
                   <Button className="bg-transparent border border-white/30 hover:bg-primary hover:border-primary text-white w-full uppercase tracking-wider">
-                    Learn More
+                    Teens & Adults Kickboxing Classes
                   </Button>
                 </Link>
               </div>
@@ -356,7 +356,7 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="py-24 bg-primary text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/qYVQxVSfHBmyqxTB.jpg')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-[url('https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/cta-bg_5eebb32b.webp')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
         <div className="container mx-auto px-4 relative z-10 text-center">
           <h2 className="text-4xl md:text-6xl font-heading font-bold mb-6">READY TO START?</h2>
           <p className="text-xl md:text-2xl mb-10 max-w-2xl mx-auto opacity-90">

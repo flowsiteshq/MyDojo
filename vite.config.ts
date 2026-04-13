@@ -24,6 +24,17 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom"],
+          "vendor-router": ["wouter"],
+          "vendor-framer": ["framer-motion"],
+          "vendor-trpc": ["@trpc/client", "@trpc/react-query", "@tanstack/react-query"],
+        },
+      },
+    },
   },
   server: {
     host: true,

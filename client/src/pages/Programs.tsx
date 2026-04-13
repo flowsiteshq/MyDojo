@@ -36,7 +36,7 @@ export default function Programs() {
       
       {/* Header */}
       <div className="bg-black text-white py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/qYVQxVSfHBmyqxTB.jpg')] bg-cover bg-center opacity-20"></div>
+        <div className="absolute inset-0 bg-[url('https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/cta-bg_5eebb32b.webp')] bg-cover bg-center opacity-20"></div>
         <div className="container mx-auto px-4 relative z-10 text-center">
           <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">PROGRAMS</h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
@@ -114,7 +114,7 @@ export default function Programs() {
                 <div className="flex flex-wrap gap-4">
                   <Link href={program.id === 'homeschool' ? '/homeschool' : `/programs/${program.id}`}>
                     <Button className="bg-black hover:bg-primary text-white px-8 py-6 h-auto font-heading uppercase tracking-wider text-lg transition-colors">
-                      Learn More <ArrowRight className="ml-2 h-5 w-5" />
+                      View {program.title} Details <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
                   <Link href={program.id === 'homeschool' ? '/homeschool' : `/programs/${program.id}#lead-form`}>
