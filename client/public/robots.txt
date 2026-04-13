@@ -1,14 +1,18 @@
-# Allow all crawlers
+# Allow all crawlers to index public content
 User-agent: *
 Allow: /
 
-# Disallow admin, auth, and API routes
+# Disallow private/admin routes
 Disallow: /admin/
 Disallow: /api/
 Disallow: /settings/
 Disallow: /notifications/
 Disallow: /login
 Disallow: /register
+Disallow: /member-dashboard
+Disallow: /instructor/
+Disallow: /staff/
+Disallow: /kiosk/
 
 # Sitemap location
-Sitemap: https://www.mydojoma.com/sitemap.xml
+Sitemap: https://mydojoma.com/sitemap.xml
