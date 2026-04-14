@@ -7767,11 +7767,21 @@ Please enter your card details below to complete your registration securely. Tot
         if (!FLUIDPAY_SECRET_KEY) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
         const fpHeaders = { 'Authorization': FLUIDPAY_SECRET_KEY, 'Content-Type': 'application/json' };
         // Look up the family group by the logged-in user's email
-        const groups = await db.select().from(schema.familyGroups)
+        // Auto-create a family group if one doesn't exist — no pre-registration required
+        let groups = await db.select().from(schema.familyGroups)
           .where(eq(schema.familyGroups.primaryContactEmail, ctx.user.email))
           .limit(1);
         if (!groups.length) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'No family group found for your account. Please create a family group first at /family-enrollment.' });
+          console.log(`[FamilyKickboxing] No family group found for ${ctx.user.email} — auto-creating one`);
+          const [insertFg] = await db.insert(schema.familyGroups).values({
+            primaryContactName: ctx.user.name || ctx.user.email,
+            primaryContactEmail: ctx.user.email,
+            primaryContactPhone: '',
+          });
+          const newFgId = (insertFg as any).insertId;
+          groups = await db.select().from(schema.familyGroups)
+            .where(eq(schema.familyGroups.id, newFgId))
+            .limit(1);
         }
         const familyGroup = groups[0];
         // Step 1: Create customer vault with the new card token
