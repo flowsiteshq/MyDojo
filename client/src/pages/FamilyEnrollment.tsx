@@ -9,6 +9,11 @@ import { Link } from "wouter";
 declare global {
   interface Window {
     TokenPay?: any;
+    Tokenizer?: new (config: {
+      apikey: string;
+      container: string;
+      submission: (resp: { token?: string; status?: string; error?: string }) => void;
+    }) => { submit: (amount?: string) => void };
   }
 }
 
@@ -32,55 +37,62 @@ export default function FamilyEnrollment() {
 
   const createFamilyGroup = trpc.family.createFamilyGroup.useMutation();
 
-    // Load FluidPay tokenizer script
+    // Pre-load the new FluidPay Tokenizer script (same as FluidPayEnrollmentForm)
+  useEffect(() => {
+    if (window.Tokenizer) { setTokenizerReady(true); return; }
+    const existing = document.getElementById("fluidpay-tokenizer-v2");
+    if (existing) return; // already injected
+    const script = document.createElement("script");
+    script.id = "fluidpay-tokenizer-v2";
+    script.src = "https://app.fluidpay.com/tokenizer/tokenizer.js";
+    script.async = true;
+    script.onload = () => setTokenizerReady(true);
+    script.onerror = () => { setTokenizerError(true); };
+    document.head.appendChild(script);
+  }, []);
+
+  // Initialize tokenizer when payment step is shown
   useEffect(() => {
     if (step !== "payment") return;
-    const FLUIDPAY_PUBLIC_KEY = (window as any).__ENV__?.VITE_FLUIDPAY_PUBLIC_KEY ||
-      import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "";
-
-    const initTokenizer = (publicKey: string) => {
-      if (!window.TokenPay) return;
-      // Remove any existing iframe inside #card-number to avoid duplicates
-      const cardDiv = document.getElementById("card-number");
-      if (cardDiv) cardDiv.innerHTML = "";
-      const tp = window.TokenPay(publicKey);
-      tp.initialize({
-        dataElement: "#card-number",
-        errorElement: "#card-errors",
-        useStyles: false,
-        disableZip: true,
+    if (!tokenizerReady || tokenizerRef.current) return;
+    if (!window.Tokenizer) return;
+    const FLUIDPAY_PUBLIC_KEY = import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "";
+    try {
+      const instance = new window.Tokenizer({
+        apikey: FLUIDPAY_PUBLIC_KEY,
+        container: "#card-number",
+        submission: (resp: any) => {
+          if (!resp.token || resp.status === "error") {
+            toast.error("Card error", { description: resp.error || "Invalid card details." });
+            setIsLoading(false);
+            return;
+          }
+          // Token received — submit to server
+          createFamilyGroup.mutate({
+            primaryContactName: contactName,
+            primaryContactEmail: contactEmail,
+            primaryContactPhone: contactPhone || undefined,
+            cardToken: resp.token,
+          }, {
+            onSuccess: (result) => {
+              setFamilyGroupId(result.familyGroupId);
+              setStep("success");
+              toast.success("Family account created! 🎉", { description: "Your $99 family registration fee has been processed." });
+              setIsLoading(false);
+            },
+            onError: (err: any) => {
+              toast.error("Payment failed", { description: err.message || "Please check your card details." });
+              setIsLoading(false);
+            },
+          });
+        },
       });
-      tokenizerRef.current = tp;
-      setTokenizerReady(true);
-    };
-
-    const waitForTokenPay = (publicKey: string, attempts = 0) => {
-      if (window.TokenPay) {
-        initTokenizer(publicKey);
-        return;
-      }
-      if (attempts > 40) {
-        console.error("FluidPay TokenPay failed to load after 4 seconds");
-        setTokenizerError(true);
-        return;
-      }
-      setTimeout(() => waitForTokenPay(publicKey, attempts + 1), 100);
-    };
-
-    const existingScript = document.getElementById("fluidpay-tokenizer");
-    if (!existingScript) {
-      const script = document.createElement("script");
-      script.id = "fluidpay-tokenizer";
-      script.src = "https://app.fluidpay.com/js/tokenizer.js";
-      script.async = false; // load synchronously so TokenPay is available immediately
-      script.onload = () => waitForTokenPay(FLUIDPAY_PUBLIC_KEY);
-      script.onerror = () => { console.error("Failed to load FluidPay tokenizer script"); setTokenizerError(true); };
-      document.head.appendChild(script);
-    } else {
-      // Script already loaded, just wait for TokenPay
-      waitForTokenPay(FLUIDPAY_PUBLIC_KEY);
+      tokenizerRef.current = instance;
+    } catch (err) {
+      console.error("Failed to initialize FluidPay Tokenizer", err);
+      setTokenizerError(true);
     }
-  }, [step]);
+  }, [step, tokenizerReady]);
 
   const handleInfoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,36 +103,15 @@ export default function FamilyEnrollment() {
     setStep("payment");
   };
 
-  const handlePayment = async (e: React.FormEvent) => {
+  const handlePayment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!tokenizerRef.current) {
       toast.error("Payment form not ready. Please wait.");
       return;
     }
     setIsLoading(true);
-    tokenizerRef.current.createToken(
-      async (token: string) => {
-        try {
-          const result = await createFamilyGroup.mutateAsync({
-            primaryContactName: contactName,
-            primaryContactEmail: contactEmail,
-            primaryContactPhone: contactPhone || undefined,
-            cardToken: token,
-          });
-          setFamilyGroupId(result.familyGroupId);
-          setStep("success");
-          toast.success("Family account created! 🎉", { description: "Your $99 family registration fee has been processed." });
-        } catch (err: any) {
-          toast.error("Payment failed", { description: err.message || "Please check your card details." });
-        } finally {
-          setIsLoading(false);
-        }
-      },
-      (err: any) => {
-        toast.error("Card error", { description: err?.message || "Invalid card details." });
-        setIsLoading(false);
-      }
-    );
+    // The new Tokenizer API uses submit() which triggers the submission callback set during init
+    tokenizerRef.current.submit("99.00");
   };
 
   return (
