@@ -6,11 +6,6 @@ import { toast } from "sonner";
 import { Users, CheckCircle, CreditCard, Tag, Star, ArrowRight, Shield, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 
-declare global {
-  interface Window {
-    TokenPay?: any;
-  }
-}
 
 type Step = "info" | "payment" | "success";
 
@@ -20,42 +15,81 @@ export default function FamilyEnrollment() {
   const [tokenizerReady, setTokenizerReady] = useState(false);
   const [tokenizerError, setTokenizerError] = useState(false);
   const tokenizerRef = useRef<any>(null);
+  const tokenizerInitializedRef = useRef(false);
 
   // Form state — prefill from URL query params if provided (?name=Brenda+Galvez&phone=8326655442)
-  const _params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-  const [contactName, setContactName] = useState(_params.get('name') || "");
-  const [contactEmail, setContactEmail] = useState(_params.get('email') || "");
-  const [contactPhone, setContactPhone] = useState(_params.get('phone') || "");
+  const [contactName, setContactName] = useState(() => {
+    const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    return p.get("name") || "";
+  });
+  const [contactEmail, setContactEmail] = useState(() => {
+    const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    return p.get("email") || "";
+  });
+  const [contactPhone, setContactPhone] = useState(() => {
+    const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    return p.get("phone") || "";
+  });
 
   // Result state
   const [familyGroupId, setFamilyGroupId] = useState<number | null>(null);
 
   const createFamilyGroup = trpc.family.createFamilyGroup.useMutation();
 
-    // Pre-load the new FluidPay Tokenizer script (same as FluidPayEnrollmentForm)
+  // Pre-load the FluidPay Tokenizer script
   useEffect(() => {
     if (window.Tokenizer) { setTokenizerReady(true); return; }
     const existing = document.getElementById("fluidpay-tokenizer-v2");
-    if (existing) return; // already injected
+    if (existing) {
+      // Script already in DOM — wait for it
+      const poll = setInterval(() => {
+        if (window.Tokenizer) { setTokenizerReady(true); clearInterval(poll); }
+      }, 100);
+      setTimeout(() => { clearInterval(poll); if (!window.Tokenizer) setTokenizerError(true); }, 10000);
+      return;
+    }
     const script = document.createElement("script");
     script.id = "fluidpay-tokenizer-v2";
     script.src = "https://app.fluidpay.com/tokenizer/tokenizer.js";
     script.async = true;
     script.onload = () => setTokenizerReady(true);
-    script.onerror = () => { setTokenizerError(true); };
+    script.onerror = () => setTokenizerError(true);
     document.head.appendChild(script);
   }, []);
 
   // Initialize tokenizer when payment step is shown
   useEffect(() => {
     if (step !== "payment") return;
-    if (!tokenizerReady || tokenizerRef.current) return;
+    if (!tokenizerReady || tokenizerInitializedRef.current) return;
     if (!window.Tokenizer) return;
+    tokenizerInitializedRef.current = true;
     const FLUIDPAY_PUBLIC_KEY = import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "";
     try {
       const instance = new window.Tokenizer({
         apikey: FLUIDPAY_PUBLIC_KEY,
         container: "#card-number",
+        onLoad: () => {},
+        settings: {
+          payment: { types: ["card"] },
+          styles: {
+            body: { "font-family": "inherit", "background-color": "transparent" },
+            inputs: {
+              "border-radius": "8px",
+              "border": "2px solid #444",
+              "padding": "14px 16px",
+              "font-size": "18px",
+              "height": "56px",
+              "color": "#ffffff",
+              "background-color": "#1a1a1a",
+            },
+            labels: {
+              "font-size": "15px",
+              "font-weight": "600",
+              "color": "#aaaaaa",
+              "margin-bottom": "6px",
+            },
+          },
+        },
         submission: (resp: any) => {
           if (!resp.token || resp.status === "error") {
             toast.error("Card error", { description: resp.error || "Invalid card details." });
@@ -63,23 +97,30 @@ export default function FamilyEnrollment() {
             return;
           }
           // Token received — submit to server
-          createFamilyGroup.mutate({
-            primaryContactName: contactName,
-            primaryContactEmail: contactEmail,
-            primaryContactPhone: contactPhone || undefined,
-            cardToken: resp.token,
-          }, {
-            onSuccess: (result) => {
-              setFamilyGroupId(result.familyGroupId);
-              setStep("success");
-              toast.success("Family account created! 🎉", { description: "Your $99 family registration fee has been processed." });
-              setIsLoading(false);
+          createFamilyGroup.mutate(
+            {
+              primaryContactName: contactName,
+              primaryContactEmail: contactEmail,
+              primaryContactPhone: contactPhone || undefined,
+              cardToken: resp.token,
             },
-            onError: (err: any) => {
-              toast.error("Payment failed", { description: err.message || "Please check your card details." });
-              setIsLoading(false);
-            },
-          });
+            {
+              onSuccess: (result) => {
+                setFamilyGroupId(result.familyGroupId);
+                setStep("success");
+                toast.success("Family account created! 🎉", {
+                  description: "Your $99 family registration fee has been processed.",
+                });
+                setIsLoading(false);
+              },
+              onError: (err: any) => {
+                toast.error("Payment failed", {
+                  description: err.message || "Please check your card details.",
+                });
+                setIsLoading(false);
+              },
+            }
+          );
         },
       });
       tokenizerRef.current = instance;
@@ -105,7 +146,6 @@ export default function FamilyEnrollment() {
       return;
     }
     setIsLoading(true);
-    // The new Tokenizer API uses submit() which triggers the submission callback set during init
     tokenizerRef.current.submit("99.00");
   };
 
@@ -147,7 +187,10 @@ export default function FamilyEnrollment() {
               When a second family member enrolls, they receive 50% off their monthly membership fee — every month, for the life of their membership.
             </p>
             <div className="mt-4 p-3 bg-white/5 rounded-xl">
-              <p className="text-sm text-white/60">Example: If monthly tuition is <span className="text-white font-bold">$149/mo</span>, 2nd member pays only <span className="text-red-400 font-black">$74.50/mo</span></p>
+              <p className="text-sm text-white/60">
+                Example: If monthly tuition is <span className="text-white font-bold">$149/mo</span>, 2nd member pays only{" "}
+                <span className="text-red-400 font-black">$74.50/mo</span>
+              </p>
             </div>
           </div>
 
@@ -162,7 +205,9 @@ export default function FamilyEnrollment() {
               Instead of paying a separate $99 registration fee per person, your entire family is covered under one $99 family registration — no matter how many members enroll.
             </p>
             <div className="mt-4 p-3 bg-white/5 rounded-xl">
-              <p className="text-sm text-white/60">Family of 3 saves <span className="text-yellow-400 font-black">$198</span> on registration fees alone</p>
+              <p className="text-sm text-white/60">
+                Family of 3 saves <span className="text-yellow-400 font-black">$198</span> on registration fees alone
+              </p>
             </div>
           </div>
         </div>
@@ -199,7 +244,7 @@ export default function FamilyEnrollment() {
                   <label className="block text-sm font-medium text-white/70 mb-1">Primary Contact Name *</label>
                   <Input
                     value={contactName}
-                    onChange={e => setContactName(e.target.value)}
+                    onChange={(e) => setContactName(e.target.value)}
                     placeholder="Full name"
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
                     required
@@ -210,7 +255,7 @@ export default function FamilyEnrollment() {
                   <Input
                     type="email"
                     value={contactEmail}
-                    onChange={e => setContactEmail(e.target.value)}
+                    onChange={(e) => setContactEmail(e.target.value)}
                     placeholder="your@email.com"
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
                     required
@@ -221,12 +266,15 @@ export default function FamilyEnrollment() {
                   <Input
                     type="tel"
                     value={contactPhone}
-                    onChange={e => setContactPhone(e.target.value)}
+                    onChange={(e) => setContactPhone(e.target.value)}
                     placeholder="(555) 000-0000"
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
                   />
                 </div>
-                <Button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-black text-lg py-6 h-auto uppercase tracking-wider">
+                <Button
+                  type="submit"
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-black text-lg py-6 h-auto uppercase tracking-wider"
+                >
                   Continue to Payment <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </form>
@@ -258,27 +306,29 @@ export default function FamilyEnrollment() {
               </div>
 
               {tokenizerError && (
-                <div className="rounded-lg bg-yellow-900/40 border border-yellow-600/50 p-4 text-yellow-300 text-sm mb-2">
+                <div className="rounded-lg bg-yellow-900/40 border border-yellow-600/50 p-4 text-yellow-300 text-sm mb-4">
                   <p className="font-bold mb-1">⚠️ Payment system temporarily unavailable</p>
-                  <p>Our payment processor is experiencing a brief outage. Please try again in a few minutes, or call us at <strong>(877) 4-MYDOJO</strong> to complete your enrollment over the phone.</p>
+                  <p>
+                    Please try again in a few minutes, or call us at <strong>(877) 4-MYDOJO</strong> to complete your enrollment over the phone.
+                  </p>
                 </div>
               )}
+
               <form onSubmit={handlePayment} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-white/70 mb-2">Card Number</label>
                   {!tokenizerReady && !tokenizerError && (
-                    <div className="bg-white/10 border border-white/20 rounded-lg p-3 min-h-[44px] flex items-center gap-2 text-white/40 text-sm">
+                    <div className="bg-white/10 border border-white/20 rounded-lg p-3 min-h-[56px] flex items-center gap-2 text-white/40 text-sm">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Loading secure payment form...
                     </div>
                   )}
                   <div
                     id="card-number"
-                    className={`bg-white/10 border border-white/20 rounded-lg p-3 min-h-[44px] text-white ${!tokenizerReady ? 'hidden' : ''}`}
-                    style={{ colorScheme: "dark" }}
+                    className={`rounded-lg min-h-[56px] ${!tokenizerReady ? "hidden" : ""}`}
                   />
                 </div>
-                <div id="card-errors" className="text-red-400 text-sm min-h-[20px]" />
+
                 <div className="flex items-center gap-2 text-white/50 text-xs">
                   <Shield className="w-4 h-4" />
                   <span>Secured by FluidPay — your card data is encrypted and never stored on our servers.</span>
@@ -286,13 +336,17 @@ export default function FamilyEnrollment() {
 
                 <Button
                   type="submit"
-                  disabled={isLoading || !tokenizerReady}
+                  disabled={isLoading || !tokenizerReady || tokenizerError}
                   className="w-full bg-red-600 hover:bg-red-700 text-white font-black text-lg py-6 h-auto uppercase tracking-wider disabled:opacity-50"
                 >
                   {isLoading ? (
-                    <><Loader2 className="mr-2 w-5 h-5 animate-spin" /> Processing...</>
+                    <>
+                      <Loader2 className="mr-2 w-5 h-5 animate-spin" /> Processing...
+                    </>
                   ) : (
-                    <>Pay $99 & Create Family Account <ArrowRight className="ml-2 w-5 h-5" /></>
+                    <>
+                      PAY $99 & CREATE FAMILY ACCOUNT <ArrowRight className="ml-2 w-5 h-5" />
+                    </>
                   )}
                 </Button>
 
@@ -318,27 +372,35 @@ export default function FamilyEnrollment() {
                 Welcome to the MyDojo family, <span className="text-white font-bold">{contactName}</span>!
               </p>
               <p className="text-white/60 text-sm mb-8">
-                Your $99 family registration fee has been processed. Your family account ID is <span className="text-green-400 font-mono font-bold">#{familyGroupId}</span>.
+                Your $99 family registration fee has been processed. Your family account ID is{" "}
+                <span className="text-green-400 font-mono font-bold">#{familyGroupId}</span>.
               </p>
 
               <div className="bg-white/5 rounded-xl p-6 mb-8 text-left space-y-3">
                 <h3 className="font-bold text-lg mb-3">Your Family Benefits Are Active:</h3>
                 <div className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 shrink-0" />
-                  <p className="text-sm text-white/70">✅ One-time $99 registration fee paid — no additional registration fees for any family member</p>
+                  <p className="text-sm text-white/70">
+                    ✅ One-time $99 registration fee paid — no additional registration fees for any family member
+                  </p>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 shrink-0" />
-                  <p className="text-sm text-white/70">✅ 2nd family member enrolls at <span className="text-red-400 font-bold">50% off</span> monthly tuition</p>
+                  <p className="text-sm text-white/70">
+                    ✅ 2nd family member enrolls at <span className="text-red-400 font-bold">50% off</span> monthly tuition
+                  </p>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 shrink-0" />
-                  <p className="text-sm text-white/70">✅ A confirmation has been sent to <span className="text-white font-medium">{contactEmail}</span></p>
+                  <p className="text-sm text-white/70">
+                    ✅ A confirmation has been sent to <span className="text-white font-medium">{contactEmail}</span>
+                  </p>
                 </div>
               </div>
 
               <p className="text-white/60 text-sm mb-6">
-                To enroll your family members, visit our front desk or call us at <span className="text-white font-bold">(877) 4-MYDOJO</span> and mention your family account ID.
+                To enroll your family members, visit our front desk or call us at{" "}
+                <span className="text-white font-bold">(877) 4-MYDOJO</span> and mention your family account ID.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
