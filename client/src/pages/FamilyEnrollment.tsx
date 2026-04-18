@@ -31,37 +31,54 @@ export default function FamilyEnrollment() {
 
   const createFamilyGroup = trpc.family.createFamilyGroup.useMutation();
 
-  // Load FluidPay tokenizer script
+    // Load FluidPay tokenizer script
   useEffect(() => {
     if (step !== "payment") return;
     const FLUIDPAY_PUBLIC_KEY = (window as any).__ENV__?.VITE_FLUIDPAY_PUBLIC_KEY ||
       import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "";
+
+    const initTokenizer = (publicKey: string) => {
+      if (!window.TokenPay) return;
+      // Remove any existing iframe inside #card-number to avoid duplicates
+      const cardDiv = document.getElementById("card-number");
+      if (cardDiv) cardDiv.innerHTML = "";
+      const tp = window.TokenPay(publicKey);
+      tp.initialize({
+        dataElement: "#card-number",
+        errorElement: "#card-errors",
+        useStyles: false,
+        disableZip: true,
+      });
+      tokenizerRef.current = tp;
+      setTokenizerReady(true);
+    };
+
+    const waitForTokenPay = (publicKey: string, attempts = 0) => {
+      if (window.TokenPay) {
+        initTokenizer(publicKey);
+        return;
+      }
+      if (attempts > 40) {
+        console.error("FluidPay TokenPay failed to load after 4 seconds");
+        return;
+      }
+      setTimeout(() => waitForTokenPay(publicKey, attempts + 1), 100);
+    };
 
     const existingScript = document.getElementById("fluidpay-tokenizer");
     if (!existingScript) {
       const script = document.createElement("script");
       script.id = "fluidpay-tokenizer";
       script.src = "https://app.fluidpay.com/js/tokenizer.js";
-      script.async = true;
-      script.onload = () => initTokenizer(FLUIDPAY_PUBLIC_KEY);
+      script.async = false; // load synchronously so TokenPay is available immediately
+      script.onload = () => waitForTokenPay(FLUIDPAY_PUBLIC_KEY);
+      script.onerror = () => console.error("Failed to load FluidPay tokenizer script");
       document.head.appendChild(script);
     } else {
-      initTokenizer(FLUIDPAY_PUBLIC_KEY);
+      // Script already loaded, just wait for TokenPay
+      waitForTokenPay(FLUIDPAY_PUBLIC_KEY);
     }
   }, [step]);
-
-  const initTokenizer = (publicKey: string) => {
-    if (!window.TokenPay) return;
-    const tp = window.TokenPay(publicKey);
-    tp.initialize({
-      dataElement: "#card-number",
-      errorElement: "#card-errors",
-      useStyles: false,
-      disableZip: true,
-    });
-    tokenizerRef.current = tp;
-    setTokenizerReady(true);
-  };
 
   const handleInfoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
