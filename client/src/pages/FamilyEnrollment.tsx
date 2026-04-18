@@ -9,11 +9,6 @@ import { Link } from "wouter";
 declare global {
   interface Window {
     TokenPay?: any;
-    Tokenizer?: new (config: {
-      apikey: string;
-      container: string;
-      submission: (resp: { token?: string; status?: string; error?: string }) => void;
-    }) => { submit: (amount?: string) => void };
   }
 }
 
