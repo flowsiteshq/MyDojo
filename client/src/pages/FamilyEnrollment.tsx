@@ -20,10 +20,11 @@ export default function FamilyEnrollment() {
   const [tokenizerReady, setTokenizerReady] = useState(false);
   const tokenizerRef = useRef<any>(null);
 
-  // Form state
-  const [contactName, setContactName] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
+  // Form state — prefill from URL query params if provided (?name=Brenda+Galvez&phone=8326655442)
+  const _params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const [contactName, setContactName] = useState(_params.get('name') || "");
+  const [contactEmail, setContactEmail] = useState(_params.get('email') || "");
+  const [contactPhone, setContactPhone] = useState(_params.get('phone') || "");
 
   // Result state
   const [familyGroupId, setFamilyGroupId] = useState<number | null>(null);
