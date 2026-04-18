@@ -2232,10 +2232,25 @@ Please enter your card details below to complete your registration securely. Tot
         waiverReason: z.string().max(200).optional(),
         agreementSignature: z.string().max(255).optional(),
         agreementSignedAt: z.string().optional(), // ISO string
+        deferTuition: z.boolean().optional(), // if true, charge only $99 enrollment fee now; defer first month tuition
+        deferredTuitionDate: z.string().optional(), // YYYY-MM-DD, must be within same calendar month
       }))
       .mutation(async ({ input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+
+        // Validate deferred tuition date is within the same calendar month
+        if (input.deferTuition && input.deferredTuitionDate) {
+          const today = new Date();
+          const deferDate = new Date(input.deferredTuitionDate + 'T12:00:00');
+          if (
+            deferDate.getMonth() !== today.getMonth() ||
+            deferDate.getFullYear() !== today.getFullYear() ||
+            deferDate <= today
+          ) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Deferred tuition date must be a future date within the current calendar month' });
+          }
+        }
 
         const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
         const FLUIDPAY_SECRET_KEY = process.env.FLUIDPAY_SECRET_KEY;
@@ -2286,6 +2301,11 @@ Please enter your card details below to complete your registration securely. Tot
           // Summer camp: $199 camp fee + $99 registration = $298 flat
           chargeCents = 29800;
           chargeDescription = `MyDojo Summer Camp - ${input.summerCampWeek || 'Registration'}`;
+        } else if (input.deferTuition) {
+          // Deferred tuition: charge only the $99 enrollment fee now; first month tuition charged later
+          const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '99') as string);
+          chargeCents = Math.round(enrollmentFeeAmt * 100);
+          chargeDescription = `MyDojo ${pkg!.name} Membership - Enrollment Fee (Tuition deferred to ${input.deferredTuitionDate || 'later this month'})`;
         } else {
           // Membership: down payment (first month + enrollment fee), optionally waived
           const downPaymentAmt = parseFloat(pkg!.downPayment as string);
@@ -2364,6 +2384,41 @@ Please enter your card details below to complete your registration securely. Tot
             paidFirstMonth: 1,
             remainingBalance: '0.00',
             monthlyPaymentsRemaining: 0,
+            status: 'active',
+            discountApplied: input.discountCode || null,
+            agreementSignature: input.agreementSignature || null,
+            agreementSignedAt: input.agreementSignedAt ? new Date(input.agreementSignedAt) : null,
+            startDate: new Date(),
+          });
+          enrollmentId = (insertResult as any).insertId;
+        } else if (input.deferTuition) {
+          // Deferred tuition path: only $99 enrollment fee charged now; first month tuition deferred
+          const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '99') as string);
+          const monthlyPrice = parseFloat(pkg!.monthlyPrice as string);
+          const totalPrice = parseFloat(pkg!.totalPrice as string);
+          const remainingBalance = Math.max(0, totalPrice - enrollmentFeeAmt);
+          packageName = pkg!.name;
+          amountCharged = enrollmentFeeAmt;
+          const deferDate = input.deferredTuitionDate
+            ? new Date(input.deferredTuitionDate + 'T12:00:00')
+            : null;
+          const insertResult = await db.insert(schema.enrollments).values({
+            membershipPackageId: pkg!.id,
+            leadId: input.leadId || null,
+            customerName: input.customerName,
+            customerEmail: input.customerEmail,
+            customerPhone: input.customerPhone,
+            studentName: input.studentName || input.customerName,
+            fluidpayCustomerId: fpCustomerId,
+            fluidpaySubscriptionId: fpSubscriptionId,
+            stripePaymentIntentId: fpTransactionId,
+            downPaymentAmount: enrollmentFeeAmt.toFixed(2),
+            paidFirstMonth: 0, // first month NOT yet paid
+            deferredTuitionDate: deferDate,
+            deferredTuitionAmount: monthlyPrice.toFixed(2),
+            deferredTuitionCharged: 0, // pending
+            remainingBalance: remainingBalance.toFixed(2),
+            monthlyPaymentsRemaining: pkg!.durationMonths,
             status: 'active',
             discountApplied: input.discountCode || null,
             agreementSignature: input.agreementSignature || null,

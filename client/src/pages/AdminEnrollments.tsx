@@ -66,6 +66,8 @@ function StaffEnrollmentDialog({ open, onClose, onEnrolled }: StaffEnrollmentDia
   const [studentName, setStudentName] = useState("");
   const [waiveEnrollmentFee, setWaiveEnrollmentFee] = useState(false);
   const [waiverReason, setWaiverReason] = useState("");
+  const [deferTuition, setDeferTuition] = useState(false);
+  const [deferredTuitionDate, setDeferredTuitionDate] = useState("");
   const [enrollmentData, setEnrollmentData] = useState<any | null>(null);
 
   const activePackages = packages?.filter((p) => p.isActive) ?? [];
@@ -74,7 +76,15 @@ function StaffEnrollmentDialog({ open, onClose, onEnrolled }: StaffEnrollmentDia
   const enrollmentFee = selectedPkg ? parseFloat(selectedPkg.enrollmentFee as string) : 99;
   const monthlyPrice = selectedPkg ? parseFloat(selectedPkg.monthlyPrice as string) : 0;
   const downPayment = selectedPkg ? parseFloat(selectedPkg.downPayment as string) : 0;
-  const effectiveTotal = waiveEnrollmentFee ? Math.max(0, downPayment - enrollmentFee) : downPayment;
+  const effectiveTotal = deferTuition
+    ? enrollmentFee
+    : waiveEnrollmentFee
+    ? Math.max(0, downPayment - enrollmentFee)
+    : downPayment;
+  // Get today's date and end of current month for deferred tuition date picker
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().slice(0, 10);
 
   const handleContinueToPayment = () => {
     if (!selectedPkg || !customerName || !customerEmail || !customerPhone) return;
@@ -91,6 +101,8 @@ function StaffEnrollmentDialog({ open, onClose, onEnrolled }: StaffEnrollmentDia
       studentName: studentName || customerName,
       waiveEnrollmentFee,
       waiverReason: waiverReason.trim() || undefined,
+      deferTuition: deferTuition || undefined,
+      deferredTuitionDate: deferTuition ? deferredTuitionDate : undefined,
     });
     setStep("payment");
   };
@@ -104,6 +116,8 @@ function StaffEnrollmentDialog({ open, onClose, onEnrolled }: StaffEnrollmentDia
     setStudentName("");
     setWaiveEnrollmentFee(false);
     setWaiverReason("");
+    setDeferTuition(false);
+    setDeferredTuitionDate("");
     setEnrollmentData(null);
     onClose();
   };
@@ -223,6 +237,41 @@ function StaffEnrollmentDialog({ open, onClose, onEnrolled }: StaffEnrollmentDia
                   <p className="text-xs text-muted-foreground text-right">{waiverReason.length}/200</p>
                 </div>
               )}
+
+              {/* Deferred Tuition Toggle */}
+              {!waiveEnrollmentFee && (
+                <div className="flex items-center justify-between rounded-lg border p-3 bg-blue-50/50">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="defer-toggle" className="flex items-center gap-1.5 cursor-pointer">
+                      <DollarSign className="h-4 w-4 text-blue-600" />
+                      Defer First Month Tuition
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Charge only the ${enrollmentFee.toFixed(2)} enrollment fee today; collect ${monthlyPrice.toFixed(2)} tuition on a later date this month.
+                    </p>
+                  </div>
+                  <Switch
+                    id="defer-toggle"
+                    checked={deferTuition}
+                    onCheckedChange={(v) => { setDeferTuition(v); if (!v) setDeferredTuitionDate(""); }}
+                  />
+                </div>
+              )}
+              {deferTuition && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="deferredDate">Tuition Charge Date (this month)</Label>
+                  <Input
+                    id="deferredDate"
+                    type="date"
+                    min={todayStr}
+                    max={endOfMonth}
+                    value={deferredTuitionDate}
+                    onChange={(e) => setDeferredTuitionDate(e.target.value)}
+                    className="text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">Must be a future date within the current calendar month.</p>
+                </div>
+              )}
             </div>
 
             {/* Price preview */}
@@ -230,8 +279,14 @@ function StaffEnrollmentDialog({ open, onClose, onEnrolled }: StaffEnrollmentDia
               <div className="rounded-lg bg-card border p-3 text-sm space-y-1">
                 <div className="flex justify-between text-muted-foreground">
                   <span>First month's membership</span>
-                  <span>${monthlyPrice.toFixed(2)}</span>
+                  <span className={deferTuition ? "line-through text-muted-foreground/40" : ""}>${monthlyPrice.toFixed(2)}</span>
                 </div>
+                {deferTuition && (
+                  <div className="flex justify-between text-blue-700 text-xs font-medium">
+                    <span>Tuition deferred to {deferredTuitionDate || "(select date)"}</span>
+                    <span>-${monthlyPrice.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center text-muted-foreground">
                   <span className="flex items-center gap-1.5">
                     Enrollment fee
@@ -255,9 +310,15 @@ function StaffEnrollmentDialog({ open, onClose, onEnrolled }: StaffEnrollmentDia
                   <span>Total due today</span>
                   <span>${effectiveTotal.toFixed(2)}</span>
                 </div>
-                <p className="text-xs text-muted-foreground/70">
-                  Then ${monthlyPrice.toFixed(2)}/mo recurring
-                </p>
+                {deferTuition ? (
+                  <p className="text-xs text-blue-600 font-medium">
+                    ${monthlyPrice.toFixed(2)} tuition will be auto-charged on {deferredTuitionDate || "the selected date"}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground/70">
+                    Then ${monthlyPrice.toFixed(2)}/mo recurring
+                  </p>
+                )}
               </div>
             )}
 
@@ -267,7 +328,7 @@ function StaffEnrollmentDialog({ open, onClose, onEnrolled }: StaffEnrollmentDia
               </Button>
               <Button
                 className="flex-1"
-                disabled={!selectedPackageId || !customerName || !customerEmail || !customerPhone}
+                disabled={!selectedPackageId || !customerName || !customerEmail || !customerPhone || (deferTuition && !deferredTuitionDate)}
                 onClick={handleContinueToPayment}
               >
                 Continue to Payment

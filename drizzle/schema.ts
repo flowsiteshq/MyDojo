@@ -454,6 +454,12 @@ export const enrollments = mysqlTable("enrollments", {
   downPaymentAmount: decimal("downPaymentAmount", { precision: 10, scale: 2 }).notNull(),
   /** Whether first month tuition was paid upfront */
   paidFirstMonth: int("paidFirstMonth").default(0).notNull(), // 0 = no, 1 = yes
+  /** Date when deferred first-month tuition should be charged (within same calendar month as enrollment) */
+  deferredTuitionDate: timestamp("deferredTuitionDate"),
+  /** Amount to charge on deferredTuitionDate (first month tuition, typically $149) */
+  deferredTuitionAmount: decimal("deferredTuitionAmount", { precision: 10, scale: 2 }),
+  /** Whether the deferred tuition has been processed: 0=pending, 1=charged, 2=failed */
+  deferredTuitionCharged: int("deferredTuitionCharged").default(0).notNull(),
   /** Remaining balance after down payment */
   remainingBalance: decimal("remainingBalance", { precision: 10, scale: 2 }).notNull(),
   /** Number of monthly payments remaining */

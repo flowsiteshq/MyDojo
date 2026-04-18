@@ -25,6 +25,9 @@ interface EnrollmentData {
   // Staff-only: enrollment fee waiver
   waiveEnrollmentFee?: boolean;
   waiverReason?: string;
+  // Deferred tuition: charge only $99 now, first month tuition on a later date
+  deferTuition?: boolean;
+  deferredTuitionDate?: string; // YYYY-MM-DD within same calendar month
 }
 
 interface FluidPayEnrollmentFormProps {
@@ -205,6 +208,8 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError }: F
             summerCampWeek: enrollmentData.weekLabel,
             waiveEnrollmentFee: waiveEnrollmentFee || undefined,
             waiverReason: enrollmentData.waiverReason || undefined,
+            deferTuition: enrollmentData.deferTuition || undefined,
+            deferredTuitionDate: enrollmentData.deferredTuitionDate || undefined,
             agreementSignature: agreementSig?.signedName,
             agreementSignedAt: agreementSig?.signedAt?.toISOString(),
           });

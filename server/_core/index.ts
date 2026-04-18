@@ -13,6 +13,7 @@ import { runGHLSyncJob } from "../ghlSyncJob";
 import { runNoShowFollowUpJob } from "../noShowFollowUpJob";
 import { runStudentReminderJob } from "../studentReminderJob";
 import { runSocialPostJob } from "../socialPostJob";
+import { runDeferredTuitionJob } from "../deferredTuitionJob";
 import { handleStripeWebhook } from "../stripeWebhook";
 import { handleGHLWebhook } from "../ghlWebhook";
 import { handleFacebookWebhook, verifyFacebookWebhook } from "../facebookWebhook";
@@ -148,6 +149,14 @@ async function startServer() {
       runSocialPostJob().catch(console.error);
     }, 5 * 60 * 1000); // every 5 minutes
     console.log("[SocialPostJob] Scheduled to run every 5 minutes.");
+
+    // Start deferred tuition auto-charge job — runs every 30 minutes
+    // Charges first-month tuition for enrollments where the deferred date has arrived
+    runDeferredTuitionJob().catch(console.error); // run once at startup
+    setInterval(() => {
+      runDeferredTuitionJob().catch(console.error);
+    }, 30 * 60 * 1000); // every 30 minutes
+    console.log("[DeferredTuitionJob] Scheduled to run every 30 minutes.");
   });
 }
 
