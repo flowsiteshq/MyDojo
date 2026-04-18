@@ -18,6 +18,7 @@ export default function FamilyEnrollment() {
   const [step, setStep] = useState<Step>("info");
   const [isLoading, setIsLoading] = useState(false);
   const [tokenizerReady, setTokenizerReady] = useState(false);
+  const [tokenizerError, setTokenizerError] = useState(false);
   const tokenizerRef = useRef<any>(null);
 
   // Form state — prefill from URL query params if provided (?name=Brenda+Galvez&phone=8326655442)
@@ -60,6 +61,7 @@ export default function FamilyEnrollment() {
       }
       if (attempts > 40) {
         console.error("FluidPay TokenPay failed to load after 4 seconds");
+        setTokenizerError(true);
         return;
       }
       setTimeout(() => waitForTokenPay(publicKey, attempts + 1), 100);
@@ -72,7 +74,7 @@ export default function FamilyEnrollment() {
       script.src = "https://app.fluidpay.com/js/tokenizer.js";
       script.async = false; // load synchronously so TokenPay is available immediately
       script.onload = () => waitForTokenPay(FLUIDPAY_PUBLIC_KEY);
-      script.onerror = () => console.error("Failed to load FluidPay tokenizer script");
+      script.onerror = () => { console.error("Failed to load FluidPay tokenizer script"); setTokenizerError(true); };
       document.head.appendChild(script);
     } else {
       // Script already loaded, just wait for TokenPay
@@ -269,17 +271,28 @@ export default function FamilyEnrollment() {
                 </div>
               </div>
 
+              {tokenizerError && (
+                <div className="rounded-lg bg-yellow-900/40 border border-yellow-600/50 p-4 text-yellow-300 text-sm mb-2">
+                  <p className="font-bold mb-1">⚠️ Payment system temporarily unavailable</p>
+                  <p>Our payment processor is experiencing a brief outage. Please try again in a few minutes, or call us at <strong>(877) 4-MYDOJO</strong> to complete your enrollment over the phone.</p>
+                </div>
+              )}
               <form onSubmit={handlePayment} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-white/70 mb-2">Card Number</label>
+                  {!tokenizerReady && !tokenizerError && (
+                    <div className="bg-white/10 border border-white/20 rounded-lg p-3 min-h-[44px] flex items-center gap-2 text-white/40 text-sm">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading secure payment form...
+                    </div>
+                  )}
                   <div
                     id="card-number"
-                    className="bg-white/10 border border-white/20 rounded-lg p-3 min-h-[44px] text-white"
+                    className={`bg-white/10 border border-white/20 rounded-lg p-3 min-h-[44px] text-white ${!tokenizerReady ? 'hidden' : ''}`}
                     style={{ colorScheme: "dark" }}
                   />
                 </div>
                 <div id="card-errors" className="text-red-400 text-sm min-h-[20px]" />
-
                 <div className="flex items-center gap-2 text-white/50 text-xs">
                   <Shield className="w-4 h-4" />
                   <span>Secured by FluidPay — your card data is encrypted and never stored on our servers.</span>
