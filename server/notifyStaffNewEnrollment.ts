@@ -59,10 +59,10 @@ export async function notifyStaffNewEnrollment(enrollment: NewEnrollmentInfo): P
     const programLine = enrollment.program ? ` | Program: ${enrollment.program}` : "";
 
     const message =
-      `🎉 New Enrollment!\n` +
-      `${studentLine}Parent/Member: ${enrollment.customerName}${phoneLine}\n` +
+      `🎉 GREAT JOB TEAM! New enrollment just came in!\n` +
+      `${studentLine}Member: ${enrollment.customerName}${phoneLine}\n` +
       `Plan: ${enrollment.packageName} | Paid: $${enrollment.amountCharged.toFixed(2)}${programLine}\n` +
-      `Log in to MyDojo admin to view details.`;
+      `Keep up the amazing work — let's keep growing! 💪🥋`;
 
     const results = await Promise.allSettled(
       staffList.map((staff) =>
