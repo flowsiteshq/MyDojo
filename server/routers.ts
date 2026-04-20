@@ -8094,14 +8094,14 @@ Please enter your card details below to complete your registration securely. Tot
           type: 'sale',
           amount: 100,
           currency: 'usd',
-          payment_method: { card: { token_id: input.token } },
+          payment_method: { token: input.token },
           billing_address: { first_name: firstName, last_name: lastName, email: input.email },
           order_meta: { description: 'MyDojo $1 Test Transaction' },
         }),
       });
       const chargeData = await chargeRes.json();
-      if (chargeData.status !== 'success' || chargeData.data?.response_body?.card?.processor_response_code !== '00') {
-        const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.msg || 'Payment declined';
+      if (chargeData.status !== 'success' || !chargeData.data || chargeData.data?.status !== 'approved') {
+        const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.data?.response_body?.card?.response_text || chargeData.msg || 'Payment declined';
         throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
       }
       return {
