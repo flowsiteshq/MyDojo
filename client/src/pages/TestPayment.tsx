@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { CreditCard, CheckCircle, Shield, Loader2, ArrowRight, FlaskConical } from "lucide-react";
+import { CheckCircle, Shield, Loader2, ArrowRight, FlaskConical } from "lucide-react";
 import { Link } from "wouter";
 
 export default function TestPayment() {
@@ -15,6 +15,13 @@ export default function TestPayment() {
   const [result, setResult] = useState<{ transactionId: string; last4: string; cardType: string } | null>(null);
   const tokenizerRef = useRef<any>(null);
   const tokenizerInitRef = useRef(false);
+  const nameRef = useRef(name);
+  const emailRef = useRef(email);
+  const isLoadingRef = useRef(false);
+
+  // Keep refs in sync so the tokenizer submission callback always has fresh values
+  useEffect(() => { nameRef.current = name; }, [name]);
+  useEffect(() => { emailRef.current = email; }, [email]);
 
   const testCharge = trpc.testCharge.useMutation();
 
@@ -76,7 +83,7 @@ export default function TestPayment() {
             return;
           }
           testCharge.mutate(
-            { name, email, token: resp.token },
+            { name: nameRef.current, email: emailRef.current, token: resp.token },
             {
               onSuccess: (data) => {
                 setResult({ transactionId: data.transactionId!, last4: data.last4!, cardType: data.cardType! });
@@ -84,10 +91,12 @@ export default function TestPayment() {
                   description: `Transaction ID: ${data.transactionId}`,
                 });
                 setIsLoading(false);
+                isLoadingRef.current = false;
               },
               onError: (err: any) => {
                 toast.error("Payment failed", { description: err.message || "Card declined." });
                 setIsLoading(false);
+                isLoadingRef.current = false;
               },
             }
           );
@@ -101,9 +110,12 @@ export default function TestPayment() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tokenizerRef.current) { toast.error("Payment form not ready."); return; }
+    if (!tokenizerRef.current) { toast.error("Payment form not ready. Please refresh."); return; }
+    if (isLoadingRef.current) return;
     setIsLoading(true);
-    tokenizerRef.current.submit("1.00");
+    isLoadingRef.current = true;
+    // Do NOT pass an amount — tokenizer only needs to collect and tokenize card data
+    tokenizerRef.current.submit();
   };
 
   return (
@@ -167,7 +179,7 @@ export default function TestPayment() {
                       ⚠️ Payment form unavailable. Please try again.
                     </div>
                   )}
-                  <div id="test-card-number" className={`rounded-lg min-h-[56px] ${!tokenizerReady ? "hidden" : ""}`} />
+                  <div id="test-card-number" className={`rounded-lg min-h-[140px] ${!tokenizerReady ? "hidden" : ""}`} />
                 </div>
 
                 <div className="flex items-center gap-2 text-white/40 text-xs">
