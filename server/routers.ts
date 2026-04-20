@@ -8100,15 +8100,18 @@ Please enter your card details below to complete your registration securely. Tot
         }),
       });
       const chargeData = await chargeRes.json();
-      if (chargeData.status !== 'success' || !chargeData.data || chargeData.data?.status !== 'approved') {
-        const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.data?.response_body?.card?.response_text || chargeData.msg || 'Payment declined';
+      // FluidPay returns response_code 100 for approved, status can be 'pending_settlement' or 'approved'
+      const txData = chargeData.data;
+      const isApproved = chargeData.status === 'success' && txData && txData.response_code === 100 && txData.response_body?.card?.processor_response_code === '00';
+      if (!isApproved) {
+        const msg = txData?.response_body?.card?.processor_response_text || txData?.response_body?.card?.response_text || chargeData.msg || 'Payment declined';
         throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
       }
       return {
         success: true,
-        transactionId: chargeData.data?.id,
-        last4: chargeData.data?.response_body?.card?.last_four,
-        cardType: chargeData.data?.response_body?.card?.card_type,
+        transactionId: txData?.id,
+        last4: txData?.response_body?.card?.last_four,
+        cardType: txData?.response_body?.card?.card_type,
         amount: '$1.00',
       };
     }),
