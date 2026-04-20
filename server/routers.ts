@@ -8073,5 +8073,44 @@ Please enter your card details below to complete your registration securely. Tot
         return { success: true };
       }),
   }),
+
+  /** $1 test charge — runs a real $1 transaction through FluidPay to verify card processing */
+  testCharge: publicProcedure
+    .input(z.object({
+      name: z.string().min(2),
+      email: z.string().email(),
+      token: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
+      const FLUIDPAY_KEY = process.env.FLUIDPAY_SECRET_KEY || '';
+      const nameParts = input.name.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
+        method: 'POST',
+        headers: { 'Authorization': FLUIDPAY_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'sale',
+          amount: 100,
+          currency: 'usd',
+          payment_method: { card: { token_id: input.token } },
+          billing_address: { first_name: firstName, last_name: lastName, email: input.email },
+          order_meta: { description: 'MyDojo $1 Test Transaction' },
+        }),
+      });
+      const chargeData = await chargeRes.json();
+      if (chargeData.status !== 'success' || chargeData.data?.response_body?.card?.processor_response_code !== '00') {
+        const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.msg || 'Payment declined';
+        throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
+      }
+      return {
+        success: true,
+        transactionId: chargeData.data?.id,
+        last4: chargeData.data?.response_body?.card?.last_four,
+        cardType: chargeData.data?.response_body?.card?.card_type,
+        amount: '$1.00',
+      };
+    }),
 });
 export type AppRouter = typeof appRouter;

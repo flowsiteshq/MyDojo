@@ -45,6 +45,7 @@ const KioskCheckIn = lazy(() => import("./pages/KioskCheckIn"));
 const KioskArcade = lazy(() => import("./pages/KioskArcade"));
 const IntroOfferCheckout = lazy(() => import("./pages/IntroOfferCheckout"));
 const FamilyEnrollment = lazy(() => import("./pages/FamilyEnrollment"));
+const TestPayment = lazy(() => import("./pages/TestPayment"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminIntroAppointments = lazy(() => import("./pages/AdminIntroAppointments"));
@@ -118,6 +119,7 @@ function Router() {
         <Route path="/arcade" component={KioskArcade} />
         <Route path="/intro-offer" component={IntroOfferCheckout} />
         <Route path="/family-enrollment" component={FamilyEnrollment} />
+        <Route path="/test-payment" component={TestPayment} />
         
         {/* Student dashboard without Layout */}
         <Route path="/dashboard" component={MemberDashboard} />
