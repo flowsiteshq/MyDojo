@@ -6438,10 +6438,22 @@ Please enter your card details below to complete your registration securely. Tot
           // Non-fatal — popup lead is already saved in popupLeads
         }
 
+        // Notify staff via SMS (fire-and-forget)
+        try {
+          const { notifyStaffNewLead } = await import('./notifyStaffNewLead');
+          const campaignLabel = input.campaign === 'summer_camp' ? 'Summer Camp' : input.campaign === 'online_special' ? 'Online Special (2 Weeks Free)' : 'Kickboxing';
+          notifyStaffNewLead({
+            name: input.name ?? 'Unknown',
+            phone: input.phone,
+            program: input.program ?? campaignLabel,
+            source: `popup_${input.campaign}`,
+          }).catch(() => {});
+        } catch (_) {}
+
         // Notify owner
         try {
           const { notifyOwner } = await import('./_core/notification');
-          const campaignLabel = input.campaign === 'summer_camp' ? '🏕️ Summer Camp' : '🥊 Kickboxing';
+          const campaignLabel = input.campaign === 'summer_camp' ? '🏕️ Summer Camp' : input.campaign === 'online_special' ? '🎁 Online Special' : '🥊 Kickboxing';
           await notifyOwner({
             title: `New ${campaignLabel} Lead`,
             content: `${input.name ?? 'Someone'} (${input.email}${input.phone ? ` · ${input.phone}` : ''}) signed up via the ${campaignLabel} popup.`,
