@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import compression from "compression";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -43,6 +44,37 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // Redirect non-www to www (canonical URL) to avoid duplicate content and reduce redirects
+  // Also enforce HTTPS in production
+  app.use((req, res, next) => {
+    const host = req.headers.host || "";
+    const proto = req.headers["x-forwarded-proto"] || req.protocol;
+    
+    // Redirect http -> https in production
+    if (process.env.NODE_ENV === "production" && proto === "http") {
+      return res.redirect(301, `https://${host}${req.originalUrl}`);
+    }
+    
+    // Redirect mydojoma.com -> www.mydojoma.com (canonical)
+    if (host === "mydojoma.com") {
+      return res.redirect(301, `https://www.mydojoma.com${req.originalUrl}`);
+    }
+    
+    next();
+  });
+
+  // Enable gzip compression for all responses (reduces JS/CSS/HTML by ~60-80%)
+  app.use(compression({
+    level: 6, // good balance of speed vs compression ratio
+    threshold: 1024, // only compress responses > 1KB
+    filter: (req, res) => {
+      // Don't compress Stripe webhook (needs raw body)
+      if (req.path === '/api/stripe/webhook') return false;
+      return compression.filter(req, res);
+    }
+  }));
+
   // Stripe webhook endpoint - MUST be before body parser middleware
   // Stripe requires raw body for signature verification
   app.post(
