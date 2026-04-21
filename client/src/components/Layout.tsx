@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Phone, MapPin, Instagram, Facebook, Youtube, User, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CookieBanner } from "@/components/CookieBanner";
-import LeadMagnetPopup from "@/components/LeadMagnetPopup";
-import PopupSlideshow from "@/components/PopupSlideshow";
+import OnlineSpecialPopup from "@/components/OnlineSpecialPopup";
 import { openIntakeChatbot } from "@/lib/chatbot";
 import { useLocationContext } from "@/contexts/LocationContext";
 import { NotificationSubscribe } from "@/components/NotificationSubscribe";
@@ -463,8 +462,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
       <CookieBanner />
-      <LeadMagnetPopup />
-      <PopupSlideshow />
+      <OnlineSpecialPopup />
 
       {/* Main Content */}
       <main className="flex-grow pt-0">

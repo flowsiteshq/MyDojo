@@ -6260,10 +6260,11 @@ Please enter your card details below to complete your registration securely. Tot
   popup: router({
     submitLead: publicProcedure
       .input(z.object({
-        campaign: z.enum(['summer_camp', 'kickboxing']),
+        campaign: z.enum(['summer_camp', 'kickboxing', 'online_special']),
         name: z.string().min(1).max(255).optional(),
         email: z.string().email(),
         phone: z.string().max(30).optional(),
+        program: z.string().max(100).optional(),
         source: z.string().max(100).optional(),
       }))
       .mutation(async ({ input }) => {
