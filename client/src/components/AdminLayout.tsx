@@ -202,7 +202,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         >
           {isCollapsed && !mobile ? (
             <img
-              src="/images/logo-icon.png"
+              src="/images/logo-icon.webp"
               alt="MyDojo"
               className="h-8 w-8 object-contain"
               onError={(e) => {
@@ -211,11 +211,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             />
           ) : (
             <img
-              src="/images/logo-full-black.png"
+              src="/images/logo-full-black.webp"
               alt="MyDojo Admin"
               className="h-9 object-contain"
               onError={(e) => {
-                e.currentTarget.src = "/images/FULLLOGOBLACK.png";
+                e.currentTarget.src = "/images/FULLLOGOBLACK.webp";
               }}
             />
           )}
@@ -392,11 +392,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <Menu className="w-5 h-5" />
           </button>
           <img
-            src="/images/logo-full-black.png"
+            src="/images/logo-full-black.webp"
             alt="MyDojo"
             className="h-7 object-contain"
             onError={(e) => {
-              e.currentTarget.src = "/images/FULLLOGOBLACK.png";
+              e.currentTarget.src = "/images/FULLLOGOBLACK.webp";
             }}
           />
         </header>

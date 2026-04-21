@@ -61,7 +61,7 @@ function ChatHeader({ onClose, extraControls }: { onClose: () => void; extraCont
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
             <img
-              src="/images/logo-icon-white.png"
+              src="/images/logo-icon-white.webp"
               alt="MyDojo"
               className="w-full h-full object-contain p-0.5"
             />
@@ -179,7 +179,7 @@ function SwipeableMessage({
         {!isUser && (
           <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center flex-shrink-0 shadow-md overflow-hidden self-end mb-1">
             <img
-              src="/images/logo-icon-white.png"
+              src="/images/logo-icon-white.webp"
               alt="Kai"
               className="w-full h-full object-contain p-0.5"
             />
@@ -251,7 +251,7 @@ function TypingIndicator() {
   return (
     <div className="flex items-end gap-2 mt-4">
       <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center flex-shrink-0 shadow-md overflow-hidden">
-        <img src="/images/logo-icon-white.png" alt="Kai" className="w-full h-full object-contain p-0.5" />
+        <img src="/images/logo-icon-white.webp" alt="Kai" className="w-full h-full object-contain p-0.5" />
       </div>
       <div className="bg-muted rounded-2xl px-4 py-3 flex items-center gap-1">
         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />

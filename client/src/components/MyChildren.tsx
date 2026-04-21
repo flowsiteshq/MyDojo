@@ -88,8 +88,7 @@ function ChildCard({ child, isDark, onEdit, onDelete }: ChildCardProps) {
           <img
             src={child.photoUrl}
             alt={child.name}
-            className="w-full h-full object-cover"
-          />
+            className="w-full h-full object-cover" loading="lazy" />
         ) : (
           <User className={`w-10 h-10 ${isDark ? "text-white/30" : "text-gray-400"}`} />
         )}
@@ -336,7 +335,7 @@ function ChildFormDialog({ open, onClose, editing, isDark }: ChildFormDialogProp
               {cameraOpen ? (
                 <video ref={videoRef} className="w-full h-full object-cover" autoPlay playsInline muted />
               ) : photoPreview ? (
-                <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" loading="lazy" />
               ) : (
                 <User className={`w-12 h-12 ${isDark ? "text-white/30" : "text-gray-400"}`} />
               )}

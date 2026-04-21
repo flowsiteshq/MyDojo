@@ -183,8 +183,7 @@ export default function LocationDetail() {
               <img
                 src={TOMBALL_PHOTOS[activePhoto].url}
                 alt={TOMBALL_PHOTOS[activePhoto].caption}
-                className="w-full h-full object-cover transition-all duration-500"
-              />
+                className="w-full h-full object-cover transition-all duration-500" loading="lazy" />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
                 <p className="text-white font-bold text-lg">{TOMBALL_PHOTOS[activePhoto].caption}</p>
                 <p className="text-gray-300 text-sm mt-1">{TOMBALL_PHOTOS[activePhoto].description}</p>
@@ -202,7 +201,7 @@ export default function LocationDetail() {
                     activePhoto === idx ? "border-primary shadow-lg scale-105" : "border-transparent opacity-70 hover:opacity-100"
                   )}
                 >
-                  <img src={photo.url} alt={photo.caption} className="w-full h-full object-cover" />
+                  <img src={photo.url} alt={photo.caption} className="w-full h-full object-cover" loading="lazy" />
                 </button>
               ))}
             </div>

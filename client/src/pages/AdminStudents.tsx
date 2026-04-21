@@ -443,8 +443,7 @@ export default function AdminStudents() {
                             <img
                               src={student.photoUrl}
                               alt={student.name}
-                              className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-gray-200"
-                            />
+                              className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-gray-200" loading="lazy" />
                           ) : (
                             <InitialsAvatar name={student.name} size="sm" />
                           )}
@@ -589,8 +588,7 @@ export default function AdminStudents() {
                   <img
                     src={photoPreview}
                     alt="Profile preview"
-                    className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow-sm"
-                  />
+                    className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 shadow-sm" loading="lazy" />
                 ) : (
                   <div className="w-20 h-20">
                     <InitialsAvatar name={editForm.customerName || "?"} size="md" />
@@ -790,8 +788,7 @@ export default function AdminStudents() {
                     <img
                       src={promoteStudent.photoUrl}
                       alt={studentLabel}
-                      className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                    />
+                      className="w-10 h-10 rounded-full object-cover border border-gray-200" loading="lazy" />
                   ) : (
                     <InitialsAvatar name={studentLabel} size="sm" />
                   )}

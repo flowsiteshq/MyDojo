@@ -112,8 +112,7 @@ export function TestimonialCarousel() {
                     <img 
                       src={testimonial.image} 
                       alt={testimonial.name} 
-                      className="h-full w-full object-cover"
-                    />
+                      className="h-full w-full object-cover" loading="lazy" />
                   </div>
                   <div>
                     <h4 className="font-bold text-gray-900">{testimonial.name}</h4>

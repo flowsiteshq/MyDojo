@@ -26,8 +26,7 @@ export default function Kickboxing() {
           <img 
             src="https://private-us-east-1.manuscdn.com/sessionFile/QpMQgPXlSP73mBxske9Snp/sandbox/35CYYUnc6BwhasfDP62sKy-img-1_1771507294000_na1fn_a2lja2JveGluZy1oZXJvLWRpdmVyc2Utd29tZW4.jpg?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvUXBNUWdQWGxTUDczbUJ4c2tlOVNucC9zYW5kYm94LzM1Q1lZVW5jNkJ3aGFzZkRQNjJzS3ktaW1nLTFfMTc3MTUwNzI5NDAwMF9uYTFmbl9hMmxqYTJKdmVHbHVaeTFvWlhKdkxXUnBkbVZ5YzJVdGQyOXRaVzQuanBnP3gtb3NzLXByb2Nlc3M9aW1hZ2UvcmVzaXplLHdfMTkyMCxoXzE5MjAvZm9ybWF0LHdlYnAvcXVhbGl0eSxxXzgwIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=a6KaND9mtW3wNiCQQtgCHHKO-lgDU-0XXgSg7QVznmcUI5K62b8h~cjQwYenAaBH5BlkZd3BRD7wGqjxIB7TcJh65HDBB0SuBgJYyVN33CkTxYdlw5AoP3fI~WuL6Bz13fZHxYqCD6MUJRnqgpVlYtzek5cZ5UEXnDF2hWGcGnDwX-uCjZITPYfcJ77twXOIKW53Z9ttUcCYthguaOEcyoPR0GjDl4tJ~tUDoVRAppfPkzHcMKAPow4NMOpBeGxLT-nwDPoxEuxqWaI~QyHNa01gXQLc64pgZrAOQvNMce9UgJp-JW5ICfUzELrLaXVmCjc0TaM0JqvPgERMDO3dSQ__" 
             alt="Diverse Women Kickboxing Class" 
-            className="w-full h-full object-cover opacity-40"
-          />
+            className="w-full h-full object-cover opacity-40" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
         </div>
         
@@ -111,8 +110,7 @@ export default function Kickboxing() {
                 <img 
                   src="https://private-us-east-1.manuscdn.com/sessionFile/QpMQgPXlSP73mBxske9Snp/sandbox/35CYYUnc6BwhasfDP62sKy-img-3_1771507282000_na1fn_a2lja2JveGluZy1iYWctd29yay1hY3Rpb24.jpg?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvUXBNUWdQWGxTUDczbUJ4c2tlOVNucC9zYW5kYm94LzM1Q1lZVW5jNkJ3aGFzZkRQNjJzS3ktaW1nLTNfMTc3MTUwNzI4MjAwMF9uYTFmbl9hMmxqYTJKdmVHbHVaeTFpWVdjdGQyOXlheTFoWTNScGIyNC5qcGc~eC1vc3MtcHJvY2Vzcz1pbWFnZS9yZXNpemUsd18xOTIwLGhfMTkyMC9mb3JtYXQsd2VicC9xdWFsaXR5LHFfODAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTg3NjE2MDB9fX1dfQ__&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=CZGoy9oZdtBrMiJ9YYBCOduy84g9Q30oXZ4KeWkkCYaThfdP67b0Vr0bLRSTbrTUtNEv0AVURb59xZGQom-KDXIfSxo4fnX51opjqo0fBtyxOugTdhJ3nkI-mdvhaUyVqLhst7ah2TdbcTPPDZWVXFUCyJ4k0pZzKyLkL4C0Xvd-1lTrRKzU1v8E3iCMqFq4Lyxis6p~1hXUSEE~WWg5L07ggkSsFeJFgwmraz4c2s60yQzo-wc5UaVIZYZ2CsR6DWXWaXtp~yEknR2UigiOOR3dXk4YAb9ptzO9ukmQ82bKOpHW4Fb~k2ohg4QSyzkDe0-LFLnhCwQR7Nl7gasbnw__" 
                   alt="Women Kickboxing Training" 
-                  className="w-full h-auto"
-                />
+                  className="w-full h-auto" loading="lazy" />
               </div>
               <div className="absolute -bottom-6 -right-6 w-full h-full border-4 border-primary rounded-2xl z-0"></div>
             </motion.div>
@@ -183,7 +181,7 @@ export default function Kickboxing() {
       {/* Mission Section */}
       <section className="py-24 bg-primary relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-[url('/images/hero-main.jpg')] bg-cover bg-center"></div>
+          <div className="absolute inset-0 bg-[url('/images/hero-main.webp')] bg-cover bg-center"></div>
         </div>
         <div className="container mx-auto px-4 relative z-10 text-center">
           <h2 className="text-white font-bold tracking-widest uppercase mb-4">Our Mission</h2>
@@ -313,7 +311,7 @@ export default function Kickboxing() {
                 className="bg-zinc-800 p-8 rounded-xl text-center hover:bg-zinc-700 transition-colors"
               >
                 <div className="mb-4 rounded-lg overflow-hidden h-48">
-                  <img src={phase.image} alt={phase.title} className="w-full h-full object-cover" />
+                  <img src={phase.image} alt={phase.title} className="w-full h-full object-cover" loading="lazy" />
                 </div>
                 <div className="text-primary font-bold text-sm uppercase tracking-wider mb-2">{phase.time}</div>
                 <h4 className="text-2xl font-heading font-bold text-white mb-3">{phase.title}</h4>
@@ -630,8 +628,7 @@ export default function Kickboxing() {
           <img 
             src="https://private-us-east-1.manuscdn.com/sessionFile/QpMQgPXlSP73mBxske9Snp/sandbox/35CYYUnc6BwhasfDP62sKy-img-1_1771507294000_na1fn_a2lja2JveGluZy1oZXJvLWRpdmVyc2Utd29tZW4.jpg?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvUXBNUWdQWGxTUDczbUJ4c2tlOVNucC9zYW5kYm94LzM1Q1lZVW5jNkJ3aGFzZkRQNjJzS3ktaW1nLTFfMTc3MTUwNzI5NDAwMF9uYTFmbl9hMmxqYTJKdmVHbHVaeTFvWlhKdkxXUnBkbVZ5YzJVdGQyOXRaVzQuanBnP3gtb3NzLXByb2Nlc3M9aW1hZ2UvcmVzaXplLHdfMTkyMCxoXzE5MjAvZm9ybWF0LHdlYnAvcXVhbGl0eSxxXzgwIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzk4NzYxNjAwfX19XX0_&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=a6KaND9mtW3wNiCQQtgCHHKO-lgDU-0XXgSg7QVznmcUI5K62b8h~cjQwYenAaBH5BlkZd3BRD7wGqjxIB7TcJh65HDBB0SuBgJYyVN33CkTxYdlw5AoP3fI~WuL6Bz13fZHxYqCD6MUJRnqgpVlYtzek5cZ5UEXnDF2hWGcGnDwX-uCjZITPYfcJ77twXOIKW53Z9ttUcCYthguaOEcyoPR0GjDl4tJ~tUDoVRAppfPkzHcMKAPow4NMOpBeGxLT-nwDPoxEuxqWaI~QyHNa01gXQLc64pgZrAOQvNMce9UgJp-JW5ICfUzELrLaXVmCjc0TaM0JqvPgERMDO3dSQ__" 
             alt="Kickboxing Community" 
-            className="w-full h-full object-cover opacity-20 mix-blend-overlay"
-          />
+            className="w-full h-full object-cover opacity-20 mix-blend-overlay" loading="lazy" />
         </div>
         <div className="container mx-auto px-4 relative z-10 text-center">
           <motion.div

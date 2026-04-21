@@ -123,7 +123,7 @@ export default function TestPayment() {
       {/* Header */}
       <div className="bg-black border-b border-white/10 px-6 py-4 flex items-center gap-4">
         <Link href="/">
-          <img src="/images/logo.png" alt="MyDojo" className="h-10 object-contain" />
+          <img src="/images/logo.webp" alt="MyDojo" className="h-10 object-contain" loading="lazy" />
         </Link>
         <div className="flex items-center gap-2 bg-yellow-500/20 border border-yellow-500/40 rounded-full px-3 py-1">
           <FlaskConical className="w-3.5 h-3.5 text-yellow-400" />

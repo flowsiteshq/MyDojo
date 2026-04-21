@@ -287,7 +287,7 @@ export default function KioskCheckIn() {
             <div className="flex flex-col items-center justify-center pt-8 pb-6">
               {/* MyDojo Circular Logo - Prominent */}
               <img 
-                src="/images/logo-circular.png" 
+                src="/images/logo-circular.webp" 
                 alt="MYDOJO" 
                 className="h-32 w-32 mb-8 drop-shadow-[0_0_40px_rgba(225,6,0,0.9)] animate-pulse"
               />
@@ -506,8 +506,7 @@ export default function KioskCheckIn() {
                               <img 
                                 src={getProgramBadgeUrl(cls.program) || undefined} 
                                 alt={cls.program}
-                                className="w-full h-full object-cover"
-                              />
+                                className="w-full h-full object-cover" loading="lazy" />
                             ) : (
                               <span className="text-white/60 text-xs font-bold text-center leading-tight px-1">{cls.program?.charAt(0)}</span>
                             )}
@@ -880,7 +879,7 @@ export default function KioskCheckIn() {
           boxShadow: '0 0 60px rgba(225,6,0,0.5), inset 0 0 40px rgba(225,6,0,0.08)'
         }}>
           {/* Logo */}
-          <img src="/images/logo-circular.png" alt="MyDojo" className="w-20 h-20 mx-auto mb-6 drop-shadow-lg" />
+          <img src="/images/logo-circular.webp" alt="MyDojo" className="w-20 h-20 mx-auto mb-6 drop-shadow-lg" />
 
           {/* Student Avatar */}
           <div
@@ -888,7 +887,7 @@ export default function KioskCheckIn() {
             style={{ background: 'linear-gradient(135deg, #E10600 0%, #8B0000 100%)', boxShadow: '0 0 30px rgba(225,6,0,0.6)' }}
           >
             {selectedStudent?.photoUrl ? (
-              <img src={selectedStudent.photoUrl} alt={selectedStudent.name} className="w-full h-full rounded-full object-cover" />
+              <img src={selectedStudent.photoUrl} alt={selectedStudent.name} className="w-full h-full rounded-full object-cover" loading="lazy" />
             ) : (
               selectedStudent?.name?.charAt(0)?.toUpperCase() || '?'
             )}

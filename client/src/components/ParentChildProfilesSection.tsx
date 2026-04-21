@@ -39,8 +39,7 @@ export function ParentChildProfilesSection() {
               <img
                 src={profile.photoUrl}
                 alt={profile.name}
-                className="w-16 h-16 rounded-full object-cover border-2 border-purple-200 shadow-sm"
-              />
+                className="w-16 h-16 rounded-full object-cover border-2 border-purple-200 shadow-sm" loading="lazy" />
             ) : (
               <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center border-2 border-purple-200">
                 <User className="h-8 w-8 text-purple-400" />

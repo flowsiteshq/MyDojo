@@ -129,7 +129,7 @@ export default function Join() {
     <div className="min-h-screen bg-white">
       {/* Minimal Header — no nav distractions */}
       <header className="bg-black py-4 px-6 flex items-center justify-between">
-        <img src="/images/logo-icon-white.png" alt="MyDojo" className="h-10 w-auto object-contain" />
+        <img src="/images/logo-icon-white.webp" alt="MyDojo" className="h-10 w-auto object-contain" />
         <a href="tel:8774693656" className="flex items-center gap-2 text-white font-bold text-lg hover:text-primary transition-colors">
           <Phone className="h-5 w-5 text-primary" />
           (877) 4-MYDOJO
@@ -202,8 +202,7 @@ export default function Join() {
                   <img
                     src={program.image}
                     alt={program.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                   {selectedProgram === program.id && (
                     <div className="absolute top-3 right-3 bg-primary rounded-full p-1.5">

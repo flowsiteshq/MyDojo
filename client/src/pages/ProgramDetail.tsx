@@ -93,8 +93,7 @@ export default function ProgramDetail() {
         <img
           src={program.image}
           alt={program.title}
-          className="w-full h-full object-cover"
-        />
+          className="w-full h-full object-cover" loading="lazy" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
         <div className="absolute bottom-0 left-0 w-full p-8 md:p-16">
           <div className="container mx-auto">

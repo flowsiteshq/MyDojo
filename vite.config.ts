@@ -25,6 +25,8 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
     chunkSizeWarningLimit: 600,
+    cssCodeSplit: true,
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -32,6 +34,7 @@ export default defineConfig({
           "vendor-router": ["wouter"],
           "vendor-framer": ["framer-motion"],
           "vendor-trpc": ["@trpc/client", "@trpc/react-query", "@tanstack/react-query"],
+          "vendor-ui": ["lucide-react", "class-variance-authority", "clsx", "tailwind-merge"],
         },
       },
     },

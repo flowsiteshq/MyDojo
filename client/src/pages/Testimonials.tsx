@@ -34,8 +34,7 @@ export default function Testimonials() {
           <img
             src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/qYVQxVSfHBmyqxTB.jpg"
             alt="MyDojo Community"
-            className="w-full h-full object-cover opacity-20"
-          />
+            className="w-full h-full object-cover opacity-20" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black" />
         </div>
 
@@ -143,8 +142,7 @@ export default function Testimonials() {
                         <img
                           src={testimonial.memberPhoto}
                           alt={testimonial.memberName}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
+                          className="w-12 h-12 rounded-full object-cover" loading="lazy" />
                       )}
                       <div>
                         <p className="font-bold text-white">{testimonial.memberName}</p>

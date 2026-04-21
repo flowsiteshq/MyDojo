@@ -1249,7 +1249,7 @@ export function TrialChatbot() {
             >
               <ArrowLeft className="h-6 w-6" />
             </button>
-            <img src="/images/logo-icon-white.png" alt="MyDojo" className="h-10 w-10 rounded-full" />
+            <img src="/images/logo-icon-white.webp" alt="MyDojo" className="h-10 w-10 rounded-full" />
             <div>
               <h2 className="font-bold text-lg">MYDOJO ASSISTANT</h2>
               <p className="text-sm text-white/80">Start Your Free Trial</p>
@@ -1409,7 +1409,7 @@ export function TrialChatbot() {
             >
               {/* Bot avatar */}
               {message.role === "bot" && (
-                <img src="/images/WhitelogoBlackCircle.png" alt="MyDojo Bot" className="h-8 w-8 flex-shrink-0 mt-1" />
+                <img src="/images/WhitelogoBlackCircle.webp" alt="MyDojo Bot" className="h-8 w-8 flex-shrink-0 mt-1" />
               )}
               <div className={`max-w-[80%] md:max-w-[70%]`}>
                 <div
@@ -1434,7 +1434,7 @@ export function TrialChatbot() {
           {/* Typing indicator */}
           {isTyping && (
             <div className="flex justify-start gap-2">
-              <img src="/images/WhitelogoBlackCircle.png" alt="MyDojo Bot" className="h-8 w-8 flex-shrink-0 mt-1" />
+              <img src="/images/WhitelogoBlackCircle.webp" alt="MyDojo Bot" className="h-8 w-8 flex-shrink-0 mt-1" />
               <div className="bg-white rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
                 <div className="flex gap-1">
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>

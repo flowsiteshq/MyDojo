@@ -76,7 +76,7 @@ function getInitials(name: string) {
 function Avatar({ name, photoUrl, size = "md" }: { name: string; photoUrl?: string | null; size?: "sm" | "md" | "lg" }) {
   const sizeClass = size === "sm" ? "w-8 h-8 text-xs" : size === "lg" ? "w-12 h-12 text-base" : "w-10 h-10 text-sm";
   if (photoUrl) {
-    return <img src={photoUrl} alt={name} className={`${sizeClass} rounded-full object-cover flex-shrink-0`} />;
+    return <img src={photoUrl} alt={name} className={`${sizeClass} rounded-full object-cover flex-shrink-0`} loading="lazy" />;
   }
   const colors = ["bg-red-500", "bg-blue-500", "bg-green-500", "bg-purple-500", "bg-orange-500"];
   const color = colors[name.charCodeAt(0) % colors.length];

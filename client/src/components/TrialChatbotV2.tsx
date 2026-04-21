@@ -289,7 +289,7 @@ export function TrialChatbotV2({ isOpen, onClose }: { isOpen: boolean; onClose: 
         {/* Header */}
         <div className="bg-black text-white p-4 rounded-t-2xl flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/images/mydojo-icon.png" alt="MyDojo" className="w-10 h-10 rounded-full" />
+            <img src="/images/mydojo-icon.webp" alt="MyDojo" className="w-10 h-10 rounded-full" loading="lazy" />
             <div>
               <h3 className="font-bold">MYDOJO ASSISTANT</h3>
               <p className="text-xs text-gray-300">Start Your Free Trial</p>

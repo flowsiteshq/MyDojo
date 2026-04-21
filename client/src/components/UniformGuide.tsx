@@ -53,8 +53,7 @@ export default function UniformGuide() {
                 <img
                   src={uniform.image}
                   alt={`${uniform.title} Uniform`}
-                  className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
-                />
+                  className="w-full h-full object-contain hover:scale-105 transition-transform duration-500" loading="lazy" />
               </div>
               
               <div className="p-8">

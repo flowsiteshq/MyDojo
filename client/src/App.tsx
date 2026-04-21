@@ -90,7 +90,7 @@ const PageLoader = () => (
     {/* Centered logo mark */}
     <div className="flex flex-col items-center gap-3 opacity-80">
       <img
-        src="/images/logo-full-black.png"
+        src="/images/logo-full-black.webp"
         alt="MyDojo"
         className="h-14 w-auto"
         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}

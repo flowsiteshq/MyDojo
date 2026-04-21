@@ -1081,10 +1081,10 @@ export default function MemberDashboard2() {
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
               <img
-                src={isDark ? "/images/logo-icon-white.png" : "/images/logo-icon.png"}
+                src={isDark ? "/images/logo-icon-white.webp" : "/images/logo-icon.webp"}
                 alt="MyDojo"
                 className="h-9 w-9 object-contain"
-                onError={(e) => { (e.target as HTMLImageElement).src = "/images/logo-icon-white.png"; }}
+                onError={(e) => { (e.target as HTMLImageElement).src = "/images/logo-icon-white.webp"; }}
               />
               <span className={`text-xl font-black tracking-widest ${t.textPrimary}`}>MYDOJO</span>
             </div>
@@ -1158,7 +1158,7 @@ export default function MemberDashboard2() {
               >
                 <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-[#E11D2A] to-red-700 flex items-center justify-center text-sm font-bold text-white">
                   {selfPhotoUrl ? (
-                    <img src={selfPhotoUrl} alt="Profile" className="w-full h-full object-cover" />
+                    <img src={selfPhotoUrl} alt="Profile" className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     initials
                   )}
@@ -1182,7 +1182,7 @@ export default function MemberDashboard2() {
                   <div className={`px-4 py-3 border-b ${t.borderSubtle} flex items-center gap-3`}>
                     <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-[#E11D2A] to-red-700 flex items-center justify-center text-base font-bold text-white flex-shrink-0">
                       {selfPhotoUrl ? (
-                        <img src={selfPhotoUrl} alt="Profile" className="w-full h-full object-cover" />
+                        <img src={selfPhotoUrl} alt="Profile" className="w-full h-full object-cover" loading="lazy" />
                       ) : (
                         initials
                       )}
@@ -1324,8 +1324,7 @@ export default function MemberDashboard2() {
                 <img
                   src="https://images.unsplash.com/photo-1555597673-b21d5c935865?w=1200&auto=format&fit=crop&q=80"
                   alt="Karate Training"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
+                  className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
                 <div className="relative z-10 p-8 flex flex-col justify-end h-full min-h-[320px]">
                   <p className="text-xs font-bold tracking-widest text-[#E11D2A] uppercase mb-2">Current Lesson</p>

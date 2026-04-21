@@ -27,8 +27,7 @@ export default function BlogPost() {
         <img 
           src={post.imageUrl} 
           alt={post.title} 
-          className="w-full h-full object-cover"
-        />
+          className="w-full h-full object-cover" loading="lazy" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
         
         <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16">
@@ -138,8 +137,7 @@ export default function BlogPost() {
                           <img 
                             src={relatedPost.imageUrl} 
                             alt={relatedPost.title} 
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          />
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
                         </div>
                         <div>
                           <h4 className="font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-2 text-sm">

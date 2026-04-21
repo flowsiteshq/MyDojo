@@ -101,7 +101,7 @@ export default function Events() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center gap-16">
             <div className="w-full lg:w-1/2">
-              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/SyvAbjUuGnRExiUN.jpg" alt="Community" className="rounded-2xl shadow-2xl w-full" />
+              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/SyvAbjUuGnRExiUN.jpg" alt="Community" className="rounded-2xl shadow-2xl w-full" loading="lazy" />
             </div>
             <div className="w-full lg:w-1/2">
               <h2 className="text-4xl font-heading font-bold mb-6">JOIN OUR COMMUNITY</h2>

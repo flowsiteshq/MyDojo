@@ -299,8 +299,7 @@ export default function AdminSocialMedia() {
                       <img
                         src={imagePreview}
                         alt="Post preview"
-                        className="max-h-64 rounded-lg border border-gray-200 object-contain"
-                      />
+                        className="max-h-64 rounded-lg border border-gray-200 object-contain" loading="lazy" />
                       <button
                         onClick={() => { setImagePreview(null); setImageUrl(null); setImageKey(null); }}
                         className="absolute -top-2 -right-2 bg-white border border-gray-300 rounded-full p-1 shadow-sm hover:bg-red-50"
@@ -542,8 +541,7 @@ function PostList({
                 <img
                   src={post.imageUrl}
                   alt="Post"
-                  className="h-24 w-auto rounded-lg object-cover border border-gray-100 mb-3"
-                />
+                  className="h-24 w-auto rounded-lg object-cover border border-gray-100 mb-3" loading="lazy" />
               )}
 
               {/* Engagement stats */}

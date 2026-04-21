@@ -144,8 +144,7 @@ export default function NotificationHistory() {
           <img 
             src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/qYVQxVSfHBmyqxTB.jpg" 
             alt="MyDojo Training" 
-            className="w-full h-full object-cover opacity-30"
-          />
+            className="w-full h-full object-cover opacity-30" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-br from-black via-black/90 to-primary/20" />
         </div>
 
@@ -153,7 +152,7 @@ export default function NotificationHistory() {
         <div className="relative z-10 max-w-2xl mx-auto px-4 text-center">
           {/* Icon */}
           <div className="mb-8 inline-flex items-center justify-center w-24 h-24 bg-primary rounded-full">
-            <img src="/images/logo-white.png" alt="MyDojo" className="h-16 w-16" />
+            <img src="/images/logo-white.webp" alt="MyDojo" className="h-16 w-16" loading="lazy" />
           </div>
 
           {/* Heading */}

@@ -21,8 +21,7 @@ export default function Blog() {
           <img 
             src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/QCDmgxbjdlfUOCPT.jpg" 
             alt="Blog Header" 
-            className="w-full h-full object-cover opacity-40"
-          />
+            className="w-full h-full object-cover opacity-40" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black"></div>
         </div>
         <div className="container mx-auto px-4 relative z-10 text-center">
@@ -63,8 +62,7 @@ export default function Blog() {
                     <img 
                       src={post.imageUrl} 
                       alt={post.title} 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
                     <div className="absolute top-4 left-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                       {post.category}
                     </div>

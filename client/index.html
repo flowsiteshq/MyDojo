@@ -193,10 +193,14 @@
       })(window, document);
       adroll.track("pageView");
     </script>
-    <!-- Google Fonts -->
+    <!-- Google Fonts - optimized with font-display=swap and reduced weights -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet" />
+    <!-- Preconnect to CDN for hero images -->
+    <link rel="preconnect" href="https://d2xsxph8kpxj0f.cloudfront.net" crossorigin />
+    <!-- Preload first hero image for LCP -->
+    <link rel="preload" as="image" href="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero1_1d3d63d3.webp" />
   </head>
 
   <body>

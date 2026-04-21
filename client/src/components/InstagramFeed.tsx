@@ -69,8 +69,7 @@ export default function InstagramFeed() {
               <img 
                 src={post.image} 
                 alt={post.caption} 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
               
               {/* Overlay */}
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-center items-center text-white p-6 text-center">

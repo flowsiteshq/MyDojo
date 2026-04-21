@@ -38,8 +38,7 @@ export default function Login() {
         <img
           src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/qYVQxVSfHBmyqxTB.jpg"
           alt="MyDojo Background"
-          className="w-full h-full object-cover opacity-30"
-        />
+          className="w-full h-full object-cover opacity-30" loading="lazy" />
         <div className="absolute inset-0 bg-gradient-to-br from-black via-black/90 to-primary/20" />
       </div>
 

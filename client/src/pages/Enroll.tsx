@@ -96,7 +96,7 @@ export default function Enroll() {
       {/* Header */}
       <div className="bg-black text-white py-6 px-4">
         <div className="max-w-2xl mx-auto flex items-center gap-4">
-          <img src="/images/logo-white.png" alt="MyDojo" className="h-10 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          <img src="/images/logo-white.webp" alt="MyDojo" className="h-10 object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           <div>
             <h1 className="text-2xl font-heading font-bold uppercase tracking-wide">
               {programParam ? `${PROGRAM_EMOJI[programParam] || "🥋"} ${programParam} Enrollment` : "Join MyDojo"}

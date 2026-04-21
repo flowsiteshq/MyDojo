@@ -19,10 +19,9 @@ export default function EnrollmentSuccess() {
       {/* Hero Image Section */}
       <div className="relative h-64 bg-black overflow-hidden">
         <img
-          src="/images/hero-main.jpg"
+          src="/images/hero-main.webp"
           alt="MyDojo Training"
-          className="w-full h-full object-cover opacity-40"
-        />
+          className="w-full h-full object-cover opacity-40" loading="lazy" />
         <div className="absolute inset-0 flex items-center justify-center">
           <h1 className="text-4xl md:text-5xl font-heading font-bold text-white text-center px-4">
             WELCOME TO MYDOJO!

@@ -64,8 +64,7 @@ export default function Programs() {
                     <img 
                       src={program.image} 
                       alt={program.title} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <span className="text-white font-heading text-2xl font-bold border-2 border-white px-6 py-2 rounded-full">View Details</span>
                     </div>

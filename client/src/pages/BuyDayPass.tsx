@@ -329,8 +329,7 @@ export default function BuyDayPass() {
           <img
             src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/ESkmczpClhJKxFDQ.png"
             alt="MyDojo"
-            className="w-9 h-9 rounded-lg object-contain"
-          />
+            className="w-9 h-9 rounded-lg object-contain" loading="lazy" />
           <div>
             <p className="text-white font-black text-base leading-tight">MyDojo</p>
             <p className="text-white/40 text-xs">Day Pass Checkout</p>

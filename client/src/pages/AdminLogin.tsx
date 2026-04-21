@@ -93,21 +93,20 @@ export default function AdminLogin() {
       <div className="lg:w-1/2 relative flex flex-col justify-between p-10 overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="/images/hero-main.jpg"
+            src="/images/hero-main.webp"
             alt="MyDojo"
-            className="w-full h-full object-cover opacity-30"
-          />
+            className="w-full h-full object-cover opacity-30" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-br from-black via-black/80 to-primary/20" />
         </div>
 
         <div className="relative z-10">
           <a href="/" className="inline-block">
             <img
-              src="/images/logo-full-white.png"
+              src="/images/logo-full-white.webp"
               alt="MyDojo"
               className="h-12"
               onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src = "/images/FULLLOGOWHITE.png";
+                (e.currentTarget as HTMLImageElement).src = "/images/FULLLOGOWHITE.webp";
               }}
             />
           </a>

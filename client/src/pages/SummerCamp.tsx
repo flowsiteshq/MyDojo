@@ -20,7 +20,7 @@ export default function SummerCamp() {
       fieldTrip: "Trampoline Park Adventure",
       available: true,
       color: "from-red-500 to-orange-500",
-      image: "/images/camp-weeks/karate-kids.jpg"
+      image: "/images/camp-weeks/karate-kids.webp"
     },
     { 
       dates: "June 12-16", 
@@ -28,7 +28,7 @@ export default function SummerCamp() {
       fieldTrip: "Local Police Station Tour",
       available: true,
       color: "from-blue-400 to-cyan-400",
-      image: "/images/camp-weeks/self-defense.jpg"
+      image: "/images/camp-weeks/self-defense.webp"
     },
     { 
       dates: "June 19-23", 
@@ -36,7 +36,7 @@ export default function SummerCamp() {
       fieldTrip: "Martial Arts Museum",
       available: true,
       color: "from-yellow-400 to-orange-500",
-      image: "/images/camp-weeks/board-breaking.jpg"
+      image: "/images/camp-weeks/board-breaking.webp"
     },
     { 
       dates: "June 26-30", 
@@ -44,7 +44,7 @@ export default function SummerCamp() {
       fieldTrip: "Medieval Times Experience",
       available: true,
       color: "from-orange-500 to-red-400",
-      image: "/images/camp-weeks/weapons.jpg"
+      image: "/images/camp-weeks/weapons.webp"
     },
     { 
       dates: "July 3-7", 
@@ -52,7 +52,7 @@ export default function SummerCamp() {
       fieldTrip: "Fireworks & Field Games",
       available: true,
       color: "from-blue-600 to-red-600",
-      image: "/images/camp-weeks/independence-day.jpg"
+      image: "/images/camp-weeks/independence-day.webp"
     },
     { 
       dates: "July 10-14", 
@@ -60,7 +60,7 @@ export default function SummerCamp() {
       fieldTrip: "Professional Dojo Visit",
       available: true,
       color: "from-blue-500 to-indigo-500",
-      image: "/images/camp-weeks/tournament.jpg"
+      image: "/images/camp-weeks/tournament.webp"
     },
     { 
       dates: "July 17-21", 
@@ -68,7 +68,7 @@ export default function SummerCamp() {
       fieldTrip: "Community Service Day",
       available: true,
       color: "from-yellow-400 to-amber-500",
-      image: "/images/camp-weeks/leadership.jpg"
+      image: "/images/camp-weeks/leadership.webp"
     },
     { 
       dates: "July 24-28", 
@@ -84,7 +84,7 @@ export default function SummerCamp() {
       fieldTrip: "Championship Tournament",
       available: true,
       color: "from-orange-600 to-yellow-500",
-      image: "/images/camp-weeks/black-belt.jpg"
+      image: "/images/camp-weeks/black-belt.webp"
     },
     { 
       dates: "Aug 7-10", 
@@ -92,7 +92,7 @@ export default function SummerCamp() {
       fieldTrip: "Awards Ceremony & Pizza Party",
       available: true,
       color: "from-purple-500 to-pink-500",
-      image: "/images/camp-weeks/finale.jpg"
+      image: "/images/camp-weeks/finale.webp"
     },
   ];
 
@@ -132,10 +132,9 @@ export default function SummerCamp() {
         <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0">
             <img
-              src="/images/summer-camp/hero-colorful.jpg"
+              src="/images/summer-camp/hero-colorful.webp"
               alt="MyDojo Summer Camp"
-              className="w-full h-full object-cover"
-            />
+              className="w-full h-full object-cover" loading="lazy" />
             <div className="absolute inset-0 bg-gradient-to-r from-orange-600/90 via-yellow-500/80 to-blue-500/70"></div>
           </div>
 
@@ -198,7 +197,7 @@ export default function SummerCamp() {
                 className="relative overflow-hidden rounded-2xl shadow-2xl group"
               >
                 <img 
-                  src="/images/social/instagram-post-2.jpg" 
+                  src="/images/social/instagram-post-2.webp" 
                   alt="Expert martial arts instruction" 
                   className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110"
                   loading="lazy"
@@ -214,7 +213,7 @@ export default function SummerCamp() {
                 className="relative overflow-hidden rounded-2xl shadow-2xl group"
               >
                 <img 
-                  src="/images/summer-camp/group-activity.jpg" 
+                  src="/images/summer-camp/group-activity.webp" 
                   alt="Group activities and fun" 
                   className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110"
                   loading="lazy"
@@ -449,7 +448,7 @@ export default function SummerCamp() {
 
         {/* CTA Section */}
         <section className="py-24 bg-gradient-to-r from-orange-600 via-yellow-500 to-blue-500 text-white relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/images/summer-camp/activities-colorful.jpg')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
+          <div className="absolute inset-0 bg-[url('/images/summer-camp/activities-colorful.webp')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
           <div className="container mx-auto px-4 relative z-10 text-center">
             <h2 className="text-4xl md:text-6xl font-heading font-bold mb-6 drop-shadow-lg">
               READY FOR AN EPIC SUMMER? ☀️

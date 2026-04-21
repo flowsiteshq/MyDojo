@@ -146,8 +146,7 @@ export default function Homeschool() {
           <img
             src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/tomball-main-floor_284d59f6.jpg"
             alt="Homeschool Martial Arts"
-            className="w-full h-full object-cover opacity-40"
-          />
+            className="w-full h-full object-cover opacity-40" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
@@ -329,8 +328,7 @@ export default function Homeschool() {
                   <img
                     src={program.image}
                     alt={program.name}
-                    className="w-full h-full object-cover"
-                  />
+                    className="w-full h-full object-cover" loading="lazy" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                   <div className="absolute bottom-0 left-0 p-6">
                     <h4 className="text-2xl font-heading font-bold text-white">{program.name}</h4>
@@ -419,8 +417,7 @@ export default function Homeschool() {
           <img
             src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/tomball-main-floor_284d59f6.jpg"
             alt="Join MyDojo"
-            className="w-full h-full object-cover opacity-20"
-          />
+            className="w-full h-full object-cover opacity-20" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-r from-black to-black/80" />
         </div>
         <div className="container mx-auto px-4 relative z-10 text-center">

@@ -11,7 +11,7 @@ const SCROLL_THRESHOLD = 0.40;  // OR when 40% scrolled
 const SLIDES = [
   {
     id: "summer_camp" as const,
-    bg: "/images/summer-camp/hero-colorful.jpg",
+    bg: "/images/summer-camp/hero-colorful.webp",
     accent: "#f59e0b",         // amber
     accentDark: "#b45309",
     badge: "🏕️  Summer 2025",

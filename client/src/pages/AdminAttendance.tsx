@@ -84,8 +84,7 @@ function StudentAvatar({ name, photoUrl, size = "sm" }: { name: string; photoUrl
       <img
         src={photoUrl}
         alt={name}
-        className={`${sizeClass} rounded-full object-cover flex-shrink-0 border border-gray-200`}
-      />
+        className={`${sizeClass} rounded-full object-cover flex-shrink-0 border border-gray-200`} loading="lazy" />
     );
   }
   return <InitialsAvatar name={name} size={size} />;

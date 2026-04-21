@@ -154,7 +154,7 @@ export default function FamilyEnrollment() {
       {/* Header */}
       <div className="bg-black border-b border-white/10 px-6 py-4">
         <Link href="/">
-          <img src="/images/logo.png" alt="MyDojo" className="h-10 object-contain" />
+          <img src="/images/logo.webp" alt="MyDojo" className="h-10 object-contain" loading="lazy" />
         </Link>
       </div>
 

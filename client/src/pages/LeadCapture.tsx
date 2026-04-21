@@ -72,10 +72,9 @@ export default function LeadCapture() {
         {/* Header */}
         <div className="text-center mb-8">
           <img 
-            src="/images/mydojo-logo-white.png" 
+            src="/images/mydojo-logo-white.webp" 
             alt="MyDojo" 
-            className="h-16 mx-auto mb-6"
-          />
+            className="h-16 mx-auto mb-6" loading="lazy" />
           <h1 className="text-4xl md:text-5xl font-heading font-bold text-white mb-4">
             CLAIM YOUR <span className="text-primary">FREE TRIAL</span>
           </h1>

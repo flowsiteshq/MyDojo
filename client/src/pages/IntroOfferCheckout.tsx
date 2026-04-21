@@ -501,7 +501,7 @@ export default function IntroOfferCheckout() {
         {/* Header */}
         <div className="text-center mb-8">
           <img
-            src="/images/logo-full-white.png"
+            src="/images/logo-full-white.webp"
             alt="MyDojo"
             className="h-10 mx-auto mb-4"
             onError={(e) => {

@@ -58,8 +58,7 @@ export default function Waiver() {
           <img 
             src="https://storage.manus.space/mydojo-website-assets/kickboxing-hero-diverse-women.jpg" 
             alt="MyDojo Training" 
-            className="w-full h-full object-cover"
-          />
+            className="w-full h-full object-cover" loading="lazy" />
         </div>
         <div className="container relative z-10">
           <h1 className="text-4xl md:text-6xl font-heading font-bold mb-4">
