@@ -6299,6 +6299,24 @@ Please enter your card details below to complete your registration securely. Tot
           emailSent: false,
         });
 
+        // Send welcome SMS to the prospect (fire-and-forget)
+        if (input.phone) {
+          try {
+            const { sendSms, normalizePhone } = await import('./sms800');
+            const firstName = input.name ? input.name.split(' ')[0] : 'there';
+            const isOnlineSpecialSms = input.campaign === 'online_special';
+            const smsMessage = isOnlineSpecialSms
+              ? `Hi ${firstName}! 🎉 Welcome to MyDojo! Your 2 FREE weeks of karate classes are confirmed. We're at 14027 FM 2920, Tomball TX. Arrive 10-15 min early for your first class & wear comfy clothes — we'll handle the rest! Questions? Call/text (877) 4-MYDOJO. See you on the mat! 🥋`
+              : `Hi ${firstName}! Thanks for your interest in MyDojo. We'll be in touch soon to schedule your free class. Questions? Call (877) 4-MYDOJO. 🥋`;
+            await sendSms({
+              to: normalizePhone(input.phone),
+              message: smsMessage,
+            });
+          } catch (smsErr) {
+            console.error('[Popup Lead] Failed to send welcome SMS to prospect:', smsErr);
+          }
+        }
+
         // Send confirmation email to the lead
         let emailSent = false;
         try {
@@ -6307,11 +6325,61 @@ Please enter your card details below to complete your registration securely. Tot
           const firstName = input.name ? input.name.split(' ')[0] : 'there';
 
           const isSummerCamp = input.campaign === 'summer_camp';
+          const isOnlineSpecial = input.campaign === 'online_special';
           const subject = isSummerCamp
             ? `🏕️ You're on the Summer Camp Interest List — MyDojo`
+            : isOnlineSpecial
+            ? `🎉 Your 2 FREE Weeks Are Confirmed — MyDojo`
             : `🥊 You're on the Kickboxing Interest List — MyDojo`;
 
-          const bodyHtml = isSummerCamp
+          const bodyHtml = isOnlineSpecial
+            ? `
+              <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;">
+                <div style="background:#000;padding:24px;text-align:center;">
+                  <h1 style="color:#fff;margin:0;font-size:24px;letter-spacing:2px;">MYDOJO</h1>
+                  <p style="color:#CC0000;margin:4px 0 0;font-size:12px;letter-spacing:1px;">ONLINE SPECIAL — 2 WEEKS FREE</p>
+                </div>
+                <div style="padding:32px 24px;">
+                  <h2 style="color:#111;font-size:22px;">Hi ${firstName}! 🎉</h2>
+                  <p style="color:#444;line-height:1.6;">Congratulations — your <strong>2 FREE weeks of karate classes</strong> at MyDojo are confirmed! We can't wait to have you on the mat.</p>
+
+                  <div style="background:#fef2f2;border-left:4px solid #CC0000;padding:20px;margin:24px 0;border-radius:4px;">
+                    <h3 style="color:#CC0000;margin:0 0 12px;font-size:17px;">📍 We're Located At</h3>
+                    <p style="color:#333;margin:0;line-height:1.8;"><strong>MyDojo Martial Arts &amp; Fitness</strong><br/>14027 FM 2920, Tomball, TX 77377<br/><a href="https://maps.google.com/?q=14027+FM+2920+Tomball+TX+77377" style="color:#CC0000;">Get Directions →</a></p>
+                  </div>
+
+                  <div style="background:#f0fdf4;border-left:4px solid #16a34a;padding:20px;margin:24px 0;border-radius:4px;">
+                    <h3 style="color:#15803d;margin:0 0 12px;font-size:17px;">🥋 What to Expect on Your First Class</h3>
+                    <ul style="color:#333;line-height:2;padding-left:20px;">
+                      <li>Arrive <strong>10–15 minutes early</strong> to check in and meet your instructor</li>
+                      <li>Wear comfortable workout clothes — we'll provide a uniform for your trial</li>
+                      <li>No prior experience needed — all skill levels are welcome</li>
+                      <li>Classes are <strong>45–60 minutes</strong> of fun, structured training</li>
+                      <li>You'll learn basic stances, strikes, and self-defense techniques</li>
+                      <li>Bring water and a positive attitude — that's all you need!</li>
+                    </ul>
+                  </div>
+
+                  <div style="background:#f8f9fa;padding:20px;margin:24px 0;border-radius:4px;">
+                    <h3 style="color:#111;margin:0 0 16px;font-size:17px;">❓ Frequently Asked Questions</h3>
+                    <p style="color:#333;margin:0 0 8px;"><strong>Q: What age groups do you teach?</strong><br/><span style="color:#555;">A: We have programs for all ages — Little Ninjas (3–5), Dragon Kids (5–12), Teens &amp; Adults (13+), and Kickboxing for all ages.</span></p>
+                    <p style="color:#333;margin:16px 0 8px;"><strong>Q: Do I need to buy a uniform?</strong><br/><span style="color:#555;">A: Not for your trial! We'll provide everything you need for your first two weeks. Uniforms are available if you decide to enroll.</span></p>
+                    <p style="color:#333;margin:16px 0 8px;"><strong>Q: How many classes can I attend during my 2 free weeks?</strong><br/><span style="color:#555;">A: You can attend as many classes as you'd like during your 2-week trial. We recommend at least 2 classes per week for the best experience.</span></p>
+                    <p style="color:#333;margin:16px 0 8px;"><strong>Q: Is there a contract or commitment?</strong><br/><span style="color:#555;">A: Absolutely not for the trial. If you love it and decide to enroll, we offer flexible month-to-month and annual plans.</span></p>
+                    <p style="color:#333;margin:16px 0 8px;"><strong>Q: What if I need to reschedule my first class?</strong><br/><span style="color:#555;">A: No problem! Just call or text us at <a href="tel:+18774693656" style="color:#CC0000;">(877) 4-MYDOJO</a> and we'll find a time that works for you.</span></p>
+                  </div>
+
+                  <div style="text-align:center;margin:32px 0;">
+                    <a href="https://mydojoma.com/programs" style="background:#CC0000;color:#fff;padding:14px 32px;text-decoration:none;border-radius:4px;font-weight:bold;font-size:16px;letter-spacing:1px;display:inline-block;">VIEW CLASS SCHEDULE →</a>
+                  </div>
+                  <p style="color:#444;line-height:1.6;">Questions? Call or text us at <a href="tel:+18774693656" style="color:#CC0000;">(877) 4-MYDOJO</a> — we're happy to help!</p>
+                  <p style="color:#888;font-size:13px;">14027 FM 2920, Tomball, TX 77377 · <a href="https://mydojoma.com" style="color:#CC0000;">mydojoma.com</a></p>
+                </div>
+                <div style="background:#111;padding:16px;text-align:center;">
+                  <p style="color:#666;font-size:12px;margin:0;">© 2025 MyDojo Martial Arts &amp; Fitness · Tomball, TX</p>
+                </div>
+              </div>`
+            : isSummerCamp
             ? `
               <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;">
                 <div style="background:#000;padding:24px;text-align:center;">
