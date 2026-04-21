@@ -60,11 +60,17 @@ export default function OnlineSpecialPopup() {
   const hasShown = useRef(false);
   const confettiRef = useRef<ReturnType<typeof confetti.create> | null>(null);
 
-  // Fetch class schedule
-  const { data: scheduleData } = trpc.schedule.getAvailableTimes.useQuery(undefined, {
-    enabled: open && step === "schedule",
-    staleTime: 5 * 60 * 1000,
-  });
+  // Fetch class schedule from local DB
+  const { data: scheduleData } = trpc.schedule.getClassSchedules.useQuery(
+    {
+      programs: ["Little Ninjas", "Dragon Kids", "Teens", "Adult Karate", "Kickboxing", "After School"],
+      location: "MyDojo Headquarters - Tomball",
+    },
+    {
+      enabled: open && step === "schedule",
+      staleTime: 5 * 60 * 1000,
+    }
+  );
 
   const submitLead = trpc.popup.submitLead.useMutation();
 
@@ -166,7 +172,7 @@ export default function OnlineSpecialPopup() {
   const programKey = program.split(" (")[0]; // e.g. "Little Ninjas"
   const filteredSchedule = (scheduleData || []).filter(
     (s: any) =>
-      s.isActive &&
+      s.isActive === 1 &&
       (programKey === "Not Sure Yet" ||
         s.program.toLowerCase().includes(programKey.toLowerCase()) ||
         programKey.toLowerCase().includes(s.program.toLowerCase()))
