@@ -2271,77 +2271,85 @@ Please enter your card details below to complete your registration securely. Tot
         const firstName = nameParts[0] || '';
         const lastName = nameParts.slice(1).join(' ') || '';
 
-        // Step 1: Create Customer Vault with tokenized card
-        const customerRes = await fetch(`${FLUIDPAY_API_URL}/api/vault/customer`, {
-          method: 'POST',
-          headers: fpHeaders,
-          body: JSON.stringify({
-            description: `MyDojo member: ${input.customerName}`,
-            default_payment: { token: input.token },
-            default_billing_address: {
-              first_name: firstName,
-              last_name: lastName,
-              email: input.customerEmail,
-              phone: input.customerPhone.replace(/\D/g, ''),
-            },
-          }),
-        });
-        const customerData = await customerRes.json();
-        if (customerData.status !== 'success') {
-          console.error('[FluidPay] Customer vault creation failed:', customerData);
-          throw new TRPCError({ code: 'BAD_REQUEST', message: customerData.msg || 'Failed to save payment method' });
-        }
-        const fpCustomerId = customerData.data.id;
-        const fpPaymentMethodId = customerData.data.data?.customer?.defaults?.payment_method_id;
+        // Detect promo-free (zero-cost) enrollment — skip vault creation and charge entirely
+        const isPromoFree = input.token === 'PROMO_FREE';
+        let fpCustomerId: string | null = null;
+        let fpPaymentMethodId: string | null = null;
+        let fpTransactionId: string | null = null;
 
-        // Step 2: Charge the initial amount
-        let chargeCents: number;
-        let chargeDescription: string;
-        if (input.isSummerCamp) {
-          // Summer camp: $199 camp fee + $99 registration = $298 flat
-          chargeCents = 29800;
-          chargeDescription = `MyDojo Summer Camp - ${input.summerCampWeek || 'Registration'}`;
-        } else if (input.deferTuition) {
-          // Deferred tuition: charge only the $99 enrollment fee now; first month tuition charged later
-          const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '99') as string);
-          chargeCents = Math.round(enrollmentFeeAmt * 100);
-          chargeDescription = `MyDojo ${pkg!.name} Membership - Enrollment Fee (Tuition deferred to ${input.deferredTuitionDate || 'later this month'})`;
-        } else {
-          // Membership: down payment (first month + enrollment fee), optionally waived
-          const downPaymentAmt = parseFloat(pkg!.downPayment as string);
-          const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '99') as string);
-          const effectiveCharge = input.waiveEnrollmentFee
-            ? Math.max(0, downPaymentAmt - enrollmentFeeAmt)
-            : downPaymentAmt;
-          chargeCents = Math.round(effectiveCharge * 100);
-          chargeDescription = input.waiveEnrollmentFee
-            ? `MyDojo ${pkg!.name} Membership - First Month (Enrollment Fee Waived${input.waiverReason ? ': ' + input.waiverReason : ''})`
-            : `MyDojo ${pkg!.name} Membership - Down Payment`;
-        }
+        if (!isPromoFree) {
+          // Step 1: Create Customer Vault with tokenized card
+          const customerRes = await fetch(`${FLUIDPAY_API_URL}/api/vault/customer`, {
+            method: 'POST',
+            headers: fpHeaders,
+            body: JSON.stringify({
+              description: `MyDojo member: ${input.customerName}`,
+              default_payment: { token: input.token },
+              default_billing_address: {
+                first_name: firstName,
+                last_name: lastName,
+                email: input.customerEmail,
+                phone: input.customerPhone.replace(/\D/g, ''),
+              },
+            }),
+          });
+          const customerData = await customerRes.json();
+          if (customerData.status !== 'success') {
+            console.error('[FluidPay] Customer vault creation failed:', customerData);
+            throw new TRPCError({ code: 'BAD_REQUEST', message: customerData.msg || 'Failed to save payment method' });
+          }
+          fpCustomerId = customerData.data.id;
+          fpPaymentMethodId = customerData.data.data?.customer?.defaults?.payment_method_id;
 
-        const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
-          method: 'POST',
-          headers: fpHeaders,
-          body: JSON.stringify({
-            type: 'sale',
-            amount: chargeCents,
-            currency: 'usd',
-            payment_method: { customer: { id: fpCustomerId, payment_method_type: 'card', payment_method_id: fpPaymentMethodId } },
-            billing_address: { first_name: firstName, last_name: lastName, email: input.customerEmail, phone: input.customerPhone.replace(/\D/g, '') },
-            order_meta: { description: chargeDescription },
-          }),
-        });
-        const chargeData = await chargeRes.json();
-        if (chargeData.status !== 'success' || chargeData.data?.response_body?.card?.processor_response_code !== '00') {
-          console.error('[FluidPay] Charge failed:', chargeData);
-          const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.msg || 'Payment declined';
-          throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
-        }
-        const fpTransactionId = chargeData.data?.id;
+          // Step 2: Charge the initial amount
+          let chargeCents: number;
+          let chargeDescription: string;
+          if (input.isSummerCamp) {
+            // Summer camp: $199 camp fee + $99 registration = $298 flat
+            chargeCents = 29800;
+            chargeDescription = `MyDojo Summer Camp - ${input.summerCampWeek || 'Registration'}`;
+          } else if (input.deferTuition) {
+            // Deferred tuition: charge only the $99 enrollment fee now; first month tuition charged later
+            const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '99') as string);
+            chargeCents = Math.round(enrollmentFeeAmt * 100);
+            chargeDescription = `MyDojo ${pkg!.name} Membership - Enrollment Fee (Tuition deferred to ${input.deferredTuitionDate || 'later this month'})`;
+          } else {
+            // Membership: down payment (first month + enrollment fee), optionally waived
+            const downPaymentAmt = parseFloat(pkg!.downPayment as string);
+            const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '99') as string);
+            const effectiveCharge = input.waiveEnrollmentFee
+              ? Math.max(0, downPaymentAmt - enrollmentFeeAmt)
+              : downPaymentAmt;
+            chargeCents = Math.round(effectiveCharge * 100);
+            chargeDescription = input.waiveEnrollmentFee
+              ? `MyDojo ${pkg!.name} Membership - First Month (Enrollment Fee Waived${input.waiverReason ? ': ' + input.waiverReason : ''})`
+              : `MyDojo ${pkg!.name} Membership - Down Payment`;
+          }
 
-        // Step 3: Create recurring subscription for monthly billing (membership only)
+          const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
+            method: 'POST',
+            headers: fpHeaders,
+            body: JSON.stringify({
+              type: 'sale',
+              amount: chargeCents,
+              currency: 'usd',
+              payment_method: { customer: { id: fpCustomerId, payment_method_type: 'card', payment_method_id: fpPaymentMethodId } },
+              billing_address: { first_name: firstName, last_name: lastName, email: input.customerEmail, phone: input.customerPhone.replace(/\D/g, '') },
+              order_meta: { description: chargeDescription },
+            }),
+          });
+          const chargeData = await chargeRes.json();
+          if (chargeData.status !== 'success' || chargeData.data?.response_body?.card?.processor_response_code !== '00') {
+            console.error('[FluidPay] Charge failed:', chargeData);
+            const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.msg || 'Payment declined';
+            throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
+          }
+          fpTransactionId = chargeData.data?.id;
+        } // end !isPromoFree
+
+        // Step 3: Create recurring subscription for monthly billing (membership only, skip for promo-free)
         let fpSubscriptionId: string | null = null;
-        if (!input.isSummerCamp && pkg) {
+        if (!isPromoFree && !input.isSummerCamp && pkg && fpCustomerId) {
           const nextMonthDate = new Date();
           nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
           const startDate = nextMonthDate.toISOString().slice(0, 10);
