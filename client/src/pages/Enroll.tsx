@@ -35,8 +35,9 @@ export default function Enroll() {
   });
   const [enrollmentData, setEnrollmentData] = useState<any | null>(null);
 
-  // Read ?program= from URL
+  // Read ?program= and ?promo= from URL
   const programParam = new URLSearchParams(window.location.search).get("program") || "";
+  const promoParam = new URLSearchParams(window.location.search).get("promo") || undefined;
 
   // Fetch active packages
   const { data: packages, isLoading: pkgsLoading } = trpc.member.getActivePackages.useQuery();
@@ -272,6 +273,7 @@ export default function Enroll() {
               enrollmentData={enrollmentData}
               onSuccess={handleEnrollmentSuccess}
               onError={handleEnrollmentError}
+              initialPromo={promoParam}
             />
           </div>
         )}

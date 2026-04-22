@@ -34,6 +34,7 @@ interface FluidPayEnrollmentFormProps {
   enrollmentData: EnrollmentData;
   onSuccess?: (message: string) => void;
   onError?: (message: string) => void;
+  initialPromo?: string; // pre-applied promo code from URL
 }
 
 declare global {
@@ -95,7 +96,7 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
   );
 }
 
-export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError }: FluidPayEnrollmentFormProps) {
+export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, initialPromo }: FluidPayEnrollmentFormProps) {
   const [step, setStep] = useState<"agreement" | "payment">("agreement");
   const [agreementSig, setAgreementSig] = useState<AgreementSignature | null>(null);
 
@@ -107,12 +108,32 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError }: F
   const scriptLoadedRef = useRef(false);
   const tokenizerInitializedRef = useRef(false);
   // Promo code state
-  const [promoInput, setPromoInput] = useState("");
+  const [promoInput, setPromoInput] = useState(initialPromo || "");
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; discountType: string; discountValue: number; description: string } | null>(null);
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
   const validatePromo = trpc.promo.validate.useMutation();
   const markPromoUsed = trpc.promo.markUsed.useMutation();
+
+  // Auto-apply promo code from URL on first render
+  useEffect(() => {
+    if (!initialPromo) return;
+    validatePromo.mutate(
+      { code: initialPromo.trim() },
+      {
+        onSuccess: (result) => {
+          setAppliedPromo(result);
+          setPromoInput(result.code);
+          toast.success(`Promo code applied: ${result.description}`);
+        },
+        onError: () => {
+          // silently ignore invalid initial promo
+        },
+      }
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleApplyPromo = async () => {
     if (!promoInput.trim()) return;
     setPromoError(null);
