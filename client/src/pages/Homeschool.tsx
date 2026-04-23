@@ -250,7 +250,7 @@ export default function Homeschool() {
               <Calendar className="h-5 w-5 text-primary" />
               <p className="text-gray-700 font-medium">
                 <span className="font-bold text-black">Mon–Fri at 12:00 PM</span> · Located at{" "}
-                <span className="font-bold text-black">MyDojo Tomball</span> · 14027 FM 2920, Tomball, TX 77377
+                <span className="font-bold text-black">MyDojo Tomball</span> · 11721 Spring Cypress Rd, Tomball, TX 77377
               </p>
             </div>
           </motion.div>

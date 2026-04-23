@@ -6187,7 +6187,7 @@ Please enter your card details below to complete your registration securely. Tot
                   <div style="text-align: center; margin: 32px 0;">
                     <a href="https://mydojoma.com" style="background: #CC0000; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px; letter-spacing: 1px; display: inline-block;">BOOK A FREE TRIAL CLASS →</a>
                   </div>
-                  <p style="color: #888; font-size: 13px;">Questions? Call us at <a href="tel:+18774693656" style="color: #CC0000;">(877) 4-MYDOJO</a> or visit us at 14027 FM 2920, Tomball, TX 77377.</p>
+                  <p style="color: #888; font-size: 13px;">Questions? Call us at <a href="tel:+18774693656" style="color: #CC0000;">(877) 4-MYDOJO</a> or visit us at 11721 Spring Cypress Rd, Tomball, TX 77377.</p>
                 </div>
                 <div style="background: #111; padding: 16px; text-align: center;">
                   <p style="color: #666; font-size: 12px; margin: 0;">© 2025 MyDojo Martial Arts &amp; Fitness · Tomball, TX</p>
@@ -6306,7 +6306,7 @@ Please enter your card details below to complete your registration securely. Tot
             const firstName = input.name ? input.name.split(' ')[0] : 'there';
             const isOnlineSpecialSms = input.campaign === 'online_special';
             const smsMessage = isOnlineSpecialSms
-              ? `Hi ${firstName}! 🎉 Welcome to MyDojo! Your 2 FREE weeks of karate classes are confirmed. We're at 14027 FM 2920, Tomball TX. Arrive 10-15 min early for your first class & wear comfy clothes — we'll handle the rest! Questions? Call/text (877) 4-MYDOJO. See you on the mat! 🥋`
+              ? `Hi ${firstName}! 🎉 Welcome to MyDojo! Your 2 FREE weeks of karate classes are confirmed. We're at 11721 Spring Cypress Rd, Tomball TX. Arrive 10-15 min early for your first class & wear comfy clothes — we'll handle the rest! Questions? Call/text (877) 4-MYDOJO. See you on the mat! 🥋`
               : `Hi ${firstName}! Thanks for your interest in MyDojo. We'll be in touch soon to schedule your free class. Questions? Call (877) 4-MYDOJO. 🥋`;
             await sendSms({
               to: normalizePhone(input.phone),
@@ -6345,7 +6345,7 @@ Please enter your card details below to complete your registration securely. Tot
 
                   <div style="background:#fef2f2;border-left:4px solid #CC0000;padding:20px;margin:24px 0;border-radius:4px;">
                     <h3 style="color:#CC0000;margin:0 0 12px;font-size:17px;">📍 We're Located At</h3>
-                    <p style="color:#333;margin:0;line-height:1.8;"><strong>MyDojo Martial Arts &amp; Fitness</strong><br/>14027 FM 2920, Tomball, TX 77377<br/><a href="https://maps.google.com/?q=14027+FM+2920+Tomball+TX+77377" style="color:#CC0000;">Get Directions →</a></p>
+                    <p style="color:#333;margin:0;line-height:1.8;"><strong>MyDojo Martial Arts &amp; Fitness</strong><br/>11721 Spring Cypress Rd, Tomball, TX 77377<br/><a href="https://maps.google.com/?q=11721+Spring+Cypress+Rd+Tomball+TX+77377" style="color:#CC0000;">Get Directions →</a></p>
                   </div>
 
                   <div style="background:#f0fdf4;border-left:4px solid #16a34a;padding:20px;margin:24px 0;border-radius:4px;">
@@ -6373,7 +6373,7 @@ Please enter your card details below to complete your registration securely. Tot
                     <a href="https://mydojoma.com/programs" style="background:#CC0000;color:#fff;padding:14px 32px;text-decoration:none;border-radius:4px;font-weight:bold;font-size:16px;letter-spacing:1px;display:inline-block;">VIEW CLASS SCHEDULE →</a>
                   </div>
                   <p style="color:#444;line-height:1.6;">Questions? Call or text us at <a href="tel:+18774693656" style="color:#CC0000;">(877) 4-MYDOJO</a> — we're happy to help!</p>
-                  <p style="color:#888;font-size:13px;">14027 FM 2920, Tomball, TX 77377 · <a href="https://mydojoma.com" style="color:#CC0000;">mydojoma.com</a></p>
+                  <p style="color:#888;font-size:13px;">11721 Spring Cypress Rd, Tomball, TX 77377 · <a href="https://mydojoma.com" style="color:#CC0000;">mydojoma.com</a></p>
                 </div>
                 <div style="background:#111;padding:16px;text-align:center;">
                   <p style="color:#666;font-size:12px;margin:0;">© 2025 MyDojo Martial Arts &amp; Fitness · Tomball, TX</p>
@@ -6403,7 +6403,7 @@ Please enter your card details below to complete your registration securely. Tot
                   <div style="text-align:center;margin:32px 0;">
                     <a href="https://mydojoma.com/summer-camp" style="background:#CC0000;color:#fff;padding:14px 32px;text-decoration:none;border-radius:4px;font-weight:bold;font-size:16px;letter-spacing:1px;display:inline-block;">LEARN MORE ABOUT SUMMER CAMP →</a>
                   </div>
-                  <p style="color:#888;font-size:13px;">14027 FM 2920, Tomball, TX 77377 · <a href="https://mydojoma.com" style="color:#CC0000;">mydojoma.com</a></p>
+                  <p style="color:#888;font-size:13px;">11721 Spring Cypress Rd, Tomball, TX 77377 · <a href="https://mydojoma.com" style="color:#CC0000;">mydojoma.com</a></p>
                 </div>
                 <div style="background:#111;padding:16px;text-align:center;">
                   <p style="color:#666;font-size:12px;margin:0;">© 2025 MyDojo Martial Arts &amp; Fitness · Tomball, TX</p>
@@ -6432,7 +6432,7 @@ Please enter your card details below to complete your registration securely. Tot
                   <div style="text-align:center;margin:32px 0;">
                     <a href="https://mydojoma.com/programs/kickboxing" style="background:#CC0000;color:#fff;padding:14px 32px;text-decoration:none;border-radius:4px;font-weight:bold;font-size:16px;letter-spacing:1px;display:inline-block;">BOOK MY FREE CLASS NOW →</a>
                   </div>
-                  <p style="color:#888;font-size:13px;">14027 FM 2920, Tomball, TX 77377 · <a href="https://mydojoma.com" style="color:#CC0000;">mydojoma.com</a></p>
+                  <p style="color:#888;font-size:13px;">11721 Spring Cypress Rd, Tomball, TX 77377 · <a href="https://mydojoma.com" style="color:#CC0000;">mydojoma.com</a></p>
                 </div>
                 <div style="background:#111;padding:16px;text-align:center;">
                   <p style="color:#666;font-size:12px;margin:0;">© 2025 MyDojo Martial Arts &amp; Fitness · Tomball, TX</p>
