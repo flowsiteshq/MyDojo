@@ -1694,3 +1694,29 @@ export const familyKickboxingAddOns = mysqlTable("familyKickboxingAddOns", {
 });
 export type FamilyKickboxingAddOn = typeof familyKickboxingAddOns.$inferSelect;
 export type InsertFamilyKickboxingAddOn = typeof familyKickboxingAddOns.$inferInsert;
+
+// ─── Parents Night Out RSVP ────────────────────────────────────────────────
+export const pnoRsvps = mysqlTable("pnoRsvps", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Event identifier so this table can be reused for future PNO events */
+  eventId: varchar("eventId", { length: 64 }).notNull().default("nerf-wars-2025-04-25"),
+  /** Parent/guardian name */
+  parentName: varchar("parentName", { length: 255 }).notNull(),
+  /** Parent phone number */
+  phone: varchar("phone", { length: 20 }).notNull(),
+  /** Parent email (optional) */
+  email: varchar("email", { length: 320 }),
+  /** Comma-separated list of student names attending */
+  studentNames: text("studentNames").notNull(),
+  /** Number of students attending */
+  studentCount: int("studentCount").notNull().default(1),
+  /** Whether they are bringing a friend (non-student guest) */
+  bringingFriend: int("bringingFriend").notNull().default(0),
+  /** Friend's name if bringing one */
+  friendName: varchar("friendName", { length: 255 }),
+  /** Any dietary restrictions or notes */
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type PnoRsvp = typeof pnoRsvps.$inferSelect;
+export type InsertPnoRsvp = typeof pnoRsvps.$inferInsert;

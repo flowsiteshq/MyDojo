@@ -8204,5 +8204,35 @@ Please enter your card details below to complete your registration securely. Tot
         amount: '$1.00',
       };
     }),
+  pno: router({
+    submitRsvp: publicProcedure
+      .input(z.object({
+        parentName: z.string().min(2),
+        phone: z.string().min(10),
+        email: z.string().email().optional(),
+        studentNames: z.string().min(1),
+        studentCount: z.number().int().min(1).max(10),
+        bringingFriend: z.boolean(),
+        friendName: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { createPnoRsvp, checkPnoRsvpExists } = await import('./db');
+        const alreadyRsvpd = await checkPnoRsvpExists(input.phone);
+        if (alreadyRsvpd) {
+          throw new TRPCError({ code: 'CONFLICT', message: "You've already RSVP'd for this event!" });
+        }
+        await createPnoRsvp({
+          ...input,
+          eventId: 'nerf-wars-2025-04-25',
+        });
+        return { success: true };
+      }),
+    getRsvps: protectedProcedure
+      .query(async () => {
+        const { getPnoRsvps } = await import('./db');
+        return getPnoRsvps();
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;

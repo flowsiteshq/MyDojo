@@ -72,6 +72,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Join = lazy(() => import("./pages/Join"));
 const BuyDayPass = lazy(() => import("./pages/BuyDayPass"));
 const Enroll = lazy(() => import("./pages/Enroll"));
+const ParentsNightOut = lazy(() => import("./pages/ParentsNightOut"));
 
 // Loading component — subtle fade-in bar at the top, no jarring red circle
 const PageLoader = () => (
@@ -119,6 +120,7 @@ function Router() {
         <Route path="/arcade" component={KioskArcade} />
         <Route path="/intro-offer" component={IntroOfferCheckout} />
         <Route path="/family-enrollment" component={FamilyEnrollment} />
+        <Route path="/parents-night-out" component={ParentsNightOut} />
         <Route path="/test-payment" component={TestPayment} />
         
         {/* Student dashboard without Layout */}

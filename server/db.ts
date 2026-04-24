@@ -805,3 +805,52 @@ export async function getApprovedTimeOffForMonth(year: number, month: number) {
       )
     );
 }
+
+// ─── Parents Night Out RSVP helpers ────────────────────────────────────────
+export async function createPnoRsvp(data: {
+  eventId?: string;
+  parentName: string;
+  phone: string;
+  email?: string;
+  studentNames: string;
+  studentCount: number;
+  bringingFriend: boolean;
+  friendName?: string;
+  notes?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const { pnoRsvps } = await import("../drizzle/schema");
+  const [result] = await db.insert(pnoRsvps).values({
+    eventId: data.eventId ?? "nerf-wars-2025-04-25",
+    parentName: data.parentName,
+    phone: data.phone,
+    email: data.email,
+    studentNames: data.studentNames,
+    studentCount: data.studentCount,
+    bringingFriend: data.bringingFriend ? 1 : 0,
+    friendName: data.friendName,
+    notes: data.notes,
+  });
+  return result;
+}
+
+export async function getPnoRsvps(eventId?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  const { pnoRsvps } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  const id = eventId ?? "nerf-wars-2025-04-25";
+  return db.select().from(pnoRsvps).where(eq(pnoRsvps.eventId, id)).orderBy(pnoRsvps.createdAt);
+}
+
+export async function checkPnoRsvpExists(phone: string, eventId?: string) {
+  const db = await getDb();
+  if (!db) return false;
+  const { pnoRsvps } = await import("../drizzle/schema");
+  const { eq } = await import("drizzle-orm");
+  const id = eventId ?? "nerf-wars-2025-04-25";
+  const normalized = phone.replace(/\D/g, "").slice(-10);
+  const allRows = await db.select().from(pnoRsvps).where(eq(pnoRsvps.eventId, id));
+  return allRows.some((r: any) => r.phone.replace(/\D/g, "").slice(-10) === normalized);
+}
