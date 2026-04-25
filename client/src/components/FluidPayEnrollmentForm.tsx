@@ -28,6 +28,8 @@ interface EnrollmentData {
   // Deferred tuition: charge only $99 now, first month tuition on a later date
   deferTuition?: boolean;
   deferredTuitionDate?: string; // YYYY-MM-DD within same calendar month
+  // Full down payment waiver: $0 today, recurring starts immediately
+  waiveDownPayment?: boolean;
 }
 
 interface FluidPayEnrollmentFormProps {
@@ -231,6 +233,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
             waiverReason: enrollmentData.waiverReason || undefined,
             deferTuition: enrollmentData.deferTuition || undefined,
             deferredTuitionDate: enrollmentData.deferredTuitionDate || undefined,
+            waiveDownPayment: enrollmentData.waiveDownPayment || undefined,
             agreementSignature: agreementSig?.signedName,
             agreementSignedAt: agreementSig?.signedAt?.toISOString(),
           });

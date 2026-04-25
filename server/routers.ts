@@ -2234,6 +2234,7 @@ Please enter your card details below to complete your registration securely. Tot
         agreementSignedAt: z.string().optional(), // ISO string
         deferTuition: z.boolean().optional(), // if true, charge only $99 enrollment fee now; defer first month tuition
         deferredTuitionDate: z.string().optional(), // YYYY-MM-DD, must be within same calendar month
+        waiveDownPayment: z.boolean().optional(), // if true, $0 charged today, recurring subscription starts immediately
       }))
       .mutation(async ({ input }) => {
         const db = await getDb();
@@ -2308,6 +2309,10 @@ Please enter your card details below to complete your registration securely. Tot
             // Summer camp: $199 camp fee + $99 registration = $298 flat
             chargeCents = 29800;
             chargeDescription = `MyDojo Summer Camp - ${input.summerCampWeek || 'Registration'}`;
+          } else if (input.waiveDownPayment) {
+            // Full down payment waived: $0 charged today, recurring subscription starts immediately
+            chargeCents = 0;
+            chargeDescription = `MyDojo ${pkg!.name} Membership - Down Payment Waived`;
           } else if (input.deferTuition) {
             // Deferred tuition: charge only the $99 enrollment fee now; first month tuition charged later
             const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '99') as string);
@@ -2326,33 +2331,36 @@ Please enter your card details below to complete your registration securely. Tot
               : `MyDojo ${pkg!.name} Membership - Down Payment`;
           }
 
-          const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
-            method: 'POST',
-            headers: fpHeaders,
-            body: JSON.stringify({
-              type: 'sale',
-              amount: chargeCents,
-              currency: 'usd',
-              payment_method: { customer: { id: fpCustomerId, payment_method_type: 'card', payment_method_id: fpPaymentMethodId } },
-              billing_address: { first_name: firstName, last_name: lastName, email: input.customerEmail, phone: input.customerPhone.replace(/\D/g, '') },
-              order_meta: { description: chargeDescription },
-            }),
-          });
-          const chargeData = await chargeRes.json();
-          if (chargeData.status !== 'success' || chargeData.data?.response_body?.card?.processor_response_code !== '00') {
-            console.error('[FluidPay] Charge failed:', chargeData);
-            const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.msg || 'Payment declined';
-            throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
+          // Skip charge if amount is $0 (waiveDownPayment path)
+          if (chargeCents > 0) {
+            const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
+              method: 'POST',
+              headers: fpHeaders,
+              body: JSON.stringify({
+                type: 'sale',
+                amount: chargeCents,
+                currency: 'usd',
+                payment_method: { customer: { id: fpCustomerId, payment_method_type: 'card', payment_method_id: fpPaymentMethodId } },
+                billing_address: { first_name: firstName, last_name: lastName, email: input.customerEmail, phone: input.customerPhone.replace(/\D/g, '') },
+                order_meta: { description: chargeDescription },
+              }),
+            });
+            const chargeData = await chargeRes.json();
+            if (chargeData.status !== 'success' || chargeData.data?.response_body?.card?.processor_response_code !== '00') {
+              console.error('[FluidPay] Charge failed:', chargeData);
+              const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.msg || 'Payment declined';
+              throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
+            }
+            fpTransactionId = chargeData.data?.id;
           }
-          fpTransactionId = chargeData.data?.id;
         } // end !isPromoFree
 
         // Step 3: Create recurring subscription for monthly billing (membership only, skip for promo-free)
         let fpSubscriptionId: string | null = null;
         if (!isPromoFree && !input.isSummerCamp && pkg && fpCustomerId) {
-          const nextMonthDate = new Date();
-          nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
-          const startDate = nextMonthDate.toISOString().slice(0, 10);
+          // If down payment waived, start subscription today; otherwise start next month (first month already charged)
+          const subStartDate = input.waiveDownPayment ? new Date() : (() => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d; })();
+          const startDate = subStartDate.toISOString().slice(0, 10);
           const subscriptionRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
             method: 'POST',
             headers: fpHeaders,
@@ -2429,6 +2437,32 @@ Please enter your card details below to complete your registration securely. Tot
             monthlyPaymentsRemaining: pkg!.durationMonths,
             status: 'active',
             discountApplied: input.discountCode || null,
+            agreementSignature: input.agreementSignature || null,
+            agreementSignedAt: input.agreementSignedAt ? new Date(input.agreementSignedAt) : null,
+            startDate: new Date(),
+          });
+          enrollmentId = (insertResult as any).insertId;
+        } else if (input.waiveDownPayment) {
+          // Full down payment waived: $0 today, recurring starts immediately
+          const totalPrice = parseFloat(pkg!.totalPrice as string);
+          packageName = pkg!.name;
+          amountCharged = 0;
+          const insertResult = await db.insert(schema.enrollments).values({
+            membershipPackageId: pkg!.id,
+            leadId: input.leadId || null,
+            customerName: input.customerName,
+            customerEmail: input.customerEmail,
+            customerPhone: input.customerPhone,
+            studentName: input.studentName || input.customerName,
+            fluidpayCustomerId: fpCustomerId,
+            fluidpaySubscriptionId: fpSubscriptionId,
+            stripePaymentIntentId: null,
+            downPaymentAmount: '0.00',
+            paidFirstMonth: 0,
+            remainingBalance: totalPrice.toFixed(2),
+            monthlyPaymentsRemaining: pkg!.durationMonths,
+            status: 'active',
+            discountApplied: 'down_payment_waived',
             agreementSignature: input.agreementSignature || null,
             agreementSignedAt: input.agreementSignedAt ? new Date(input.agreementSignedAt) : null,
             startDate: new Date(),

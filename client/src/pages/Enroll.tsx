@@ -85,6 +85,7 @@ export default function Enroll() {
       customerEmail: info.customerEmail.trim(),
       customerPhone: info.customerPhone.trim(),
       studentName: info.studentName.trim() || info.customerName.trim(),
+      waiveDownPayment: noDownPayment || undefined,
     });
     setStep("payment");
   }
