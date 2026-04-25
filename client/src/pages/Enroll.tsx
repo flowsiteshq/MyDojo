@@ -38,11 +38,25 @@ export default function Enroll() {
   // Read ?program= and ?promo= from URL
   const programParam = new URLSearchParams(window.location.search).get("program") || "";
   const promoParam = new URLSearchParams(window.location.search).get("promo") || undefined;
+  const packageParam = new URLSearchParams(window.location.search).get("package");
+  const noDownPayment = new URLSearchParams(window.location.search).get("nodp") === "true";
 
   // Fetch active packages
   const { data: packages, isLoading: pkgsLoading } = trpc.member.getActivePackages.useQuery();
 
   const selectedPkg = packages?.find((p) => p.id === selectedPackageId);
+
+  // Auto-select package from URL param once packages load
+  useEffect(() => {
+    if (packageParam && packages && !selectedPackageId) {
+      const pkgId = parseInt(packageParam, 10);
+      const found = packages.find((p) => p.id === pkgId);
+      if (found) {
+        setSelectedPackageId(pkgId);
+        setStep("info");
+      }
+    }
+  }, [packages, packageParam]);
 
   // When package is chosen, move to info step
   function handleSelectPackage(pkgId: number) {
@@ -63,8 +77,8 @@ export default function Enroll() {
     setEnrollmentData({
       packageId: selectedPkg.id,
       packageName: selectedPkg.name,
-      downPayment: parseFloat(selectedPkg.downPayment as string),
-      enrollmentFee: parseFloat(selectedPkg.enrollmentFee as string),
+      downPayment: noDownPayment ? 0 : parseFloat(selectedPkg.downPayment as string),
+      enrollmentFee: noDownPayment ? 0 : parseFloat(selectedPkg.enrollmentFee as string),
       monthlyPrice: parseFloat(selectedPkg.monthlyPrice as string),
       durationMonths: selectedPkg.durationMonths,
       customerName: info.customerName.trim(),
