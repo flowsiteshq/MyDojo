@@ -163,7 +163,8 @@ export default function Enroll() {
                 {packages.map((pkg) => {
                   const monthly = parseFloat(pkg.monthlyPrice as string);
                   const down = parseFloat(pkg.downPayment as string);
-                  const benefits: string[] = pkg.benefits ? JSON.parse(pkg.benefits as string) : [];
+                  let benefits: string[] = [];
+                  try { benefits = pkg.benefits ? JSON.parse(pkg.benefits as string) : []; } catch { benefits = []; }
                   return (
                     <Card
                       key={pkg.id}
