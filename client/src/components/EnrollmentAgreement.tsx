@@ -65,7 +65,7 @@ export function EnrollmentAgreement({
   onAccepted,
 }: EnrollmentAgreementProps) {
   const [allSectionsRead, setAllSectionsRead] = useState(false);
-  const [typedName, setTypedName] = useState("");
+  const [typedName, setTypedName] = useState(customerName.trim());
   const [accepted, setAccepted] = useState(false);
   const [showSignature, setShowSignature] = useState(false);
 
@@ -77,8 +77,9 @@ export function EnrollmentAgreement({
     day: "numeric",
   });
 
-  const nameMatches =
-    typedName.trim().toLowerCase() === customerName.trim().toLowerCase();
+  // Normalize: collapse multiple spaces, trim, lowercase for comparison
+  const normalizeName = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase();
+  const nameMatches = normalizeName(typedName) === normalizeName(customerName);
   const canProceed = allSectionsRead && accepted && nameMatches;
 
   const handleProceed = () => {
