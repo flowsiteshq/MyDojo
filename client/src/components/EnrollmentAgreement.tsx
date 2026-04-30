@@ -80,7 +80,8 @@ export function EnrollmentAgreement({
   // Normalize: collapse multiple spaces, trim, lowercase for comparison
   const normalizeName = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase();
   const nameMatches = normalizeName(typedName) === normalizeName(customerName);
-  const canProceed = allSectionsRead && accepted && nameMatches;
+  // Name confirmed + having clicked through the agreement is sufficient — no separate checkbox needed
+  const canProceed = allSectionsRead && nameMatches;
 
   const handleProceed = () => {
     if (!canProceed) return;
