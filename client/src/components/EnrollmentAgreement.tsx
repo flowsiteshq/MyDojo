@@ -315,7 +315,13 @@ export function EnrollmentAgreement({
 
           {/* Checkbox */}
           <div
-            className="flex items-start gap-4 bg-gray-50 border border-gray-200 rounded-xl p-4 cursor-pointer active:bg-gray-100"
+            className={`flex items-start gap-4 rounded-xl p-4 cursor-pointer border-2 ${
+              accepted
+                ? 'bg-green-50 border-green-400'
+                : nameMatches
+                ? 'bg-primary/5 border-primary animate-pulse'
+                : 'bg-gray-50 border-gray-200'
+            }`}
             onClick={() => setAccepted((a) => !a)}
             style={{ minHeight: 64 }}
           >
@@ -325,8 +331,10 @@ export function EnrollmentAgreement({
               onCheckedChange={(v) => setAccepted(!!v)}
               className="mt-0.5 w-6 h-6 shrink-0"
             />
-            <label htmlFor="agree-check" className="text-base text-gray-700 leading-snug cursor-pointer select-none">
-              I have read, understood, and agree to all terms of this Enrollment Agreement, Liability
+            <label htmlFor="agree-check" className={`text-base leading-snug cursor-pointer select-none font-semibold ${
+              accepted ? 'text-green-800' : nameMatches ? 'text-primary' : 'text-gray-700'
+            }`}>
+              {accepted ? '✓ ' : ''}I have read, understood, and agree to all terms of this Enrollment Agreement, Liability
               Waiver, and Photo Consent.
             </label>
           </div>
