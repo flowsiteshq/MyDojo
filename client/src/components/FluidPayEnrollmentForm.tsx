@@ -461,7 +461,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
             </div>
           )}
 
-          {totalAmount === 0 ? (
+          {totalAmount === 0 && !enrollmentData.waiveDownPayment ? (
             <Button
               onClick={() => {
                 if (appliedPromo) markPromoUsed.mutate({ code: appliedPromo.code });
@@ -500,7 +500,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
               {isSubmitting ? (
                 <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Processing…</>
               ) : (
-                `Pay $${totalAmount.toFixed(2)} & Complete Enrollment`
+                enrollmentData.waiveDownPayment ? `Save Card & Complete Enrollment — $0 Today` : `Pay $${totalAmount.toFixed(2)} & Complete Enrollment`
               )}
             </Button>
           ) : null}
