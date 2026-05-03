@@ -69,6 +69,8 @@ export function CookieBanner() {
       marketing: true
     }));
     setIsVisible(false);
+    // Fire event so lead capture popup can respond
+    window.dispatchEvent(new CustomEvent('mydojo:cookieAccepted'));
   };
 
   const handleDeclineAll = () => {

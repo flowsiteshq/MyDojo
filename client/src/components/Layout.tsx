@@ -5,6 +5,7 @@ import { Menu, X, Phone, MapPin, Instagram, Facebook, Youtube, User, ChevronDown
 import { cn } from "@/lib/utils";
 import { CookieBanner } from "@/components/CookieBanner";
 import OnlineSpecialPopup from "@/components/OnlineSpecialPopup";
+import { WebsiteVisitorPopup } from "@/components/WebsiteVisitorPopup";
 import { openIntakeChatbot } from "@/lib/chatbot";
 import { useLocationContext } from "@/contexts/LocationContext";
 import { NotificationSubscribe } from "@/components/NotificationSubscribe";
@@ -463,6 +464,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       <CookieBanner />
       <OnlineSpecialPopup />
+      <WebsiteVisitorPopup />
 
       {/* Main Content */}
       <main className="flex-grow pt-0">
