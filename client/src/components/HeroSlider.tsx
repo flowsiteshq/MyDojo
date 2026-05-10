@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { ParticleButton } from "@/components/ui/ParticleButton";
 import { Link } from "wouter";
 import { openIntakeChatbot } from "@/lib/chatbot";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useLocationContext } from "@/contexts/LocationContext";
+import { trpc } from "@/lib/trpc";
+import { IntroOfferModal } from "@/components/IntroOfferModal";
 
 const slides = [
   {
@@ -64,6 +66,20 @@ const slides = [
   }
 ];
 
+const DEFAULT_CONTENT = {
+  headline: "FUN. FIT. STRONG.",
+  subheadline: "PROGRAMS FOR EVERY AGE",
+  targetMessage: "Experience martial arts training for every age. Build confidence, discipline, and strength.",
+  ctaText: "Claim $29 Intro Offer",
+  badgeText: "Limited Spots Available",
+  holiday: null as string | null,
+  season: "general" as string,
+  targetAudience: "everyone" as string,
+  urgency: "" as string,
+  isSummerCamp: false,
+  isMothersDay: false,
+};
+
 interface HeroSliderProps {
   onOpenChatbot?: () => void;
 }
@@ -73,9 +89,26 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
   const [direction, setDirection] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [offerModalOpen, setOfferModalOpen] = useState(false);
+  const [paused, setPaused] = useState(false);
   const { userCity, closestLocation } = useLocationContext();
 
-  // Minimum swipe distance (in px)
+  const { data: heroContent } = trpc.heroContent.getHeroContent.useQuery(undefined, {
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const content = heroContent || DEFAULT_CONTENT;
+
+  const getBadge = () => {
+    if (content.isMothersDay) return { text: "🌸 Happy Mother's Day — Give the Gift of Confidence!", color: "#be185d" };
+    if (content.isSummerCamp) return { text: "☀️ Summer Camp Now Enrolling — Limited Spots!", color: "#0891B2" };
+    if (content.holiday) return { text: `🎉 ${content.holiday} Special Offer!`, color: "#E10600" };
+    return { text: "🥋 Limited Spots Available — Claim Your Intro Offer Today!", color: "#E10600" };
+  };
+
+  const badge = getBadge();
+
   const minSwipeDistance = 50;
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -103,11 +136,12 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
   };
 
   useEffect(() => {
+    if (paused) return;
     const timer = setInterval(() => {
       nextSlide();
-    }, 10000); // Slowed down from 6s to 10s
+    }, 10000);
     return () => clearInterval(timer);
-  }, [currentSlide]);
+  }, [currentSlide, paused]);
 
   const nextSlide = () => {
     setDirection(1);
@@ -137,12 +171,20 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
   };
 
   return (
+    <>
     <section 
       className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden bg-black"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
+      {/* Holiday/seasonal banner strip */}
+      <div
+        className="absolute top-0 left-0 right-0 z-20 py-2 px-4 text-center text-xs font-bold uppercase tracking-widest text-white"
+        style={{ backgroundColor: badge.color }}
+      >
+        {badge.text}
+      </div>
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={currentSlide}
@@ -171,40 +213,44 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
       </AnimatePresence>
 
       {/* Content */}
-      <div className="container mx-auto px-4 relative z-10 flex flex-col justify-end md:justify-center h-full pb-20 md:pb-0">
+      <div className="container mx-auto px-4 relative z-10 flex flex-col justify-end md:justify-center h-full pb-20 md:pb-0 pt-8">
         <motion.div
-          key={`content-${currentSlide}`}
+          key={`content-${currentSlide}-${content.holiday}`}
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
           className="max-w-3xl"
         >
           <h2 className="text-primary font-bold tracking-widest uppercase mb-4 text-lg md:text-xl">
-            Welcome to MyDojo
+            {content.subheadline || "PROGRAMS FOR EVERY AGE"}
           </h2>
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-heading font-bold text-white leading-tight mb-4 md:mb-6">
-            {slides[currentSlide].title}
+            {content.headline || "FUN. FIT."}
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
-              {slides[currentSlide].highlight}
+              {content.isMothersDay ? "MOM'S CHOICE." : content.isSummerCamp ? "SUMMER CAMP." : "STRONG."}
             </span>
           </h1>
           <p className="text-lg md:text-xl text-gray-200 mb-6 md:mb-8 max-w-xl leading-relaxed line-clamp-3 md:line-clamp-none">
-            {slides[currentSlide].description}
+            {(content as typeof DEFAULT_CONTENT & { description?: string }).description || (content as typeof DEFAULT_CONTENT).targetMessage}
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <ParticleButton 
-              onClick={onOpenChatbot || openIntakeChatbot}
-              className="bg-primary hover:bg-primary/90 text-white text-lg px-8 py-6 h-auto font-heading uppercase tracking-wider skew-x-[-10deg] w-full sm:w-auto"
-              particleColor="#ef4444"
-              particleCount={20}
+            {/* Primary: $29 Intro Offer */}
+            <button
+              onClick={() => setOfferModalOpen(true)}
+              className="bg-primary hover:bg-primary/90 text-white text-lg px-8 py-5 h-auto font-heading uppercase tracking-wider skew-x-[-10deg] w-full sm:w-auto transition-all duration-200 hover:scale-105 shadow-lg"
             >
-              <span className="skew-x-[10deg]">Start Your Journey</span>
-            </ParticleButton>
+              <span className="skew-x-[10deg] flex flex-col items-center sm:items-start">
+                <span className="font-black">{content.ctaText || "Claim $29 Intro Offer"}</span>
+                <span className="text-xs font-normal opacity-90 mt-0.5 normal-case tracking-normal">
+                  2 Classes + Uniform Included
+                </span>
+              </span>
+            </button>
             <Link href={closestLocation ? `/locations/${closestLocation.id}` : (userCity ? `/locations?city=${encodeURIComponent(userCity)}` : "/locations")}>
               <Button className="bg-white text-black hover:bg-gray-200 text-lg px-8 py-6 h-auto font-heading uppercase tracking-wider skew-x-[-10deg] w-full sm:w-auto">
                 <span className="skew-x-[10deg]">
-                  {closestLocation ? `Find Classes in ${closestLocation.city}` : (userCity ? `Find Classes in ${userCity}` : "Find a Class Near Me")}
+                  {closestLocation ? `Classes in ${closestLocation.city}` : (userCity ? `Classes in ${userCity}` : "Find a Class")}
                 </span>
               </Button>
             </Link>
@@ -216,6 +262,19 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
                 <span className="skew-x-[10deg]">View Programs</span>
               </Button>
             </Link>
+          </div>
+          {/* Social proof mini-stat */}
+          <div className="flex items-center gap-3 mt-5">
+            <div className="flex -space-x-2">
+              {[11, 12, 13, 14].map((i) => (
+                <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-600 overflow-hidden">
+                  <img src={`https://i.pravatar.cc/32?img=${i}`} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-gray-300">
+              <span className="text-white font-bold">500+</span> families enrolled this year
+            </p>
           </div>
         </motion.div>
       </div>
@@ -255,6 +314,16 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
           />
         ))}
       </div>
+      {/* Pause/play */}
+      <button
+        onClick={() => setPaused((p) => !p)}
+        className="absolute bottom-10 left-4 z-20 text-white/50 hover:text-white transition-colors hidden md:block"
+        aria-label={paused ? "Resume" : "Pause"}
+      >
+        {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+      </button>
     </section>
+    <IntroOfferModal open={offerModalOpen} onClose={() => setOfferModalOpen(false)} />
+    </>
   );
 }

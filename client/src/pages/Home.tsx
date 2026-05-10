@@ -9,6 +9,9 @@ import { MasonryGallery } from "@/components/MasonryGallery";
 import { HeroSlider } from "@/components/HeroSlider";
 import { BeltJourney } from "@/components/BeltJourney";
 import { ProgramFinder } from "@/components/ProgramFinder";
+import { SocialProofTicker } from "@/components/SocialProofTicker";
+import { IntroOfferModal } from "@/components/IntroOfferModal";
+import type { ProgramId } from "@/components/IntroOfferModal";
 import SEO from "@/components/SEO";
 import SchemaMarkup from "@/components/SchemaMarkup";
 import { openIntakeChatbot } from "@/lib/chatbot";
@@ -23,6 +26,13 @@ export default function Home() {
   const [showChatGPT, setShowChatGPT] = useState(false);
   const [showIntakeBot, setShowIntakeBot] = useState(false);
   const [useLegacyBot, setUseLegacyBot] = useState(false);
+  const [offerModalOpen, setOfferModalOpen] = useState(false);
+  const [offerProgramId, setOfferProgramId] = useState<ProgramId | undefined>();
+
+  const openOffer = (programId?: ProgramId) => {
+    setOfferProgramId(programId);
+    setOfferModalOpen(true);
+  };
 
   // Check for legacy bot flag in URL (?bot=legacy)
   // Check for enroll parameter to open intake chatbot
@@ -77,6 +87,9 @@ export default function Home() {
       />
       {/* Hero Section */}
       <HeroSlider onOpenChatbot={openIntakeChatbot} />
+
+      {/* Social Proof Ticker */}
+      <SocialProofTicker />
 
       {/* Philosophy Section */}
       <section className="py-24 bg-white relative overflow-hidden">
@@ -248,18 +261,22 @@ export default function Home() {
                 <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/little-ninjas_25d41024.webp" alt="Little Ninjas" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
               </div>
+              <div className="absolute top-4 right-4 bg-purple-600 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">
+                2 Classes $29 + Uniform!
+              </div>
               <div className="absolute bottom-0 left-0 w-full p-8">
                 <div className="w-12 h-1 bg-primary mb-4 transform origin-left transition-all duration-300 group-hover:w-24"></div>
                 <h4 className="text-3xl font-heading font-bold mb-2">LITTLE NINJAS</h4>
-                <p className="text-gray-300 mb-4 text-sm uppercase tracking-wider">Ages 3-5</p>
-                <p className="text-gray-400 mb-6 line-clamp-3 group-hover:text-white transition-colors">
-                  A "stealthy" way to teach children life skills. Helps them enter society with a more confident and enthusiastic outlook.
+                <p className="text-gray-300 mb-2 text-sm uppercase tracking-wider">Ages 3–5</p>
+                <p className="text-gray-400 mb-4 line-clamp-3 group-hover:text-white transition-colors">
+                  Big Confidence Starts Here. Builds focus, listening skills, and self-esteem in a fun, safe environment.
                 </p>
-                <Link href="/programs">
-                  <Button className="bg-transparent border border-white/30 hover:bg-primary hover:border-primary text-white w-full uppercase tracking-wider">
-                    Little Ninjas Karate Program
-                  </Button>
-                </Link>
+                <button
+                  onClick={() => openOffer("little-ninjas")}
+                  className="bg-purple-600 hover:bg-purple-700 text-white w-full uppercase tracking-wider py-2.5 text-sm font-bold transition-colors rounded"
+                >
+                  Claim $29 Intro Offer →
+                </button>
               </div>
             </motion.div>
 
@@ -286,18 +303,22 @@ export default function Home() {
                 <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/core-kids_baf3bc26.webp" alt="Dragon Kids" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
               </div>
+              <div className="absolute top-4 right-4 bg-blue-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">
+                2 Classes $29 + Uniform!
+              </div>
               <div className="absolute bottom-0 left-0 w-full p-8">
                 <div className="w-12 h-1 bg-primary mb-4 transform origin-left transition-all duration-300 group-hover:w-24"></div>
-                <h4 className="text-3xl font-heading font-bold mb-2">CORE KIDS</h4>
-                <p className="text-gray-300 mb-4 text-sm uppercase tracking-wider">Ages 5-12</p>
-                <p className="text-gray-400 mb-6 line-clamp-3 group-hover:text-white transition-colors">
-                  Perfect way to give kids confidence and improve self-discipline. Teaches life skills of self-defense in a fun, safe environment.
+                <h4 className="text-3xl font-heading font-bold mb-2">KIDS MARTIAL ARTS</h4>
+                <p className="text-gray-300 mb-2 text-sm uppercase tracking-wider">Ages 6–12</p>
+                <p className="text-gray-400 mb-4 line-clamp-3 group-hover:text-white transition-colors">
+                  Strong Today. Leader Tomorrow. Builds discipline, anti-bullying skills, fitness, and leadership.
                 </p>
-                <Link href="/programs">
-                  <Button className="bg-transparent border border-white/30 hover:bg-primary hover:border-primary text-white w-full uppercase tracking-wider">
-                    Core Kids Martial Arts Program
-                  </Button>
-                </Link>
+                <button
+                  onClick={() => openOffer("kids-martial-arts")}
+                  className="bg-blue-700 hover:bg-blue-800 text-white w-full uppercase tracking-wider py-2.5 text-sm font-bold transition-colors rounded"
+                >
+                  Claim $29 Intro Offer →
+                </button>
               </div>
             </motion.div>
 
@@ -324,18 +345,86 @@ export default function Home() {
                 <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/teens-adults_e35f9895.webp" alt="Adults & Teens" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
               </div>
+              <div className="absolute top-4 right-4 bg-red-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">
+                2 Classes $29 + Uniform!
+              </div>
               <div className="absolute bottom-0 left-0 w-full p-8">
                 <div className="w-12 h-1 bg-primary mb-4 transform origin-left transition-all duration-300 group-hover:w-24"></div>
                 <h4 className="text-3xl font-heading font-bold mb-2">TEENS & ADULTS</h4>
-                <p className="text-gray-300 mb-4 text-sm uppercase tracking-wider">Ages 13+</p>
-                <p className="text-gray-400 mb-6 line-clamp-3 group-hover:text-white transition-colors">
-                  Get in the best shape of your life while learning real self-defense. High-energy kickboxing and traditional martial arts.
+                <p className="text-gray-300 mb-2 text-sm uppercase tracking-wider">Ages 13+</p>
+                <p className="text-gray-400 mb-4 line-clamp-3 group-hover:text-white transition-colors">
+                  Confidence. Focus. Strength. Self-defense skills, stress relief, and improved fitness.
                 </p>
-                <Link href="/programs">
-                  <Button className="bg-transparent border border-white/30 hover:bg-primary hover:border-primary text-white w-full uppercase tracking-wider">
-                    Teens & Adults Kickboxing Classes
-                  </Button>
-                </Link>
+                <button
+                  onClick={() => openOffer("teens-adults")}
+                  className="bg-red-700 hover:bg-red-800 text-white w-full uppercase tracking-wider py-2.5 text-sm font-bold transition-colors rounded"
+                >
+                  Claim $29 Intro Offer →
+                </button>
+              </div>
+            </motion.div>
+
+            {/* Program Card 4 - Adult Karate */}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 100, scale: 0.9 },
+                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20, mass: 1 } }
+              }}
+              whileHover={{ y: -15, scale: 1.02, transition: { duration: 0.3 } }}
+              className="group relative overflow-hidden rounded-xl bg-zinc-900 h-[500px] shadow-2xl"
+            >
+              <div className="absolute inset-0">
+                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero3_6fed392b.webp" alt="Adult Karate" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+              </div>
+              <div className="absolute top-4 right-4 bg-gray-800 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">
+                2 Classes $29 + Uniform!
+              </div>
+              <div className="absolute bottom-0 left-0 w-full p-8">
+                <div className="w-12 h-1 bg-primary mb-4 transform origin-left transition-all duration-300 group-hover:w-24"></div>
+                <h4 className="text-3xl font-heading font-bold mb-2">ADULT KARATE</h4>
+                <p className="text-gray-300 mb-2 text-sm uppercase tracking-wider">Adults</p>
+                <p className="text-gray-400 mb-4 line-clamp-3 group-hover:text-white transition-colors">
+                  Discipline. Power. Mastery. Traditional karate with real self-defense and mental discipline.
+                </p>
+                <button
+                  onClick={() => openOffer("adult-karate")}
+                  className="bg-gray-700 hover:bg-gray-600 text-white w-full uppercase tracking-wider py-2.5 text-sm font-bold transition-colors rounded"
+                >
+                  Claim $29 Intro Offer →
+                </button>
+              </div>
+            </motion.div>
+
+            {/* Program Card 5 - Kickboxing Fitness */}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 100, scale: 0.9 },
+                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20, mass: 1 } }
+              }}
+              whileHover={{ y: -15, scale: 1.02, transition: { duration: 0.3 } }}
+              className="group relative overflow-hidden rounded-xl bg-zinc-900 h-[500px] shadow-2xl"
+            >
+              <div className="absolute inset-0">
+                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/kickboxing-bg_d4fcc4c5.webp" alt="Kickboxing Fitness" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+              </div>
+              <div className="absolute top-4 right-4 bg-green-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">
+                🔥 First Class FREE!
+              </div>
+              <div className="absolute bottom-0 left-0 w-full p-8">
+                <div className="w-12 h-1 bg-primary mb-4 transform origin-left transition-all duration-300 group-hover:w-24"></div>
+                <h4 className="text-3xl font-heading font-bold mb-2">KICKBOXING</h4>
+                <p className="text-gray-300 mb-2 text-sm uppercase tracking-wider">Teens & Adults</p>
+                <p className="text-gray-400 mb-4 line-clamp-3 group-hover:text-white transition-colors">
+                  Sweat Today. Feel Amazing. Burn 800 calories, relieve stress, and boost endurance.
+                </p>
+                <button
+                  onClick={() => openOffer("kickboxing")}
+                  className="bg-green-700 hover:bg-green-800 text-white w-full uppercase tracking-wider py-2.5 text-sm font-bold transition-colors rounded"
+                >
+                  Claim First Class FREE →
+                </button>
               </div>
             </motion.div>
           </motion.div>
@@ -376,6 +465,13 @@ export default function Home() {
       
       {/* Intake Chatbot (State Machine POC) */}
       {showIntakeBot && <IntakeChatbot onClose={() => setShowIntakeBot(false)} />}
+
+      {/* Intro Offer Modal */}
+      <IntroOfferModal
+        open={offerModalOpen}
+        onClose={() => setOfferModalOpen(false)}
+        defaultProgramId={offerProgramId}
+      />
     </div>
   );
 }

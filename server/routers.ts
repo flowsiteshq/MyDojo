@@ -60,11 +60,13 @@ import { sendStreakMilestoneEmail, checkStreakMilestone, sendEnrollmentConfirmat
 import { ENV } from "./_core/env";
 import { getWeatherForSlot } from "./weather";
 import { mealPlanRouter } from "./mealPlanRouter";
+import { heroContentRouter } from "./heroContentRouter";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   mealPlan: mealPlanRouter,
+  heroContent: heroContentRouter,
   auth: router({
     ...authRouter._def.procedures,
     me: publicProcedure.query(opts => opts.ctx.user),
