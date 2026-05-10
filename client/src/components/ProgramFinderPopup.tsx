@@ -138,6 +138,7 @@ const AUDIENCE_CARDS = [
     label: "My Child",
     sub: "Build confidence, focus, and discipline for life.",
     image: CHILD_IMG,
+    objectPosition: "center 20%",
     reviews: 320,
     tag: "MOST POPULAR",
     tagColor: "bg-red-600",
@@ -147,6 +148,7 @@ const AUDIENCE_CARDS = [
     label: "Myself",
     sub: "Get fit, learn self-defense, and feel unstoppable.",
     image: MYSELF_IMG,
+    objectPosition: "center 15%",
     reviews: 185,
     tag: null,
     tagColor: "",
@@ -156,6 +158,7 @@ const AUDIENCE_CARDS = [
     label: "Whole Family",
     sub: "Train together, grow together, succeed together.",
     image: FAMILY_IMG,
+    objectPosition: "center 15%",
     reviews: 120,
     tag: null,
     tagColor: "",
@@ -165,6 +168,7 @@ const AUDIENCE_CARDS = [
     label: "Summer Camp",
     sub: "3 days of martial arts fun for kids!",
     image: SUMMER_CAMP_IMG,
+    objectPosition: "center 20%",
     reviews: 95,
     tag: "LIMITED SPOTS",
     tagColor: "bg-amber-600",
@@ -292,8 +296,8 @@ export function ProgramFinderPopup({ isOpen, onClose }: ProgramFinderPopupProps)
               <img
                 src={leftPanelImg}
                 alt="MyDojo"
-                className="w-full h-full object-cover object-top transition-all duration-700"
-                style={{ filter: "brightness(0.55)" }}
+                className="w-full h-full object-cover transition-all duration-700"
+                style={{ objectPosition: 'center 20%', filter: "brightness(0.55)" }}
               />
               <div className="absolute inset-0" style={{ background: "linear-gradient(to right, transparent 60%, #0a0a0a 100%), linear-gradient(to top, #0a0a0a 0%, transparent 40%)" }} />
             </div>
@@ -386,7 +390,8 @@ export function ProgramFinderPopup({ isOpen, onClose }: ProgramFinderPopupProps)
                           <img
                             src={card.image}
                             alt={card.label}
-                            className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            style={{ objectPosition: card.objectPosition || 'center 20%' }}
                           />
                           <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 60%)" }} />
                           {/* Glow on hover */}
