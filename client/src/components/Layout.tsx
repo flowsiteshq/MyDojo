@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Phone, MapPin, Instagram, Facebook, Youtube, User, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CookieBanner } from "@/components/CookieBanner";
-import OnlineSpecialPopup from "@/components/OnlineSpecialPopup";
+import { ProgramFinderPopup } from "@/components/ProgramFinderPopup";
 import { WebsiteVisitorPopup } from "@/components/WebsiteVisitorPopup";
 import { openIntakeChatbot } from "@/lib/chatbot";
 import { useLocationContext } from "@/contexts/LocationContext";
@@ -28,6 +28,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isSticky, setIsSticky] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProgramsOpen, setIsProgramsOpen] = useState(false);
+  const [showProgramFinder, setShowProgramFinder] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const openPrograms = useCallback(() => {
@@ -46,6 +47,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const isHome = location === "/";
   const { closestLocation } = useLocationContext();
+
+  // Auto-show the program finder popup after 6 seconds on homepage
+  useEffect(() => {
+    if (!isHome) return;
+    const hasSeenPopup = sessionStorage.getItem('programFinderShown');
+    if (hasSeenPopup) return;
+    const timer = setTimeout(() => {
+      setShowProgramFinder(true);
+      sessionStorage.setItem('programFinderShown', '1');
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [isHome]);
   const { isAuthenticated, user } = useAuth();
   const programsRef = useRef<HTMLDivElement>(null);
 
@@ -463,7 +476,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
       <CookieBanner />
-      <OnlineSpecialPopup />
+      <ProgramFinderPopup isOpen={showProgramFinder} onClose={() => setShowProgramFinder(false)} />
       <WebsiteVisitorPopup />
 
       {/* Main Content */}
