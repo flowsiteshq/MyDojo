@@ -483,11 +483,25 @@ async function handleIntroOfferPayment(session: Stripe.Checkout.Session) {
     console.error("[Stripe Webhook] Failed to create intro offer trial signup:", err);
   }
 
+  // Send welcome email to the customer
+  try {
+    const { sendIntroOfferWelcomeEmail } = await import("./emailService.js");
+    await sendIntroOfferWelcomeEmail({
+      toEmail: customerEmail,
+      customerName,
+      program,
+      amountPaid,
+      isSummerCamp: program.toLowerCase().includes("summer"),
+    });
+  } catch (emailErr) {
+    console.error("[Stripe Webhook] Failed to send intro offer welcome email:", emailErr);
+  }
+
   // Notify owner
   try {
     await notifyOwner({
-      title: `💰 New $29 Intro Offer Purchase — ${customerName}`,
-      content: `${customerName} (${customerEmail}, ${customerPhone}) paid $${amountPaid} for the ${program} intro offer (2 classes + uniform). Stripe session: ${session.id}`,
+      title: `New Intro Offer Purchase — ${customerName}`,
+      content: `${customerName} (${customerEmail}, ${customerPhone}) paid $${amountPaid} for the ${program} intro offer. Stripe session: ${session.id}`,
     });
   } catch (notifErr) {
     console.error("[Stripe Webhook] Failed to send owner notification for intro offer:", notifErr);

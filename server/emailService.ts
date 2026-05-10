@@ -1194,3 +1194,270 @@ export async function sendBeltExamPaidInstructorEmail(
     return false;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Intro Offer Welcome Email
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface IntroOfferWelcomeEmailParams {
+  toEmail: string;
+  customerName: string;
+  program: string;
+  amountPaid: number;
+  isSummerCamp?: boolean;
+}
+
+function buildIntroOfferWelcomeHtml(p: IntroOfferWelcomeEmailParams): string {
+  const isSummerCamp = p.isSummerCamp || p.program.toLowerCase().includes("summer camp");
+
+  const scheduleSection = isSummerCamp
+    ? `
+      <tr>
+        <td style="padding:0 0 24px;">
+          <h2 style="margin:0 0 12px;font-size:18px;font-weight:800;color:#1f2937;">Summer Camp Details</h2>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#fef3c7;border-radius:8px;border:1px solid #f59e0b;">
+            <tr>
+              <td style="padding:16px 20px;">
+                <p style="margin:0 0 8px;font-size:14px;color:#92400e;font-weight:700;">3-Day Martial Arts Camp</p>
+                <p style="margin:0 0 4px;font-size:13px;color:#78350f;">Ages 5–14 &middot; All skill levels welcome</p>
+                <p style="margin:0;font-size:13px;color:#78350f;">Our team will contact you within 24 hours to confirm your camp dates and schedule.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>`
+    : `
+      <tr>
+        <td style="padding:0 0 24px;">
+          <h2 style="margin:0 0 12px;font-size:18px;font-weight:800;color:#1f2937;">Class Schedule</h2>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+            <tr>
+              <td style="padding:16px 20px;">
+                <p style="margin:0 0 8px;font-size:14px;color:#374151;font-weight:700;">Monday, Wednesday, Friday</p>
+                <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">Morning classes: 9:00 AM – 10:00 AM</p>
+                <p style="margin:0 0 12px;font-size:13px;color:#6b7280;">Evening classes: 6:00 PM – 7:00 PM</p>
+                <p style="margin:0 0 8px;font-size:14px;color:#374151;font-weight:700;">Saturday</p>
+                <p style="margin:0;font-size:13px;color:#6b7280;">10:00 AM – 11:30 AM (All levels)</p>
+              </td>
+            </tr>
+          </table>
+          <p style="margin:12px 0 0;font-size:12px;color:#9ca3af;">Our team will reach out within 24 hours to confirm your first class time.</p>
+        </td>
+      </tr>`;
+
+  const whatToBringSection = isSummerCamp
+    ? `
+      <tr>
+        <td style="padding:0 0 24px;">
+          <h2 style="margin:0 0 12px;font-size:18px;font-weight:800;color:#1f2937;">What to Bring</h2>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            ${["Comfortable athletic clothing", "Water bottle", "Snacks for breaks", "Positive attitude and energy!"].map((item) => `
+            <tr>
+              <td style="padding:6px 0;">
+                <table cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="width:24px;vertical-align:top;">
+                      <div style="width:20px;height:20px;background:#dc2626;border-radius:50%;text-align:center;line-height:20px;">
+                        <span style="color:#fff;font-size:11px;font-weight:700;">&#10003;</span>
+                      </div>
+                    </td>
+                    <td style="padding-left:8px;font-size:14px;color:#374151;">${item}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>`).join("")}
+          </table>
+        </td>
+      </tr>`
+    : `
+      <tr>
+        <td style="padding:0 0 24px;">
+          <h2 style="margin:0 0 12px;font-size:18px;font-weight:800;color:#1f2937;">What to Bring</h2>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            ${["Comfortable athletic clothing (we provide your uniform!)", "Water bottle", "Athletic shoes or bare feet on the mat", "Positive attitude — we'll handle the rest!"].map((item) => `
+            <tr>
+              <td style="padding:6px 0;">
+                <table cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="width:24px;vertical-align:top;">
+                      <div style="width:20px;height:20px;background:#dc2626;border-radius:50%;text-align:center;line-height:20px;">
+                        <span style="color:#fff;font-size:11px;font-weight:700;">&#10003;</span>
+                      </div>
+                    </td>
+                    <td style="padding-left:8px;font-size:14px;color:#374151;">${item}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>`).join("")}
+          </table>
+        </td>
+      </tr>`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to MyDojo!</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);max-width:600px;">
+
+          <!-- Logo bar -->
+          <tr>
+            <td style="background:#ffffff;padding:24px 40px 16px;text-align:center;border-bottom:1px solid #f3f4f6;">
+              <img src="${LOGO_URL}" alt="MyDojo Martial Arts" width="180" style="display:block;margin:0 auto;height:auto;" />
+            </td>
+          </tr>
+
+          <!-- Red header -->
+          <tr>
+            <td style="background:#dc2626;padding:36px 40px;text-align:center;">
+              <h1 style="margin:0;color:#ffffff;font-size:32px;font-weight:900;letter-spacing:-0.5px;line-height:1.2;">
+                ${isSummerCamp ? "WELCOME TO SUMMER CAMP!" : "YOU'RE IN!"}
+              </h1>
+              <p style="margin:10px 0 0;color:rgba(255,255,255,0.9);font-size:16px;">
+                ${isSummerCamp
+                  ? "Your 3-Day Summer Camp spot is confirmed."
+                  : `Your 2-class intro offer for <strong>${p.program}</strong> is confirmed.`}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:36px 40px 24px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+
+                <!-- Greeting -->
+                <tr>
+                  <td style="padding:0 0 20px;">
+                    <p style="margin:0;font-size:16px;color:#374151;line-height:1.6;">
+                      Hi <strong>${p.customerName}</strong>,
+                    </p>
+                    <p style="margin:12px 0 0;font-size:16px;color:#374151;line-height:1.7;">
+                      ${isSummerCamp
+                        ? `We're thrilled to have your child joining us for <strong>Summer Camp</strong> at MyDojo! Get ready for 3 incredible days of martial arts training, fun, and new friendships.`
+                        : `Welcome to <strong>MyDojo Martial Arts &amp; Fitness</strong>! We're so excited to have you join us for your <strong>${p.program}</strong> intro experience. You've taken the first step toward a stronger, more confident you.`}
+                    </p>
+                  </td>
+                </tr>
+
+                <!-- Confirmation badge -->
+                <tr>
+                  <td style="padding:0 0 24px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border-radius:8px;border:1px solid #86efac;">
+                      <tr>
+                        <td style="padding:16px 20px;">
+                          <p style="margin:0 0 4px;font-size:13px;color:#166534;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Confirmed</p>
+                          <p style="margin:0;font-size:15px;color:#15803d;font-weight:600;">
+                            ${isSummerCamp ? "3-Day Summer Camp Pass" : `2 Classes + Uniform — ${p.program}`}
+                          </p>
+                          <p style="margin:4px 0 0;font-size:13px;color:#166534;">Amount paid: <strong>$${p.amountPaid}</strong></p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                ${scheduleSection}
+                ${whatToBringSection}
+
+                <!-- Location -->
+                <tr>
+                  <td style="padding:0 0 24px;">
+                    <h2 style="margin:0 0 12px;font-size:18px;font-weight:800;color:#1f2937;">Our Location</h2>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+                      <tr>
+                        <td style="padding:16px 20px;">
+                          <p style="margin:0 0 4px;font-size:14px;color:#374151;font-weight:700;">MyDojo Martial Arts &amp; Fitness</p>
+                          <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">14027 FM 2920, Tomball, TX 77377</p>
+                          <p style="margin:0;font-size:13px;color:#6b7280;">Phone: (281) 818-9288</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+
+                <!-- CTA -->
+                <tr>
+                  <td style="padding:0 0 28px;text-align:center;">
+                    <a href="${BOOK_CLASS_URL}"
+                       style="display:inline-block;background:#dc2626;color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:8px;letter-spacing:0.5px;">
+                      View Class Schedule &rarr;
+                    </a>
+                  </td>
+                </tr>
+
+                <!-- Sign off -->
+                <tr>
+                  <td>
+                    <p style="margin:0;font-size:16px;color:#374151;line-height:1.6;">
+                      See you on the mat,<br/>
+                      <strong>The MyDojo Team</strong>
+                    </p>
+                  </td>
+                </tr>
+
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+              <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
+                MyDojo Martial Arts &amp; Fitness &middot; 14027 FM 2920, Tomball, TX 77377<br/>
+                Questions? Call us at (281) 818-9288 or reply to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+/**
+ * Send a welcome email to a new intro offer purchaser.
+ * Includes class schedule, what to bring, and location info.
+ * Returns true on success, false on failure (non-throwing).
+ */
+export async function sendIntroOfferWelcomeEmail(params: IntroOfferWelcomeEmailParams): Promise<boolean> {
+  if (!ENV.RESEND_API_KEY) {
+    console.warn("[Email] RESEND_API_KEY not configured — skipping intro offer welcome email");
+    return false;
+  }
+
+  const isSummerCamp = params.isSummerCamp || params.program.toLowerCase().includes("summer camp");
+  const subject = isSummerCamp
+    ? `Your Summer Camp spot is confirmed — see you at MyDojo!`
+    : `Welcome to MyDojo — your intro classes are confirmed!`;
+
+  try {
+    const resend = getResend();
+    const { error } = await resend.emails.send({
+      from: `MyDojo <${ENV.EMAIL_FROM}>`,
+      to: params.toEmail,
+      subject,
+      html: buildIntroOfferWelcomeHtml(params),
+    });
+
+    if (error) {
+      console.error("[Email] Resend error sending intro offer welcome email:", error);
+      return false;
+    }
+
+    console.log(`[Email] Intro offer welcome email sent to ${params.toEmail} (program: ${params.program})`);
+    return true;
+  } catch (err) {
+    console.error("[Email] Failed to send intro offer welcome email:", err);
+    return false;
+  }
+}

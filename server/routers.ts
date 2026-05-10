@@ -6634,9 +6634,9 @@ Please enter your card details below to complete your registration securely. Tot
           console.error('[IntroOffer] Failed to save popup lead:', leadErr);
         }
 
-        // Determine if kickboxing (first class free) or karate ($29 + uniform)
+        // Determine program type
         const isKickboxing = input.program.toLowerCase().includes('kickboxing');
-
+        const isSummerCampOffer = input.program.toLowerCase().includes('summer camp') || input.program.toLowerCase().includes('summer_camp');
         // For free kickboxing, skip Stripe and create trial signup directly
         if (isKickboxing) {
           try {
@@ -6655,6 +6655,58 @@ Please enter your card details below to complete your registration securely. Tot
           return { checkoutUrl: null, isFree: true };
         }
 
+        // Summer Camp: $49 for 3-day pass, first-time participants only
+        if (isSummerCampOffer) {
+          const emailLower = input.email.toLowerCase();
+          try {
+            const priorCamp = await db
+              .select()
+              .from(schema.trialSignups)
+              .where(and(
+                eq(schema.trialSignups.email, emailLower),
+                eq(schema.trialSignups.program, 'Summer Camp'),
+                eq(schema.trialSignups.status, 'completed')
+              ))
+              .limit(1);
+            if (priorCamp.length > 0) {
+              throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message: 'This offer is only valid for first-time Summer Camp participants. Please contact us for regular pricing.',
+              });
+            }
+          } catch (err) {
+            if (err instanceof TRPCError) throw err;
+            console.error('[IntroOffer] Summer camp first-time check error:', err);
+          }
+          const campSession = await stripeClient.checkout.sessions.create({
+            payment_method_types: ['card'],
+            mode: 'payment',
+            line_items: [{
+              price_data: {
+                currency: 'usd',
+                unit_amount: 4900,
+                product_data: {
+                  name: 'MyDojo Summer Camp — 3-Day Pass',
+                  description: '3 days of martial arts summer camp. First-time participants only. Ages 5–14.',
+                },
+              },
+              quantity: 1,
+            }],
+            customer_email: input.email,
+            allow_promotion_codes: true,
+            success_url: `${baseUrl}/intro-offer-success?session_id={CHECKOUT_SESSION_ID}&name=${encodeURIComponent(input.name)}&program=${encodeURIComponent('Summer Camp')}`,
+            cancel_url: `${baseUrl}/summer-camp?offer=cancelled`,
+            metadata: {
+              type: 'summer_camp_intro',
+              customerName: input.name,
+              customerEmail: input.email,
+              customerPhone: input.phone || '',
+              program: 'Summer Camp',
+            },
+            client_reference_id: input.email,
+          });
+          return { checkoutUrl: campSession.url, isFree: false };
+        }
         // Create Stripe Checkout session for $29 paid offer
         const session = await stripeClient.checkout.sessions.create({
           payment_method_types: ['card'],

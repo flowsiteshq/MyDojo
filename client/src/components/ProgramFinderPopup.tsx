@@ -6,8 +6,9 @@ import { toast } from "sonner";
 const CHILD_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/popup-card-child-bLGQWmY93vixcyFEBo3Jf9.webp";
 const MYSELF_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/popup-card-myself-Q28shwqFCizjLa57ncRJDq.webp";
 const FAMILY_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/popup-card-family-AsxQoWfuzLKSK4vLwUoDoW.webp";
+const SUMMER_CAMP_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/popup-card-summer-camp-Ny6vLhvcXXKGLB6qNNbyUC.webp";
 
-type Audience = "child" | "myself" | "family" | null;
+type Audience = "child" | "myself" | "family" | "summer-camp" | null;
 type Step = 1 | 2 | 3;
 
 interface Program {
@@ -108,6 +109,19 @@ const PROGRAMS: Record<string, Program[]> = {
       icon: <Users className="w-5 h-5" />,
     },
   ],
+  "summer-camp": [
+    {
+      id: "summer-camp",
+      name: "Summer Camp",
+      age: "Ages 5–14",
+      tagline: "3 days of martial arts adventure!",
+      benefits: ["First-time participants only", "3 full days of training", "Uniform included"],
+      offer: "3-Day Pass",
+      price: "$49",
+      color: "from-amber-600 to-amber-900",
+      icon: <Star className="w-5 h-5" />,
+    },
+  ],
 };
 
 const TESTIMONIALS = [
@@ -145,6 +159,15 @@ const AUDIENCE_CARDS = [
     reviews: 120,
     tag: null,
     tagColor: "",
+  },
+  {
+    id: "summer-camp" as Audience,
+    label: "Summer Camp",
+    sub: "3 days of martial arts fun for kids!",
+    image: SUMMER_CAMP_IMG,
+    reviews: 95,
+    tag: "LIMITED SPOTS",
+    tagColor: "bg-amber-600",
   },
 ];
 
@@ -228,6 +251,20 @@ export function ProgramFinderPopup({ isOpen, onClose }: ProgramFinderPopupProps)
   const testimonial = TESTIMONIALS[testimonialIndex];
   const programs = audience ? PROGRAMS[audience] : [];
 
+  // Determine left panel image
+  const leftPanelImg =
+    audience === "myself" ? MYSELF_IMG :
+    audience === "family" ? FAMILY_IMG :
+    audience === "summer-camp" ? SUMMER_CAMP_IMG :
+    CHILD_IMG;
+
+  // Determine CTA button label
+  const ctaLabel = selectedProgram?.isFree
+    ? "Book My Free Class"
+    : selectedProgram?.id === "summer-camp"
+    ? "Claim 3-Day Pass for $49"
+    : "Claim 2 Classes for $29";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backdropFilter: "blur(8px)", backgroundColor: "rgba(0,0,0,0.85)" }}>
       <div
@@ -253,7 +290,7 @@ export function ProgramFinderPopup({ isOpen, onClose }: ProgramFinderPopupProps)
             {/* Background image based on audience */}
             <div className="absolute inset-0">
               <img
-                src={audience === "myself" ? MYSELF_IMG : audience === "family" ? FAMILY_IMG : CHILD_IMG}
+                src={leftPanelImg}
                 alt="MyDojo"
                 className="w-full h-full object-cover object-top transition-all duration-700"
                 style={{ filter: "brightness(0.55)" }}
@@ -333,7 +370,7 @@ export function ProgramFinderPopup({ isOpen, onClose }: ProgramFinderPopupProps)
                   <h3 className="text-white font-black text-2xl mb-1">WHO IS THIS PROGRAM FOR?</h3>
                   <p className="text-gray-400 text-sm mb-5">Select one to get started</p>
 
-                  <div className="grid grid-cols-3 gap-3 mb-6">
+                  <div className="grid grid-cols-2 gap-3 mb-6">
                     {AUDIENCE_CARDS.map((card) => (
                       <button
                         key={card.id}
@@ -345,7 +382,7 @@ export function ProgramFinderPopup({ isOpen, onClose }: ProgramFinderPopupProps)
                         }}
                       >
                         {/* Card image */}
-                        <div className="relative h-36 overflow-hidden">
+                        <div className="relative h-32 overflow-hidden">
                           <img
                             src={card.image}
                             alt={card.label}
@@ -505,7 +542,7 @@ export function ProgramFinderPopup({ isOpen, onClose }: ProgramFinderPopupProps)
                     <div>
                       <input
                         type="text"
-                        placeholder="Your Full Name"
+                        placeholder="Full Name"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
                         required
@@ -544,10 +581,8 @@ export function ProgramFinderPopup({ isOpen, onClose }: ProgramFinderPopupProps)
                     >
                       {isSubmitting ? (
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : selectedProgram.isFree ? (
-                        <>Book My Free Class <ArrowRight className="w-5 h-5" /></>
                       ) : (
-                        <>Claim 2 Classes for $29 <ArrowRight className="w-5 h-5" /></>
+                        <>{ctaLabel} <ArrowRight className="w-5 h-5" /></>
                       )}
                     </button>
 
@@ -561,7 +596,7 @@ export function ProgramFinderPopup({ isOpen, onClose }: ProgramFinderPopupProps)
                     </div>
 
                     <p className="text-center text-gray-600 text-xs">
-                      🔒 Your information is secure &amp; never shared.
+                      Your information is secure and never shared.
                     </p>
                   </form>
                 </div>
