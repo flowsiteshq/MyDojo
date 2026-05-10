@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
 
 const PROGRAMS = [
   "Little Ninjas (Ages 3–5)",
-  "Dragon Kids (Ages 5–12)",
+  "Kids Martial Arts (Ages 6–12)",
   "Teens & Adults (Ages 13+)",
-  "Kickboxing",
+  "Adult Karate",
+  "Kickboxing Fitness",
   "Not Sure Yet",
 ];
 
@@ -255,10 +256,10 @@ export default function OnlineSpecialPopup() {
               Online Special
             </div>
             <h2 className="text-3xl font-black text-white leading-tight mb-1">
-              2 WEEKS FREE
+              2 CLASSES FOR $29
             </h2>
             <p className="text-red-300 font-semibold text-sm uppercase tracking-wider">
-              Karate Classes — Limited Time Offer
+              Uniform Included — Limited Spots!
             </p>
           </div>
         </div>
@@ -268,7 +269,7 @@ export default function OnlineSpecialPopup() {
           {step === "form" && (
             <div className="space-y-3">
               <p className="text-sm text-gray-500 text-center mb-4">
-                Claim your <strong>2 free weeks</strong> — fill out the form below and we'll get you started!
+                Claim your <strong>2 classes for $29 + uniform</strong> — fill out the form below and we'll get you started!
               </p>
 
               {/* Name */}
@@ -334,11 +335,11 @@ export default function OnlineSpecialPopup() {
                 disabled={submitLead.isPending}
                 className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold text-base uppercase tracking-wider rounded-xl mt-2"
               >
-                {submitLead.isPending ? "Submitting..." : "Claim My 2 Free Weeks →"}
+                {submitLead.isPending ? "Submitting..." : "Claim My $29 Intro Offer →"}
               </Button>
 
-              <p className="text-center text-xs text-gray-400">
-                No credit card required. No commitment.
+                <p className="text-center text-xs text-gray-400">
+                Uniform included. Limited spots available.
               </p>
             </div>
           )}
@@ -355,7 +356,7 @@ export default function OnlineSpecialPopup() {
                   🎉 Congratulations, {name.split(" ")[0]}!
                 </h3>
                 <p className="text-gray-600 text-sm">
-                  You've claimed your <strong>2 FREE weeks</strong> of karate classes! Now let's pick your first class time.
+                  You've claimed your <strong>2 classes for $29 + uniform</strong>! Now let's pick your first class time.
                 </p>
               </div>
               <Button
