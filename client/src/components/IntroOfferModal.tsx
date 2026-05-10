@@ -117,15 +117,22 @@ export function IntroOfferModal({ open, onClose, defaultProgramId }: IntroOfferM
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const checkoutMutation = trpc.heroContent.createIntroOfferCheckout.useMutation({
+  const checkoutMutation = trpc.popup.createIntroOfferCheckout.useMutation({
     onSuccess: (data) => {
-      if (data.checkoutUrl) {
+      if (data.isFree) {
+        // Kickboxing: free class, no payment needed
+        setStep("redirecting");
+        setTimeout(() => {
+          onClose();
+          resetForm();
+        }, 2500);
+      } else if (data.checkoutUrl) {
         setStep("redirecting");
         window.open(data.checkoutUrl, "_blank");
         setTimeout(() => {
           onClose();
           resetForm();
-        }, 2000);
+        }, 2500);
       }
     },
     onError: (err) => {
@@ -162,10 +169,10 @@ export function IntroOfferModal({ open, onClose, defaultProgramId }: IntroOfferM
     if (!selectedProgram) return;
     if (!validateInfo()) return;
     checkoutMutation.mutate({
-      programId: selectedProgram.id,
-      customerName: name.trim(),
-      customerEmail: email.trim(),
-      customerPhone: phone.trim(),
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      program: selectedProgram.name,
       origin: window.location.origin,
     });
   };
@@ -385,9 +392,13 @@ export function IntroOfferModal({ open, onClose, defaultProgramId }: IntroOfferM
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-8 h-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Opening Secure Checkout...</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {checkoutMutation.data?.isFree ? "You're All Set!" : "Opening Secure Checkout..."}
+              </h3>
               <p className="text-gray-500 text-sm">
-                A new tab has opened with your checkout. Complete your payment there to confirm your spot!
+                {checkoutMutation.data?.isFree
+                  ? "Your free kickboxing class is confirmed! We'll be in touch to schedule your first session."
+                  : "A new tab has opened with your checkout. Complete your $29 payment there to confirm your spot!"}
               </p>
               <Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto mt-4" />
             </div>

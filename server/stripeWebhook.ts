@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Stripe from "stripe";
 import { getDb } from "./db";
-import { enrollments, membershipPackages } from "../drizzle/schema";
+import { enrollments, membershipPackages, trialSignups } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { notifyOwner } from "./_core/notification";
 
@@ -44,9 +44,11 @@ export async function handleStripeWebhook(req: Request, res: Response) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        // Route belt exam payments to a dedicated handler
+        // Route based on metadata type
         if (session.metadata?.type === "belt_exam") {
           await handleBeltExamPayment(session);
+        } else if (session.metadata?.type === "intro_offer") {
+          await handleIntroOfferPayment(session);
         } else {
           await handleCheckoutSessionCompleted(session);
         }
@@ -412,4 +414,82 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     .where(eq(enrollments.id, enrollment.id));
 
   console.log("[Stripe Webhook] Enrollment marked as failed due to payment failure:", enrollment.id);
+}
+
+/**
+ * Handle intro offer payment (checkout.session.completed with metadata.type === 'intro_offer')
+ * Creates a trial signup record and notifies the owner.
+ */
+async function handleIntroOfferPayment(session: Stripe.Checkout.Session) {
+  console.log("[Stripe Webhook] Processing intro offer payment:", session.id);
+
+  // Test event guard
+  if ((session as any).id?.startsWith('evt_test_')) {
+    console.log("[Stripe Webhook] Test event detected for intro offer, skipping");
+    return;
+  }
+
+  const db = await getDb();
+  if (!db) {
+    console.error("[Stripe Webhook] Database not available for intro offer");
+    return;
+  }
+
+  const customerName = session.metadata?.customerName || session.customer_details?.name || "Unknown";
+  const customerEmail = session.metadata?.customerEmail || session.customer_details?.email || session.customer_email || "";
+  const customerPhone = session.metadata?.customerPhone || session.customer_details?.phone || "";
+  const program = session.metadata?.program || "Not Sure";
+  const amountPaid = session.amount_total ? session.amount_total / 100 : 29;
+
+  // Map program string to valid enum value
+  const programMap: Record<string, string> = {
+    "Little Ninjas": "Little Ninjas",
+    "Kids Martial Arts": "Dragon Kids",
+    "Dragon Kids": "Dragon Kids",
+    "Teens & Adults": "Teens",
+    "Teens": "Teens",
+    "Adult Karate": "Adult Karate",
+    "Kickboxing": "Kickboxing",
+    "Kickboxing Fitness": "Kickboxing",
+  };
+  const mappedProgram = programMap[program] || "Not Sure";
+
+  // Idempotency: check if a trial signup with this session ID already exists
+  const existing = await db
+    .select()
+    .from(trialSignups)
+    .where(eq(trialSignups.email, customerEmail.toLowerCase()))
+    .limit(1);
+
+  if (existing.length > 0 && existing[0].source === 'intro_offer_stripe') {
+    console.log("[Stripe Webhook] Intro offer trial signup already exists for:", customerEmail);
+    return;
+  }
+
+  // Create trial signup record
+  try {
+    await db.insert(trialSignups).values({
+      name: customerName,
+      email: customerEmail.toLowerCase(),
+      phone: customerPhone,
+      program: mappedProgram as any,
+      status: "new",
+      source: "intro_offer_stripe" as any,
+      location: "HQ",
+      notes: `Paid $${amountPaid} intro offer via Stripe. Session: ${session.id}`,
+    } as any);
+    console.log("[Stripe Webhook] Intro offer trial signup created for:", customerName, "(", customerEmail, ")");
+  } catch (err) {
+    console.error("[Stripe Webhook] Failed to create intro offer trial signup:", err);
+  }
+
+  // Notify owner
+  try {
+    await notifyOwner({
+      title: `💰 New $29 Intro Offer Purchase — ${customerName}`,
+      content: `${customerName} (${customerEmail}, ${customerPhone}) paid $${amountPaid} for the ${program} intro offer (2 classes + uniform). Stripe session: ${session.id}`,
+    });
+  } catch (notifErr) {
+    console.error("[Stripe Webhook] Failed to send owner notification for intro offer:", notifErr);
+  }
 }

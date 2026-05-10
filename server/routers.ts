@@ -6589,12 +6589,105 @@ Please enter your card details below to complete your registration securely. Tot
           .where(conditions.length > 0 ? and(...conditions) : undefined)
           .orderBy(desc(schema.popupLeads.createdAt))
           .limit(input.limit ?? 200);
-
         return leads;
       }),
-  }),
 
-  // ─── Commissions ─────────────────────────────────────────────────────────────
+    // ── $29 Intro Offer — Stripe Checkout Session ─────────────────────────────
+    createIntroOfferCheckout: publicProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        phone: z.string().optional(),
+        program: z.string().min(1),
+        origin: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+
+        const stripeKey = process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '';
+        if (!stripeKey) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Stripe not configured' });
+
+        const stripeClient = new Stripe(stripeKey, { apiVersion: '2026-01-28.clover' as any });
+
+        const baseUrl = input.origin || 'https://mydojoma.com';
+
+        // Save the lead (dedup by email + campaign)
+        try {
+          const emailLower = input.email.toLowerCase();
+          const existing = await db
+            .select()
+            .from(schema.popupLeads)
+            .where(and(eq(schema.popupLeads.email, emailLower), eq(schema.popupLeads.campaign, 'online_special')))
+            .limit(1);
+          if (existing.length === 0) {
+            await db.insert(schema.popupLeads).values({
+              campaign: 'online_special',
+              name: input.name,
+              email: emailLower,
+              phone: input.phone ?? null,
+              source: 'intro_offer_popup',
+              emailSent: false,
+            });
+          }
+        } catch (leadErr) {
+          console.error('[IntroOffer] Failed to save popup lead:', leadErr);
+        }
+
+        // Determine if kickboxing (first class free) or karate ($29 + uniform)
+        const isKickboxing = input.program.toLowerCase().includes('kickboxing');
+
+        // For free kickboxing, skip Stripe and create trial signup directly
+        if (isKickboxing) {
+          try {
+            await db.insert(schema.trialSignups).values({
+              name: input.name,
+              email: input.email,
+              phone: input.phone || '',
+              program: 'Kickboxing',
+              status: 'new',
+              source: 'intro_offer_popup',
+              location: 'HQ',
+            } as any);
+          } catch (err) {
+            console.error('[IntroOffer] Failed to create kickboxing trial signup:', err);
+          }
+          return { checkoutUrl: null, isFree: true };
+        }
+
+        // Create Stripe Checkout session for $29 paid offer
+        const session = await stripeClient.checkout.sessions.create({
+          payment_method_types: ['card'],
+          mode: 'payment',
+          line_items: [{
+            price_data: {
+              currency: 'usd',
+              unit_amount: 2900,
+              product_data: {
+                name: `MyDojo ${input.program} — 2 Classes + Uniform`,
+                description: '2 martial arts classes + uniform included. Valid for 30 days.',
+              },
+            },
+            quantity: 1,
+          }],
+          customer_email: input.email,
+          allow_promotion_codes: true,
+          success_url: `${baseUrl}/intro-offer-success?session_id={CHECKOUT_SESSION_ID}&name=${encodeURIComponent(input.name)}&program=${encodeURIComponent(input.program)}`,
+          cancel_url: `${baseUrl}/?offer=cancelled`,
+          metadata: {
+            type: 'intro_offer',
+            customerName: input.name,
+            customerEmail: input.email,
+            customerPhone: input.phone || '',
+            program: input.program,
+          },
+          client_reference_id: input.email,
+        });
+
+        return { checkoutUrl: session.url, isFree: false };
+      }),
+  }),
+  // ─── Commissionsns ─────────────────────────────────────────────────────────────
   commissions: router({
 
     // Get the current enrollment commission bonus amount (cents)

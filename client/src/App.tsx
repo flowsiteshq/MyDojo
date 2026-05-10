@@ -70,6 +70,7 @@ const AdminStaffHours = lazy(() => import("./pages/AdminStaffHours"));
 const AdminFamilyGroups = lazy(() => import("./pages/AdminFamilyGroups"));
 const AdminPnoRsvps = lazy(() => import("./pages/AdminPnoRsvps"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const IntroOfferSuccess = lazy(() => import("./pages/IntroOfferSuccess"));
 const Join = lazy(() => import("./pages/Join"));
 const BuyDayPass = lazy(() => import("./pages/BuyDayPass"));
 const Enroll = lazy(() => import("./pages/Enroll"));
@@ -120,6 +121,7 @@ function Router() {
         <Route path="/check-in" component={KioskCheckIn} />
         <Route path="/arcade" component={KioskArcade} />
         <Route path="/intro-offer" component={IntroOfferCheckout} />
+        <Route path="/intro-offer-success" component={IntroOfferSuccess} />
         <Route path="/family-enrollment" component={FamilyEnrollment} />
         <Route path="/parents-night-out" component={ParentsNightOut} />
         <Route path="/test-payment" component={TestPayment} />
