@@ -9,62 +9,57 @@ import { useLocationContext } from "@/contexts/LocationContext";
 import { trpc } from "@/lib/trpc";
 import { IntroOfferModal } from "@/components/IntroOfferModal";
 
-const slides = [
+// Base slides (always available)
+const BASE_SLIDES = [
   {
     id: 1,
     image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero1_1d3d63d3.webp",
-
-    title: "FUN. FIT.",
-    highlight: "STRONG.",
-    description: "Experience the next evolution of martial arts training. Build confidence, discipline, and strength in a supportive, high-energy environment.",
     position: "center"
   },
   {
     id: 2,
     image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero2_cef79f5f.webp",
-
-    title: "UNLEASH YOUR",
-    highlight: "POTENTIAL.",
-    description: "Push your limits with high-intensity kickboxing classes designed to burn calories and build lean muscle.",
     position: "center"
   },
   {
     id: 3,
     image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero3_6fed392b.webp",
-
-    title: "EMPOWER",
-    highlight: "YOURSELF.",
-    description: "Learn practical self-defense skills while getting in the best shape of your life.",
     position: "center"
   },
   {
     id: 4,
     image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero4_98841652.webp",
-
-    title: "CONFIDENCE",
-    highlight: "FOR LIFE.",
-    description: "Give your child the tools they need to succeed: focus, respect, and unshakeable self-belief.",
     position: "center"
   },
   {
     id: 5,
     image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero5_e53b2006.webp",
-
-    title: "COMMUNITY",
-    highlight: "DRIVEN.",
-    description: "Join a supportive family of martial artists who will cheer you on every step of the way.",
     position: "center"
   },
   {
     id: 6,
     image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero6_32ad6fad.webp",
-
-    title: "TRAIN LIKE",
-    highlight: "A PRO.",
-    description: "World-class instruction in a state-of-the-art facility. Your journey to black belt starts here.",
     position: "center"
   }
 ];
+
+// Holiday-specific slide images
+const HOLIDAY_SLIDES: Record<string, typeof BASE_SLIDES> = {
+  "Mother's Day": [
+    { id: 1, image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero4_98841652.webp", position: "center" },
+    { id: 2, image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero5_e53b2006.webp", position: "center" },
+    { id: 3, image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero1_1d3d63d3.webp", position: "center" },
+  ],
+  "Summer Camp": [
+    { id: 1, image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero4_98841652.webp", position: "center" },
+    { id: 2, image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero1_1d3d63d3.webp", position: "center" },
+    { id: 3, image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero5_e53b2006.webp", position: "center" },
+  ],
+  "Back to School": [
+    { id: 1, image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero4_98841652.webp", position: "center" },
+    { id: 2, image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero1_1d3d63d3.webp", position: "center" },
+  ],
+};
 
 const DEFAULT_CONTENT = {
   headline: "FUN. FIT. STRONG.",
@@ -99,6 +94,9 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
   });
 
   const content = heroContent || DEFAULT_CONTENT;
+
+  // Use holiday-specific slides if available, otherwise fall back to base slides
+  const slides = (content.holiday && HOLIDAY_SLIDES[content.holiday]) ? HOLIDAY_SLIDES[content.holiday] : BASE_SLIDES;
 
   const getBadge = () => {
     if (content.isMothersDay) return { text: "🌸 Happy Mother's Day — Give the Gift of Confidence!", color: "#be185d" };
@@ -201,7 +199,7 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
         >
           <img
             src={slides[currentSlide].image}
-            alt={slides[currentSlide].title}
+            alt="MyDojo Martial Arts"
             loading={currentSlide === 0 ? "eager" : "lazy"}
             fetchPriority={currentSlide === 0 ? "high" : "low"}
             className={`w-full h-full object-cover ${
@@ -225,11 +223,11 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
             {content.subheadline || "PROGRAMS FOR EVERY AGE"}
           </h2>
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-heading font-bold text-white leading-tight mb-4 md:mb-6">
-            {content.headline || "FUN. FIT."}
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
-              {content.isMothersDay ? "MOM'S CHOICE." : content.isSummerCamp ? "SUMMER CAMP." : "STRONG."}
-            </span>
+            {content.isMothersDay
+              ? <><span>EMPOWER</span><br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-white">MOM'S CHOICE.</span></>
+              : content.isSummerCamp
+              ? <><span>SUMMER</span><br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-white">CAMP IS HERE.</span></>
+              : <>{content.headline || "FUN. FIT."}<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">STRONG.</span></>}
           </h1>
           <p className="text-lg md:text-xl text-gray-200 mb-6 md:mb-8 max-w-xl leading-relaxed line-clamp-3 md:line-clamp-none">
             {(content as typeof DEFAULT_CONTENT & { description?: string }).description || (content as typeof DEFAULT_CONTENT).targetMessage}
