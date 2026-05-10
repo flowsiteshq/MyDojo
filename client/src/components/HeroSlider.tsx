@@ -7,7 +7,7 @@ import { openIntakeChatbot } from "@/lib/chatbot";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useLocationContext } from "@/contexts/LocationContext";
 import { trpc } from "@/lib/trpc";
-import { IntroOfferModal } from "@/components/IntroOfferModal";
+import { ProgramFinderPopup } from "@/components/ProgramFinderPopup";
 
 // Base slides (always available)
 const BASE_SLIDES = [
@@ -321,7 +321,7 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
         {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
       </button>
     </section>
-    <IntroOfferModal open={offerModalOpen} onClose={() => setOfferModalOpen(false)} />
+    <ProgramFinderPopup isOpen={offerModalOpen} onClose={() => setOfferModalOpen(false)} />
     </>
   );
 }
