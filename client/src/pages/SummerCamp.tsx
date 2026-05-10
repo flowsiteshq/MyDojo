@@ -1,201 +1,95 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronLeft, ChevronRight, Star, Shield, Zap, Users, Heart, Trophy, Sun, Check } from "lucide-react";
-import { Link } from "wouter";
+import { ChevronDown, ChevronLeft, ChevronRight, Star, Shield, Zap, Users, Heart, Trophy, Sun, Check, Gift } from "lucide-react";
 import SEO from "@/components/SEO";
 import { openIntakeChatbot } from "@/lib/chatbot";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
+// ─── CDN base ─────────────────────────────────────────────────────────────────
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
 const TOTAL_SPOTS = 30;
-const INITIAL_SPOTS_TAKEN = 18; // live-looking counter seed
+const INITIAL_TAKEN = 18;
 
 const THEME_WEEKS = [
-  {
-    dates: "June 3 – June 7",
-    label: "JUNE 3 – JUNE 7",
-    theme: "Ninja Warrior Week",
-    desc: "Obstacle courses, speed challenges & ninja games!",
-    color: "from-red-600 to-orange-500",
-    image: "/images/camp-weeks/karate-kids.webp",
-  },
-  {
-    dates: "June 10 – June 14",
-    label: "JUNE 10 – JUNE 14",
-    theme: "Water War Week",
-    desc: "Water games, slip n' slide & splash battles!",
-    color: "from-cyan-500 to-blue-600",
-    image: "/images/summer-camp/water-activities.webp",
-  },
-  {
-    dates: "June 17 – June 21",
-    label: "JUNE 17 – JUNE 21",
-    theme: "Board Breaking Week",
-    desc: "Break barriers & boards. Build power & confidence!",
-    color: "from-yellow-500 to-orange-600",
-    image: "/images/camp-weeks/board-breaking.webp",
-  },
-  {
-    dates: "June 24 – June 28",
-    label: "JUNE 24 – JUNE 28",
-    theme: "Nerf Battle Week",
-    desc: "Team battles, missions & strategy challenges!",
-    color: "from-green-500 to-teal-600",
-    image: "/images/camp-weeks/self-defense.webp",
-  },
-  {
-    dates: "July 1 – July 5",
-    label: "JULY 1 – JULY 5",
-    theme: "Glow Night Week",
-    desc: "Glow games, lasers & epic night adventures!",
-    color: "from-purple-600 to-pink-600",
-    image: "/images/camp-weeks/finale.webp",
-  },
-  {
-    dates: "July 10 – July 14",
-    label: "JULY 10 – JULY 14",
-    theme: "Leadership Week",
-    desc: "Life skills, team building & community service!",
-    color: "from-amber-500 to-yellow-400",
-    image: "/images/camp-weeks/leadership.webp",
-  },
-  {
-    dates: "July 17 – July 21",
-    label: "JULY 17 – JULY 21",
-    theme: "Tournament Prep Week",
-    desc: "Sparring, drills & championship mindset training!",
-    color: "from-blue-600 to-indigo-600",
-    image: "/images/camp-weeks/tournament.webp",
-  },
-  {
-    dates: "July 24 – July 28",
-    label: "JULY 24 – JULY 28",
-    theme: "Water Gun Fun Week",
-    desc: "Epic water gun battles & outdoor adventures!",
-    color: "from-sky-400 to-cyan-500",
-    image: `${CDN}/water-gun-fun_20404a48.jpg`,
-  },
-  {
-    dates: "July 31 – Aug 4",
-    label: "JULY 31 – AUG 4",
-    theme: "Black Belt Bootcamp",
-    desc: "Advanced training, board breaks & championship drills!",
-    color: "from-orange-600 to-red-700",
-    image: "/images/camp-weeks/black-belt.webp",
-  },
-  {
-    dates: "Aug 7 – Aug 10",
-    label: "AUG 7 – AUG 10",
-    theme: "Summer Finale Celebration",
-    desc: "Awards ceremony, pizza party & epic memories!",
-    color: "from-pink-500 to-rose-600",
-    image: "/images/camp-weeks/weapons.webp",
-  },
+  { label: "JUNE 3 – JUNE 7",    theme: "NINJA WARRIOR WEEK",    desc: "Obstacle courses, speed challenges & ninja games!",       image: "/images/camp-weeks/karate-kids.webp",     badge: "#e53e3e" },
+  { label: "JUNE 10 – JUNE 14",  theme: "WATER WAR WEEK",        desc: "Water games, slip n' slide & splash battles!",            image: "/images/summer-camp/water-activities.webp", badge: "#3182ce" },
+  { label: "JUNE 17 – JUNE 21",  theme: "BOARD BREAKING WEEK",   desc: "Break barriers & boards. Build power & confidence!",      image: "/images/camp-weeks/board-breaking.webp",  badge: "#d69e2e" },
+  { label: "JUNE 24 – JUNE 28",  theme: "NERF BATTLE WEEK",      desc: "Team battles, missions & strategy challenges!",           image: "/images/camp-weeks/self-defense.webp",    badge: "#38a169" },
+  { label: "JULY 1 – JULY 5",    theme: "GLOW NIGHT WEEK",       desc: "Glow games, lasers & epic night adventures!",             image: "/images/camp-weeks/finale.webp",          badge: "#805ad5" },
+  { label: "JULY 10 – JULY 14",  theme: "LEADERSHIP WEEK",       desc: "Life skills, team building & community service!",         image: "/images/camp-weeks/leadership.webp",      badge: "#ed8936" },
+  { label: "JULY 17 – JULY 21",  theme: "TOURNAMENT PREP WEEK",  desc: "Sparring, drills & championship mindset training!",       image: "/images/camp-weeks/tournament.webp",      badge: "#2b6cb0" },
+  { label: "JULY 24 – JULY 28",  theme: "WATER GUN FUN WEEK",    desc: "Epic water gun battles & outdoor adventures!",            image: `${CDN}/water-gun-fun_20404a48.jpg`,       badge: "#00b5d8" },
+  { label: "JULY 31 – AUG 4",    theme: "BLACK BELT BOOTCAMP",   desc: "Advanced training, board breaks & championship drills!",  image: "/images/camp-weeks/black-belt.webp",      badge: "#1a202c" },
+  { label: "AUG 7 – AUG 10",     theme: "SUMMER FINALE",         desc: "Awards ceremony, pizza party & epic memories!",           image: "/images/camp-weeks/weapons.webp",         badge: "#e53e3e" },
 ];
 
-const DAILY_SCHEDULE = [
-  { time: "8:00 AM", label: "DROP OFF", desc: "Warm welcome & check-in", icon: "🌅", color: "bg-orange-500" },
-  { time: "9:00 AM", label: "MARTIAL ARTS TRAINING", desc: "Skills, drills & confidence building", icon: "🥋", color: "bg-red-600" },
-  { time: "11:00 AM", label: "GAMES & CHALLENGES", desc: "Ninja courses, relay races & more", icon: "🏆", color: "bg-yellow-500" },
-  { time: "12:00 PM", label: "LUNCH TIME", desc: "Bring lunch or add lunch option", icon: "🍕", color: "bg-green-500" },
-  { time: "1:00 PM", label: "TEAM ACTIVITIES", desc: "Group games, crafts & fun challenges", icon: "🎯", color: "bg-blue-500" },
-  { time: "3:00 PM", label: "PICK UP", desc: "Tired, happy & full of stories!", icon: "🚗", color: "bg-purple-500" },
+const SCHEDULE = [
+  { time: "8:00 AM",  label: "DROP OFF",              desc: "Warm welcome & check-in",          icon: "🌅", bg: "#ed8936" },
+  { time: "9:00 AM",  label: "MARTIAL ARTS TRAINING", desc: "Skills, drills & confidence building", icon: "🥋", bg: "#e53e3e" },
+  { time: "11:00 AM", label: "GAMES & CHALLENGES",    desc: "Ninja courses, relay races & more", icon: "🏆", bg: "#38a169" },
+  { time: "12:00 PM", label: "LUNCH TIME",            desc: "Bring lunch or add lunch option",   icon: "🍕", bg: "#3182ce" },
+  { time: "1:00 PM",  label: "TEAM ACTIVITIES",       desc: "Group games, crafts & fun challenges", icon: "🎯", bg: "#805ad5" },
+  { time: "3:00 PM",  label: "PICK UP",               desc: "Tired, happy & full of stories!",   icon: "🚗", bg: "#718096" },
 ];
 
 const TESTIMONIALS = [
-  {
-    name: "Jessica M.",
-    avatar: "/images/summer-camp/hero-colorful.webp",
-    stars: 5,
-    text: "My son begged to come back every day! The staff is amazing and the activities are top notch.",
-    program: "Summer Camp 2025",
-  },
-  {
-    name: "Michael T.",
-    avatar: "/images/summer-camp/group-activity.webp",
-    stars: 5,
-    text: "My daughter has more confidence than ever and made so many new friends. Best investment we made!",
-    program: "Summer Camp 2025",
-  },
-  {
-    name: "Amanda R.",
-    avatar: "/images/summer-camp/kids-training.webp",
-    stars: 5,
-    text: "Best summer decision we made. The perfect mix of fun, fitness and martial arts!",
-    program: "Summer Camp 2025",
-  },
-  {
-    name: "David K.",
-    avatar: "/images/summer-camp/activities-colorful.webp",
-    stars: 5,
-    text: "Our kids talk about camp all year long. The instructors are incredible role models. 10/10!",
-    program: "Summer Camp 2025",
-  },
+  { name: "Jessica M.", text: "My son begged to come back every day! The staff is amazing and the activities are top notch.",                 avatar: `${CDN}/hero1_1d3d63d3.webp`, initials: "JM", color: "#e53e3e" },
+  { name: "Michael T.", text: "My daughter has more confidence than ever and made so many new friends. Best investment we made!",          avatar: `${CDN}/hero2_cef79f5f.webp`, initials: "MT", color: "#3182ce" },
+  { name: "Amanda R.",  text: "Best summer decision we made. The perfect mix of fun, fitness and martial arts!",                        avatar: `${CDN}/hero3_6fed392b.webp`, initials: "AR", color: "#38a169" },
+  { name: "David K.",   text: "Our kids talk about camp all year long. The instructors are incredible role models. 10/10!",              avatar: `${CDN}/hero4_98841652.webp`, initials: "DK", color: "#805ad5" },
+  { name: "Sarah L.",   text: "My daughter went from shy to confident in one week. Absolutely life-changing experience!",                avatar: `${CDN}/hero1_1d3d63d3.webp`, initials: "SL", color: "#ed8936" },
 ];
 
 const FAQS = [
-  { q: "Is prior martial arts experience needed?", a: "Not at all! Our camp is designed for all skill levels, from complete beginners to experienced students. Our certified instructors tailor activities to each child's ability." },
-  { q: "What are the age ranges for camp?", a: "Summer Camp is open to kids ages 5–14. We group children by age and skill level to ensure everyone has a great experience." },
-  { q: "What time is drop off and pick up?", a: "Drop off is at 8:00 AM and pick up is at 3:00 PM. Extended care options are available — contact us for details." },
-  { q: "Is lunch provided?", a: "Campers bring their own lunch. We have a lunch period at noon. Snacks are provided in the morning. We are a nut-aware facility." },
-  { q: "Do you offer extended care?", a: "Yes! Extended care is available before and after camp hours. Please contact us to arrange this when registering." },
-  { q: "What is included in the $49 pass?", a: "The $49 intro pass includes 3 full days of camp, all activities, a camp t-shirt, and access to all theme week activities during your chosen days." },
-];
-
-const WHY_PARENTS = [
-  { icon: Shield, title: "Safe & Secure", desc: "A safe, structured environment you can trust.", color: "text-red-500" },
-  { icon: Users, title: "Positive Role Models", desc: "Instructors who inspire and support your child.", color: "text-orange-500" },
-  { icon: Zap, title: "Active & Engaging", desc: "High-energy activities that keep kids moving and learning.", color: "text-yellow-500" },
-  { icon: Star, title: "Build Confidence", desc: "Martial arts training that builds focus, respect & confidence.", color: "text-green-500" },
-  { icon: Heart, title: "Make New Friends", desc: "Kids make friends, strengthen social skills and have fun!", color: "text-blue-500" },
+  { q: "Is prior martial arts experience needed?",  a: "Not at all! Our camp is designed for all skill levels, from complete beginners to experienced students. Our certified instructors tailor activities to each child's ability." },
+  { q: "What are the age ranges for camp?",         a: "Summer Camp is open to kids ages 5–14. We group children by age and skill level to ensure everyone has a great experience." },
+  { q: "What time is drop off and pick up?",        a: "Drop off is at 8:00 AM and pick up is at 3:00 PM. Extended care options are available — contact us for details." },
+  { q: "Is lunch provided?",                        a: "Campers bring their own lunch. We have a lunch period at noon. Snacks are provided in the morning. We are a nut-aware facility." },
+  { q: "Do you offer extended care?",               a: "Yes! Extended care is available before and after camp hours. Please contact us to arrange this when registering." },
+  { q: "What is included in the $49 pass?",         a: "The $49 3-Day Pass includes all martial arts training, ninja games, team activities, pizza on Fridays, and a MyDojo camp t-shirt. It's everything you need for an epic summer experience!" },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
-
 export default function SummerCamp() {
-  const [spotsLeft, setSpotsLeft] = useState(TOTAL_SPOTS - INITIAL_SPOTS_TAKEN);
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [spotsLeft, setSpotsLeft] = useState(TOTAL_SPOTS - INITIAL_TAKEN);
+  const [testimonialIdx, setTestimonialIdx] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [themeStart, setThemeStart] = useState(0);
   const [stickyVisible, setStickyVisible] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
+  const themeRef = useRef<HTMLDivElement>(null);
 
-  // Sticky bar appears after scrolling past hero
   useEffect(() => {
     const onScroll = () => {
-      const heroBottom = heroRef.current?.getBoundingClientRect().bottom ?? 0;
-      setStickyVisible(heroBottom < 0);
+      const bottom = heroRef.current?.getBoundingClientRect().bottom ?? 0;
+      setStickyVisible(bottom < 0);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Simulate live spots countdown (slow trickle for urgency)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSpotsLeft((prev) => {
-        if (prev <= 4) return prev;
-        const rand = Math.random();
-        if (rand > 0.97) return prev - 1;
-        return prev;
-      });
-    }, 8000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Auto-advance testimonials
   useEffect(() => {
     const t = setInterval(() => {
-      setActiveTestimonial((p) => (p + 1) % TESTIMONIALS.length);
+      setTestimonialIdx(p => (p + 1) % TESTIMONIALS.length);
     }, 5000);
     return () => clearInterval(t);
   }, []);
 
-  const visibleThemes = 5;
-  const maxStart = THEME_WEEKS.length - visibleThemes;
+  useEffect(() => {
+    const t = setInterval(() => {
+      setSpotsLeft(p => (p > 4 && Math.random() > 0.97) ? p - 1 : p);
+    }, 8000);
+    return () => clearInterval(t);
+  }, []);
 
+  const taken = TOTAL_SPOTS - spotsLeft;
   const claimPass = () => openIntakeChatbot();
+
+  const scrollTheme = (dir: "left" | "right") => {
+    if (themeRef.current) {
+      themeRef.current.scrollBy({ left: dir === "right" ? 280 : -280, behavior: "smooth" });
+    }
+  };
 
   return (
     <>
@@ -204,302 +98,264 @@ export default function SummerCamp() {
         description="Join MyDojo's action-packed Summer Camp! 3 days for only $49. Martial arts, ninja games, water battles & more for ages 5–14. Limited spots — register today!"
       />
 
-      {/* ── Sticky Offer Bar ──────────────────────────────────────────────── */}
+      {/* ── STICKY BAR ──────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {stickyVisible && (
           <motion.div
-            initial={{ y: -80, opacity: 0 }}
+            initial={{ y: -60, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -80, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-red-700 via-red-600 to-orange-500 shadow-2xl"
+            exit={{ y: -60, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between px-6 py-3"
+            style={{ background: "#cc0000" }}
           >
-            <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Sun className="w-5 h-5 text-yellow-300 shrink-0 animate-spin" style={{ animationDuration: "4s" }} />
-                <span className="text-white font-bold text-sm md:text-base">
-                  ☀️ SUMMER CAMP SPECIAL: <span className="text-yellow-300">3 DAYS FOR ONLY $49!</span>
-                </span>
-              </div>
-              <button
-                onClick={claimPass}
-                className="shrink-0 bg-yellow-400 hover:bg-yellow-300 text-black font-black uppercase tracking-wider text-xs md:text-sm px-4 py-2 rounded-lg transition-colors flex items-center gap-1"
-              >
-                CLAIM OFFER NOW →
-              </button>
+            <div className="flex items-center gap-3">
+              <Sun className="w-5 h-5 text-yellow-300 shrink-0" />
+              <span className="text-white font-bold text-sm md:text-base">
+                ☀️ SUMMER CAMP SPECIAL: <span className="text-yellow-300 font-black">3 DAYS FOR ONLY $49!</span>
+              </span>
             </div>
+            <button
+              onClick={claimPass}
+              className="shrink-0 font-black uppercase tracking-wider text-xs md:text-sm px-5 py-2 rounded transition-colors"
+              style={{ background: "#ecc94b", color: "#000" }}
+            >
+              CLAIM OFFER NOW →
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="flex flex-col w-full bg-black">
+      <div className="w-full" style={{ fontFamily: "'Oswald', 'Impact', sans-serif" }}>
 
         {/* ── HERO ──────────────────────────────────────────────────────────── */}
-        <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
-          {/* Video / Image background */}
+        <section ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "600px" }}>
+          {/* Full-width background image */}
           <div className="absolute inset-0">
             <img
-              src="/images/summer-camp/hero-colorful.webp"
-              alt="MyDojo Summer Camp Hero"
-              className="w-full h-full object-cover"
+              src="/manus-storage/hero-ai-generated_c3d51ed6.jpg"
+              alt="MyDojo Summer Camp"
+              className="w-full h-full object-cover object-center"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/40" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+            {/* Dark overlay — heavier on left, lighter on right so image shows */}
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.25) 100%)" }} />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 30%, rgba(0,0,0,0.5) 100%)" }} />
           </div>
 
-          {/* Animated background particles */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute rounded-full bg-orange-500/10"
-                style={{
-                  width: `${80 + i * 40}px`,
-                  height: `${80 + i * 40}px`,
-                  left: `${10 + i * 15}%`,
-                  top: `${20 + (i % 3) * 20}%`,
-                }}
-                animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.3, 0.1] }}
-                transition={{ duration: 3 + i, repeat: Infinity, delay: i * 0.5 }}
-              />
-            ))}
-          </div>
+          {/* Red diagonal accent stripe */}
+          <div className="absolute left-0 top-0 bottom-0 w-2" style={{ background: "#cc0000" }} />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Copy */}
-            <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                CONFIDENCE. FRIENDSHIP. FUN.
+          <div className="relative z-10 max-w-7xl mx-auto px-6 py-14 flex flex-col lg:flex-row items-start lg:items-center gap-8">
+
+            {/* LEFT: Copy */}
+            <div className="flex-1 max-w-xl">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 mb-4">
+                <div className="px-3 py-1 text-white text-xs font-bold uppercase tracking-widest" style={{ background: "#cc0000" }}>
+                  CONFIDENCE. FRIENDSHIP. FUN.
+                </div>
               </div>
 
-              <h1 className="text-5xl md:text-7xl font-black text-white leading-none mb-4 uppercase">
-                SUMMER CAMP<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                  STARTS HERE!
-                </span>
+              {/* Headline */}
+              <h1 className="font-black uppercase leading-none mb-5" style={{ fontSize: "clamp(2.8rem, 6vw, 5rem)", lineHeight: 1 }}>
+                <span className="text-white block" style={{ fontStyle: "italic", textShadow: "2px 2px 8px rgba(0,0,0,0.8)" }}>SUMMER CAMP</span>
+                <span className="block" style={{ color: "#f6e05e", fontStyle: "italic", textShadow: "2px 2px 8px rgba(0,0,0,0.8)" }}>STARTS HERE!</span>
               </h1>
 
-              <div className="flex flex-wrap gap-4 mb-8">
-                {["Martial Arts", "Games & Activities", "New Friends", "Pizza Fridays"].map((item) => (
-                  <div key={item} className="flex items-center gap-2 text-white/80 text-sm">
-                    <Check className="w-4 h-4 text-yellow-400 shrink-0" />
-                    {item}
+              {/* Icon badges — inline checkmark style matching mockup */}
+              <div className="flex flex-wrap gap-x-5 gap-y-1 mb-6">
+                {["Martial Arts", "Games & Activities", "New Friends", "Pizza Fridays"].map(item => (
+                  <div key={item} className="flex items-center gap-1.5">
+                    <Check className="w-4 h-4 shrink-0" style={{ color: "#f6e05e" }} />
+                    <span className="text-white text-sm font-bold">{item}</span>
                   </div>
                 ))}
               </div>
 
-              {/* Trust badge */}
-              <div className="flex items-center gap-3 mb-8">
-                <div className="flex -space-x-2">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-orange-500 flex items-center justify-center text-xs font-bold text-white">
-                      {String.fromCharCode(64 + i)}
+              {/* Trust badge — matches mockup: group icon + text */}
+              <div className="inline-flex items-center gap-3 px-4 py-2 rounded mb-6" style={{ background: "rgba(0,0,0,0.7)", border: "1px solid rgba(255,255,255,0.15)" }}>
+                <Users className="w-10 h-10 text-white shrink-0" />
+                <div>
+                  <p className="text-white font-black text-sm leading-none">TRUSTED BY</p>
+                  <p className="font-black text-xl leading-none" style={{ color: "#f6e05e" }}>500+ FAMILIES</p>
+                  <div className="flex gap-0.5 mt-0.5">
+                    {[...Array(5)].map((_, i) => <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT: Offer card */}
+            <div className="w-full lg:w-80 shrink-0">
+              <div className="rounded-lg overflow-hidden shadow-2xl" style={{ background: "rgba(0,0,0,0.85)", border: "2px solid rgba(255,255,255,0.15)" }}>
+                {/* LIMITED TIME OFFER badge */}
+                <div className="text-center py-2 font-black text-white text-xs uppercase tracking-widest" style={{ background: "#cc0000" }}>
+                  LIMITED TIME OFFER
+                </div>
+
+                {/* Price — yellow paint-stroke style */}
+                <div className="text-center px-6 pt-4 pb-2">
+                  <p className="text-white text-sm uppercase tracking-widest mb-1">3 DAYS FOR ONLY</p>
+                  <div className="relative inline-block">
+                    {/* Paint stroke background */}
+                    <div className="absolute inset-0 rounded" style={{ background: "#f6e05e", transform: "rotate(-1deg) scaleX(1.1)", zIndex: 0 }} />
+                    <p className="relative z-10 font-black leading-none px-4" style={{ fontSize: "5rem", color: "#1a202c", fontStyle: "italic" }}>$49</p>
+                  </div>
+                </div>
+
+                {/* Checklist */}
+                <div className="px-5 pb-4 space-y-1.5">
+                  {["Martial Arts Training", "Ninja Games & Challenges", "Team Activities", "Pizza Fridays", "Camp T-Shirt Included"].map(item => (
+                    <div key={item} className="flex items-center gap-2">
+                      <Check className="w-4 h-4 shrink-0" style={{ color: "#f6e05e" }} />
+                      <span className="text-white text-sm font-medium">{item}</span>
                     </div>
                   ))}
                 </div>
-                <div>
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => <Star key={i} className="w-3.5 h-3.5 fill-yellow-400" />)}
-                  </div>
-                  <p className="text-white/70 text-xs">Trusted by <strong className="text-white">500+ Families</strong></p>
-                </div>
-              </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={claimPass}
-                  className="bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white font-black uppercase tracking-wider text-lg px-8 py-4 rounded-xl shadow-2xl shadow-red-900/50 transition-all hover:scale-105 flex items-center gap-2"
-                >
-                  Claim Summer Pass →
-                </button>
-                <button
-                  onClick={() => document.getElementById("schedule")?.scrollIntoView({ behavior: "smooth" })}
-                  className="border-2 border-white/40 text-white hover:bg-white/10 font-bold uppercase tracking-wider text-lg px-8 py-4 rounded-xl transition-all backdrop-blur-sm"
-                >
-                  View Schedule
-                </button>
-              </div>
-            </motion.div>
-
-            {/* Right: Offer card */}
-            <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="flex justify-center lg:justify-end"
-            >
-              <div className="relative">
-                {/* Glow */}
-                <div className="absolute -inset-4 bg-gradient-to-r from-yellow-500/30 to-red-500/30 rounded-3xl blur-2xl" />
-                <div className="relative bg-black/70 backdrop-blur-xl border border-white/20 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
-                  <div className="text-center mb-6">
-                    <div className="inline-block bg-red-600 text-white text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full mb-4">
-                      LIMITED TIME OFFER
-                    </div>
-                    <p className="text-white/70 text-sm uppercase tracking-widest mb-1">3 DAYS FOR ONLY</p>
-                    <div className="text-8xl font-black text-yellow-400 leading-none">$49</div>
-                    <p className="text-white/50 text-xs mt-1">Includes camp t-shirt + all activities</p>
-                  </div>
-
-                  <div className="space-y-2.5 mb-6">
-                    {["Martial Arts Training", "Ninja Games & Challenges", "Team Activities", "Pizza Fridays", "Camp T-Shirt Included"].map((item) => (
-                      <div key={item} className="flex items-center gap-3 text-white/90 text-sm">
-                        <div className="w-5 h-5 rounded-full bg-green-500/20 border border-green-500/50 flex items-center justify-center shrink-0">
-                          <Check className="w-3 h-3 text-green-400" />
-                        </div>
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-
+                {/* CTA Buttons */}
+                <div className="px-5 pb-5 space-y-2">
                   <button
                     onClick={claimPass}
-                    className="w-full bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-700 hover:to-orange-600 text-white font-black uppercase tracking-wider py-4 rounded-xl transition-all hover:scale-105 shadow-lg shadow-red-900/50 text-sm"
+                    className="w-full py-3 font-black uppercase tracking-wider text-white rounded transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                    style={{ background: "#cc0000", fontSize: "1rem" }}
                   >
                     CLAIM SUMMER PASS →
                   </button>
                   <button
                     onClick={() => document.getElementById("schedule")?.scrollIntoView({ behavior: "smooth" })}
-                    className="w-full text-white/60 hover:text-white text-sm font-semibold uppercase tracking-wider mt-3 py-2 transition-colors"
+                    className="w-full py-2 font-bold uppercase tracking-wider text-center text-sm transition-colors"
+                    style={{ color: "rgba(255,255,255,0.6)" }}
                   >
                     VIEW CAMP SCHEDULE
                   </button>
+                </div>
 
-                  {/* Spots counter */}
-                  <div className="mt-4 pt-4 border-t border-white/10">
-                    <div className="flex items-center justify-between text-xs text-white/60 mb-1.5">
-                      <span>Spots remaining</span>
-                      <span className="text-red-400 font-bold">{spotsLeft} / {TOTAL_SPOTS}</span>
-                    </div>
-                    <div className="w-full bg-white/10 rounded-full h-2">
-                      <motion.div
-                        className="bg-gradient-to-r from-red-500 to-orange-400 h-2 rounded-full"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${((TOTAL_SPOTS - spotsLeft) / TOTAL_SPOTS) * 100}%` }}
-                        transition={{ duration: 1, delay: 0.5 }}
-                      />
-                    </div>
+                {/* Spots bar */}
+                <div className="px-5 pb-4 border-t border-white/10 pt-3">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span style={{ color: "rgba(255,255,255,0.5)" }}>Spots remaining</span>
+                    <span className="font-bold" style={{ color: "#fc8181" }}>{spotsLeft} / {TOTAL_SPOTS}</span>
+                  </div>
+                  <div className="w-full rounded-full h-2" style={{ background: "rgba(255,255,255,0.1)" }}>
+                    <motion.div
+                      className="h-2 rounded-full"
+                      style={{ background: "#cc0000" }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(taken / TOTAL_SPOTS) * 100}%` }}
+                      transition={{ duration: 1 }}
+                    />
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
-
-          {/* Scroll indicator */}
-          <motion.div
-            className="absolute bottom-8 left-1/2 -translate-x-1/2"
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <ChevronDown className="w-8 h-8 text-white/40" />
-          </motion.div>
         </section>
 
-        {/* ── WHY PARENTS LOVE MYDOJO ───────────────────────────────────────── */}
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-14">
-              <h2 className="text-4xl md:text-5xl font-black text-black uppercase mb-3">
-                WHY PARENTS <span className="text-red-600">LOVE MYDOJO</span>
-              </h2>
-            </div>
+        {/* ── STICKY BAR (inline, below hero) ─────────────────────────────── */}
+        <div className="w-full flex items-center justify-between px-6 py-3" style={{ background: "#cc0000" }}>
+          <div className="flex items-center gap-2">
+            <span className="text-lg">☀️</span>
+            <span className="text-white font-bold text-sm md:text-base">
+              SUMMER CAMP SPECIAL: <span className="font-black" style={{ color: "#f6e05e" }}>3 DAYS FOR ONLY $49!</span>
+            </span>
+          </div>
+          <button
+            onClick={claimPass}
+            className="shrink-0 font-black uppercase tracking-wider text-xs md:text-sm px-5 py-2 rounded transition-colors"
+            style={{ background: "#ecc94b", color: "#000" }}
+          >
+            CLAIM OFFER NOW →
+          </button>
+        </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-              {/* Feature cards */}
-              <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4">
-                {WHY_PARENTS.map((item, i) => {
-                  const Icon = item.icon;
-                  return (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1 }}
-                      className="bg-gray-50 rounded-2xl p-5 text-center hover:shadow-lg transition-shadow"
-                    >
-                      <Icon className={`w-8 h-8 ${item.color} mx-auto mb-3`} />
-                      <h3 className="font-black text-sm text-black uppercase mb-1">{item.title}</h3>
-                      <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
-                    </motion.div>
-                  );
-                })}
+        {/* ── WHY PARENTS LOVE MYDOJO ───────────────────────────────────────── */}
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-6">
+            <h2 className="font-black uppercase text-3xl md:text-4xl text-black mb-10">
+              WHY PARENTS <span style={{ color: "#cc0000" }}>LOVE MYDOJO</span>
+            </h2>
+
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+              {/* 5 feature cards */}
+              <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                {[
+                  { Icon: Shield,  color: "#cc0000", title: "SAFE & SECURE",         desc: "A safe, structured environment you can trust." },
+                  { Icon: Users,   color: "#ed8936", title: "POSITIVE ROLE MODELS",  desc: "Instructors who inspire and support your child." },
+                  { Icon: Zap,     color: "#3182ce", title: "ACTIVE & ENGAGING",     desc: "High-energy activities that keep kids moving and learning." },
+                  { Icon: Star,    color: "#cc0000", title: "BUILD CONFIDENCE",      desc: "Martial arts training that builds focus, respect & confidence." },
+                  { Icon: Heart,   color: "#3182ce", title: "MAKE NEW FRIENDS",      desc: "Kids make friends, strengthen social skills and have fun!" },
+                ].map(({ Icon, color, title, desc }) => (
+                  <div key={title} className="flex flex-col items-center text-center p-4 rounded-lg border border-gray-100 bg-white shadow-sm">
+                    <Icon className="w-8 h-8 mb-2" style={{ color }} />
+                    <p className="font-black text-xs uppercase text-black mb-1 leading-tight">{title}</p>
+                    <p className="text-gray-500 text-xs leading-relaxed">{desc}</p>
+                  </div>
+                ))}
               </div>
 
-              {/* Photo */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                className="relative rounded-2xl overflow-hidden shadow-2xl h-72 lg:h-full min-h-[280px]"
-              >
+              {/* Photo with brush-stroke edge */}
+              <div className="lg:w-72 shrink-0 relative rounded-xl overflow-hidden shadow-xl" style={{ minHeight: "280px" }}>
                 <img
                   src="/images/summer-camp/group-activity.webp"
-                  alt="MyDojo Summer Camp Group"
+                  alt="MyDojo kids group"
                   className="w-full h-full object-cover"
+                  style={{ minHeight: "280px" }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-5">
-                  <div className="flex gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                    <span className="text-white text-sm font-bold ml-2">500+ Reviews</span>
-                  </div>
+                {/* Brush-stroke left edge effect */}
+                <div className="absolute inset-y-0 left-0 w-8" style={{ background: "linear-gradient(to right, white, transparent)" }} />
+                <div className="absolute bottom-3 left-3 flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
+                  <span className="text-white text-sm font-bold ml-1 drop-shadow">500+ Reviews</span>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* ── TESTIMONIALS ──────────────────────────────────────────────────── */}
-        <section className="py-20 bg-zinc-950">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-14">
-              <h2 className="text-4xl md:text-5xl font-black text-white uppercase mb-3">
-                WHAT <span className="text-red-500">PARENTS</span> ARE SAYING
-              </h2>
-            </div>
+        <section className="py-16" style={{ background: "#111" }}>
+          <div className="max-w-7xl mx-auto px-6">
+            <h2 className="font-black uppercase text-3xl md:text-4xl text-white text-center mb-10">
+              WHAT <span style={{ color: "#cc0000" }}>PARENTS</span> ARE SAYING
+            </h2>
 
             <div className="relative">
               {/* Prev */}
               <button
-                onClick={() => setActiveTestimonial((p) => (p - 1 + TESTIMONIALS.length) % TESTIMONIALS.length)}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors"
+                onClick={() => setTestimonialIdx(p => (p - 1 + TESTIMONIALS.length) % TESTIMONIALS.length)}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-5 z-10 w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
               >
                 <ChevronLeft className="w-5 h-5 text-white" />
               </button>
 
-              {/* Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden">
-                {[0, 1, 2].map((offset) => {
-                  const idx = (activeTestimonial + offset) % TESTIMONIALS.length;
-                  const t = TESTIMONIALS[idx];
+              {/* 3 cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {[0, 1, 2].map(offset => {
+                  const t = TESTIMONIALS[(testimonialIdx + offset) % TESTIMONIALS.length];
                   return (
                     <motion.div
-                      key={idx}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: offset * 0.1 }}
-                      className="bg-zinc-900 border border-white/10 rounded-2xl p-6"
+                      key={t.name + offset}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.4 }}
+                      className="rounded-xl p-5"
+                      style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.08)" }}
                     >
-                      <div className="flex gap-1 mb-4">
-                        {[...Array(t.stars)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        ))}
+                      {/* Stars */}
+                      <div className="flex gap-0.5 mb-3">
+                        {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
                       </div>
-                      <p className="text-white/80 text-sm leading-relaxed mb-5 italic">"{t.text}"</p>
+                      <p className="text-gray-300 text-sm leading-relaxed mb-4 italic">"{t.text}"</p>
+                      {/* Avatar + name */}
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-orange-500 shrink-0">
-                          <img src={t.avatar} alt={t.name} className="w-full h-full object-cover" />
+                        <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-red-600 flex items-center justify-center font-black text-white text-sm" style={{ background: t.color }}>
+                          {t.initials}
                         </div>
                         <div>
-                          <p className="text-white font-bold text-sm">— {t.name}</p>
-                          <p className="text-white/40 text-xs">{t.program}</p>
+                          <span className="text-white font-bold text-sm block">– {t.name}</span>
+                          <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>Summer Camp 2025</span>
                         </div>
                       </div>
                     </motion.div>
@@ -509,20 +365,26 @@ export default function SummerCamp() {
 
               {/* Next */}
               <button
-                onClick={() => setActiveTestimonial((p) => (p + 1) % TESTIMONIALS.length)}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-colors"
+                onClick={() => setTestimonialIdx(p => (p + 1) % TESTIMONIALS.length)}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-5 z-10 w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
               >
                 <ChevronRight className="w-5 h-5 text-white" />
               </button>
             </div>
 
             {/* Dots */}
-            <div className="flex justify-center gap-2 mt-8">
+            <div className="flex justify-center gap-2 mt-6">
               {TESTIMONIALS.map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => setActiveTestimonial(i)}
-                  className={`w-2 h-2 rounded-full transition-all ${i === activeTestimonial ? "bg-red-500 w-6" : "bg-white/20"}`}
+                  onClick={() => setTestimonialIdx(i)}
+                  className="rounded-full transition-all"
+                  style={{
+                    width: i === testimonialIdx ? "24px" : "8px",
+                    height: "8px",
+                    background: i === testimonialIdx ? "#cc0000" : "rgba(255,255,255,0.2)",
+                  }}
                 />
               ))}
             </div>
@@ -530,219 +392,196 @@ export default function SummerCamp() {
         </section>
 
         {/* ── DAILY SCHEDULE ────────────────────────────────────────────────── */}
-        <section id="schedule" className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-14">
-              <h2 className="text-4xl md:text-5xl font-black text-black uppercase mb-3">
-                A DAY AT <span className="text-red-600">SUMMER CAMP</span>
-              </h2>
-              <p className="text-gray-500 text-lg">Every day is packed with adventure, learning, and fun!</p>
-            </div>
+        <section id="schedule" className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-6">
+            <h2 className="font-black uppercase text-3xl md:text-4xl text-black text-center mb-12">
+              A DAY AT <span style={{ color: "#cc0000" }}>SUMMER CAMP</span>
+            </h2>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Timeline */}
-              <div className="relative">
-                {/* Vertical line */}
-                <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gradient-to-b from-orange-500 via-red-500 to-purple-500" />
-
-                <div className="space-y-6">
-                  {DAILY_SCHEDULE.map((item, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1 }}
-                      className="flex items-center gap-5 pl-2"
-                    >
-                      {/* Dot */}
-                      <div className={`w-12 h-12 rounded-full ${item.color} flex items-center justify-center text-xl shrink-0 shadow-lg z-10`}>
-                        {item.icon}
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{item.time}</p>
-                        <p className="text-black font-black text-base uppercase">{item.label}</p>
-                        <p className="text-gray-500 text-sm">{item.desc}</p>
-                      </div>
-                    </motion.div>
-                  ))}
+            <div className="flex flex-col lg:flex-row gap-10 items-center">
+              {/* Horizontal timeline */}
+              <div className="flex-1">
+                {/* Connecting line */}
+                <div className="relative">
+                  <div className="hidden md:block absolute top-6 left-6 right-6 h-0.5" style={{ background: "linear-gradient(to right, #ed8936, #e53e3e, #38a169, #3182ce, #805ad5, #718096)" }} />
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {SCHEDULE.map((item, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.1 }}
+                        className="flex flex-col items-center text-center"
+                      >
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl mb-3 shadow-lg relative z-10" style={{ background: item.bg }}>
+                          {item.icon}
+                        </div>
+                        <p className="text-xs font-bold mb-0.5" style={{ color: "#718096" }}>{item.time}</p>
+                        <p className="font-black text-xs uppercase text-black leading-tight mb-1">{item.label}</p>
+                        <p className="text-gray-500 text-xs leading-relaxed">{item.desc}</p>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Photo */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                className="relative rounded-2xl overflow-hidden shadow-2xl h-[480px]"
-              >
+              {/* Action photo */}
+              <div className="lg:w-80 shrink-0 rounded-xl overflow-hidden shadow-2xl" style={{ height: "320px" }}>
                 <img
-                  src="/images/summer-camp/activities-colorful.webp"
-                  alt="Kids at Summer Camp"
+                  src="/images/camp-weeks/board-breaking.webp"
+                  alt="Kid breaking board at camp"
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-6">
-                  <div className="text-white">
-                    <p className="font-black text-2xl uppercase">Full Day of Fun!</p>
-                    <p className="text-white/70 text-sm">8:00 AM – 3:00 PM</p>
-                  </div>
-                </div>
-              </motion.div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* ── THEME WEEKS ───────────────────────────────────────────────────── */}
-        <section className="py-20 bg-zinc-950">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-14">
-              <h2 className="text-4xl md:text-5xl font-black text-white uppercase mb-3">
-                EPIC <span className="text-yellow-400">THEME WEEKS!</span>
+        <section className="py-16" style={{ background: "#0a0a0a" }}>
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-8">
+              <h2 className="font-black uppercase text-3xl md:text-5xl text-white mb-1">
+                EPIC <span style={{ color: "#f6e05e" }}>THEME WEEKS!</span>
               </h2>
-              <p className="text-white/50 text-lg">Each week is a new adventure!</p>
+              <p style={{ color: "rgba(255,255,255,0.5)" }}>Each week is a new adventure!</p>
             </div>
 
-            {/* Scrollable cards */}
+            {/* Scrollable cards with arrows */}
             <div className="relative">
-              <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+              {/* Left arrow */}
+              <button
+                onClick={() => scrollTheme("left")}
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full flex items-center justify-center shadow-xl"
+                style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.2)" }}
+              >
+                <ChevronLeft className="w-5 h-5 text-white" />
+              </button>
+
+              <div
+                ref={themeRef}
+                className="flex gap-4 overflow-x-auto pb-2"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
                 {THEME_WEEKS.map((week, i) => (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, y: 30 }}
+                    initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: i * 0.05 }}
-                    className="relative shrink-0 w-56 h-72 rounded-2xl overflow-hidden snap-start group cursor-pointer"
+                    transition={{ delay: Math.min(i * 0.05, 0.3) }}
                     onClick={claimPass}
+                    className="relative shrink-0 rounded-xl overflow-hidden cursor-pointer group"
+                    style={{ width: "160px", height: "260px" }}
                   >
                     <img
                       src={week.image}
                       alt={week.theme}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
-                    <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent`} />
-                    <div className="absolute inset-0 p-4 flex flex-col justify-end">
-                      <div className={`inline-block self-start bg-gradient-to-r ${week.color} text-white text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full mb-2`}>
+                    <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)" }} />
+                    <div className="absolute inset-0 p-3 flex flex-col justify-end">
+                      <div
+                        className="inline-block self-start text-white text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded mb-1"
+                        style={{ background: week.badge }}
+                      >
                         {week.label}
                       </div>
-                      <h3 className="text-white font-black text-base uppercase leading-tight mb-1">{week.theme}</h3>
-                      <p className="text-white/60 text-xs leading-relaxed">{week.desc}</p>
+                      <p className="text-white font-black text-sm uppercase leading-tight mb-1">{week.theme}</p>
+                      <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>{week.desc}</p>
                     </div>
                   </motion.div>
                 ))}
               </div>
-            </div>
 
-            <div className="text-center mt-8">
+              {/* Right arrow */}
               <button
-                onClick={claimPass}
-                className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-black uppercase tracking-wider px-10 py-4 rounded-xl transition-all hover:scale-105 shadow-xl text-sm"
+                onClick={() => scrollTheme("right")}
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full flex items-center justify-center shadow-xl"
+                style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.2)" }}
               >
-                REGISTER FOR A THEME WEEK →
+                <ChevronRight className="w-5 h-5 text-white" />
               </button>
             </div>
           </div>
         </section>
 
         {/* ── SPOTS COUNTER + BRING A FRIEND ────────────────────────────────── */}
-        <section className="py-16 bg-black">
-          <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Spots counter */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-zinc-900 border border-white/10 rounded-2xl p-8 flex items-center gap-6"
-            >
-              <div className="shrink-0">
-                <Users className="w-12 h-12 text-red-500" />
-              </div>
+        <section className="py-10" style={{ background: "#111" }}>
+          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Spots */}
+            <div className="flex items-center gap-5 rounded-xl p-6" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <Users className="w-12 h-12 shrink-0" style={{ color: "#cc0000" }} />
               <div className="flex-1">
                 <p className="text-white font-black text-lg uppercase mb-2">SPOTS ARE FILLING FAST!</p>
-                <div className="w-full bg-white/10 rounded-full h-3 mb-2">
+                <div className="w-full rounded-full h-3 mb-2" style={{ background: "rgba(255,255,255,0.1)" }}>
                   <motion.div
-                    className="bg-gradient-to-r from-red-600 to-orange-500 h-3 rounded-full"
+                    className="h-3 rounded-full"
+                    style={{ background: "#cc0000" }}
                     initial={{ width: 0 }}
-                    whileInView={{ width: `${((TOTAL_SPOTS - spotsLeft) / TOTAL_SPOTS) * 100}%` }}
+                    whileInView={{ width: `${(taken / TOTAL_SPOTS) * 100}%` }}
                     viewport={{ once: true }}
                     transition={{ duration: 1.5 }}
                   />
                 </div>
-                <p className="text-white/60 text-sm">
-                  <span className="text-red-400 font-black text-xl">{TOTAL_SPOTS - spotsLeft}</span>
-                  <span className="text-white/40"> / {TOTAL_SPOTS} SPOTS REMAINING</span>
+                <p style={{ color: "rgba(255,255,255,0.5)" }} className="text-sm">
+                  <span className="font-black text-2xl" style={{ color: "#fc8181" }}>{taken}</span>
+                  <span> / {TOTAL_SPOTS} SPOTS REMAINING</span>
                 </p>
               </div>
-            </motion.div>
+            </div>
 
             {/* Bring a friend */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl p-8 flex items-center gap-6 cursor-pointer hover:scale-[1.02] transition-transform"
+            <div
+              className="flex items-center gap-5 rounded-xl p-6 cursor-pointer hover:opacity-95 transition-opacity"
+              style={{ background: "#ecc94b" }}
               onClick={claimPass}
             >
-              <div className="shrink-0">
-                <Trophy className="w-12 h-12 text-black" />
-              </div>
+              <Gift className="w-12 h-12 shrink-0 text-black" />
               <div>
-                <p className="text-black font-black text-lg uppercase mb-1">BRING A FRIEND DAY!</p>
-                <p className="text-black/70 text-sm">Bring a friend and you both get a special prize! 🎁</p>
+                <p className="font-black text-lg uppercase text-black">BRING A FRIEND DAY!</p>
+                <p className="text-sm" style={{ color: "rgba(0,0,0,0.65)" }}>Bring a friend and you both get a special prize! 🎁</p>
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
         {/* ── WHAT TO BRING + FAQ ───────────────────────────────────────────── */}
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-3 gap-10">
             {/* What to bring */}
             <div>
-              <h2 className="text-3xl font-black text-black uppercase mb-6">
-                WHAT TO <span className="text-red-600">BRING</span>
+              <h2 className="font-black uppercase text-2xl text-black mb-5">
+                WHAT TO <span style={{ color: "#cc0000" }}>BRING</span>
               </h2>
-              <div className="space-y-3 mb-8">
-                {["Water Bottle", "Lunch (or add lunch option)", "Comfortable Clothes", "Positive Attitude!"].map((item) => (
-                  <div key={item} className="flex items-center gap-3 text-gray-700">
-                    <Check className="w-5 h-5 text-green-500 shrink-0" />
-                    <span className="font-semibold">{item}</span>
+              <div className="space-y-3 mb-6">
+                {["Water Bottle", "Lunch (or add lunch option)", "Comfortable Clothes", "Positive Attitude!"].map(item => (
+                  <div key={item} className="flex items-center gap-3">
+                    <Check className="w-5 h-5 shrink-0" style={{ color: "#38a169" }} />
+                    <span className="text-gray-700 font-semibold">{item}</span>
                   </div>
                 ))}
               </div>
-              <div className="relative rounded-2xl overflow-hidden h-48">
-                <img
-                  src="/images/summer-camp/kids-training.webp"
-                  alt="Kids training at MyDojo"
-                  className="w-full h-full object-cover"
-                />
+              <div className="rounded-xl overflow-hidden shadow-lg" style={{ height: "200px" }}>
+                <img src="/images/summer-camp/kids-training.webp" alt="Kids training" className="w-full h-full object-cover" />
               </div>
             </div>
 
             {/* FAQ */}
-            <div className="lg:col-span-2">
-              <h2 className="text-3xl font-black text-black uppercase mb-6">
-                FREQUENTLY ASKED <span className="text-red-600">QUESTIONS</span>
+            <div className="lg:col-span-1">
+              <h2 className="font-black uppercase text-2xl text-black mb-5">
+                FREQUENTLY ASKED <span style={{ color: "#cc0000" }}>QUESTIONS</span>
               </h2>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {FAQS.map((faq, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.05 }}
-                    className="border border-gray-200 rounded-xl overflow-hidden"
-                  >
+                  <div key={i} className="border border-gray-200 rounded-lg overflow-hidden">
                     <button
-                      className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+                      className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors"
                       onClick={() => setOpenFaq(openFaq === i ? null : i)}
                     >
-                      <span className="font-bold text-black text-sm pr-4">{faq.q}</span>
-                      <ChevronDown
-                        className={`w-5 h-5 text-gray-400 shrink-0 transition-transform ${openFaq === i ? "rotate-180" : ""}`}
-                      />
+                      <span className="font-bold text-black text-sm pr-3">{faq.q}</span>
+                      <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${openFaq === i ? "rotate-180" : ""}`} />
                     </button>
                     <AnimatePresence>
                       {openFaq === i && (
@@ -750,84 +589,67 @@ export default function SummerCamp() {
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.25 }}
+                          transition={{ duration: 0.2 }}
                           className="overflow-hidden"
                         >
-                          <p className="px-5 pb-4 text-gray-600 text-sm leading-relaxed">{faq.a}</p>
+                          <p className="px-4 pb-3 text-gray-600 text-sm leading-relaxed">{faq.a}</p>
                         </motion.div>
                       )}
                     </AnimatePresence>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
+            </div>
+
+            {/* Photo */}
+            <div className="rounded-xl overflow-hidden shadow-xl" style={{ minHeight: "300px" }}>
+              <img
+                src="/images/summer-camp/activities-colorful.webp"
+                alt="Happy campers"
+                className="w-full h-full object-cover"
+                style={{ minHeight: "300px" }}
+              />
             </div>
           </div>
         </section>
 
-        {/* ── FINAL CTA ─────────────────────────────────────────────────────── */}
-        <section className="relative py-24 bg-black overflow-hidden">
-          {/* Background */}
-          <div className="absolute inset-0">
-            <img
-              src="/images/summer-camp/activities-colorful.webp"
-              alt="Summer Camp"
-              className="w-full h-full object-cover opacity-20"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/60" />
+        {/* ── CTA FOOTER ────────────────────────────────────────────────────── */}
+        <section className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #cc0000 0%, #e53e3e 50%, #ed8936 100%)" }}>
+          {/* Flanking kid photos */}
+          <div className="absolute left-0 inset-y-0 w-48 hidden xl:block overflow-hidden">
+            <img src="/manus-storage/cta-kid-left_2282a125.jpg" alt="" className="w-full h-full object-cover object-top" />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, transparent 60%, #cc0000 100%)" }} />
+          </div>
+          <div className="absolute right-0 inset-y-0 w-48 hidden xl:block overflow-hidden">
+            <img src="/manus-storage/cta-kid-right_83443a39.jpg" alt="" className="w-full h-full object-cover object-top" />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to left, transparent 60%, #ed8936 100%)" }} />
           </div>
 
-          {/* Kids photos flanking */}
-          <div className="absolute left-0 bottom-0 h-full w-48 hidden xl:block overflow-hidden">
-            <img
-              src="/images/summer-camp/hero-colorful.webp"
-              alt="Happy camper"
-              className="h-full w-full object-cover object-top opacity-60"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black" />
-          </div>
-          <div className="absolute right-0 bottom-0 h-full w-48 hidden xl:block overflow-hidden">
-            <img
-              src="/images/summer-camp/group-activity.webp"
-              alt="Happy campers"
-              className="h-full w-full object-cover object-top opacity-60"
-            />
-            <div className="absolute inset-0 bg-gradient-to-l from-transparent to-black" />
-          </div>
-
-          <div className="relative z-10 max-w-3xl mx-auto px-4 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+          <div className="relative z-10 max-w-3xl mx-auto px-6 py-20 text-center">
+            <h2 className="font-black uppercase text-white leading-tight mb-3" style={{ fontSize: "clamp(1.8rem, 4vw, 3rem)" }}>
+              GIVE THEM A SUMMER THEY'LL NEVER FORGET!
+            </h2>
+            <p className="text-white/80 text-lg mb-8">3 Days. Endless Adventures. Lifetime Memories.</p>
+            <button
+              onClick={claimPass}
+              className="font-black uppercase tracking-wider text-black rounded-lg px-10 py-4 text-lg transition-all hover:opacity-90 hover:scale-105 shadow-2xl"
+              style={{ background: "#f6e05e" }}
             >
-              <h2 className="text-4xl md:text-6xl font-black text-white uppercase leading-tight mb-4">
-                GIVE THEM A SUMMER<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                  THEY'LL NEVER FORGET!
-                </span>
-              </h2>
-              <p className="text-white/70 text-xl mb-10">3 Days. Endless Adventures. Lifetime Memories.</p>
-
-              <button
-                onClick={claimPass}
-                className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-black font-black uppercase tracking-wider text-xl px-12 py-5 rounded-xl transition-all hover:scale-105 shadow-2xl shadow-orange-900/50 mb-4"
-              >
-                CLAIM 3 DAYS FOR ONLY $49 →
-              </button>
-              <p className="text-white/40 text-sm uppercase tracking-widest">LIMITED SUMMER SPOTS — RESERVE TODAY!</p>
-            </motion.div>
+              CLAIM 3 DAYS FOR ONLY $49 →
+            </button>
+            <p className="text-white/60 text-xs uppercase tracking-widest mt-4">LIMITED SUMMER SPOTS — RESERVE TODAY!</p>
           </div>
 
-          {/* Bottom trust bar */}
-          <div className="relative z-10 max-w-5xl mx-auto px-4 mt-16 border-t border-white/10 pt-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          {/* Trust bar */}
+          <div className="relative z-10 border-t border-white/20 py-6">
+            <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               {[
                 { icon: "🥋", label: "EXPERT INSTRUCTORS" },
                 { icon: "🏛️", label: "STATE-OF-THE-ART FACILITY" },
                 { icon: "❤️", label: "FOCUS ON CONFIDENCE, DISCIPLINE & FUN" },
                 { icon: "⭐", label: "TRUSTED BY 500+ FAMILIES" },
-              ].map((item, i) => (
-                <div key={i} className="text-white/60">
+              ].map(item => (
+                <div key={item.label} className="text-white/80">
                   <div className="text-2xl mb-1">{item.icon}</div>
                   <p className="text-xs font-bold uppercase tracking-wider">{item.label}</p>
                 </div>
