@@ -183,6 +183,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Program Finder Quiz */}
+      <ProgramFinder />
+
       {/* Philosophy Section */}
       <section className="py-24 bg-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-gray-50 skew-x-[-12deg] transform translate-x-20 z-0"></div>
@@ -524,9 +527,6 @@ export default function Home() {
       <section className="py-20 bg-white">
         <TestimonialCarousel />
       </section>
-
-      {/* Program Finder Quiz */}
-      <ProgramFinder />
 
       <MasonryGallery />
 
