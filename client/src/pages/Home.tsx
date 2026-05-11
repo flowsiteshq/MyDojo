@@ -4,6 +4,7 @@ import { ArrowRight, Star, Shield, Zap, Users } from "lucide-react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { TestimonialCarousel } from "@/components/TestimonialCarousel";
+import { RatingBadges } from "@/components/RatingBadges";
 import { FAQ } from "@/components/FAQ";
 import { MasonryGallery } from "@/components/MasonryGallery";
 import { HeroSlider } from "@/components/HeroSlider";
@@ -104,6 +105,9 @@ export default function Home() {
       {/* ── TESTIMONIALS (below hero) ─────────────────────────────────────── */}
       <section className="py-12" style={{ background: "#111" }}>
         <div className="max-w-7xl mx-auto px-6">
+          {/* Rating Badges */}
+          <RatingBadges className="mb-6" />
+
           <h2 className="font-black uppercase text-2xl md:text-3xl text-white text-center mb-8">
             WHAT OUR <span style={{ color: "#cc0000" }}>MEMBERS</span> ARE SAYING
           </h2>

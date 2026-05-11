@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { DailyScheduleTimeline } from "@/components/DailyScheduleTimeline";
+import { RatingBadges } from "@/components/RatingBadges";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronLeft, ChevronRight, Star, Shield, Zap, Users, Heart, Trophy, Sun, Check, Gift } from "lucide-react";
 import SEO from "@/components/SEO";
@@ -287,6 +288,9 @@ export default function SummerCamp() {
         {/* ── TESTIMONIALS (below hero) ─────────────────────────────────────── */}
         <section className="py-12" style={{ background: "#111" }}>
           <div className="max-w-7xl mx-auto px-6">
+            {/* Rating Badges */}
+            <RatingBadges className="mb-6" />
+
             <h2 className="font-black uppercase text-2xl md:text-3xl text-white text-center mb-8">
               WHAT <span style={{ color: "#cc0000" }}>PARENTS</span> ARE SAYING
             </h2>
