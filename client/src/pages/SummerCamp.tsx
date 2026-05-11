@@ -18,7 +18,7 @@ const THEME_WEEKS = [
   { label: "JUNE 3 – JUNE 7",    theme: "NINJA WARRIOR WEEK",    desc: "Obstacle courses, speed challenges & ninja games!",       image: "/manus-storage/theme-ninja-warrior_180c5163.jpg",     badge: "#e53e3e" },
   { label: "JUNE 10 – JUNE 14",  theme: "WATER WAR WEEK",        desc: "Water games, slip n' slide & splash battles!",            image: "/images/summer-camp/water-activities.webp", badge: "#3182ce" },
   { label: "JUNE 17 – JUNE 21",  theme: "BOARD BREAKING WEEK",   desc: "Break barriers & boards. Build power & confidence!",      image: "/manus-storage/theme-board-breaking_29e08c96.jpg",  badge: "#d69e2e" },
-  { label: "JUNE 24 – JUNE 28",  theme: "NERF BATTLE WEEK",      desc: "Team battles, missions & strategy challenges!",           image: "/images/camp-weeks/self-defense.webp",    badge: "#38a169" },
+  { label: "JUNE 24 – JUNE 28",  theme: "NERF BATTLE WEEK",      desc: "Team battles, missions & strategy challenges!",           image: `${CDN}/theme-nerf-battle-ZxsaCLvznZzvzMNNDgJPLb.webp`,    badge: "#38a169" },
   { label: "JULY 1 – JULY 5",    theme: "GLOW NIGHT WEEK",       desc: "Glow games, lasers & epic night adventures!",             image: "/images/camp-weeks/independence-day.webp", badge: "#805ad5" },
   { label: "JULY 10 – JULY 14",  theme: "LEADERSHIP WEEK",       desc: "Life skills, team building & community service!",         image: "/images/camp-weeks/leadership.webp",      badge: "#ed8936" },
   { label: "JULY 17 – JULY 21",  theme: "TOURNAMENT PREP WEEK",  desc: "Sparring, drills & championship mindset training!",       image: "/manus-storage/theme-tournament_14014f75.jpg",      badge: "#2b6cb0" },
