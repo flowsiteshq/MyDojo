@@ -172,26 +172,16 @@ export default function SummerCamp() {
 
           {/* RIGHT: Offer — absolute positioned top-right, all stacked vertically */}
           <div className="absolute right-6 top-0 bottom-0 z-10 flex flex-col justify-center items-end" style={{ maxWidth: 520 }}>
-            {/* $49 price graphic */}
+            {/* Combined $49 price + checklist graphic */}
             <img
-              src="/manus-storage/80ba2d25-3c98-4a3d-8ec1-671b987e2e81_a931f3d8.png"
-              alt="3 Days for only $49 - Limited Time Offer"
+              src="/manus-storage/9f0b9c48-c72b-484b-8ea2-e15f20585fc6_b677b9a3.png"
+              alt="3 Days for only $49 - Martial Arts Training, Ninja Games, Team Activities, Pizza Fridays, Camp T-Shirt Included"
               className="h-auto object-contain"
-              style={{ width: 480, maxWidth: "45vw", filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.6))" }}
+              style={{ width: 480, maxWidth: "45vw", filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.5))" }}
             />
 
-            {/* Checklist — directly under graphic */}
-            <div className="space-y-1.5 mb-4 w-full">
-              {["Martial Arts Training", "Ninja Games & Challenges", "Team Activities", "Pizza Fridays", "Camp T-Shirt Included"].map(item => (
-                <div key={item} className="flex items-center gap-2 justify-end">
-                  <span className="text-green-400 font-black text-base leading-none">✓</span>
-                  <span className="text-white font-semibold text-sm" style={{ textShadow: "1px 1px 4px rgba(0,0,0,0.9)" }}>{item}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA Buttons — directly under checklist */}
-            <div className="space-y-2 w-full flex flex-col items-end">
+            {/* CTA Buttons — directly under graphic */}
+            <div className="space-y-2 w-full flex flex-col items-end mt-2">
               <button
                 onClick={claimPass}
                 className="py-3 px-8 font-black uppercase tracking-wider text-white rounded transition-all hover:opacity-90 flex items-center justify-center gap-2"
