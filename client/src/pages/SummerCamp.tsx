@@ -189,27 +189,15 @@ export default function SummerCamp() {
 
             {/* RIGHT: Offer card */}
             <div className="w-full lg:w-80 shrink-0">
-              <div className="rounded-lg overflow-hidden shadow-2xl" style={{ background: "#fef9c3", border: "3px solid #f6e05e" }}>
-                {/* LIMITED TIME OFFER badge */}
-                <div className="text-center py-2 font-black text-white text-xs uppercase tracking-widest" style={{ background: "#cc0000" }}>
-                  ⚡ LIMITED TIME OFFER
-                </div>
-
-                {/* Price — yellow paint-stroke style */}
-                <div className="text-center px-6 pt-4 pb-2">
-                  <p className="font-black text-2xl uppercase tracking-wider mb-0" style={{ color: "#1a202c" }}>3 DAYS</p>
-                  <p className="font-bold text-sm uppercase tracking-widest" style={{ color: "#374151" }}>FOR ONLY</p>
-                  <p className="font-black leading-none" style={{ fontSize: "5.5rem", color: "#d97706", lineHeight: 0.9, letterSpacing: "-2px" }}>$49</p>
-                </div>
-
-                {/* Checklist */}
-                <div className="px-5 pb-4 space-y-1.5">
-                  {["Martial Arts Training", "Ninja Games & Challenges", "Team Activities", "Pizza Fridays", "Camp T-Shirt Included"].map(item => (
-                    <div key={item} className="flex items-center gap-2">
-                      <Check className="w-4 h-4 shrink-0" style={{ color: "#cc0000" }} />
-                      <span className="text-sm font-medium" style={{ color: "#374151" }}>{item}</span>
-                    </div>
-                  ))}
+              <div className="rounded-lg overflow-hidden shadow-2xl" style={{ background: "rgba(0,0,0,0.85)", border: "2px solid rgba(255,255,255,0.15)" }}>
+                {/* Price graphic — replaces LIMITED TIME OFFER badge + price + checklist */}
+                <div className="px-2 pt-2 pb-0">
+                  <img
+                    src="/manus-storage/80ba2d25-3c98-4a3d-8ec1-671b987e2e81_a931f3d8.png"
+                    alt="3 Days for only $49 - Limited Time Offer"
+                    className="w-full h-auto object-contain"
+                    style={{ filter: "drop-shadow(0 2px 12px rgba(0,0,0,0.5))" }}
+                  />
                 </div>
 
                 {/* CTA Buttons */}
