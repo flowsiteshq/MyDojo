@@ -18,6 +18,7 @@ import { openIntakeChatbot } from "@/lib/chatbot";
 import { ChatGPTChatbot } from "@/components/ChatGPTChatbot";
 import { IntakeChatbot } from "@/components/IntakeChatbot";
 import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Home() {
   // The userAuth hooks provides authentication state
@@ -28,6 +29,15 @@ export default function Home() {
   const [useLegacyBot, setUseLegacyBot] = useState(false);
   const [offerModalOpen, setOfferModalOpen] = useState(false);
   const [offerProgramId, setOfferProgramId] = useState<ProgramId | undefined>();
+  const [testimonialIdx, setTestimonialIdx] = useState(0);
+
+  const HOME_TESTIMONIALS = [
+    { name: "Sarah Jenkins",    role: "Parent of Little Ninja",     text: "MyDojo has been transformative for my son. He used to be so shy, but after just 3 months his confidence has skyrocketed. The instructors are incredibly patient and encouraging.",   avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/HONlObwBdLAnGGRP.jpg",  initials: "SJ" },
+    { name: "Michael Chen",     role: "Adult Kickboxing Member",    text: "The adult kickboxing classes are intense, fun, and a great stress reliever. I've lost 15 pounds and feel stronger than ever. Best workout I've ever found!",                      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/uMNMXRfxfSZQbfbK.jpg",  initials: "MC" },
+    { name: "Jessica Williams", role: "Teen Program Student",       text: "The teen program isn't just about fighting — it's about discipline and respect. I've made great friends here and learned self-defense skills that make me feel empowered.",          avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/POUQPzFzOxDdiDNV.jpg",  initials: "JW" },
+    { name: "David Rodriguez",  role: "Parent of Core Kid",         text: "We tried soccer and baseball, but nothing stuck until MyDojo. The structure and focus required in class have helped my daughter improve her grades at school too. Highly recommend!", avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/ISYgyHwTaHvYSOvQ.jpg",  initials: "DR" },
+    { name: "Amanda Torres",    role: "Parent — Summer Camp 2025",  text: "Best summer decision we made. The perfect mix of fun, fitness and martial arts. My kids talk about camp all year long. The instructors are incredible role models!",            avatar: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/testimonial-amanda_e12fc346.jpg", initials: "AT" },
+  ];
 
   const openOffer = (programId?: ProgramId) => {
     setOfferProgramId(programId);
@@ -90,6 +100,84 @@ export default function Home() {
 
       {/* Social Proof Ticker */}
       <SocialProofTicker />
+
+      {/* ── TESTIMONIALS (below hero) ─────────────────────────────────────── */}
+      <section className="py-12" style={{ background: "#111" }}>
+        <div className="max-w-7xl mx-auto px-6">
+          <h2 className="font-black uppercase text-2xl md:text-3xl text-white text-center mb-8">
+            WHAT OUR <span style={{ color: "#cc0000" }}>MEMBERS</span> ARE SAYING
+          </h2>
+
+          <div className="relative px-8">
+            {/* Prev */}
+            <button
+              onClick={() => setTestimonialIdx(p => (p - 1 + HOME_TESTIMONIALS.length) % HOME_TESTIMONIALS.length)}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
+            >
+              <ChevronLeft className="w-5 h-5 text-white" />
+            </button>
+
+            {/* 3 cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {[0, 1, 2].map(offset => {
+                const t = HOME_TESTIMONIALS[(testimonialIdx + offset) % HOME_TESTIMONIALS.length];
+                return (
+                  <motion.div
+                    key={t.name + offset}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.4 }}
+                    className="rounded-xl p-5"
+                    style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.08)" }}
+                  >
+                    {/* Stars */}
+                    <div className="flex gap-0.5 mb-3">
+                      {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
+                    </div>
+                    <p className="text-gray-300 text-sm leading-relaxed mb-4 italic">"{t.text}"</p>
+                    {/* Avatar + name */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-red-600">
+                        <img src={t.avatar} alt={t.name} className="w-full h-full object-cover object-top" />
+                      </div>
+                      <div>
+                        <span className="text-white font-bold text-sm block">– {t.name}</span>
+                        <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{t.role}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Next */}
+            <button
+              onClick={() => setTestimonialIdx(p => (p + 1) % HOME_TESTIMONIALS.length)}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
+            >
+              <ChevronRight className="w-5 h-5 text-white" />
+            </button>
+          </div>
+
+          {/* Dots */}
+          <div className="flex justify-center gap-2 mt-6">
+            {HOME_TESTIMONIALS.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setTestimonialIdx(i)}
+                className="rounded-full transition-all"
+                style={{
+                  width: i === testimonialIdx ? "24px" : "8px",
+                  height: "8px",
+                  background: i === testimonialIdx ? "#cc0000" : "rgba(255,255,255,0.2)",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Philosophy Section */}
       <section className="py-24 bg-white relative overflow-hidden">
