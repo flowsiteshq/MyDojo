@@ -290,19 +290,16 @@ export default function SummerCamp() {
                 ))}
               </div>
 
-              {/* Photo with brush-stroke edge */}
-              <div className="lg:w-72 shrink-0 relative rounded-xl overflow-hidden shadow-xl" style={{ minHeight: "280px" }}>
+              {/* Photo with transparent background */}
+              <div className="lg:w-80 shrink-0 relative" style={{ minHeight: "280px" }}>
                 <img
-                  src="/manus-storage/why-parents-group_02fa50c1.jpg"
-                  alt="MyDojo kids group"
-                  className="w-full h-full object-cover"
-                  style={{ minHeight: "280px" }}
+                  src="/manus-storage/kids_transparent_v2_280e6c21.png"
+                  alt="MyDojo kids smiling in martial arts uniforms"
+                  className="w-full h-auto object-contain"
                 />
-                {/* Brush-stroke left edge effect */}
-                <div className="absolute inset-y-0 left-0 w-8" style={{ background: "linear-gradient(to right, white, transparent)" }} />
                 <div className="absolute bottom-3 left-3 flex items-center gap-1">
                   {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
-                  <span className="text-white text-sm font-bold ml-1 drop-shadow">500+ Reviews</span>
+                  <span className="text-black text-sm font-bold ml-1 drop-shadow">500+ Reviews</span>
                 </div>
               </div>
             </div>
