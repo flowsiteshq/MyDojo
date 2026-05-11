@@ -261,7 +261,7 @@ export default function Home() {
               className="relative"
             >
               <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl">
-                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/community_7e1d84a3.webp" alt="MyDojo Community" loading="lazy" className="w-full h-auto" />
+                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/philosophy-community-5cT4u2H5LumCR2qo3db4DH.webp" alt="MyDojo Community" loading="lazy" className="w-full h-auto" />
               </div>
               {/* Decorative elements */}
               <div className="absolute -bottom-6 -right-6 w-full h-full border-2 border-primary rounded-2xl z-0"></div>
