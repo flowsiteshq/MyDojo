@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { DailyScheduleTimeline } from "@/components/DailyScheduleTimeline";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronLeft, ChevronRight, Star, Shield, Zap, Users, Heart, Trophy, Sun, Check, Gift } from "lucide-react";
 import SEO from "@/components/SEO";
@@ -12,13 +13,13 @@ const TOTAL_SPOTS = 30;
 const INITIAL_TAKEN = 18;
 
 const THEME_WEEKS = [
-  { label: "JUNE 3 – JUNE 7",    theme: "NINJA WARRIOR WEEK",    desc: "Obstacle courses, speed challenges & ninja games!",       image: "/images/camp-weeks/karate-kids.webp",     badge: "#e53e3e" },
+  { label: "JUNE 3 – JUNE 7",    theme: "NINJA WARRIOR WEEK",    desc: "Obstacle courses, speed challenges & ninja games!",       image: "/manus-storage/theme-ninja-warrior_180c5163.jpg",     badge: "#e53e3e" },
   { label: "JUNE 10 – JUNE 14",  theme: "WATER WAR WEEK",        desc: "Water games, slip n' slide & splash battles!",            image: "/images/summer-camp/water-activities.webp", badge: "#3182ce" },
-  { label: "JUNE 17 – JUNE 21",  theme: "BOARD BREAKING WEEK",   desc: "Break barriers & boards. Build power & confidence!",      image: "/images/camp-weeks/board-breaking.webp",  badge: "#d69e2e" },
+  { label: "JUNE 17 – JUNE 21",  theme: "BOARD BREAKING WEEK",   desc: "Break barriers & boards. Build power & confidence!",      image: "/manus-storage/theme-board-breaking_29e08c96.jpg",  badge: "#d69e2e" },
   { label: "JUNE 24 – JUNE 28",  theme: "NERF BATTLE WEEK",      desc: "Team battles, missions & strategy challenges!",           image: "/images/camp-weeks/self-defense.webp",    badge: "#38a169" },
   { label: "JULY 1 – JULY 5",    theme: "GLOW NIGHT WEEK",       desc: "Glow games, lasers & epic night adventures!",             image: "/images/camp-weeks/independence-day.webp", badge: "#805ad5" },
   { label: "JULY 10 – JULY 14",  theme: "LEADERSHIP WEEK",       desc: "Life skills, team building & community service!",         image: "/images/camp-weeks/leadership.webp",      badge: "#ed8936" },
-  { label: "JULY 17 – JULY 21",  theme: "TOURNAMENT PREP WEEK",  desc: "Sparring, drills & championship mindset training!",       image: "/images/camp-weeks/tournament.webp",      badge: "#2b6cb0" },
+  { label: "JULY 17 – JULY 21",  theme: "TOURNAMENT PREP WEEK",  desc: "Sparring, drills & championship mindset training!",       image: "/manus-storage/theme-tournament_14014f75.jpg",      badge: "#2b6cb0" },
   { label: "JULY 24 – JULY 28",  theme: "WATER GUN FUN WEEK",    desc: "Epic water gun battles & outdoor adventures!",            image: `${CDN}/water-gun-fun_20404a48.jpg`,       badge: "#00b5d8" },
   { label: "JULY 31 – AUG 4",    theme: "BLACK BELT BOOTCAMP",   desc: "Advanced training, board breaks & championship drills!",  image: "/images/camp-weeks/black-belt.webp",      badge: "#1a202c" },
   { label: "AUG 7 – AUG 10",     theme: "SUMMER FINALE",         desc: "Awards ceremony, pizza party & epic memories!",           image: "/images/camp-weeks/finale.webp",          badge: "#e53e3e" },
@@ -390,17 +391,10 @@ export default function SummerCamp() {
         {/* ── DAILY SCHEDULE ────────────────────────────────────────────────── */}
         <section id="schedule" className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-6">
-            {/* Schedule graphic — title is embedded in the image */}
-            <div className="w-full mb-8">
-              <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/camp_timeline_v2-REoPPpADfTKmDB9oYCriYB.png"
-                alt="A Day at Summer Camp schedule"
-                className="w-full h-auto object-contain rounded-xl shadow-xl"
-              />
-            </div>
+            <DailyScheduleTimeline />
 
             {/* Action photo — full width, max 720px */}
-            <div className="flex justify-center">
+            <div className="flex justify-center mt-12">
               <div className="w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl">
                 <img
                   src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/camp_board_break-6HNvFxvbzNYujR7SuJMWuq.png"
