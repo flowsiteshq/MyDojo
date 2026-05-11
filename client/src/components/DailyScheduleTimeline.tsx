@@ -1,11 +1,13 @@
 import { useState } from "react";
 
+const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
+
 interface ScheduleStep {
   time: string;
   ampm: string;
   label: string;
   desc: string;
-  icon: string;
+  image: string;
   color: string;
   bgColor: string;
 }
@@ -16,7 +18,7 @@ const steps: ScheduleStep[] = [
     ampm: "AM",
     label: "DROP OFF",
     desc: "Campers arrive, check in, and get ready for an awesome day!",
-    icon: "🚗",
+    image: `${CDN}/icon-drop-off-HpUX3CdC95zBXJQWSyRLXZ.png`,
     color: "#e53e3e",
     bgColor: "#e53e3e",
   },
@@ -25,7 +27,7 @@ const steps: ScheduleStep[] = [
     ampm: "AM",
     label: "MARTIAL ARTS TRAINING",
     desc: "Build confidence, focus, and strength with expert instruction.",
-    icon: "🥋",
+    image: `${CDN}/icon-martial-arts-P9gFsf6kGVFpEwKWZeppvP.png`,
     color: "#dd6b20",
     bgColor: "#dd6b20",
   },
@@ -34,7 +36,7 @@ const steps: ScheduleStep[] = [
     ampm: "AM",
     label: "GAMES & CHALLENGES",
     desc: "Fun games and challenges that encourage teamwork and leadership.",
-    icon: "🏆",
+    image: `${CDN}/icon-games-3izsGPqDQcWwuqJSCfYzj8.png`,
     color: "#38a169",
     bgColor: "#38a169",
   },
@@ -43,7 +45,7 @@ const steps: ScheduleStep[] = [
     ampm: "PM",
     label: "LUNCH TIME",
     desc: "Recharge with a healthy lunch and relax with friends.",
-    icon: "🍕",
+    image: `${CDN}/icon-lunch-cCHjvZzQodyyynKsqjcGzv.png`,
     color: "#319795",
     bgColor: "#319795",
   },
@@ -52,16 +54,16 @@ const steps: ScheduleStep[] = [
     ampm: "PM",
     label: "TEAM ACTIVITIES",
     desc: "Collaborate, create, and have fun with exciting team activities.",
-    icon: "⭐",
+    image: `${CDN}/icon-team-activities-EmYfZoKqkCDdgH6ySMWtfv.png`,
     color: "#3182ce",
     bgColor: "#3182ce",
   },
   {
-    time: "3:00",
+    time: "5:30",
     ampm: "PM",
     label: "PICK UP",
     desc: "Campers wrap up the day and get picked up with big smiles!",
-    icon: "🏠",
+    image: `${CDN}/icon-pick-up-TDFsUY3FqZV7Zps6hbmSTj.png`,
     color: "#d69e2e",
     bgColor: "#d69e2e",
   },
@@ -86,7 +88,7 @@ export function DailyScheduleTimeline() {
         <div
           className="absolute left-0 right-0"
           style={{
-            top: "52px",
+            top: "60px",
             height: "3px",
             backgroundImage:
               "repeating-linear-gradient(to right, #1a1a1a 0, #1a1a1a 12px, transparent 12px, transparent 24px)",
@@ -97,7 +99,7 @@ export function DailyScheduleTimeline() {
         <div
           className="absolute"
           style={{
-            top: "40px",
+            top: "47px",
             right: "-8px",
             width: 0,
             height: 0,
@@ -113,13 +115,13 @@ export function DailyScheduleTimeline() {
           {steps.map((step, i) => (
             <div
               key={i}
-              className="flex flex-col items-center cursor-pointer group"
+              className="flex flex-col items-center cursor-pointer"
               onMouseEnter={() => setActiveStep(i)}
               onMouseLeave={() => setActiveStep(null)}
             >
-              {/* Circle icon */}
+              {/* Circle with image */}
               <div
-                className="w-24 h-24 rounded-full flex items-center justify-center text-3xl shadow-lg transition-transform duration-200 group-hover:scale-110 border-4 border-white"
+                className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-lg transition-all duration-200"
                 style={{
                   background: step.bgColor,
                   transform: activeStep === i ? "scale(1.12)" : "scale(1)",
@@ -129,7 +131,12 @@ export function DailyScheduleTimeline() {
                       : "0 4px 12px rgba(0,0,0,0.15)",
                 }}
               >
-                <span style={{ fontSize: "2rem" }}>{step.icon}</span>
+                <img
+                  src={step.image}
+                  alt={step.label}
+                  className="w-full h-full object-cover"
+                  style={{ mixBlendMode: "multiply" }}
+                />
               </div>
 
               {/* Time */}
@@ -173,11 +180,15 @@ export function DailyScheduleTimeline() {
       </div>
 
       {/* Mobile Timeline — vertical */}
-      <div className="md:hidden relative pl-10">
+      <div className="md:hidden relative pl-14">
         {/* Vertical dashed line */}
         <div
-          className="absolute left-5 top-0 bottom-0 w-0.5"
+          className="absolute"
           style={{
+            left: "24px",
+            top: "0",
+            bottom: "0",
+            width: "3px",
             backgroundImage:
               "repeating-linear-gradient(to bottom, #1a1a1a 0, #1a1a1a 8px, transparent 8px, transparent 16px)",
           }}
@@ -188,23 +199,29 @@ export function DailyScheduleTimeline() {
             <div
               key={i}
               className="flex items-start gap-4 cursor-pointer"
-              onClick={() =>
-                setActiveStep(activeStep === i ? null : i)
-              }
+              onClick={() => setActiveStep(activeStep === i ? null : i)}
             >
               {/* Circle icon — positioned over the line */}
               <div
-                className="absolute -left-1 flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-xl border-2 border-white shadow-md"
+                className="absolute rounded-full overflow-hidden border-2 border-white shadow-md"
                 style={{
+                  left: "0px",
+                  width: "48px",
+                  height: "48px",
                   background: step.bgColor,
-                  marginLeft: "-1px",
+                  marginTop: "0px",
                 }}
               >
-                {step.icon}
+                <img
+                  src={step.image}
+                  alt={step.label}
+                  className="w-full h-full object-cover"
+                  style={{ mixBlendMode: "multiply" }}
+                />
               </div>
 
               {/* Content */}
-              <div className="ml-8 pb-2">
+              <div className="pb-2">
                 <div className="flex items-baseline gap-1 mb-0.5">
                   <span
                     className="text-lg font-black"
