@@ -2,6 +2,7 @@
  * SocialProofTicker.tsx
  * Real-time social proof notifications showing recent enrollments.
  * Premium dark glassmorphism style with animated entrance.
+ * Avatar shows nano banana program illustration instead of initials.
  */
 import { useState, useEffect, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
@@ -30,16 +31,59 @@ interface ProgramConfig {
   gradient: string;
   icon: React.ReactNode;
   emoji: string;
+  image: string;
 }
 
 const PROGRAM_CONFIG: Record<string, ProgramConfig> = {
-  "Little Ninjas":               { color: "#a855f7", gradient: "from-purple-600 to-purple-400",   icon: <Star className="w-4 h-4" />,   emoji: "⭐" },
-  "Kids Martial Arts":           { color: "#3b82f6", gradient: "from-blue-600 to-blue-400",       icon: <Shield className="w-4 h-4" />, emoji: "🥋" },
-  "Teens & Adults Martial Arts": { color: "#ef4444", gradient: "from-red-600 to-red-400",         icon: <Flame className="w-4 h-4" />,  emoji: "🔥" },
-  "Adult Karate":                { color: "#f97316", gradient: "from-orange-600 to-orange-400",   icon: <Zap className="w-4 h-4" />,    emoji: "⚡" },
-  "Kickboxing Fitness":          { color: "#22c55e", gradient: "from-green-600 to-green-400",     icon: <Zap className="w-4 h-4" />,    emoji: "💪" },
-  "After School Program":        { color: "#eab308", gradient: "from-yellow-600 to-yellow-400",   icon: <Trophy className="w-4 h-4" />, emoji: "🏆" },
-  "Summer Camp":                 { color: "#06b6d4", gradient: "from-cyan-600 to-cyan-400",       icon: <Star className="w-4 h-4" />,   emoji: "🏕️" },
+  "Little Ninjas": {
+    color: "#a855f7",
+    gradient: "from-purple-600 to-purple-400",
+    icon: <Star className="w-4 h-4" />,
+    emoji: "⭐",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-little-ninjas-icon-mAMYQ5Bv6uisAiTZ5K5GQu.webp",
+  },
+  "Kids Martial Arts": {
+    color: "#3b82f6",
+    gradient: "from-blue-600 to-blue-400",
+    icon: <Shield className="w-4 h-4" />,
+    emoji: "🥋",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-kids-martial-arts-icon-Vj7bBxjn963m8EZYnaGfQP.webp",
+  },
+  "Teens & Adults Martial Arts": {
+    color: "#ef4444",
+    gradient: "from-red-600 to-red-400",
+    icon: <Flame className="w-4 h-4" />,
+    emoji: "🔥",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-teens-adults-icon-LpWWvsSRjwWK2grH4tDkJg.webp",
+  },
+  "Adult Karate": {
+    color: "#f97316",
+    gradient: "from-orange-600 to-orange-400",
+    icon: <Zap className="w-4 h-4" />,
+    emoji: "⚡",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-adult-karate-icon-97TNw8WYGfGSkrXWgHwAij.webp",
+  },
+  "Kickboxing Fitness": {
+    color: "#22c55e",
+    gradient: "from-green-600 to-green-400",
+    icon: <Zap className="w-4 h-4" />,
+    emoji: "💪",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-kickboxing-icon-3wZvsMQWK2QsE88jbA5XvL.webp",
+  },
+  "After School Program": {
+    color: "#eab308",
+    gradient: "from-yellow-600 to-yellow-400",
+    icon: <Trophy className="w-4 h-4" />,
+    emoji: "🏆",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-after-school-icon-bqnXijqxdLdkt4EyjBiP44.webp",
+  },
+  "Summer Camp": {
+    color: "#06b6d4",
+    gradient: "from-cyan-600 to-cyan-400",
+    icon: <Star className="w-4 h-4" />,
+    emoji: "🏕️",
+    image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-kids-martial-arts-icon-Vj7bBxjn963m8EZYnaGfQP.webp",
+  },
 };
 
 const DEFAULT_CONFIG: ProgramConfig = {
@@ -47,17 +91,8 @@ const DEFAULT_CONFIG: ProgramConfig = {
   gradient: "from-red-600 to-red-400",
   icon: <Users className="w-4 h-4" />,
   emoji: "🥊",
+  image: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-teens-adults-icon-LpWWvsSRjwWK2grH4tDkJg.webp",
 };
-
-/** Get initials from display name like "Maria S." → "MS" */
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
 
 export function SocialProofTicker() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -151,12 +186,19 @@ export function SocialProofTicker() {
         />
 
         <div className="flex items-start gap-3 p-4 pr-9">
-          {/* Avatar circle with gradient */}
+          {/* Program image avatar */}
           <div
-            className={`flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-white font-black text-sm bg-gradient-to-br ${cfg.gradient} shadow-lg`}
-            style={{ boxShadow: `0 4px 16px ${cfg.color}55` }}
+            className="flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden"
+            style={{
+              boxShadow: `0 4px 16px ${cfg.color}55`,
+              border: `2px solid ${cfg.color}66`,
+            }}
           >
-            {getInitials(current.displayName)}
+            <img
+              src={cfg.image}
+              alt={current.program}
+              className="w-full h-full object-cover"
+            />
           </div>
 
           {/* Content */}
