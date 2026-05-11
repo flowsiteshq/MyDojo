@@ -129,7 +129,7 @@ export default function SummerCamp() {
       <div className="w-full" style={{ fontFamily: "'Oswald', 'Impact', sans-serif" }}>
 
         {/* ── HERO ──────────────────────────────────────────────────────────── */}
-        <section ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "640px" }}>
+        <section ref={heroRef} className="relative w-full overflow-hidden">
           {/* Full-width background image */}
           <div className="absolute inset-0">
             <img
@@ -145,8 +145,53 @@ export default function SummerCamp() {
           {/* Red left accent stripe */}
           <div className="absolute left-0 top-0 bottom-0 w-2" style={{ background: "#cc0000" }} />
 
-          {/* LEFT: Copy — absolute positioned bottom-left */}
-          <div className="absolute left-6 top-0 bottom-0 z-10 flex flex-col justify-center" style={{ maxWidth: 560 }}>
+          {/* ── MOBILE LAYOUT (< md): stacked vertically, centered ── */}
+          <div className="relative z-10 flex flex-col items-center px-5 pt-8 pb-8 gap-3 md:hidden">
+            {/* Headline graphic */}
+            <img
+              src="/manus-storage/fbd8cb3c-0113-4d10-a8d0-88f3517e8a68_e82e18b4.png"
+              alt="Summer Camp Starts Here! Martial Arts, Games, New Friends, Pizza Fridays"
+              className="w-full max-w-xs h-auto object-contain"
+              style={{ filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.6))" }}
+            />
+            {/* $49 offer + checklist graphic */}
+            <img
+              src="/manus-storage/9f0b9c48-c72b-484b-8ea2-e15f20585fc6_b677b9a3.png"
+              alt="3 Days for only $49 - Martial Arts Training, Ninja Games, Team Activities, Pizza Fridays, Camp T-Shirt Included"
+              className="w-full max-w-xs h-auto object-contain"
+              style={{ filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.5))" }}
+            />
+            {/* CTA button */}
+            <button
+              onClick={claimPass}
+              className="w-full max-w-xs py-4 px-6 font-black uppercase tracking-wider text-white rounded transition-all hover:opacity-90 flex items-center justify-center gap-2"
+              style={{ background: "#cc0000", fontSize: "1rem" }}
+            >
+              CLAIM SUMMER PASS →
+            </button>
+            <button
+              onClick={() => document.getElementById("schedule")?.scrollIntoView({ behavior: "smooth" })}
+              className="font-bold uppercase tracking-wider text-center text-sm"
+              style={{ color: "#ffffff", textShadow: "1px 1px 4px rgba(0,0,0,0.9)" }}
+            >
+              VIEW CAMP SCHEDULE
+            </button>
+            {/* Trust badge */}
+            <div className="inline-flex items-center gap-3 px-4 py-2 rounded" style={{ background: "rgba(0,0,0,0.7)", border: "1px solid rgba(255,255,255,0.15)" }}>
+              <Users className="w-8 h-8 text-white shrink-0" />
+              <div>
+                <p className="text-white font-black text-xs leading-none">TRUSTED BY</p>
+                <p className="font-black text-lg leading-none" style={{ color: "#f6e05e" }}>500+ FAMILIES</p>
+                <div className="flex gap-0.5 mt-0.5">
+                  {[...Array(5)].map((_, i) => <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── DESKTOP LAYOUT (md+): absolute side-by-side ── */}
+          {/* LEFT: Copy — absolute positioned center-left */}
+          <div className="hidden md:flex absolute left-6 top-0 bottom-0 z-10 flex-col justify-center" style={{ maxWidth: 560 }}>
             {/* Combined headline + icons graphic */}
             <div className="mb-4">
               <img
@@ -170,8 +215,8 @@ export default function SummerCamp() {
             </div>
           </div>
 
-          {/* RIGHT: Offer — absolute positioned top-right, all stacked vertically */}
-          <div className="absolute right-6 top-0 bottom-0 z-10 flex flex-col justify-center items-end" style={{ maxWidth: 520 }}>
+          {/* RIGHT: Offer — absolute positioned center-right (desktop only) */}
+          <div className="hidden md:flex absolute right-6 top-0 bottom-0 z-10 flex-col justify-center items-end" style={{ maxWidth: 520 }}>
             {/* Combined $49 price + checklist graphic */}
             <img
               src="/manus-storage/9f0b9c48-c72b-484b-8ea2-e15f20585fc6_b677b9a3.png"
@@ -199,8 +244,8 @@ export default function SummerCamp() {
             </div>
           </div>
 
-          {/* Spacer to give the section height */}
-          <div style={{ minHeight: 640 }} />
+          {/* Spacer to give the section height on desktop (mobile uses natural flow height) */}
+          <div className="hidden md:block" style={{ minHeight: 640 }} />
         </section>
 
         {/* ── STICKY BAR (inline, below hero) ─────────────────────────────── */}
