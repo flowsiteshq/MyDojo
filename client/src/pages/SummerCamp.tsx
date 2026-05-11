@@ -188,13 +188,13 @@ export default function SummerCamp() {
             </div>
 
             {/* RIGHT: Offer — no card box, elements float directly on hero photo */}
-            <div className="w-full lg:w-80 shrink-0 flex flex-col items-start gap-3">
-              {/* $49 price graphic */}
+            <div className="w-full lg:w-auto shrink-0 flex flex-col items-end gap-3 ml-auto">
+              {/* $49 price graphic — 2x size, pushed far right */}
               <img
                 src="/manus-storage/80ba2d25-3c98-4a3d-8ec1-671b987e2e81_a931f3d8.png"
                 alt="3 Days for only $49 - Limited Time Offer"
-                className="w-full h-auto object-contain"
-                style={{ maxWidth: 320, filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.6))" }}
+                className="h-auto object-contain"
+                style={{ width: 640, maxWidth: "90vw", filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.6))" }}
               />
 
               {/* Checklist — matching mockup */}
