@@ -129,7 +129,7 @@ export default function SummerCamp() {
       <div className="w-full" style={{ fontFamily: "'Oswald', 'Impact', sans-serif" }}>
 
         {/* ── HERO ──────────────────────────────────────────────────────────── */}
-        <section ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "600px" }}>
+        <section ref={heroRef} className="relative w-full overflow-hidden" style={{ minHeight: "640px" }}>
           {/* Full-width background image */}
           <div className="absolute inset-0">
             <img
@@ -138,94 +138,94 @@ export default function SummerCamp() {
               className="w-full h-full object-cover object-top"
             />
             {/* Dark overlay — heavier on left, lighter on right so image shows */}
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.1) 100%)" }} />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.05) 100%)" }} />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 30%, rgba(0,0,0,0.5) 100%)" }} />
           </div>
 
-          {/* Red diagonal accent stripe */}
+          {/* Red left accent stripe */}
           <div className="absolute left-0 top-0 bottom-0 w-2" style={{ background: "#cc0000" }} />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-6 py-14 flex flex-col lg:flex-row items-start lg:items-center gap-8">
+          {/* LEFT: Copy — absolute positioned bottom-left */}
+          <div className="absolute left-6 top-0 bottom-0 z-10 flex flex-col justify-center" style={{ maxWidth: 480 }}>
+            {/* Headline graphic */}
+            <div className="mb-4">
+              <img
+                src="/manus-storage/4660e950-243b-4314-9e73-972d0ac40f8f_6afcbef1.png"
+                alt="Summer Camp Starts Here!"
+                className="w-full h-auto object-contain"
+                style={{ filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.7))" }}
+              />
+            </div>
 
-            {/* LEFT: Copy */}
-            <div className="flex-1 max-w-xl">
-              {/* Headline graphic — replaces text badge + h1 */}
-              <div className="mb-4" style={{ maxWidth: 480 }}>
-                <img
-                  src="/manus-storage/4660e950-243b-4314-9e73-972d0ac40f8f_6afcbef1.png"
-                  alt="Summer Camp Starts Here!"
-                  className="w-full h-auto object-contain"
-                  style={{ filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.7))" }}
-                />
-              </div>
+            {/* Icon badges — 4-column grid */}
+            <div className="grid grid-cols-4 gap-3 mb-5" style={{ maxWidth: 340 }}>
+              {[
+                { icon: "🥋", label: "MARTIAL\nARTS" },
+                { icon: "🎮", label: "GAMES &\nACTIVITIES" },
+                { icon: "👥", label: "NEW\nFRIENDS" },
+                { icon: "🍕", label: "PIZZA\nFRIDAYS" },
+              ].map(item => (
+                <div key={item.label} className="flex flex-col items-center text-center p-2 rounded-lg" style={{ background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                  <span className="text-2xl mb-1">{item.icon}</span>
+                  <span className="text-white font-bold" style={{ fontSize: 9, letterSpacing: 0.5, lineHeight: 1.3, whiteSpace: "pre-line" }}>{item.label}</span>
+                </div>
+              ))}
+            </div>
 
-              {/* Icon badges — 4-column grid matching mockup */}
-              <div className="grid grid-cols-4 gap-3 mb-6" style={{ maxWidth: 340 }}>
-                {[
-                  { icon: "🥋", label: "MARTIAL\nARTS" },
-                  { icon: "🎮", label: "GAMES &\nACTIVITIES" },
-                  { icon: "👥", label: "NEW\nFRIENDS" },
-                  { icon: "🍕", label: "PIZZA\nFRIDAYS" },
-                ].map(item => (
-                  <div key={item.label} className="flex flex-col items-center text-center p-2 rounded-lg" style={{ background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                    <span className="text-2xl mb-1">{item.icon}</span>
-                    <span className="text-white font-bold" style={{ fontSize: 9, letterSpacing: 0.5, lineHeight: 1.3, whiteSpace: "pre-line" }}>{item.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Trust badge — matches mockup: group icon + text */}
-              <div className="inline-flex items-center gap-3 px-4 py-2 rounded mb-6" style={{ background: "rgba(0,0,0,0.7)", border: "1px solid rgba(255,255,255,0.15)" }}>
-                <Users className="w-10 h-10 text-white shrink-0" />
-                <div>
-                  <p className="text-white font-black text-sm leading-none">TRUSTED BY</p>
-                  <p className="font-black text-xl leading-none" style={{ color: "#f6e05e" }}>500+ FAMILIES</p>
-                  <div className="flex gap-0.5 mt-0.5">
-                    {[...Array(5)].map((_, i) => <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />)}
-                  </div>
+            {/* Trust badge */}
+            <div className="inline-flex items-center gap-3 px-4 py-2 rounded" style={{ background: "rgba(0,0,0,0.7)", border: "1px solid rgba(255,255,255,0.15)", width: "fit-content" }}>
+              <Users className="w-10 h-10 text-white shrink-0" />
+              <div>
+                <p className="text-white font-black text-sm leading-none">TRUSTED BY</p>
+                <p className="font-black text-xl leading-none" style={{ color: "#f6e05e" }}>500+ FAMILIES</p>
+                <div className="flex gap-0.5 mt-0.5">
+                  {[...Array(5)].map((_, i) => <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />)}
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* RIGHT: Offer — no card box, elements float directly on hero photo */}
-            <div className="w-full lg:w-auto shrink-0 flex flex-col items-end gap-0 ml-auto">
-              {/* $49 price graphic — 2x size, pushed far right */}
-              <img
-                src="/manus-storage/80ba2d25-3c98-4a3d-8ec1-671b987e2e81_a931f3d8.png"
-                alt="3 Days for only $49 - Limited Time Offer"
-                className="h-auto object-contain"
-                style={{ width: 640, maxWidth: "90vw", filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.6))", marginBottom: "-8px" }}
-              />
+          {/* RIGHT: Offer — absolute positioned top-right, all stacked vertically */}
+          <div className="absolute right-6 top-0 bottom-0 z-10 flex flex-col justify-center items-end" style={{ maxWidth: 520 }}>
+            {/* $49 price graphic */}
+            <img
+              src="/manus-storage/80ba2d25-3c98-4a3d-8ec1-671b987e2e81_a931f3d8.png"
+              alt="3 Days for only $49 - Limited Time Offer"
+              className="h-auto object-contain"
+              style={{ width: 480, maxWidth: "45vw", filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.6))" }}
+            />
 
-              {/* Checklist — directly under graphic */}
-              <div className="space-y-1.5 mb-3" style={{ paddingRight: 8 }}>
-                {["Martial Arts Training", "Ninja Games & Challenges", "Team Activities", "Pizza Fridays", "Camp T-Shirt Included"].map(item => (
-                  <div key={item} className="flex items-center gap-2">
-                    <span className="text-green-400 font-black text-base leading-none">✓</span>
-                    <span className="text-white font-semibold text-sm" style={{ textShadow: "1px 1px 4px rgba(0,0,0,0.9)" }}>{item}</span>
-                  </div>
-                ))}
-              </div>
+            {/* Checklist — directly under graphic */}
+            <div className="space-y-1.5 mb-4 w-full">
+              {["Martial Arts Training", "Ninja Games & Challenges", "Team Activities", "Pizza Fridays", "Camp T-Shirt Included"].map(item => (
+                <div key={item} className="flex items-center gap-2 justify-end">
+                  <span className="text-green-400 font-black text-base leading-none">✓</span>
+                  <span className="text-white font-semibold text-sm" style={{ textShadow: "1px 1px 4px rgba(0,0,0,0.9)" }}>{item}</span>
+                </div>
+              ))}
+            </div>
 
-              {/* CTA Buttons — directly under checklist */}
-              <div className="space-y-2" style={{ paddingRight: 8 }}>
-                <button
-                  onClick={claimPass}
-                  className="py-3 px-8 font-black uppercase tracking-wider text-white rounded transition-all hover:opacity-90 flex items-center justify-center gap-2"
-                  style={{ background: "#cc0000", fontSize: "1rem", minWidth: 280 }}
-                >
-                  CLAIM SUMMER PASS →
-                </button>
-                <button
-                  onClick={() => document.getElementById("schedule")?.scrollIntoView({ behavior: "smooth" })}
-                  className="w-full py-2 font-bold uppercase tracking-wider text-center text-sm"
-                  style={{ color: "#ffffff", textShadow: "1px 1px 4px rgba(0,0,0,0.9)" }}
-                >
-                  VIEW CAMP SCHEDULE
-                </button>
-              </div>
+            {/* CTA Buttons — directly under checklist */}
+            <div className="space-y-2 w-full flex flex-col items-end">
+              <button
+                onClick={claimPass}
+                className="py-3 px-8 font-black uppercase tracking-wider text-white rounded transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                style={{ background: "#cc0000", fontSize: "1rem", minWidth: 280 }}
+              >
+                CLAIM SUMMER PASS →
+              </button>
+              <button
+                onClick={() => document.getElementById("schedule")?.scrollIntoView({ behavior: "smooth" })}
+                className="py-2 font-bold uppercase tracking-wider text-center text-sm"
+                style={{ color: "#ffffff", textShadow: "1px 1px 4px rgba(0,0,0,0.9)", minWidth: 280 }}
+              >
+                VIEW CAMP SCHEDULE
+              </button>
             </div>
           </div>
+
+          {/* Spacer to give the section height */}
+          <div style={{ minHeight: 640 }} />
         </section>
 
         {/* ── STICKY BAR (inline, below hero) ─────────────────────────────── */}
