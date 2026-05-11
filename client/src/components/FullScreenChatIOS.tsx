@@ -53,7 +53,7 @@ function KaiAvatar({ size = "sm" }: { size?: "sm" | "md" }) {
       className={`${dim} rounded-full bg-black flex items-center justify-center flex-shrink-0 shadow-md overflow-hidden`}
     >
       <img
-        src="/images/logo-icon-white.webp"
+        src="/images/logo-icon-white.99cb4daa.webp"
         alt="Kai"
         className="w-full h-full object-contain p-1"
         onError={(e) => {
@@ -564,7 +564,7 @@ export function FullScreenChatIOS({
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
                 <img
-                  src="/images/logo-icon-white.webp"
+                  src="/images/logo-icon-white.99cb4daa.webp"
                   alt="MyDojo"
                   className="w-full h-full object-contain p-0.5"
                 />

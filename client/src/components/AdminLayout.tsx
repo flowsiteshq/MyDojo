@@ -204,7 +204,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         >
           {isCollapsed && !mobile ? (
             <img
-              src="/images/logo-icon.webp"
+              src="/images/logo-icon.99cb4daa.webp"
               alt="MyDojo"
               className="h-8 w-8 object-contain"
               onError={(e) => {

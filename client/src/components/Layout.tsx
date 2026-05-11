@@ -143,7 +143,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {isHome && !isSticky && (
         <div className="md:hidden fixed top-[var(--cookie-banner-height,0px)] left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-black/40 backdrop-blur-sm">
           <Link href="/">
-            <img src="/images/logo-icon-white.webp" alt="MyDojo" className="h-8 w-auto object-contain" />
+            <img src="/images/logo-icon-white.99cb4daa.webp" alt="MyDojo" className="h-8 w-auto object-contain" />
           </Link>
           <button
             className="p-2 text-white"
@@ -182,7 +182,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     )}
                   />
                   <img
-                    src="/images/logo-icon-white.webp"
+                    src="/images/logo-icon-white.99cb4daa.webp"
                     alt="MyDojo Logo"
                     className={cn(
                       "h-full w-auto object-contain transition-opacity duration-300",
@@ -490,7 +490,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             <div>
               <div className="mb-6">
-                <img src="/images/logo-icon-white.webp" alt="MyDojo Logo" className="h-12 w-auto object-contain" />
+                <img src="/images/logo-icon-white.99cb4daa.webp" alt="MyDojo Logo" className="h-12 w-auto object-contain" />
               </div>
               <p className="text-gray-400 mb-6 leading-relaxed">
                 Empowering lives through martial arts. Building confidence, discipline, and strength for all ages.

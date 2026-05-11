@@ -129,7 +129,7 @@ export default function Join() {
     <div className="min-h-screen bg-white">
       {/* Minimal Header — no nav distractions */}
       <header className="bg-black py-4 px-6 flex items-center justify-between">
-        <img src="/images/logo-icon-white.webp" alt="MyDojo" className="h-10 w-auto object-contain" />
+        <img src="/images/logo-icon-white.99cb4daa.webp" alt="MyDojo" className="h-10 w-auto object-contain" />
         <a href="tel:8774693656" className="flex items-center gap-2 text-white font-bold text-lg hover:text-primary transition-colors">
           <Phone className="h-5 w-5 text-primary" />
           (877) 4-MYDOJO

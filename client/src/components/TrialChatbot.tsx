@@ -1249,7 +1249,7 @@ export function TrialChatbot() {
             >
               <ArrowLeft className="h-6 w-6" />
             </button>
-            <img src="/images/logo-icon-white.webp" alt="MyDojo" className="h-10 w-10 rounded-full" />
+            <img src="/images/logo-icon-white.99cb4daa.webp" alt="MyDojo" className="h-10 w-10 rounded-full" />
             <div>
               <h2 className="font-bold text-lg">MYDOJO ASSISTANT</h2>
               <p className="text-sm text-white/80">Start Your Free Trial</p>

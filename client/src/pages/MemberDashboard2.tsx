@@ -1081,10 +1081,10 @@ export default function MemberDashboard2() {
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
               <img
-                src={isDark ? "/images/logo-icon-white.webp" : "/images/logo-icon.webp"}
+                src={isDark ? "/images/logo-icon-white.99cb4daa.webp" : "/images/logo-icon.99cb4daa.webp"}
                 alt="MyDojo"
                 className="h-9 w-9 object-contain"
-                onError={(e) => { (e.target as HTMLImageElement).src = "/images/logo-icon-white.webp"; }}
+                onError={(e) => { (e.target as HTMLImageElement).src = "/images/logo-icon-white.99cb4daa.webp"; }}
               />
               <span className={`text-xl font-black tracking-widest ${t.textPrimary}`}>MYDOJO</span>
             </div>

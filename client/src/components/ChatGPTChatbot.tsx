@@ -133,7 +133,7 @@ function SwipeableMessage({
         {!isUser && !isGrouped && (
           <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center flex-shrink-0 shadow-md overflow-hidden">
             <img
-              src="/images/logo-icon-white.webp"
+              src="/images/logo-icon-white.99cb4daa.webp"
               alt="Kai"
               className="w-full h-full object-contain p-0.5"
             />
@@ -454,7 +454,7 @@ export function ChatGPTChatbot({ onClose }: { onClose: () => void }) {
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
                 <img
-                  src="/images/logo-icon-white.webp"
+                  src="/images/logo-icon-white.99cb4daa.webp"
                   alt="MyDojo"
                   className="w-full h-full object-contain p-0.5"
                 />
@@ -505,7 +505,7 @@ export function ChatGPTChatbot({ onClose }: { onClose: () => void }) {
               {/* Kai avatar */}
               <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center flex-shrink-0 shadow-md overflow-hidden">
                 <img
-                  src="/images/logo-icon-white.webp"
+                  src="/images/logo-icon-white.99cb4daa.webp"
                   alt="Kai"
                   className="w-full h-full object-contain p-0.5"
                 />
