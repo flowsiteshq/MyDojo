@@ -6738,6 +6738,44 @@ Please enter your card details below to complete your registration securely. Tot
 
         return { checkoutUrl: session.url, isFree: false };
       }),
+
+    // ── Summer Camp Pass — Direct Stripe Checkout (no form required) ─────────────
+    createSummerCampCheckout: publicProcedure
+      .input(z.object({
+        origin: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const stripeKey = process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '';
+        if (!stripeKey) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Stripe not configured' });
+
+        const stripeClient = new Stripe(stripeKey, { apiVersion: '2026-01-28.clover' as any });
+        const baseUrl = input.origin || 'https://mydojoma.com';
+
+        const session = await stripeClient.checkout.sessions.create({
+          payment_method_types: ['card'],
+          mode: 'payment',
+          line_items: [{
+            price_data: {
+              currency: 'usd',
+              unit_amount: 4900,
+              product_data: {
+                name: 'MyDojo Summer Camp — Summer Pass',
+                description: 'Full summer camp access. Ages 5–14. Includes all theme weeks, martial arts training, games, and activities.',
+              },
+            },
+            quantity: 1,
+          }],
+          allow_promotion_codes: true,
+          success_url: `${baseUrl}/summer-camp?checkout=success`,
+          cancel_url: `${baseUrl}/summer-camp?checkout=cancelled`,
+          metadata: {
+            type: 'summer_camp_pass',
+            program: 'Summer Camp',
+          },
+        });
+
+        return { checkoutUrl: session.url };
+      }),
   }),
   // ─── Commissionsns ─────────────────────────────────────────────────────────────
   commissions: router({

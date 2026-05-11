@@ -3,7 +3,8 @@ import { DailyScheduleTimeline } from "@/components/DailyScheduleTimeline";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronLeft, ChevronRight, Star, Shield, Zap, Users, Heart, Trophy, Sun, Check, Gift } from "lucide-react";
 import SEO from "@/components/SEO";
-import { openIntakeChatbot } from "@/lib/chatbot";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 // ─── CDN base ─────────────────────────────────────────────────────────────────
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
@@ -84,7 +85,24 @@ export default function SummerCamp() {
   }, []);
 
   const taken = TOTAL_SPOTS - spotsLeft;
-  const claimPass = () => openIntakeChatbot();
+
+  const checkoutMutation = trpc.popup.createSummerCampCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.checkoutUrl) {
+        window.open(data.checkoutUrl, '_blank');
+      }
+    },
+    onError: (err) => {
+      toast.error("Something went wrong", { description: err.message });
+    },
+  });
+
+  const isCheckingOut = checkoutMutation.isPending;
+
+  const claimPass = () => {
+    if (isCheckingOut) return;
+    checkoutMutation.mutate({ origin: window.location.origin });
+  };
 
   const scrollTheme = (dir: "left" | "right") => {
     if (themeRef.current) {
