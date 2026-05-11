@@ -284,54 +284,10 @@ export default function SummerCamp() {
           </button>
         </div>
 
-        {/* ── WHY PARENTS LOVE MYDOJO ───────────────────────────────────────── */}
-        <section className="py-16 bg-white">
+        {/* ── TESTIMONIALS (below hero) ─────────────────────────────────────── */}
+        <section className="py-12" style={{ background: "#111" }}>
           <div className="max-w-7xl mx-auto px-6">
-            <h2 className="font-black uppercase text-3xl md:text-4xl text-black mb-10">
-              WHY PARENTS <span style={{ color: "#cc0000" }}>LOVE MYDOJO</span>
-            </h2>
-
-            <div className="flex flex-col lg:flex-row gap-6 items-center">
-              {/* 5 feature cards */}
-              <div className="flex-1 grid grid-cols-2 lg:grid-cols-2 gap-4">
-                {[
-                  { Icon: Shield,  title: "SAFE & SECURE",         desc: "A safe, structured environment you can trust." },
-                  { Icon: Users,   title: "POSITIVE ROLE MODELS",  desc: "Instructors who inspire and support your child." },
-                  { Icon: Zap,     title: "ACTIVE & ENGAGING",     desc: "High-energy activities that keep kids moving and learning." },
-                  { Icon: Star,    title: "BUILD CONFIDENCE",      desc: "Martial arts training that builds focus, respect & confidence." },
-                  { Icon: Heart,   title: "MAKE NEW FRIENDS",      desc: "Kids make friends, strengthen social skills and have fun!", span: true },
-                ].map(({ Icon, title, desc, span }) => (
-                  <div key={title} className={`flex flex-col items-center text-center p-6 rounded-xl border-2 bg-black${span ? " col-span-2" : ""}`} style={{ borderColor: "#cc0000" }}>
-                    <div className="w-16 h-16 mb-3 rounded-full flex items-center justify-center" style={{ background: "#cc0000" }}>
-                      <Icon className="w-8 h-8 text-white" />
-                    </div>
-                    <p className="font-black text-sm uppercase text-white mb-2 leading-tight">{title}</p>
-                    <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Photo with transparent background — 2x size */}
-              <div className="lg:w-[640px] shrink-0 relative">
-                <img
-                  src="/manus-storage/kids_transparent_v2_280e6c21.png"
-                  alt="MyDojo kids smiling in martial arts uniforms"
-                  className="w-full h-auto object-contain"
-                  style={{ filter: "drop-shadow(0 8px 32px rgba(204,0,0,0.25))" }}
-                />
-                <div className="flex items-center gap-1 justify-center mt-1">
-                  {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
-                  <span className="text-black text-sm font-bold ml-1">500+ Reviews</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── TESTIMONIALS ──────────────────────────────────────────────────── */}
-        <section className="py-16" style={{ background: "#111" }}>
-          <div className="max-w-7xl mx-auto px-6">
-            <h2 className="font-black uppercase text-3xl md:text-4xl text-white text-center mb-10">
+            <h2 className="font-black uppercase text-2xl md:text-3xl text-white text-center mb-8">
               WHAT <span style={{ color: "#cc0000" }}>PARENTS</span> ARE SAYING
             </h2>
 
@@ -405,6 +361,52 @@ export default function SummerCamp() {
             </div>
           </div>
         </section>
+
+        {/* ── WHY PARENTS LOVE MYDOJO ───────────────────────────────────────── */}
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-6">
+            <h2 className="font-black uppercase text-3xl md:text-4xl text-black mb-10">
+              WHY PARENTS <span style={{ color: "#cc0000" }}>LOVE MYDOJO</span>
+            </h2>
+
+            <div className="flex flex-col lg:flex-row gap-6 items-center">
+              {/* 5 feature cards */}
+              <div className="flex-1 grid grid-cols-2 lg:grid-cols-2 gap-4">
+                {[
+                  { Icon: Shield,  title: "SAFE & SECURE",         desc: "A safe, structured environment you can trust." },
+                  { Icon: Users,   title: "POSITIVE ROLE MODELS",  desc: "Instructors who inspire and support your child." },
+                  { Icon: Zap,     title: "ACTIVE & ENGAGING",     desc: "High-energy activities that keep kids moving and learning." },
+                  { Icon: Star,    title: "BUILD CONFIDENCE",      desc: "Martial arts training that builds focus, respect & confidence." },
+                  { Icon: Heart,   title: "MAKE NEW FRIENDS",      desc: "Kids make friends, strengthen social skills and have fun!", span: true },
+                ].map(({ Icon, title, desc, span }) => (
+                  <div key={title} className={`flex flex-col items-center text-center p-6 rounded-xl border-2 bg-black${span ? " col-span-2" : ""}`} style={{ borderColor: "#cc0000" }}>
+                    <div className="w-16 h-16 mb-3 rounded-full flex items-center justify-center" style={{ background: "#cc0000" }}>
+                      <Icon className="w-8 h-8 text-white" />
+                    </div>
+                    <p className="font-black text-sm uppercase text-white mb-2 leading-tight">{title}</p>
+                    <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Photo with transparent background — 2x size */}
+              <div className="lg:w-[640px] shrink-0 relative">
+                <img
+                  src="/manus-storage/kids_transparent_v2_280e6c21.png"
+                  alt="MyDojo kids smiling in martial arts uniforms"
+                  className="w-full h-auto object-contain"
+                  style={{ filter: "drop-shadow(0 8px 32px rgba(204,0,0,0.25))" }}
+                />
+                <div className="flex items-center gap-1 justify-center mt-1">
+                  {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
+                  <span className="text-black text-sm font-bold ml-1">500+ Reviews</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
 
         {/* ── DAILY SCHEDULE ────────────────────────────────────────────────── */}
         <section id="schedule" className="py-16 bg-white">
