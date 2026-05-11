@@ -16,12 +16,12 @@ const THEME_WEEKS = [
   { label: "JUNE 10 – JUNE 14",  theme: "WATER WAR WEEK",        desc: "Water games, slip n' slide & splash battles!",            image: "/images/summer-camp/water-activities.webp", badge: "#3182ce" },
   { label: "JUNE 17 – JUNE 21",  theme: "BOARD BREAKING WEEK",   desc: "Break barriers & boards. Build power & confidence!",      image: "/images/camp-weeks/board-breaking.webp",  badge: "#d69e2e" },
   { label: "JUNE 24 – JUNE 28",  theme: "NERF BATTLE WEEK",      desc: "Team battles, missions & strategy challenges!",           image: "/images/camp-weeks/self-defense.webp",    badge: "#38a169" },
-  { label: "JULY 1 – JULY 5",    theme: "GLOW NIGHT WEEK",       desc: "Glow games, lasers & epic night adventures!",             image: "/images/camp-weeks/finale.webp",          badge: "#805ad5" },
+  { label: "JULY 1 – JULY 5",    theme: "GLOW NIGHT WEEK",       desc: "Glow games, lasers & epic night adventures!",             image: "/images/camp-weeks/independence-day.webp", badge: "#805ad5" },
   { label: "JULY 10 – JULY 14",  theme: "LEADERSHIP WEEK",       desc: "Life skills, team building & community service!",         image: "/images/camp-weeks/leadership.webp",      badge: "#ed8936" },
   { label: "JULY 17 – JULY 21",  theme: "TOURNAMENT PREP WEEK",  desc: "Sparring, drills & championship mindset training!",       image: "/images/camp-weeks/tournament.webp",      badge: "#2b6cb0" },
   { label: "JULY 24 – JULY 28",  theme: "WATER GUN FUN WEEK",    desc: "Epic water gun battles & outdoor adventures!",            image: `${CDN}/water-gun-fun_20404a48.jpg`,       badge: "#00b5d8" },
   { label: "JULY 31 – AUG 4",    theme: "BLACK BELT BOOTCAMP",   desc: "Advanced training, board breaks & championship drills!",  image: "/images/camp-weeks/black-belt.webp",      badge: "#1a202c" },
-  { label: "AUG 7 – AUG 10",     theme: "SUMMER FINALE",         desc: "Awards ceremony, pizza party & epic memories!",           image: "/images/camp-weeks/weapons.webp",         badge: "#e53e3e" },
+  { label: "AUG 7 – AUG 10",     theme: "SUMMER FINALE",         desc: "Awards ceremony, pizza party & epic memories!",           image: "/images/camp-weeks/finale.webp",          badge: "#e53e3e" },
 ];
 
 const SCHEDULE = [
@@ -280,9 +280,9 @@ export default function SummerCamp() {
                   { Icon: Users,   title: "POSITIVE ROLE MODELS",  desc: "Instructors who inspire and support your child." },
                   { Icon: Zap,     title: "ACTIVE & ENGAGING",     desc: "High-energy activities that keep kids moving and learning." },
                   { Icon: Star,    title: "BUILD CONFIDENCE",      desc: "Martial arts training that builds focus, respect & confidence." },
-                  { Icon: Heart,   title: "MAKE NEW FRIENDS",      desc: "Kids make friends, strengthen social skills and have fun!" },
-                ].map(({ Icon, title, desc }) => (
-                  <div key={title} className="flex flex-col items-center text-center p-6 rounded-xl border-2 bg-black" style={{ borderColor: "#cc0000" }}>
+                  { Icon: Heart,   title: "MAKE NEW FRIENDS",      desc: "Kids make friends, strengthen social skills and have fun!", span: true },
+                ].map(({ Icon, title, desc, span }) => (
+                  <div key={title} className={`flex flex-col items-center text-center p-6 rounded-xl border-2 bg-black${span ? " col-span-2" : ""}`} style={{ borderColor: "#cc0000" }}>
                     <div className="w-16 h-16 mb-3 rounded-full flex items-center justify-center" style={{ background: "#cc0000" }}>
                       <Icon className="w-8 h-8 text-white" />
                     </div>
@@ -390,11 +390,7 @@ export default function SummerCamp() {
         {/* ── DAILY SCHEDULE ────────────────────────────────────────────────── */}
         <section id="schedule" className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-6">
-            <h2 className="font-black uppercase text-3xl md:text-4xl text-black text-center mb-12">
-              A DAY AT <span style={{ color: "#cc0000" }}>SUMMER CAMP</span>
-            </h2>
-
-            {/* Schedule graphic */}
+            {/* Schedule graphic — title is embedded in the image */}
             <div className="w-full mb-8">
               <img
                 src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/camp_timeline_v2-REoPPpADfTKmDB9oYCriYB.png"
@@ -403,9 +399,9 @@ export default function SummerCamp() {
               />
             </div>
 
-            {/* Action photo */}
+            {/* Action photo — full width, max 720px */}
             <div className="flex justify-center">
-              <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl">
+              <div className="w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl">
                 <img
                   src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/camp_board_break-6HNvFxvbzNYujR7SuJMWuq.png"
                   alt="Kid breaking board at MyDojo Summer Camp"
