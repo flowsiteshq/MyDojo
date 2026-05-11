@@ -146,30 +146,15 @@ export default function SummerCamp() {
           <div className="absolute left-0 top-0 bottom-0 w-2" style={{ background: "#cc0000" }} />
 
           {/* LEFT: Copy — absolute positioned bottom-left */}
-          <div className="absolute left-6 top-0 bottom-0 z-10 flex flex-col justify-center" style={{ maxWidth: 480 }}>
-            {/* Headline graphic */}
+          <div className="absolute left-6 top-0 bottom-0 z-10 flex flex-col justify-center" style={{ maxWidth: 560 }}>
+            {/* Combined headline + icons graphic */}
             <div className="mb-4">
               <img
-                src="/manus-storage/4660e950-243b-4314-9e73-972d0ac40f8f_6afcbef1.png"
-                alt="Summer Camp Starts Here!"
+                src="/manus-storage/fbd8cb3c-0113-4d10-a8d0-88f3517e8a68_e82e18b4.png"
+                alt="Summer Camp Starts Here! Martial Arts, Games, New Friends, Pizza Fridays"
                 className="w-full h-auto object-contain"
-                style={{ filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.7))" }}
+                style={{ filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.6))" }}
               />
-            </div>
-
-            {/* Icon badges — 4-column grid */}
-            <div className="grid grid-cols-4 gap-3 mb-5" style={{ maxWidth: 340 }}>
-              {[
-                { icon: "🥋", label: "MARTIAL\nARTS" },
-                { icon: "🎮", label: "GAMES &\nACTIVITIES" },
-                { icon: "👥", label: "NEW\nFRIENDS" },
-                { icon: "🍕", label: "PIZZA\nFRIDAYS" },
-              ].map(item => (
-                <div key={item.label} className="flex flex-col items-center text-center p-2 rounded-lg" style={{ background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                  <span className="text-2xl mb-1">{item.icon}</span>
-                  <span className="text-white font-bold" style={{ fontSize: 9, letterSpacing: 0.5, lineHeight: 1.3, whiteSpace: "pre-line" }}>{item.label}</span>
-                </div>
-              ))}
             </div>
 
             {/* Trust badge */}
