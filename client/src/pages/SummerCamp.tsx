@@ -188,17 +188,17 @@ export default function SummerCamp() {
             </div>
 
             {/* RIGHT: Offer — no card box, elements float directly on hero photo */}
-            <div className="w-full lg:w-auto shrink-0 flex flex-col items-end gap-3 ml-auto">
+            <div className="w-full lg:w-auto shrink-0 flex flex-col items-end gap-0 ml-auto">
               {/* $49 price graphic — 2x size, pushed far right */}
               <img
                 src="/manus-storage/80ba2d25-3c98-4a3d-8ec1-671b987e2e81_a931f3d8.png"
                 alt="3 Days for only $49 - Limited Time Offer"
                 className="h-auto object-contain"
-                style={{ width: 640, maxWidth: "90vw", filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.6))" }}
+                style={{ width: 640, maxWidth: "90vw", filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.6))", marginBottom: "-8px" }}
               />
 
-              {/* Checklist — matching mockup */}
-              <div className="space-y-1.5">
+              {/* Checklist — directly under graphic */}
+              <div className="space-y-1.5 mb-3" style={{ paddingRight: 8 }}>
                 {["Martial Arts Training", "Ninja Games & Challenges", "Team Activities", "Pizza Fridays", "Camp T-Shirt Included"].map(item => (
                   <div key={item} className="flex items-center gap-2">
                     <span className="text-green-400 font-black text-base leading-none">✓</span>
@@ -207,12 +207,12 @@ export default function SummerCamp() {
                 ))}
               </div>
 
-              {/* CTA Buttons */}
-              <div className="w-full space-y-2 pt-1">
+              {/* CTA Buttons — directly under checklist */}
+              <div className="space-y-2" style={{ paddingRight: 8 }}>
                 <button
                   onClick={claimPass}
-                  className="w-full py-3 font-black uppercase tracking-wider text-white rounded transition-all hover:opacity-90 flex items-center justify-center gap-2"
-                  style={{ background: "#cc0000", fontSize: "1rem", maxWidth: 300 }}
+                  className="py-3 px-8 font-black uppercase tracking-wider text-white rounded transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                  style={{ background: "#cc0000", fontSize: "1rem", minWidth: 280 }}
                 >
                   CLAIM SUMMER PASS →
                 </button>
