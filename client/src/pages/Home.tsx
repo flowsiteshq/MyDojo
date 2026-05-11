@@ -304,9 +304,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Program Finder Quiz */}
-      <ProgramFinder />
-
       {/* Programs Section */}
       <section className="py-24 bg-black text-white relative">
         <div className="container mx-auto px-4">
@@ -527,6 +524,9 @@ export default function Home() {
       <section className="py-20 bg-white">
         <TestimonialCarousel />
       </section>
+
+      {/* Program Finder Quiz */}
+      <ProgramFinder />
 
       <MasonryGallery />
 
