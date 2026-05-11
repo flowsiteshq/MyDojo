@@ -180,19 +180,19 @@ export default function SummerCamp() {
               style={{ width: 480, maxWidth: "45vw", filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.5))" }}
             />
 
-            {/* CTA Buttons — directly under graphic */}
-            <div className="space-y-2 w-full flex flex-col items-end mt-2">
+            {/* CTA Buttons — full width matching graphic */}
+            <div className="space-y-2 mt-2" style={{ width: 480, maxWidth: "45vw" }}>
               <button
                 onClick={claimPass}
-                className="py-3 px-8 font-black uppercase tracking-wider text-white rounded transition-all hover:opacity-90 flex items-center justify-center gap-2"
-                style={{ background: "#cc0000", fontSize: "1rem", minWidth: 280 }}
+                className="w-full py-3 px-8 font-black uppercase tracking-wider text-white rounded transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                style={{ background: "#cc0000", fontSize: "1rem" }}
               >
                 CLAIM SUMMER PASS →
               </button>
               <button
                 onClick={() => document.getElementById("schedule")?.scrollIntoView({ behavior: "smooth" })}
-                className="py-2 font-bold uppercase tracking-wider text-center text-sm"
-                style={{ color: "#ffffff", textShadow: "1px 1px 4px rgba(0,0,0,0.9)", minWidth: 280 }}
+                className="w-full py-2 font-bold uppercase tracking-wider text-center text-sm"
+                style={{ color: "#ffffff", textShadow: "1px 1px 4px rgba(0,0,0,0.9)" }}
               >
                 VIEW CAMP SCHEDULE
               </button>
