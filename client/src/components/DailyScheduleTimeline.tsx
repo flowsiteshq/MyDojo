@@ -18,7 +18,7 @@ const steps: ScheduleStep[] = [
     ampm: "AM",
     label: "DROP OFF",
     desc: "Campers arrive, check in, and get ready for an awesome day!",
-    image: `/manus-storage/icon-drop-off-transparent_38aa1950.png`,
+    image: `/manus-storage/mydojo-icon_76bee5e9.png`,
     color: "#e53e3e",
     bgColor: "#e53e3e",
   },
@@ -27,7 +27,7 @@ const steps: ScheduleStep[] = [
     ampm: "AM",
     label: "MARTIAL ARTS TRAINING",
     desc: "Build confidence, focus, and strength with expert instruction.",
-    image: `/manus-storage/icon-martial-arts-transparent_fb851181.png`,
+    image: `/manus-storage/mydojo-icon_76bee5e9.png`,
     color: "#dd6b20",
     bgColor: "#dd6b20",
   },
@@ -36,7 +36,7 @@ const steps: ScheduleStep[] = [
     ampm: "AM",
     label: "GAMES & CHALLENGES",
     desc: "Fun games and challenges that encourage teamwork and leadership.",
-    image: `/manus-storage/icon-games-transparent_c693c2e3.png`,
+    image: `/manus-storage/mydojo-icon_76bee5e9.png`,
     color: "#38a169",
     bgColor: "#38a169",
   },
@@ -45,7 +45,7 @@ const steps: ScheduleStep[] = [
     ampm: "PM",
     label: "LUNCH TIME",
     desc: "Recharge with a healthy lunch and relax with friends.",
-    image: `/manus-storage/icon-lunch-transparent_d679cb33.png`,
+    image: `/manus-storage/mydojo-icon_76bee5e9.png`,
     color: "#319795",
     bgColor: "#319795",
   },
@@ -54,7 +54,7 @@ const steps: ScheduleStep[] = [
     ampm: "PM",
     label: "TEAM ACTIVITIES",
     desc: "Collaborate, create, and have fun with exciting team activities.",
-    image: `/manus-storage/icon-team-activities-transparent_4c167eda.png`,
+    image: `/manus-storage/mydojo-icon_76bee5e9.png`,
     color: "#3182ce",
     bgColor: "#3182ce",
   },
@@ -63,7 +63,7 @@ const steps: ScheduleStep[] = [
     ampm: "PM",
     label: "PICK UP",
     desc: "Campers wrap up the day and get picked up with big smiles!",
-    image: `/manus-storage/icon-pick-up-transparent_6d144d21.png`,
+    image: `/manus-storage/mydojo-icon_76bee5e9.png`,
     color: "#d69e2e",
     bgColor: "#d69e2e",
   },
@@ -121,9 +121,10 @@ export function DailyScheduleTimeline() {
             >
               {/* Circle with image */}
               <div
-                className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-lg transition-all duration-200"
+                className="w-28 h-28 rounded-full overflow-hidden border-4 shadow-lg transition-all duration-200"
                 style={{
-                  background: step.bgColor,
+                  background: "transparent",
+                  borderColor: step.bgColor,
                   transform: activeStep === i ? "scale(1.12)" : "scale(1)",
                   boxShadow:
                     activeStep === i
@@ -202,12 +203,13 @@ export function DailyScheduleTimeline() {
             >
               {/* Circle icon — positioned over the line */}
               <div
-                className="absolute rounded-full overflow-hidden border-2 border-white shadow-md"
+                className="absolute rounded-full overflow-hidden border-2 shadow-md"
                 style={{
                   left: "0px",
                   width: "48px",
                   height: "48px",
-                  background: step.bgColor,
+                  background: "transparent",
+                  borderColor: step.bgColor,
                   marginTop: "0px",
                 }}
               >
