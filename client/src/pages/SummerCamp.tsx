@@ -397,7 +397,7 @@ export default function SummerCamp() {
             {/* Schedule graphic */}
             <div className="w-full mb-8">
               <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/camp_schedule_graphic-KhCQCgZ472YPvbLGzjegiY.png"
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/camp_timeline_v2-REoPPpADfTKmDB9oYCriYB.png"
                 alt="A Day at Summer Camp schedule"
                 className="w-full h-auto object-contain rounded-xl shadow-xl"
               />
