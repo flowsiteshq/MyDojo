@@ -149,18 +149,15 @@ export default function SummerCamp() {
 
             {/* LEFT: Copy */}
             <div className="flex-1 max-w-xl">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 mb-4">
-                <div className="px-3 py-1 text-white text-xs font-bold uppercase tracking-widest" style={{ background: "#cc0000" }}>
-                  CONFIDENCE. FRIENDSHIP. FUN.
-                </div>
+              {/* Headline graphic — replaces text badge + h1 */}
+              <div className="mb-4" style={{ maxWidth: 480 }}>
+                <img
+                  src="/manus-storage/4660e950-243b-4314-9e73-972d0ac40f8f_6afcbef1.png"
+                  alt="Summer Camp Starts Here!"
+                  className="w-full h-auto object-contain"
+                  style={{ filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.7))" }}
+                />
               </div>
-
-              {/* Headline */}
-              <h1 className="font-black uppercase leading-none mb-5" style={{ fontSize: "clamp(2.8rem, 6vw, 5rem)", lineHeight: 1 }}>
-                <span className="text-white block" style={{ fontStyle: "italic", textShadow: "2px 2px 8px rgba(0,0,0,0.8)" }}>SUMMER CAMP</span>
-                <span className="block" style={{ color: "#f6e05e", fontStyle: "italic", textShadow: "2px 2px 8px rgba(0,0,0,0.8)" }}>STARTS HERE!</span>
-              </h1>
 
               {/* Icon badges — 4-column grid matching mockup */}
               <div className="grid grid-cols-4 gap-3 mb-6" style={{ maxWidth: 340 }}>
