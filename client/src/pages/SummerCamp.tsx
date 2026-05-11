@@ -138,7 +138,7 @@ export default function SummerCamp() {
               className="w-full h-full object-cover object-top"
             />
             {/* Dark overlay — heavier on left, lighter on right so image shows */}
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.2) 100%)" }} />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.1) 100%)" }} />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 30%, rgba(0,0,0,0.5) 100%)" }} />
           </div>
 
@@ -187,53 +187,42 @@ export default function SummerCamp() {
               </div>
             </div>
 
-            {/* RIGHT: Offer card */}
-            <div className="w-full lg:w-80 shrink-0">
-              <div className="rounded-lg overflow-hidden shadow-2xl" style={{ background: "rgba(0,0,0,0.85)", border: "2px solid rgba(255,255,255,0.15)" }}>
-                {/* Price graphic — replaces LIMITED TIME OFFER badge + price + checklist */}
-                <div className="px-2 pt-2 pb-0">
-                  <img
-                    src="/manus-storage/80ba2d25-3c98-4a3d-8ec1-671b987e2e81_a931f3d8.png"
-                    alt="3 Days for only $49 - Limited Time Offer"
-                    className="w-full h-auto object-contain"
-                    style={{ filter: "drop-shadow(0 2px 12px rgba(0,0,0,0.5))" }}
-                  />
-                </div>
+            {/* RIGHT: Offer — no card box, elements float directly on hero photo */}
+            <div className="w-full lg:w-80 shrink-0 flex flex-col items-start gap-3">
+              {/* $49 price graphic */}
+              <img
+                src="/manus-storage/80ba2d25-3c98-4a3d-8ec1-671b987e2e81_a931f3d8.png"
+                alt="3 Days for only $49 - Limited Time Offer"
+                className="w-full h-auto object-contain"
+                style={{ maxWidth: 320, filter: "drop-shadow(0 4px 24px rgba(0,0,0,0.6))" }}
+              />
 
-                {/* CTA Buttons */}
-                <div className="px-5 pb-5 space-y-2">
-                  <button
-                    onClick={claimPass}
-                    className="w-full py-3 font-black uppercase tracking-wider text-white rounded transition-all hover:opacity-90 flex items-center justify-center gap-2"
-                    style={{ background: "#cc0000", fontSize: "1rem" }}
-                  >
-                    CLAIM SUMMER PASS →
-                  </button>
-                  <button
-                    onClick={() => document.getElementById("schedule")?.scrollIntoView({ behavior: "smooth" })}
-                    className="w-full py-2 font-bold uppercase tracking-wider text-center text-sm transition-colors"
-                    style={{ color: "#374151" }}
-                  >
-                    VIEW CAMP SCHEDULE
-                  </button>
-                </div>
+              {/* Checklist — matching mockup */}
+              <div className="space-y-1.5">
+                {["Martial Arts Training", "Ninja Games & Challenges", "Team Activities", "Pizza Fridays", "Camp T-Shirt Included"].map(item => (
+                  <div key={item} className="flex items-center gap-2">
+                    <span className="text-green-400 font-black text-base leading-none">✓</span>
+                    <span className="text-white font-semibold text-sm" style={{ textShadow: "1px 1px 4px rgba(0,0,0,0.9)" }}>{item}</span>
+                  </div>
+                ))}
+              </div>
 
-                {/* Spots bar */}
-                <div className="px-5 pb-4 border-t border-yellow-200 pt-3">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span style={{ color: "#6b7280" }}>Spots remaining</span>
-                    <span className="font-bold" style={{ color: "#cc0000" }}>{spotsLeft} / {TOTAL_SPOTS}</span>
-                  </div>
-                  <div className="w-full rounded-full h-2" style={{ background: "#e5e7eb" }}>
-                    <motion.div
-                      className="h-2 rounded-full"
-                      style={{ background: "#cc0000" }}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(taken / TOTAL_SPOTS) * 100}%` }}
-                      transition={{ duration: 1 }}
-                    />
-                  </div>
-                </div>
+              {/* CTA Buttons */}
+              <div className="w-full space-y-2 pt-1">
+                <button
+                  onClick={claimPass}
+                  className="w-full py-3 font-black uppercase tracking-wider text-white rounded transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                  style={{ background: "#cc0000", fontSize: "1rem", maxWidth: 300 }}
+                >
+                  CLAIM SUMMER PASS →
+                </button>
+                <button
+                  onClick={() => document.getElementById("schedule")?.scrollIntoView({ behavior: "smooth" })}
+                  className="w-full py-2 font-bold uppercase tracking-wider text-center text-sm"
+                  style={{ color: "#ffffff", textShadow: "1px 1px 4px rgba(0,0,0,0.9)" }}
+                >
+                  VIEW CAMP SCHEDULE
+                </button>
               </div>
             </div>
           </div>
