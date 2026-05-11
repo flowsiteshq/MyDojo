@@ -133,12 +133,12 @@ export default function SummerCamp() {
           {/* Full-width background image */}
           <div className="absolute inset-0">
             <img
-              src="/manus-storage/hero-ai-generated_c3d51ed6.jpg"
+              src="/manus-storage/8e083585-f603-439a-984f-ab1ee1a46df9_f2409561.png"
               alt="MyDojo Summer Camp"
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-cover object-top"
             />
             {/* Dark overlay — heavier on left, lighter on right so image shows */}
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.25) 100%)" }} />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.2) 100%)" }} />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 30%, rgba(0,0,0,0.5) 100%)" }} />
           </div>
 
