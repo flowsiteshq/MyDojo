@@ -1,11 +1,11 @@
 /**
  * SocialProofTicker.tsx
  * Real-time social proof notifications showing recent enrollments.
- * Displays as a bottom-left toast-style popup that cycles through recent signups.
+ * Premium dark glassmorphism style with animated entrance.
  */
 import { useState, useEffect, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
-import { Users, X } from "lucide-react";
+import { X, Flame, Zap, Shield, Star, Trophy, Users } from "lucide-react";
 
 interface ProofItem {
   id: number;
@@ -25,24 +25,49 @@ const FALLBACK_ITEMS: Omit<ProofItem, "id">[] = [
   { displayName: "Destiny L.", program: "Little Ninjas", timeAgo: "3 days ago", message: "Destiny L. just signed up for Little Ninjas!" },
 ];
 
-const PROGRAM_COLORS: Record<string, string> = {
-  "Little Ninjas": "#7C3AED",
-  "Kids Martial Arts": "#1D4ED8",
-  "Teens & Adults Martial Arts": "#B91C1C",
-  "Adult Karate": "#1F2937",
-  "Kickboxing Fitness": "#15803D",
-  "After School Program": "#D97706",
-  "Summer Camp": "#0891B2",
+interface ProgramConfig {
+  color: string;
+  gradient: string;
+  icon: React.ReactNode;
+  emoji: string;
+}
+
+const PROGRAM_CONFIG: Record<string, ProgramConfig> = {
+  "Little Ninjas":               { color: "#a855f7", gradient: "from-purple-600 to-purple-400",   icon: <Star className="w-4 h-4" />,   emoji: "⭐" },
+  "Kids Martial Arts":           { color: "#3b82f6", gradient: "from-blue-600 to-blue-400",       icon: <Shield className="w-4 h-4" />, emoji: "🥋" },
+  "Teens & Adults Martial Arts": { color: "#ef4444", gradient: "from-red-600 to-red-400",         icon: <Flame className="w-4 h-4" />,  emoji: "🔥" },
+  "Adult Karate":                { color: "#f97316", gradient: "from-orange-600 to-orange-400",   icon: <Zap className="w-4 h-4" />,    emoji: "⚡" },
+  "Kickboxing Fitness":          { color: "#22c55e", gradient: "from-green-600 to-green-400",     icon: <Zap className="w-4 h-4" />,    emoji: "💪" },
+  "After School Program":        { color: "#eab308", gradient: "from-yellow-600 to-yellow-400",   icon: <Trophy className="w-4 h-4" />, emoji: "🏆" },
+  "Summer Camp":                 { color: "#06b6d4", gradient: "from-cyan-600 to-cyan-400",       icon: <Star className="w-4 h-4" />,   emoji: "🏕️" },
 };
+
+const DEFAULT_CONFIG: ProgramConfig = {
+  color: "#E10600",
+  gradient: "from-red-600 to-red-400",
+  icon: <Users className="w-4 h-4" />,
+  emoji: "🥊",
+};
+
+/** Get initials from display name like "Maria S." → "MS" */
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
 
 export function SocialProofTicker() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [items, setItems] = useState<ProofItem[]>([]);
+  const [progress, setProgress] = useState(100);
 
   const { data: recentEnrollments } = trpc.heroContent.getRecentEnrollments.useQuery(undefined, {
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
@@ -50,41 +75,43 @@ export function SocialProofTicker() {
     if (recentEnrollments && recentEnrollments.length > 0) {
       setItems(recentEnrollments);
     } else {
-      // Use fallback items with fake IDs
       setItems(FALLBACK_ITEMS.map((item, i) => ({ ...item, id: -(i + 1) })));
     }
   }, [recentEnrollments]);
 
   const showNext = useCallback(() => {
     if (dismissed || items.length === 0) return;
+    setProgress(100);
     setVisible(true);
-    // Hide after 5 seconds
+    // Animate progress bar down
+    const start = Date.now();
+    const duration = 5000;
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
+      setProgress(remaining);
+      if (remaining > 0) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+
     const hideTimer = setTimeout(() => {
       setVisible(false);
-    }, 5000);
+    }, duration);
     return () => clearTimeout(hideTimer);
   }, [dismissed, items.length]);
 
   useEffect(() => {
     if (items.length === 0) return;
-
-    // Initial delay before first notification
-    const initialDelay = setTimeout(() => {
-      showNext();
-    }, 8000);
-
+    const initialDelay = setTimeout(() => { showNext(); }, 6000);
     return () => clearTimeout(initialDelay);
   }, [items.length]);
 
   useEffect(() => {
     if (items.length === 0 || dismissed) return;
-
-    // Cycle through items every 12 seconds
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % items.length);
       showNext();
     }, 12000);
-
     return () => clearInterval(interval);
   }, [items.length, dismissed, showNext]);
 
@@ -93,46 +120,80 @@ export function SocialProofTicker() {
   const current = items[currentIndex];
   if (!current) return null;
 
-  const programColor = PROGRAM_COLORS[current.program] || "#E10600";
+  const cfg = PROGRAM_CONFIG[current.program] ?? DEFAULT_CONFIG;
 
   return (
     <div
       className={`fixed bottom-6 left-4 z-50 transition-all duration-500 ${
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+        visible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-6 scale-95 pointer-events-none"
       }`}
-      style={{ maxWidth: "320px" }}
+      style={{ maxWidth: "300px", minWidth: "260px" }}
     >
+      {/* Main card — dark glass */}
       <div
-        className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden"
-        style={{ borderLeft: `4px solid ${programColor}` }}
+        className="relative overflow-hidden rounded-2xl"
+        style={{
+          background: "linear-gradient(135deg, rgba(20,20,20,0.97) 0%, rgba(30,30,30,0.97) 100%)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: `0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.06)`,
+        }}
       >
-        <div className="flex items-start gap-3 p-3 pr-8 relative">
-          {/* Icon */}
+        {/* Colored glow strip at top */}
+        <div
+          className="absolute top-0 left-0 right-0 h-0.5"
+          style={{ background: `linear-gradient(90deg, transparent, ${cfg.color}, transparent)` }}
+        />
+
+        {/* Subtle background glow */}
+        <div
+          className="absolute -top-8 -left-8 w-24 h-24 rounded-full opacity-10 blur-2xl pointer-events-none"
+          style={{ background: cfg.color }}
+        />
+
+        <div className="flex items-start gap-3 p-4 pr-9">
+          {/* Avatar circle with gradient */}
           <div
-            className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
-            style={{ backgroundColor: programColor }}
+            className={`flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-white font-black text-sm bg-gradient-to-br ${cfg.gradient} shadow-lg`}
+            style={{ boxShadow: `0 4px 16px ${cfg.color}55` }}
           >
-            <Users className="w-5 h-5" />
+            {getInitials(current.displayName)}
           </div>
 
           {/* Content */}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 leading-tight">
+          <div className="flex-1 min-w-0 pt-0.5">
+            {/* "JUST ENROLLED" badge */}
+            <div className="flex items-center gap-1.5 mb-1">
+              <span
+                className="text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full"
+                style={{ background: `${cfg.color}22`, color: cfg.color }}
+              >
+                {cfg.emoji} Just Enrolled
+              </span>
+            </div>
+
+            <p className="text-white font-bold text-sm leading-tight">
               {current.displayName}
             </p>
-            <p className="text-xs text-gray-600 mt-0.5">
-              Just enrolled in{" "}
-              <span className="font-medium" style={{ color: programColor }}>
+            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>
+              signed up for{" "}
+              <span className="font-semibold" style={{ color: cfg.color }}>
                 {current.program}
               </span>
             </p>
-            <p className="text-xs text-gray-400 mt-1">{current.timeAgo}</p>
+            <p className="text-[10px] mt-1.5 flex items-center gap-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+              <span
+                className="inline-block w-1.5 h-1.5 rounded-full animate-pulse"
+                style={{ background: "#22c55e" }}
+              />
+              {current.timeAgo}
+            </p>
           </div>
 
           {/* Close */}
           <button
             onClick={() => setDismissed(true)}
-            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute top-3 right-3 rounded-full p-0.5 transition-colors"
+            style={{ color: "rgba(255,255,255,0.25)" }}
             aria-label="Dismiss"
           >
             <X className="w-3.5 h-3.5" />
@@ -140,13 +201,12 @@ export function SocialProofTicker() {
         </div>
 
         {/* Progress bar */}
-        <div className="h-0.5 bg-gray-100">
+        <div className="h-0.5 mx-4 mb-3 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
           <div
-            className="h-full transition-all ease-linear"
+            className="h-full rounded-full transition-none"
             style={{
-              backgroundColor: programColor,
-              width: visible ? "0%" : "100%",
-              transitionDuration: visible ? "5000ms" : "0ms",
+              width: `${progress}%`,
+              background: `linear-gradient(90deg, ${cfg.color}88, ${cfg.color})`,
             }}
           />
         </div>
