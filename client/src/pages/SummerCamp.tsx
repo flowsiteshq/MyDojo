@@ -34,11 +34,11 @@ const SCHEDULE = [
 ];
 
 const TESTIMONIALS = [
-  { name: "Jessica M.", text: "My son begged to come back every day! The staff is amazing and the activities are top notch.",                 avatar: `${CDN}/hero1_1d3d63d3.webp`, initials: "JM", color: "#e53e3e" },
-  { name: "Michael T.", text: "My daughter has more confidence than ever and made so many new friends. Best investment we made!",          avatar: `${CDN}/hero2_cef79f5f.webp`, initials: "MT", color: "#3182ce" },
-  { name: "Amanda R.",  text: "Best summer decision we made. The perfect mix of fun, fitness and martial arts!",                        avatar: `${CDN}/hero3_6fed392b.webp`, initials: "AR", color: "#38a169" },
-  { name: "David K.",   text: "Our kids talk about camp all year long. The instructors are incredible role models. 10/10!",              avatar: `${CDN}/hero4_98841652.webp`, initials: "DK", color: "#805ad5" },
-  { name: "Sarah L.",   text: "My daughter went from shy to confident in one week. Absolutely life-changing experience!",                avatar: `${CDN}/hero1_1d3d63d3.webp`, initials: "SL", color: "#ed8936" },
+  { name: "Jessica M.", text: "My son begged to come back every day! The staff is amazing and the activities are top notch.",                 avatar: "/manus-storage/testimonial-jessica_86f2b45e.jpg", initials: "JM", color: "#e53e3e" },
+  { name: "Michael T.", text: "My daughter has more confidence than ever and made so many new friends. Best investment we made!",          avatar: "/manus-storage/testimonial-michael_aa81d0ad.jpg", initials: "MT", color: "#3182ce" },
+  { name: "Amanda R.",  text: "Best summer decision we made. The perfect mix of fun, fitness and martial arts!",                        avatar: "/manus-storage/testimonial-amanda_e12fc346.jpg", initials: "AR", color: "#38a169" },
+  { name: "David K.",   text: "Our kids talk about camp all year long. The instructors are incredible role models. 10/10!",              avatar: "/manus-storage/testimonial-jessica_86f2b45e.jpg", initials: "DK", color: "#805ad5" },
+  { name: "Sarah L.",   text: "My daughter went from shy to confident in one week. Absolutely life-changing experience!",                avatar: "/manus-storage/testimonial-amanda_e12fc346.jpg", initials: "SL", color: "#ed8936" },
 ];
 
 const FAQS = [
@@ -162,12 +162,17 @@ export default function SummerCamp() {
                 <span className="block" style={{ color: "#f6e05e", fontStyle: "italic", textShadow: "2px 2px 8px rgba(0,0,0,0.8)" }}>STARTS HERE!</span>
               </h1>
 
-              {/* Icon badges — inline checkmark style matching mockup */}
-              <div className="flex flex-wrap gap-x-5 gap-y-1 mb-6">
-                {["Martial Arts", "Games & Activities", "New Friends", "Pizza Fridays"].map(item => (
-                  <div key={item} className="flex items-center gap-1.5">
-                    <Check className="w-4 h-4 shrink-0" style={{ color: "#f6e05e" }} />
-                    <span className="text-white text-sm font-bold">{item}</span>
+              {/* Icon badges — 4-column grid matching mockup */}
+              <div className="grid grid-cols-4 gap-3 mb-6" style={{ maxWidth: 340 }}>
+                {[
+                  { icon: "🥋", label: "MARTIAL\nARTS" },
+                  { icon: "🎮", label: "GAMES &\nACTIVITIES" },
+                  { icon: "👥", label: "NEW\nFRIENDS" },
+                  { icon: "🍕", label: "PIZZA\nFRIDAYS" },
+                ].map(item => (
+                  <div key={item.label} className="flex flex-col items-center text-center p-2 rounded-lg" style={{ background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                    <span className="text-2xl mb-1">{item.icon}</span>
+                    <span className="text-white font-bold" style={{ fontSize: 9, letterSpacing: 0.5, lineHeight: 1.3, whiteSpace: "pre-line" }}>{item.label}</span>
                   </div>
                 ))}
               </div>
@@ -187,28 +192,25 @@ export default function SummerCamp() {
 
             {/* RIGHT: Offer card */}
             <div className="w-full lg:w-80 shrink-0">
-              <div className="rounded-lg overflow-hidden shadow-2xl" style={{ background: "rgba(0,0,0,0.85)", border: "2px solid rgba(255,255,255,0.15)" }}>
+              <div className="rounded-lg overflow-hidden shadow-2xl" style={{ background: "#fef9c3", border: "3px solid #f6e05e" }}>
                 {/* LIMITED TIME OFFER badge */}
                 <div className="text-center py-2 font-black text-white text-xs uppercase tracking-widest" style={{ background: "#cc0000" }}>
-                  LIMITED TIME OFFER
+                  ⚡ LIMITED TIME OFFER
                 </div>
 
                 {/* Price — yellow paint-stroke style */}
                 <div className="text-center px-6 pt-4 pb-2">
-                  <p className="text-white text-sm uppercase tracking-widest mb-1">3 DAYS FOR ONLY</p>
-                  <div className="relative inline-block">
-                    {/* Paint stroke background */}
-                    <div className="absolute inset-0 rounded" style={{ background: "#f6e05e", transform: "rotate(-1deg) scaleX(1.1)", zIndex: 0 }} />
-                    <p className="relative z-10 font-black leading-none px-4" style={{ fontSize: "5rem", color: "#1a202c", fontStyle: "italic" }}>$49</p>
-                  </div>
+                  <p className="font-black text-2xl uppercase tracking-wider mb-0" style={{ color: "#1a202c" }}>3 DAYS</p>
+                  <p className="font-bold text-sm uppercase tracking-widest" style={{ color: "#374151" }}>FOR ONLY</p>
+                  <p className="font-black leading-none" style={{ fontSize: "5.5rem", color: "#d97706", lineHeight: 0.9, letterSpacing: "-2px" }}>$49</p>
                 </div>
 
                 {/* Checklist */}
                 <div className="px-5 pb-4 space-y-1.5">
                   {["Martial Arts Training", "Ninja Games & Challenges", "Team Activities", "Pizza Fridays", "Camp T-Shirt Included"].map(item => (
                     <div key={item} className="flex items-center gap-2">
-                      <Check className="w-4 h-4 shrink-0" style={{ color: "#f6e05e" }} />
-                      <span className="text-white text-sm font-medium">{item}</span>
+                      <Check className="w-4 h-4 shrink-0" style={{ color: "#cc0000" }} />
+                      <span className="text-sm font-medium" style={{ color: "#374151" }}>{item}</span>
                     </div>
                   ))}
                 </div>
@@ -225,19 +227,19 @@ export default function SummerCamp() {
                   <button
                     onClick={() => document.getElementById("schedule")?.scrollIntoView({ behavior: "smooth" })}
                     className="w-full py-2 font-bold uppercase tracking-wider text-center text-sm transition-colors"
-                    style={{ color: "rgba(255,255,255,0.6)" }}
+                    style={{ color: "#374151" }}
                   >
                     VIEW CAMP SCHEDULE
                   </button>
                 </div>
 
                 {/* Spots bar */}
-                <div className="px-5 pb-4 border-t border-white/10 pt-3">
+                <div className="px-5 pb-4 border-t border-yellow-200 pt-3">
                   <div className="flex justify-between text-xs mb-1">
-                    <span style={{ color: "rgba(255,255,255,0.5)" }}>Spots remaining</span>
-                    <span className="font-bold" style={{ color: "#fc8181" }}>{spotsLeft} / {TOTAL_SPOTS}</span>
+                    <span style={{ color: "#6b7280" }}>Spots remaining</span>
+                    <span className="font-bold" style={{ color: "#cc0000" }}>{spotsLeft} / {TOTAL_SPOTS}</span>
                   </div>
-                  <div className="w-full rounded-full h-2" style={{ background: "rgba(255,255,255,0.1)" }}>
+                  <div className="w-full rounded-full h-2" style={{ background: "#e5e7eb" }}>
                     <motion.div
                       className="h-2 rounded-full"
                       style={{ background: "#cc0000" }}
@@ -297,7 +299,7 @@ export default function SummerCamp() {
               {/* Photo with brush-stroke edge */}
               <div className="lg:w-72 shrink-0 relative rounded-xl overflow-hidden shadow-xl" style={{ minHeight: "280px" }}>
                 <img
-                  src="/images/summer-camp/group-activity.webp"
+                  src="/manus-storage/why-parents-group_02fa50c1.jpg"
                   alt="MyDojo kids group"
                   className="w-full h-full object-cover"
                   style={{ minHeight: "280px" }}
@@ -350,8 +352,8 @@ export default function SummerCamp() {
                       <p className="text-gray-300 text-sm leading-relaxed mb-4 italic">"{t.text}"</p>
                       {/* Avatar + name */}
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-red-600 flex items-center justify-center font-black text-white text-sm" style={{ background: t.color }}>
-                          {t.initials}
+                        <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-red-600">
+                          <img src={t.avatar} alt={t.name} className="w-full h-full object-cover object-top" />
                         </div>
                         <div>
                           <span className="text-white font-bold text-sm block">– {t.name}</span>
@@ -615,29 +617,33 @@ export default function SummerCamp() {
 
         {/* ── CTA FOOTER ────────────────────────────────────────────────────── */}
         <section className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #cc0000 0%, #e53e3e 50%, #ed8936 100%)" }}>
-          {/* Flanking kid photos */}
-          <div className="absolute left-0 inset-y-0 w-48 hidden xl:block overflow-hidden">
-            <img src="/manus-storage/cta-kid-left_2282a125.jpg" alt="" className="w-full h-full object-cover object-top" />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, transparent 60%, #cc0000 100%)" }} />
-          </div>
-          <div className="absolute right-0 inset-y-0 w-48 hidden xl:block overflow-hidden">
-            <img src="/manus-storage/cta-kid-right_83443a39.jpg" alt="" className="w-full h-full object-cover object-top" />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to left, transparent 60%, #ed8936 100%)" }} />
-          </div>
+          {/* 3-column grid: left kid | center text | right kid */}
+          <div className="max-w-7xl mx-auto px-6 grid xl:grid-cols-[200px_1fr_200px] grid-cols-1 gap-0 items-end">
+            {/* Left kid — sits at bottom edge */}
+            <div className="hidden xl:block" style={{ height: 320, overflow: "hidden" }}>
+              <img src="/manus-storage/cta-kid-left_2282a125.jpg" alt="" className="w-full h-full object-cover object-top" />
+            </div>
 
-          <div className="relative z-10 max-w-3xl mx-auto px-6 py-20 text-center">
-            <h2 className="font-black uppercase text-white leading-tight mb-3" style={{ fontSize: "clamp(1.8rem, 4vw, 3rem)" }}>
-              GIVE THEM A SUMMER THEY'LL NEVER FORGET!
-            </h2>
-            <p className="text-white/80 text-lg mb-8">3 Days. Endless Adventures. Lifetime Memories.</p>
-            <button
-              onClick={claimPass}
-              className="font-black uppercase tracking-wider text-black rounded-lg px-10 py-4 text-lg transition-all hover:opacity-90 hover:scale-105 shadow-2xl"
-              style={{ background: "#f6e05e" }}
-            >
-              CLAIM 3 DAYS FOR ONLY $49 →
-            </button>
-            <p className="text-white/60 text-xs uppercase tracking-widest mt-4">LIMITED SUMMER SPOTS — RESERVE TODAY!</p>
+            {/* Center text */}
+            <div className="text-center py-16 px-4">
+              <h2 className="font-black uppercase text-white leading-tight mb-3" style={{ fontSize: "clamp(1.8rem, 4vw, 3rem)" }}>
+                GIVE THEM A SUMMER THEY'LL NEVER FORGET!
+              </h2>
+              <p className="text-white/80 text-lg mb-8">3 Days. Endless Adventures. Lifetime Memories.</p>
+              <button
+                onClick={claimPass}
+                className="font-black uppercase tracking-wider text-black rounded-lg px-10 py-4 text-lg transition-all hover:opacity-90 hover:scale-105 shadow-2xl"
+                style={{ background: "#f6e05e" }}
+              >
+                CLAIM 3 DAYS FOR ONLY $49 →
+              </button>
+              <p className="text-white/60 text-xs uppercase tracking-widest mt-4">LIMITED SUMMER SPOTS — RESERVE TODAY!</p>
+            </div>
+
+            {/* Right kid — sits at bottom edge */}
+            <div className="hidden xl:block" style={{ height: 320, overflow: "hidden" }}>
+              <img src="/manus-storage/cta-kid-right_83443a39.jpg" alt="" className="w-full h-full object-cover object-top" />
+            </div>
           </div>
 
           {/* Trust bar */}
