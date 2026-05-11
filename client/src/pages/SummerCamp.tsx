@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useVisitorSms } from "@/hooks/useVisitorSms";
 import { DailyScheduleTimeline } from "@/components/DailyScheduleTimeline";
 import { RatingBadges } from "@/components/RatingBadges";
 import { motion, AnimatePresence } from "framer-motion";
@@ -55,6 +56,9 @@ const FAQS = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function SummerCamp() {
+  // Fire immediate welcome SMS when visitor arrives via ad with ?phone= param
+  useVisitorSms({ page: "summer-camp" });
+
   const [spotsLeft, setSpotsLeft] = useState(TOTAL_SPOTS - INITIAL_TAKEN);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);

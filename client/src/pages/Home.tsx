@@ -19,12 +19,16 @@ import { openIntakeChatbot } from "@/lib/chatbot";
 import { ChatGPTChatbot } from "@/components/ChatGPTChatbot";
 import { IntakeChatbot } from "@/components/IntakeChatbot";
 import { useState, useEffect } from "react";
+import { useVisitorSms } from "@/hooks/useVisitorSms";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Home() {
   // The userAuth hooks provides authentication state
   // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
   let { user, loading, error, isAuthenticated, logout } = useAuth();
+  // Fire immediate welcome SMS when visitor arrives via ad with ?phone= param
+  useVisitorSms({ page: "home" });
+
   const [showChatGPT, setShowChatGPT] = useState(false);
   const [showIntakeBot, setShowIntakeBot] = useState(false);
   const [useLegacyBot, setUseLegacyBot] = useState(false);

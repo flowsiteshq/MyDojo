@@ -6776,6 +6776,54 @@ Please enter your card details below to complete your registration securely. Tot
 
         return { checkoutUrl: session.url };
       }),
+
+    // ─── Visitor SMS Trigger ──────────────────────────────────────────────────
+    // Called on page load when ?phone= is present in the URL.
+    // Sends an immediate personalized welcome text and deduplicates by phone.
+    triggerVisitorSms: publicProcedure
+      .input(z.object({
+        phone: z.string().min(7).max(30),
+        name: z.string().max(255).optional(),
+        source: z.string().max(100).optional(),
+        page: z.string().max(100).optional(), // e.g. 'home', 'summer-camp'
+      }))
+      .mutation(async ({ input }) => {
+        const { sendSms, normalizePhone } = await import('./sms800');
+        const normalizedPhone = normalizePhone(input.phone);
+        const source = input.source ?? 'direct';
+        const db = await getDb();
+
+        if (db) {
+          // Dedup: only send once per phone number (ever)
+          const existing = await db
+            .select({ id: schema.visitorSmsSent.id })
+            .from(schema.visitorSmsSent)
+            .where(eq(schema.visitorSmsSent.phone, normalizedPhone))
+            .limit(1);
+
+          if (existing.length > 0) {
+            return { success: true, alreadySent: true };
+          }
+
+          // Record before sending so concurrent requests don't double-fire
+          await db.insert(schema.visitorSmsSent).values({
+            phone: normalizedPhone,
+            source,
+            name: input.name ?? null,
+          });
+        }
+
+        const firstName = input.name ? input.name.split(' ')[0] : null;
+        const greeting = firstName ? `Hi ${firstName}!` : 'Hey there!';
+        const isSummerCamp = input.page === 'summer-camp';
+
+        const message = isSummerCamp
+          ? `${greeting} 👋 We saw you just checked out MyDojo Summer Camp! 🏕️ Spots are filling fast — 3 days for only $49. Ready to secure your child's spot? Reply YES or call (877) 4-MYDOJO and we'll get you set up! 🥋`
+          : `${greeting} 👋 Thanks for visiting MyDojo! We'd love to have you try a FREE class — no experience needed. Reply YES or call (877) 4-MYDOJO to get started. See you on the mat! 🥋`;
+
+        const result = await sendSms({ to: normalizedPhone, message });
+        return { success: result.success, alreadySent: false, error: result.error };
+      }),
   }),
   // ─── Commissionsns ─────────────────────────────────────────────────────────────
   commissions: router({

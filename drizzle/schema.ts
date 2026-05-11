@@ -1720,3 +1720,21 @@ export const pnoRsvps = mysqlTable("pnoRsvps", {
 });
 export type PnoRsvp = typeof pnoRsvps.$inferSelect;
 export type InsertPnoRsvp = typeof pnoRsvps.$inferInsert;
+
+// ─── Visitor SMS Deduplication ─────────────────────────────────────────────
+/**
+ * Tracks phones that have already received a visitor-triggered SMS so we
+ * never send the same number more than once per campaign/source.
+ */
+export const visitorSmsSent = mysqlTable("visitorSmsSent", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Normalized E.164 phone number */
+  phone: varchar("phone", { length: 30 }).notNull(),
+  /** UTM source / ad campaign identifier passed in URL */
+  source: varchar("source", { length: 100 }).default("direct").notNull(),
+  /** Optional name from URL param */
+  name: varchar("name", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type VisitorSmsSent = typeof visitorSmsSent.$inferSelect;
+export type InsertVisitorSmsSent = typeof visitorSmsSent.$inferInsert;
