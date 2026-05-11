@@ -394,40 +394,22 @@ export default function SummerCamp() {
               A DAY AT <span style={{ color: "#cc0000" }}>SUMMER CAMP</span>
             </h2>
 
-            <div className="flex flex-col lg:flex-row gap-10 items-center">
-              {/* Horizontal timeline */}
-              <div className="flex-1">
-                {/* Connecting line */}
-                <div className="relative">
-                  <div className="hidden md:block absolute top-6 left-6 right-6 h-0.5" style={{ background: "linear-gradient(to right, #ed8936, #e53e3e, #38a169, #3182ce, #805ad5, #718096)" }} />
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    {SCHEDULE.map((item, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: i * 0.1 }}
-                        className="flex flex-col items-center text-center"
-                      >
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl mb-3 shadow-lg relative z-10" style={{ background: item.bg }}>
-                          {item.icon}
-                        </div>
-                        <p className="text-xs font-bold mb-0.5" style={{ color: "#718096" }}>{item.time}</p>
-                        <p className="font-black text-xs uppercase text-black leading-tight mb-1">{item.label}</p>
-                        <p className="text-gray-500 text-xs leading-relaxed">{item.desc}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+            {/* Schedule graphic */}
+            <div className="w-full mb-8">
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/camp_schedule_graphic-KhCQCgZ472YPvbLGzjegiY.png"
+                alt="A Day at Summer Camp schedule"
+                className="w-full h-auto object-contain rounded-xl shadow-xl"
+              />
+            </div>
 
-              {/* Action photo */}
-              <div className="lg:w-80 shrink-0 rounded-xl overflow-hidden shadow-2xl" style={{ height: "320px" }}>
+            {/* Action photo */}
+            <div className="flex justify-center">
+              <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl">
                 <img
-                  src="/images/camp-weeks/board-breaking.webp"
-                  alt="Kid breaking board at camp"
-                  className="w-full h-full object-cover"
+                  src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/camp_board_break-6HNvFxvbzNYujR7SuJMWuq.png"
+                  alt="Kid breaking board at MyDojo Summer Camp"
+                  className="w-full h-auto object-cover"
                 />
               </div>
             </div>
