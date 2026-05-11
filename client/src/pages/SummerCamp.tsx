@@ -274,7 +274,7 @@ export default function SummerCamp() {
 
             <div className="flex flex-col lg:flex-row gap-6 items-center">
               {/* 5 feature cards */}
-              <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              <div className="flex-1 grid grid-cols-2 lg:grid-cols-2 gap-4">
                 {[
                   { Icon: Shield,  title: "SAFE & SECURE",         desc: "A safe, structured environment you can trust." },
                   { Icon: Users,   title: "POSITIVE ROLE MODELS",  desc: "Instructors who inspire and support your child." },
@@ -282,12 +282,12 @@ export default function SummerCamp() {
                   { Icon: Star,    title: "BUILD CONFIDENCE",      desc: "Martial arts training that builds focus, respect & confidence." },
                   { Icon: Heart,   title: "MAKE NEW FRIENDS",      desc: "Kids make friends, strengthen social skills and have fun!" },
                 ].map(({ Icon, title, desc }) => (
-                  <div key={title} className="flex flex-col items-center text-center p-4 rounded-lg border-2 bg-black" style={{ borderColor: "#cc0000" }}>
-                    <div className="w-10 h-10 mb-2 rounded-full flex items-center justify-center" style={{ background: "#cc0000" }}>
-                      <Icon className="w-5 h-5 text-white" />
+                  <div key={title} className="flex flex-col items-center text-center p-6 rounded-xl border-2 bg-black" style={{ borderColor: "#cc0000" }}>
+                    <div className="w-16 h-16 mb-3 rounded-full flex items-center justify-center" style={{ background: "#cc0000" }}>
+                      <Icon className="w-8 h-8 text-white" />
                     </div>
-                    <p className="font-black text-xs uppercase text-white mb-1 leading-tight">{title}</p>
-                    <p className="text-gray-400 text-xs leading-relaxed">{desc}</p>
+                    <p className="font-black text-sm uppercase text-white mb-2 leading-tight">{title}</p>
+                    <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
                   </div>
                 ))}
               </div>
