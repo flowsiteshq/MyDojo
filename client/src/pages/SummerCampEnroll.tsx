@@ -115,14 +115,14 @@ const PRICE_PER_WEEK = 129;
 const ADDITIONAL_STUDENT_DISCOUNT = 0.5;
 const FULL_SUMMER_DISCOUNT = 0.15;
 
-interface StudentInfo { name: string; age: string; }
+interface StudentInfo { name: string; dob: string; }
 type Step = "weeks" | "students" | "info" | "review";
 
 export default function SummerCampEnroll() {
   const [step, setStep] = useState<Step>("weeks");
   const [selectedWeeks, setSelectedWeeks] = useState<Set<string>>(new Set());
   const [studentCount, setStudentCount] = useState(1);
-  const [students, setStudents] = useState<StudentInfo[]>([{ name: "", age: "" }]);
+  const [students, setStudents] = useState<StudentInfo[]>([{ name: "", dob: "" }]);
   const [parentName, setParentName] = useState("");
   const [parentEmail, setParentEmail] = useState("");
   const [parentPhone, setParentPhone] = useState("");
@@ -165,7 +165,7 @@ export default function SummerCampEnroll() {
     setStudentCount(clamped);
     setStudents(prev => {
       const updated = [...prev];
-      while (updated.length < clamped) updated.push({ name: "", age: "" });
+      while (updated.length < clamped) updated.push({ name: "", dob: "" });
       return updated.slice(0, clamped);
     });
   };
@@ -174,17 +174,28 @@ export default function SummerCampEnroll() {
     setStudents(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s));
   };
 
+  // Compute age from DOB string (YYYY-MM-DD)
+  const getAgeFromDob = (dob: string): number => {
+    if (!dob) return -1;
+    const today = new Date();
+    const birth = new Date(dob);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  };
+
   const handleCheckout = async () => {
     if (!parentName.trim() || !parentEmail.trim() || !parentPhone.trim()) { toast.error("Please fill in all parent/guardian fields."); return; }
-    if (students.some(s => !s.name.trim() || !s.age.trim())) { toast.error("Please fill in name and age for each student."); return; }
-    const ages = students.map(s => parseInt(s.age));
-    if (ages.some(a => isNaN(a) || a < 5 || a > 14)) { toast.error("All students must be between ages 5 and 14."); return; }
+    if (students.some(s => !s.name.trim() || !s.dob.trim())) { toast.error("Please fill in name and date of birth for each student."); return; }
+    const ages = students.map(s => getAgeFromDob(s.dob));
+    if (ages.some(a => isNaN(a) || a < 5 || a > 14)) { toast.error("All students must be between ages 5 and 14 by the start of camp."); return; }
     setIsLoading(true);
     try {
       const selectedWeekLabels = CAMP_WEEKS.filter(w => selectedWeeks.has(w.id)).map(w => w.theme);
       const result = await checkoutMutation.mutateAsync({
         weeks: selectedWeekLabels,
-        students: students.map(s => ({ name: s.name, age: parseInt(s.age) })),
+        students: students.map(s => ({ name: s.name, age: getAgeFromDob(s.dob), dob: s.dob })),
         parentName, parentEmail, parentPhone, isFullSummer,
         totalCents: pricing!.totalCents,
         origin: window.location.origin,
@@ -198,7 +209,7 @@ export default function SummerCampEnroll() {
   };
 
   const canProceedFromWeeks = selectedWeeks.size > 0;
-  const canProceedFromStudents = students.every(s => s.name.trim() && s.age.trim());
+  const canProceedFromStudents = students.every(s => s.name.trim() && s.dob.trim());
 
   const stepLabels = ["Select Weeks", "Students", "Contact", "Review"];
   const steps: Step[] = ["weeks", "students", "info", "review"];
@@ -401,14 +412,30 @@ export default function SummerCampEnroll() {
                     <span className="font-black text-gray-800">{idx === 0 ? "First Student" : `Student ${idx + 1}`}</span>
                     {idx > 0 && <span className="text-xs bg-green-100 text-green-700 border border-green-300 px-2 py-0.5 rounded-full font-bold ml-1">50% OFF 🎉</span>}
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-gray-500 text-xs mb-1 block font-bold">Student Name</Label>
+                      <Label className="text-gray-500 text-xs mb-1 block font-bold">Student Name *</Label>
                       <Input value={student.name} onChange={e => updateStudent(idx, "name", e.target.value)} placeholder="Full name" className="border-gray-200 focus:border-orange-400 rounded-xl" />
                     </div>
                     <div>
-                      <Label className="text-gray-500 text-xs mb-1 block font-bold">Age (5–14)</Label>
-                      <Input type="number" min={5} max={14} value={student.age} onChange={e => updateStudent(idx, "age", e.target.value)} placeholder="Age" className="border-gray-200 focus:border-orange-400 rounded-xl" />
+                      <Label className="text-gray-500 text-xs mb-1 block font-bold">Date of Birth * <span className="text-gray-400 font-normal">(Ages 5–14)</span></Label>
+                      <Input
+                        type="date"
+                        value={student.dob}
+                        onChange={e => updateStudent(idx, "dob", e.target.value)}
+                        max={new Date(new Date().setFullYear(new Date().getFullYear() - 5)).toISOString().split("T")[0]}
+                        min={new Date(new Date().setFullYear(new Date().getFullYear() - 15)).toISOString().split("T")[0]}
+                        className="border-gray-200 focus:border-orange-400 rounded-xl"
+                      />
+                      {student.dob && (() => {
+                        const age = getAgeFromDob(student.dob);
+                        const valid = age >= 5 && age <= 14;
+                        return (
+                          <p className={`text-xs mt-1 font-bold ${valid ? "text-green-600" : "text-red-500"}`}>
+                            {valid ? `✓ Age ${age} — eligible!` : age < 5 ? `Age ${age} — must be at least 5` : `Age ${age} — must be 14 or under`}
+                          </p>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -499,7 +526,7 @@ export default function SummerCampEnroll() {
               <div className="flex items-center gap-2 mb-3"><span className="text-xl">👦</span><span className="font-black text-gray-800">Students ({studentCount})</span></div>
               {students.map((s, i) => (
                 <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
-                  <span className="text-gray-700 font-medium">{s.name}, age {s.age}</span>
+                  <span className="text-gray-700 font-medium">{s.name}, DOB {s.dob} (age {getAgeFromDob(s.dob)})</span>
                   {i > 0 && <span className="text-xs text-green-600 font-black bg-green-50 px-2 py-0.5 rounded-full">50% off</span>}
                 </div>
               ))}
