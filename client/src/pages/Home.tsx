@@ -21,6 +21,7 @@ import { IntakeChatbot } from "@/components/IntakeChatbot";
 import { useState, useEffect } from "react";
 import { useVisitorSms } from "@/hooks/useVisitorSms";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { MobileHome } from "@/components/MobileHome";
 
 export default function Home() {
   // The userAuth hooks provides authentication state
@@ -100,6 +101,11 @@ export default function Home() {
           { question: "What programs do you offer?", answer: "We offer Little Ninjas (ages 3-5), Dragon Kids (ages 5-12), After School Program, Teen Warriors (ages 12-17), Adult Karate, Fitness Kickboxing, Women's Self-Defense, and Family Classes." },
         ]}
       />
+      {/* ── MOBILE-ONLY layout (hidden on md+) ── */}
+      <MobileHome />
+
+      {/* ── DESKTOP layout (hidden on mobile) ── */}
+      <div className="hidden md:block">
       {/* Hero Section */}
       <HeroSlider onOpenChatbot={openIntakeChatbot} />
 
@@ -557,6 +563,9 @@ export default function Home() {
       </section>
 
       {/* ChatGPT Chatbot */}
+      </div>{/* end desktop wrapper */}
+
+      {/* Chatbot overlays — always rendered regardless of viewport */}
       {showChatGPT && <ChatGPTChatbot onClose={() => setShowChatGPT(false)} />}
       
       {/* Intake Chatbot (State Machine POC) */}
