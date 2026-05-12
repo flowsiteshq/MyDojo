@@ -159,10 +159,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <header
         className={cn(
           "w-full z-50 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
+          // On mobile home page, hide the desktop nav bar (MobileHome has its own sticky bar)
+          isHome && !isSticky ? "md:block" : "",
           isHome
             ? (isSticky
               ? "fixed top-[var(--cookie-banner-height,0px)] bg-white/95 backdrop-blur-md text-black shadow-lg py-2 translate-y-0"
-              : "absolute top-[100vh] -translate-y-full bg-white/10 backdrop-blur-md border-t border-white/20 text-white py-6")
+              : "absolute top-[100vh] -translate-y-full bg-white/10 backdrop-blur-md border-t border-white/20 text-white py-6 hidden")
             : "fixed top-[var(--cookie-banner-height,0px)] bg-white/95 backdrop-blur-md text-black shadow-lg py-2"
         )}
       >
@@ -486,7 +488,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Footer */}
-      <footer className="bg-black text-white pt-16 pb-8 sm:pb-8 pb-safe border-t border-white/10" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
+      <footer className="hidden md:block bg-black text-white pt-16 pb-8 sm:pb-8 pb-safe border-t border-white/10" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             <div>

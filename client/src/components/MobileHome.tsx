@@ -15,10 +15,12 @@ export function MobileHome() {
     <div className="md:hidden flex flex-col w-full">
       {/* ── 1. HERO ─────────────────────────────────────────────────────── */}
       <section className="relative min-h-[85vh] flex flex-col justify-end pb-8">
-        {/* Background image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/images/hero-main.jpg')" }}
+        {/* Background image — use img tag for reliable mobile rendering */}
+        <img
+          src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero1_1d3d63d3.webp"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
         />
         {/* Dark gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/80" />
