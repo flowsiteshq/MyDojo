@@ -117,7 +117,7 @@ export function MobileHome() {
           {/* Photo */}
           <div className="w-36 flex-shrink-0">
             <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/philosophy-community-5cT4u2H5LumCR2qo3db4DH.webp"
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/mobile-community-real-FdFDeMEGn6uNdyceZgaSWm.webp"
               alt="MyDojo kids"
               className="w-full h-44 object-cover rounded-2xl shadow-lg"
             />
@@ -134,6 +134,9 @@ export function MobileHome() {
             { label: "Core Kids", age: "Ages 5–12", img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/core-kids_baf3bc26.webp", href: "/programs#dragon-kids" },
             { label: "Teens & Adults", age: "Ages 13+", img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/teens-adults_e35f9895.webp", href: "/programs#teens-adults" },
             { label: "Kickboxing", age: "All ages", img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/kickboxing-bg_d4fcc4c5.webp", href: "/programs/kickboxing" },
+            { label: "Summer Camp", age: "Ages 5–14", img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/camp-week-ninja-CdzcWin5H9yaR7tPKgEoWf.webp", href: "/summer-camp" },
+            { label: "After School", age: "Ages 5–12", img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-after-school-icon-bqnXijqxdLdkt4EyjBiP44.webp", href: "/programs" },
+            { label: "Birthday Parties", age: "All ages", img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/bday-package-ninja-5eJDKLFQadeU39TqYLZqZJ.png", href: "/birthday-parties" },
           ].map((p) => (
             <Link key={p.label} href={p.href}>
               <div className="relative rounded-xl overflow-hidden h-28 shadow-md">
