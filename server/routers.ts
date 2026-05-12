@@ -6777,6 +6777,106 @@ Please enter your card details below to complete your registration securely. Tot
         return { checkoutUrl: session.url };
       }),
 
+    // ─── Summer Camp Enrollment Checkout ────────────────────────────────────────
+    // Builds a Stripe Checkout session with correct per-week, per-student pricing.
+    createSummerCampEnrollCheckout: publicProcedure
+      .input(z.object({
+        weeks: z.array(z.string()).min(1),
+        students: z.array(z.object({ name: z.string(), age: z.number() })).min(1),
+        parentName: z.string().min(1),
+        parentEmail: z.string().email(),
+        parentPhone: z.string().min(7),
+        isFullSummer: z.boolean(),
+        totalCents: z.number().int().positive(),
+        origin: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const stripeKey = process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '';
+        if (!stripeKey) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Stripe not configured' });
+
+        const stripeClient = new Stripe(stripeKey, { apiVersion: '2026-01-28.clover' as any });
+        const baseUrl = input.origin || 'https://mydojoma.com';
+
+        const PRICE_PER_WEEK = 12900; // cents
+        const weeksCount = input.weeks.length;
+        const studentCount = input.students.length;
+
+        // Build line items
+        const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+
+        // First student — full price
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            unit_amount: PRICE_PER_WEEK,
+            product_data: {
+              name: `Summer Camp — ${input.students[0].name} (${weeksCount} week${weeksCount !== 1 ? 's' : ''})`,
+              description: input.weeks.join(', '),
+            },
+          },
+          quantity: weeksCount,
+        });
+
+        // Additional students — 50% off
+        for (let i = 1; i < studentCount; i++) {
+          lineItems.push({
+            price_data: {
+              currency: 'usd',
+              unit_amount: Math.round(PRICE_PER_WEEK * 0.5),
+              product_data: {
+                name: `Summer Camp — ${input.students[i].name} (${weeksCount} week${weeksCount !== 1 ? 's' : ''}) — 50% Family Discount`,
+                description: input.weeks.join(', '),
+              },
+            },
+            quantity: weeksCount,
+          });
+        }
+
+        // Full summer 15% discount as a negative line item
+        if (input.isFullSummer) {
+          const subtotalCents = lineItems.reduce((sum, li) => {
+            const amt = li.price_data?.unit_amount ?? 0;
+            const qty = li.quantity ?? 1;
+            return sum + amt * qty;
+          }, 0);
+          const discountCents = Math.round(subtotalCents * 0.15);
+          lineItems.push({
+            price_data: {
+              currency: 'usd',
+              unit_amount: -discountCents,
+              product_data: {
+                name: 'Full Summer Bonus Discount (15%)',
+                description: 'Discount for enrolling in all 10 weeks',
+              },
+            },
+            quantity: 1,
+          });
+        }
+
+        const weeksList = input.weeks.join(', ');
+        const studentsList = input.students.map(s => `${s.name} (age ${s.age})`).join(', ');
+
+        const session = await stripeClient.checkout.sessions.create({
+          payment_method_types: ['card'],
+          mode: 'payment',
+          line_items: lineItems,
+          allow_promotion_codes: true,
+          customer_email: input.parentEmail,
+          success_url: `${baseUrl}/summer-camp/enroll?checkout=success`,
+          cancel_url: `${baseUrl}/summer-camp/enroll?checkout=cancelled`,
+          metadata: {
+            type: 'summer_camp_enrollment',
+            parent_name: input.parentName,
+            parent_phone: input.parentPhone,
+            students: studentsList,
+            weeks: weeksList,
+            is_full_summer: input.isFullSummer ? 'true' : 'false',
+          },
+        });
+
+        return { checkoutUrl: session.url };
+      }),
+
     // ─── Visitor SMS Trigger ──────────────────────────────────────────────────
     // Called on page load when ?phone= is present in the URL.
     // Sends an immediate personalized welcome text and deduplicates by phone.
