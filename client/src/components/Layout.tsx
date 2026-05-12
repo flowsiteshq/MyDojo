@@ -20,6 +20,7 @@ const PROGRAM_LINKS = [
   { name: "Kickboxing", path: "/programs#kickboxing", description: "All ages" },
   { name: "After School", path: "/programs#after-school", description: "Ages 5–12" },
   { name: "Summer Camp", path: "/summer-camp", description: "Seasonal" },
+  { name: "Birthday Parties", path: "/birthday-parties", description: "Celebrate with us!" },
   { name: "Homeschool", path: "/homeschool", description: "Noon classes daily" },
 ];
 
@@ -513,6 +514,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <li><Link href="/programs#kickboxing"><span className="hover:text-white cursor-pointer transition-colors">Kickboxing</span></Link></li>
                 <li><Link href="/programs#after-school"><span className="hover:text-white cursor-pointer transition-colors">After School</span></Link></li>
                 <li><Link href="/summer-camp"><span className="hover:text-white cursor-pointer transition-colors">Summer Camp</span></Link></li>
+                <li><Link href="/birthday-parties"><span className="hover:text-white cursor-pointer transition-colors">Birthday Parties</span></Link></li>
               </ul>
             </div>
             <div>

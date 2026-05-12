@@ -8652,5 +8652,56 @@ Please enter your card details below to complete your registration securely. Tot
         return { totalEnrollments, totalStudents, totalRevenueCents, fullSummerCount, weekCounts };
       }),
   }),
+
+  birthday: router({
+    requestBooking: publicProcedure
+      .input(z.object({
+        packageId: z.string(),
+        parentName: z.string().min(1),
+        phone: z.string().min(7),
+        email: z.string().email(),
+        childName: z.string().min(1),
+        childAge: z.string().optional(),
+        partyDate: z.string().min(1),
+        guestCount: z.string().optional(),
+        message: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const packageNames: Record<string, string> = {
+          ninja: 'Ninja Party ($199)',
+          champion: 'Champion Party ($299)',
+          blackbelt: 'Black Belt VIP ($449)',
+        };
+        const pkgName = packageNames[input.packageId] ?? input.packageId;
+        const { notifyOwner } = await import('./_core/notification');
+        await notifyOwner({
+          title: `🎂 New Birthday Party Request — ${pkgName}`,
+          content: [
+            `Parent: ${input.parentName}`,
+            `Phone: ${input.phone}`,
+            `Email: ${input.email}`,
+            `Birthday Child: ${input.childName}${input.childAge ? ` (Age ${input.childAge})` : ''}`,
+            `Package: ${pkgName}`,
+            `Preferred Date: ${input.partyDate}`,
+            `Expected Guests: ${input.guestCount ?? 'Not specified'}`,
+            input.message ? `Notes: ${input.message}` : '',
+          ].filter(Boolean).join('\n'),
+        });
+        // Send confirmation SMS to parent (non-fatal)
+        try {
+          const { sendSms, normalizePhone } = await import('./sms800');
+          const cleanPhone = normalizePhone(input.phone);
+          if (cleanPhone) {
+            await sendSms({
+              to: cleanPhone,
+              message: `Hi ${input.parentName.split(' ')[0]}! 🎉 We received your birthday party request for ${input.childName} on ${input.partyDate}. We'll contact you within 24 hours to confirm your date! Questions? Call (877) 469-3656. — MyDojo 🥋`,
+            });
+          }
+        } catch (_) {
+          // SMS failure is non-fatal
+        }
+        return { success: true };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;
