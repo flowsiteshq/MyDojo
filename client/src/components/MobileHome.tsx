@@ -117,7 +117,7 @@ export function MobileHome() {
           {/* Photo */}
           <div className="w-36 flex-shrink-0">
             <img
-              src="/images/community-candid-logo.png"
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/philosophy-community-5cT4u2H5LumCR2qo3db4DH.webp"
               alt="MyDojo kids"
               className="w-full h-44 object-cover rounded-2xl shadow-lg"
             />
@@ -130,10 +130,10 @@ export function MobileHome() {
         <h3 className="font-heading font-black text-gray-900 text-xl mb-3">Our Programs</h3>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: "Little Ninjas", age: "Ages 3–5", img: "/images/program-little-ninjas.jpg", href: "/programs#little-ninjas" },
-            { label: "Core Kids", age: "Ages 5–12", img: "/images/program-core-kids.jpg", href: "/programs#dragon-kids" },
-            { label: "Teens & Adults", age: "Ages 13+", img: "/images/program-teens-adults-branded.png", href: "/programs#teens-adults" },
-            { label: "Kickboxing", age: "All ages", img: "/images/featured-kickboxing.jpg", href: "/programs/kickboxing" },
+            { label: "Little Ninjas", age: "Ages 3–5", img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/little-ninjas_25d41024.webp", href: "/programs#little-ninjas" },
+            { label: "Core Kids", age: "Ages 5–12", img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/core-kids_baf3bc26.webp", href: "/programs#dragon-kids" },
+            { label: "Teens & Adults", age: "Ages 13+", img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/teens-adults_e35f9895.webp", href: "/programs#teens-adults" },
+            { label: "Kickboxing", age: "All ages", img: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/kickboxing-bg_d4fcc4c5.webp", href: "/programs/kickboxing" },
           ].map((p) => (
             <Link key={p.label} href={p.href}>
               <div className="relative rounded-xl overflow-hidden h-28 shadow-md">
