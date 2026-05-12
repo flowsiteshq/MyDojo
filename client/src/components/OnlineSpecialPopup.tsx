@@ -85,12 +85,19 @@ interface OnlineSpecialPopupProps {
 }
 
 export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: OnlineSpecialPopupProps = {}) {
+  // Read pre-fill data from URL params (e.g. from Facebook Lead Ad redirect)
+  const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const urlName = urlParams?.get("name") ?? "";
+  const urlPhone = urlParams?.get("phone") ?? "";
+  const urlEmail = urlParams?.get("email") ?? "";
+  const hasPrefilledData = !!(urlName || urlPhone || urlEmail);
+
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"program" | "form" | "schedule" | "done">("program");
   const [selectedProgram, setSelectedProgram] = useState<typeof PROGRAMS[0] | null>(null);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState(urlName);
+  const [phone, setPhone] = useState(urlPhone);
+  const [email, setEmail] = useState(urlEmail);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedSlot, setSelectedSlot] = useState<{ day: string; time: string; program: string } | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -113,13 +120,19 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
     if (forceOpen && !hasShown.current) {
       hasShown.current = true;
       setOpen(true);
-      // Pre-select the kids program if defaultProgram is 'kids'
+
+      // Pre-select program based on defaultProgram
+      let preSelectedProgram: typeof PROGRAMS[0] | null = null;
       if (defaultProgram === "kids") {
-        const kidsProgram = PROGRAMS.find((p) => p.label === "Kids Martial Arts");
-        if (kidsProgram) setSelectedProgram(kidsProgram);
+        preSelectedProgram = PROGRAMS.find((p) => p.label === "Kids Martial Arts") ?? null;
       } else if (defaultProgram === "adults") {
-        const adultProgram = PROGRAMS.find((p) => p.label === "Teens & Adults");
-        if (adultProgram) setSelectedProgram(adultProgram);
+        preSelectedProgram = PROGRAMS.find((p) => p.label === "Teens & Adults") ?? null;
+      }
+      if (preSelectedProgram) setSelectedProgram(preSelectedProgram);
+
+      // If name/phone/email are pre-filled from URL, skip straight to the form step
+      if (hasPrefilledData && preSelectedProgram) {
+        setStep("form");
       }
       return;
     }
@@ -131,7 +144,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
       }
     }, 5000);
     return () => clearTimeout(timer);
-  }, [forceOpen, defaultProgram]);
+  }, [forceOpen, defaultProgram, hasPrefilledData]);
 
   const fireConfetti = useCallback(() => {
     confetti({
@@ -404,11 +417,18 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
 
               <div className="mb-5">
                 <h3 className="text-2xl font-black text-black tracking-tight mb-1">Claim Your Spot</h3>
-                <p className="text-gray-400 text-sm">
-                  {selectedProgram.free
-                    ? "Fill out your info and we'll get you scheduled."
-                    : "Fill out your info and you'll be redirected to secure $29 checkout."}
-                </p>
+                {hasPrefilledData ? (
+                  <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2 mt-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    <p className="text-green-700 text-xs font-medium">Your info is pre-filled from your form — just confirm and claim your offer!</p>
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">
+                    {selectedProgram.free
+                      ? "Fill out your info and we'll get you scheduled."
+                      : "Fill out your info and you'll be redirected to secure $29 checkout."}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-3 flex-1">
