@@ -8703,5 +8703,55 @@ Please enter your card details below to complete your registration securely. Tot
         return { success: true };
       }),
   }),
+
+  // ── Private Lessons ─────────────────────────────────────────────────────────
+  privateLessons: router({
+    createCheckout: publicProcedure
+      .input(z.object({
+        instructorId: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const INSTRUCTORS: Record<string, { name: string; price: number }> = {
+          'master-vincent-holmes': { name: 'Master Vincent Holmes', price: 200 },
+          'sensei-kamil-ahmed': { name: 'Sensei Kamil Ahmed', price: 100 },
+          'sensei-hector-diosdado': { name: 'Sensei Hector Diosdado', price: 100 },
+          'sensei-dominique-griggs': { name: 'Sensei Dominique Griggs', price: 100 },
+        };
+
+        const instructor = INSTRUCTORS[input.instructorId];
+        if (!instructor) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid instructor selected' });
+
+        const Stripe = (await import('stripe')).default;
+        const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2026-01-28.clover' as any });
+
+        const origin = (ctx.req.headers.origin as string) || 'https://mydojoma.com';
+
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          mode: 'payment',
+          line_items: [{
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `3 Private Classes — ${instructor.name}`,
+                description: 'Three one-on-one private martial arts sessions. Classes valid for 60 days.',
+              },
+              unit_amount: instructor.price * 100,
+            },
+            quantity: 1,
+          }],
+          metadata: {
+            type: 'private_lessons',
+            instructor_id: input.instructorId,
+            instructor_name: instructor.name,
+          },
+          allow_promotion_codes: true,
+          success_url: `${origin}/private-lessons/success?instructor=${encodeURIComponent(instructor.name)}`,
+          cancel_url: `${origin}/private-lessons`,
+        });
+
+        return { checkoutUrl: session.url };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;
