@@ -469,6 +469,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </Link>
             )}
 
+            <Link href="/check-in">
+              <span
+                className={cn(
+                  "flex items-center justify-center gap-2 text-lg font-bold uppercase tracking-wider py-3 border-b border-gray-100 text-center text-primary",
+                )}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                🔥 Kiosk Check-In
+              </span>
+            </Link>
+
             <Button
               onClick={() => {
                 openIntakeChatbot();
