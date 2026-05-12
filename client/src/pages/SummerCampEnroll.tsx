@@ -9,13 +9,26 @@
  *  - Full summer (all 10 weeks): 15% bonus discount applied to total
  *  - Ages 5–14
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Check, Users, Tag, Star, Sun, Loader2 } from "lucide-react";
+import { Check, Users, Tag, Star, Sun, Loader2, CreditCard, Lock, CheckCircle } from "lucide-react";
+
+// FluidPay Tokenizer global type
+declare global {
+  interface Window {
+    Tokenizer?: new (config: {
+      apikey: string;
+      container: string;
+      submission: (resp: { token?: string; status?: string; error?: string }) => void;
+      onLoad?: () => void;
+      settings?: { payment?: { types?: string[] }; styles?: { body?: Record<string, string>; inputs?: Record<string, string>; labels?: Record<string, string> } };
+    }) => { submit: (amount?: string) => void };
+  }
+}
 
 // ─── Camp Week Definitions ────────────────────────────────────────────────────
 const CAMP_WEEKS = [
@@ -127,8 +140,77 @@ export default function SummerCampEnroll() {
   const [parentEmail, setParentEmail] = useState("");
   const [parentPhone, setParentPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [enrollSuccess, setEnrollSuccess] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [tokenizerReady, setTokenizerReady] = useState(false);
+  const tokenizerInstanceRef = useRef<{ submit: (amount?: string) => void } | null>(null);
+  const tokenizerInitializedRef = useRef(false);
+  const scriptLoadedRef = useRef(false);
 
   const checkoutMutation = trpc.popup.createSummerCampEnrollCheckout.useMutation();
+
+  // Pre-load FluidPay tokenizer script
+  useEffect(() => {
+    if (scriptLoadedRef.current) return;
+    scriptLoadedRef.current = true;
+    if (window.Tokenizer) { setTokenizerReady(true); return; }
+    const script = document.createElement("script");
+    script.src = "https://app.fluidpay.com/tokenizer/tokenizer.js";
+    script.async = true;
+    script.onload = () => setTokenizerReady(true);
+    script.onerror = () => setPaymentError("Failed to load payment form. Please refresh and try again.");
+    document.head.appendChild(script);
+  }, []);
+
+  // Initialize tokenizer when review step is shown
+  useEffect(() => {
+    if (step !== "review") return;
+    if (!tokenizerReady || tokenizerInitializedRef.current) return;
+    if (!window.Tokenizer) return;
+    tokenizerInitializedRef.current = true;
+    try {
+      const instance = new window.Tokenizer({
+        apikey: import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "",
+        container: "#camp-fluidpay-tokenizer",
+        submission: async (resp) => {
+          if (!resp.token || resp.status === "error") {
+            const msg = resp.error || "Card tokenization failed. Please check your card details.";
+            setPaymentError(msg);
+            setIsLoading(false);
+            return;
+          }
+          // Token received — fire the charge
+          try {
+            const selectedWeekLabels = CAMP_WEEKS.filter(w => selectedWeeks.has(w.id)).map(w => w.theme);
+            await checkoutMutation.mutateAsync({
+              token: resp.token,
+              weeks: selectedWeekLabels,
+              students: students.map(s => ({ name: s.name, age: getAgeFromDob(s.dob), dob: s.dob })),
+              parentName, parentEmail, parentPhone, isFullSummer,
+              totalCents: pricing!.totalCents,
+            });
+            setEnrollSuccess(true);
+            toast.success("Enrollment complete! 🎉", { description: "Check your email for confirmation." });
+          } catch (err: any) {
+            setPaymentError(err?.message ?? "Payment failed. Please try again.");
+            setIsLoading(false);
+          }
+        },
+        onLoad: () => {},
+        settings: {
+          payment: { types: ["card"] },
+          styles: {
+            body: { "font-family": "inherit", "background-color": "transparent" },
+            inputs: { "border-radius": "12px", "border": "2px solid #fed7aa", "padding": "14px 16px", "font-size": "16px", "height": "52px" },
+            labels: { "font-size": "14px", "font-weight": "700", "color": "#374151", "margin-bottom": "6px" },
+          },
+        },
+      });
+      tokenizerInstanceRef.current = instance;
+    } catch (err: any) {
+      setPaymentError(`Payment form error: ${err?.message || "Unknown"}. Please refresh.`);
+    }
+  }, [step, tokenizerReady]);
 
   const isFullSummer = selectedWeeks.size === CAMP_WEEKS.length;
   const weeksCount = selectedWeeks.size;
@@ -185,25 +267,13 @@ export default function SummerCampEnroll() {
     return age;
   };
 
-  const handleCheckout = async () => {
-    if (!parentName.trim() || !parentEmail.trim() || !parentPhone.trim()) { toast.error("Please fill in all parent/guardian fields."); return; }
-    if (students.some(s => !s.name.trim() || !s.dob.trim())) { toast.error("Please fill in name and date of birth for each student."); return; }
-    const ages = students.map(s => getAgeFromDob(s.dob));
-    if (ages.some(a => isNaN(a) || a < 5 || a > 14)) { toast.error("All students must be between ages 5 and 14 by the start of camp."); return; }
+  const handlePayNow = () => {
+    setPaymentError(null);
     setIsLoading(true);
-    try {
-      const selectedWeekLabels = CAMP_WEEKS.filter(w => selectedWeeks.has(w.id)).map(w => w.theme);
-      const result = await checkoutMutation.mutateAsync({
-        weeks: selectedWeekLabels,
-        students: students.map(s => ({ name: s.name, age: getAgeFromDob(s.dob), dob: s.dob })),
-        parentName, parentEmail, parentPhone, isFullSummer,
-        totalCents: pricing!.totalCents,
-        origin: window.location.origin,
-      });
-      if (result.checkoutUrl) window.open(result.checkoutUrl, "_blank");
-    } catch (err: any) {
-      toast.error(err?.message ?? "Something went wrong. Please try again.");
-    } finally {
+    if (tokenizerInstanceRef.current) {
+      tokenizerInstanceRef.current.submit(pricing!.total.toFixed(2));
+    } else {
+      setPaymentError("Payment form not ready. Please refresh and try again.");
       setIsLoading(false);
     }
   };
@@ -496,70 +566,102 @@ export default function SummerCampEnroll() {
           </div>
         )}
 
-        {/* ══ STEP 4: Review & Checkout ════════════════════════════════════ */}
+        {/* ══ STEP 4: Review & Pay (FluidPay) ═══════════════════════════════ */}
         {step === "review" && pricing && (
           <div>
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-black text-gray-800 mb-2">🎉 Review Your Order</h1>
-              <p className="text-gray-600">Everything look good? Let's get those spots secured!</p>
-            </div>
-
-            {/* Selected Weeks Preview */}
-            <div className="bg-white rounded-2xl shadow-lg p-5 mb-4 border border-orange-100">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-xl">📅</span>
-                <span className="font-black text-gray-800">Weeks Selected ({weeksCount})</span>
-                {isFullSummer && <span className="text-xs bg-yellow-100 text-yellow-700 border border-yellow-300 px-2 py-0.5 rounded-full font-bold">Full Summer ⭐</span>}
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {CAMP_WEEKS.filter(w => selectedWeeks.has(w.id)).map(w => (
-                  <div key={w.id} className="flex items-center gap-1.5 bg-gray-50 rounded-xl px-2 py-1.5">
-                    <span className="text-sm">{w.emoji}</span>
-                    <span className="text-xs font-bold text-gray-700 leading-tight">{w.theme.replace(" 🎉", "")}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Students */}
-            <div className="bg-white rounded-2xl shadow-lg p-5 mb-4 border border-orange-100">
-              <div className="flex items-center gap-2 mb-3"><span className="text-xl">👦</span><span className="font-black text-gray-800">Students ({studentCount})</span></div>
-              {students.map((s, i) => (
-                <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
-                  <span className="text-gray-700 font-medium">{s.name}, DOB {s.dob} (age {getAgeFromDob(s.dob)})</span>
-                  {i > 0 && <span className="text-xs text-green-600 font-black bg-green-50 px-2 py-0.5 rounded-full">50% off</span>}
+            {/* Success screen */}
+            {enrollSuccess ? (
+              <div className="flex flex-col items-center gap-5 py-12 text-center">
+                <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center shadow-lg">
+                  <CheckCircle className="w-12 h-12 text-green-500" />
                 </div>
-              ))}
-            </div>
-
-            {/* Contact */}
-            <div className="bg-white rounded-2xl shadow-lg p-5 mb-4 border border-orange-100">
-              <div className="font-black text-gray-800 mb-2 flex items-center gap-2"><span>📋</span> Contact</div>
-              <div className="text-gray-700 font-medium">{parentName}</div>
-              <div className="text-gray-500 text-sm">{parentEmail}</div>
-              <div className="text-gray-500 text-sm">{parentPhone}</div>
-            </div>
-
-            {/* Price Breakdown */}
-            <div className="bg-white rounded-2xl shadow-lg p-5 mb-6 border border-orange-100">
-              <div className="font-black text-gray-800 mb-3 flex items-center gap-2"><span>💰</span> Price Breakdown</div>
-              <div className="flex justify-between text-sm text-gray-500 mb-1.5"><span>Student 1 — {weeksCount} week{weeksCount !== 1 ? "s" : ""} × ${PRICE_PER_WEEK}</span><span className="font-bold text-gray-700">${pricing.firstStudentSubtotal.toFixed(2)}</span></div>
-              {studentCount > 1 && <div className="flex justify-between text-sm text-green-600 mb-1.5 font-bold"><span>{studentCount - 1} additional student{studentCount > 2 ? "s" : ""} (50% off)</span><span>${pricing.additionalSubtotal.toFixed(2)}</span></div>}
-              {isFullSummer && <div className="flex justify-between text-sm text-yellow-600 mb-1.5 font-bold"><span>Full Summer Bonus Discount (15%)</span><span>−${pricing.fullSummerSavings.toFixed(2)}</span></div>}
-              <div className="flex justify-between font-black text-gray-800 text-2xl border-t border-gray-100 pt-3 mt-2">
-                <span>Total Due Today</span>
-                <span style={{ color: "#FF6B35" }}>${pricing.total.toFixed(2)}</span>
+                <h2 className="text-3xl font-black text-gray-800">You're In! 🎉</h2>
+                <p className="text-gray-600 text-lg max-w-sm">Welcome to MyDojo Summer Camp 2025! Check your email for confirmation and next steps.</p>
+                <p className="text-orange-600 font-bold text-base">See you on the mat! 🥋</p>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="text-center mb-6">
+                  <h1 className="text-3xl font-black text-gray-800 mb-2">💳 Review & Pay</h1>
+                  <p className="text-gray-600">Everything look good? Enter your card to secure your spots!</p>
+                </div>
 
-            <div className="flex gap-3">
-              <Button onClick={() => setStep("info")} variant="outline" className="flex-1 border-gray-300 text-gray-600 rounded-2xl py-6">← Back</Button>
-              <Button onClick={handleCheckout} disabled={isLoading} className="flex-1 text-white font-black uppercase tracking-wider py-6 text-base rounded-2xl shadow-xl" style={{ background: "linear-gradient(135deg, #FF6B35, #FF4500)" }}>
-                {isLoading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Redirecting...</> : `Pay $${pricing.total.toFixed(2)} →`}
-              </Button>
-            </div>
+                {/* Order Summary */}
+                <div className="bg-white rounded-2xl shadow-lg p-5 mb-4 border border-orange-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xl">📅</span>
+                    <span className="font-black text-gray-800">Weeks Selected ({weeksCount})</span>
+                    {isFullSummer && <span className="text-xs bg-yellow-100 text-yellow-700 border border-yellow-300 px-2 py-0.5 rounded-full font-bold">Full Summer ⭐</span>}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                    {CAMP_WEEKS.filter(w => selectedWeeks.has(w.id)).map(w => (
+                      <div key={w.id} className="flex items-center gap-1.5 bg-gray-50 rounded-xl px-2 py-1.5">
+                        <span className="text-sm">{w.emoji}</span>
+                        <span className="text-xs font-bold text-gray-700 leading-tight">{w.theme}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-gray-100 pt-3 space-y-1.5">
+                    <div className="flex justify-between text-sm text-gray-500"><span>Student 1 — {weeksCount} wk{weeksCount !== 1 ? "s" : ""} × $129</span><span className="font-bold text-gray-700">${pricing.firstStudentSubtotal.toFixed(2)}</span></div>
+                    {studentCount > 1 && <div className="flex justify-between text-sm text-green-600 font-bold"><span>{studentCount - 1} additional student{studentCount > 2 ? "s" : ""} (50% off)</span><span>${pricing.additionalSubtotal.toFixed(2)}</span></div>}
+                    {isFullSummer && <div className="flex justify-between text-sm text-yellow-600 font-bold"><span>Full Summer Discount (15%)</span><span>−${pricing.fullSummerSavings.toFixed(2)}</span></div>}
+                    <div className="flex justify-between font-black text-gray-800 text-xl border-t border-gray-100 pt-2 mt-1">
+                      <span>Total Due Today</span>
+                      <span style={{ color: "#FF6B35" }}>${pricing.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
 
-            <p className="text-center text-xs text-gray-400 mt-4">🔒 Secure checkout powered by Stripe. Your card info is never stored on our servers.</p>
+                {/* Students */}
+                <div className="bg-white rounded-2xl shadow-md p-4 mb-4 border border-orange-100">
+                  <div className="flex items-center gap-2 mb-2"><span>👦</span><span className="font-black text-gray-800">Students</span></div>
+                  {students.map((s, i) => (
+                    <div key={i} className="flex items-center justify-between py-1 border-b border-gray-50 last:border-0">
+                      <span className="text-gray-700 text-sm font-medium">{s.name} · DOB {s.dob} · Age {getAgeFromDob(s.dob)}</span>
+                      {i > 0 && <span className="text-xs text-green-600 font-black bg-green-50 px-2 py-0.5 rounded-full">50% off</span>}
+                    </div>
+                  ))}
+                </div>
+
+                {/* FluidPay Card Form */}
+                <div className="bg-white rounded-2xl shadow-lg p-5 mb-4 border border-orange-100">
+                  <div className="flex items-center gap-2 mb-4">
+                    <CreditCard className="w-5 h-5 text-orange-500" />
+                    <span className="font-black text-gray-800">Card Details</span>
+                  </div>
+                  {!tokenizerReady && !paymentError && (
+                    <div className="flex items-center justify-center py-8 gap-3 text-gray-400">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Loading secure payment form…</span>
+                    </div>
+                  )}
+                  <div id="camp-fluidpay-tokenizer" className={tokenizerReady ? "block" : "hidden"} />
+                </div>
+
+                {paymentError && (
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 mb-4">
+                    <span className="text-base">⚠️ {paymentError}</span>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <Button onClick={() => setStep("info")} variant="outline" className="flex-1 border-gray-300 text-gray-600 rounded-2xl py-6">← Back</Button>
+                  <Button
+                    onClick={handlePayNow}
+                    disabled={isLoading || !tokenizerReady}
+                    className="flex-1 text-white font-black uppercase tracking-wider py-6 text-base rounded-2xl shadow-xl"
+                    style={{ background: "linear-gradient(135deg, #FF6B35, #FF4500)" }}
+                  >
+                    {isLoading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Processing…</> : `Pay $${pricing.total.toFixed(2)} →`}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mt-4">
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Secured by Fluid Pay · PCI DSS Compliant · Card info never stored on our servers</span>
+                </div>
+              </>
+            )}
           </div>
         )}
 

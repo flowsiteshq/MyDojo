@@ -6781,100 +6781,86 @@ Please enter your card details below to complete your registration securely. Tot
     // Builds a Stripe Checkout session with correct per-week, per-student pricing.
     createSummerCampEnrollCheckout: publicProcedure
       .input(z.object({
+        token: z.string().min(1),           // FluidPay tokenizer token
         weeks: z.array(z.string()).min(1),
-        students: z.array(z.object({ name: z.string(), age: z.number() })).min(1),
+        students: z.array(z.object({ name: z.string(), age: z.number(), dob: z.string().optional() })).min(1),
         parentName: z.string().min(1),
         parentEmail: z.string().email(),
         parentPhone: z.string().min(7),
         isFullSummer: z.boolean(),
         totalCents: z.number().int().positive(),
-        origin: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        const stripeKey = process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '';
-        if (!stripeKey) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Stripe not configured' });
+        const fluidPayKey = process.env.FLUIDPAY_SECRET_KEY;
+        if (!fluidPayKey) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
 
-        const stripeClient = new Stripe(stripeKey, { apiVersion: '2026-01-28.clover' as any });
-        const baseUrl = input.origin || 'https://mydojoma.com';
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
 
-        const PRICE_PER_WEEK = 12900; // cents
         const weeksCount = input.weeks.length;
         const studentCount = input.students.length;
-
-        // Build line items
-        const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
-
-        // First student — full price
-        lineItems.push({
-          price_data: {
-            currency: 'usd',
-            unit_amount: PRICE_PER_WEEK,
-            product_data: {
-              name: `Summer Camp — ${input.students[0].name} (${weeksCount} week${weeksCount !== 1 ? 's' : ''})`,
-              description: input.weeks.join(', '),
-            },
-          },
-          quantity: weeksCount,
-        });
-
-        // Additional students — 50% off
-        for (let i = 1; i < studentCount; i++) {
-          lineItems.push({
-            price_data: {
-              currency: 'usd',
-              unit_amount: Math.round(PRICE_PER_WEEK * 0.5),
-              product_data: {
-                name: `Summer Camp — ${input.students[i].name} (${weeksCount} week${weeksCount !== 1 ? 's' : ''}) — 50% Family Discount`,
-                description: input.weeks.join(', '),
-              },
-            },
-            quantity: weeksCount,
-          });
-        }
-
-        // Full summer 15% discount as a negative line item
-        if (input.isFullSummer) {
-          const subtotalCents = lineItems.reduce((sum, li) => {
-            const amt = li.price_data?.unit_amount ?? 0;
-            const qty = li.quantity ?? 1;
-            return sum + amt * qty;
-          }, 0);
-          const discountCents = Math.round(subtotalCents * 0.15);
-          lineItems.push({
-            price_data: {
-              currency: 'usd',
-              unit_amount: -discountCents,
-              product_data: {
-                name: 'Full Summer Bonus Discount (15%)',
-                description: 'Discount for enrolling in all 10 weeks',
-              },
-            },
-            quantity: 1,
-          });
-        }
-
+        const studentsList = input.students.map(s => `${s.name} (age ${s.age}${s.dob ? ', DOB ' + s.dob : ''})`).join(', ');
         const weeksList = input.weeks.join(', ');
-        const studentsList = input.students.map(s => `${s.name} (age ${s.age})`).join(', ');
 
-        const session = await stripeClient.checkout.sessions.create({
-          payment_method_types: ['card'],
-          mode: 'payment',
-          line_items: lineItems,
-          allow_promotion_codes: true,
-          customer_email: input.parentEmail,
-          success_url: `${baseUrl}/summer-camp/enroll?checkout=success`,
-          cancel_url: `${baseUrl}/summer-camp/enroll?checkout=cancelled`,
-          metadata: {
-            type: 'summer_camp_enrollment',
-            parent_name: input.parentName,
-            parent_phone: input.parentPhone,
-            students: studentsList,
-            weeks: weeksList,
-            is_full_summer: input.isFullSummer ? 'true' : 'false',
-          },
+        // Charge via FluidPay REST API
+        const chargeRes = await fetch('https://app.fluidpay.com/api/transaction', {
+          method: 'POST',
+          headers: { 'Authorization': fluidPayKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'sale',
+            amount: input.totalCents,
+            payment_method: { token: input.token },
+            billing_address: {
+              first_name: input.parentName.split(' ')[0],
+              last_name: input.parentName.split(' ').slice(1).join(' ') || '',
+              email: input.parentEmail,
+              phone: input.parentPhone,
+            },
+            order_id: `camp-${Date.now()}`,
+            description: `MyDojo Summer Camp 2025 — ${studentCount} student${studentCount !== 1 ? 's' : ''}, ${weeksCount} week${weeksCount !== 1 ? 's' : ''}`,
+          }),
         });
 
-        return { checkoutUrl: session.url };
+        const chargeBody = await chargeRes.json() as {
+          status: string;
+          msg: string;
+          data?: { id: string; status: string; response_body?: { card?: { response_text?: string } } };
+        };
+
+        if (chargeBody.status !== 'success' || !chargeBody.data) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: chargeBody.msg || 'Payment failed' });
+        }
+        const txn = chargeBody.data;
+        if (txn.status !== 'approved') {
+          const declineMsg = txn.response_body?.card?.response_text || `Transaction ${txn.status}`;
+          throw new TRPCError({ code: 'BAD_REQUEST', message: `Payment declined: ${declineMsg}` });
+        }
+
+        // Record enrollment
+        await db.insert(schema.summerCampEnrollments).values({
+          parentName: input.parentName,
+          parentEmail: input.parentEmail,
+          parentPhone: input.parentPhone,
+          students: JSON.stringify(input.students),
+          weeks: JSON.stringify(input.weeks),
+          weekCount: weeksCount,
+          studentCount,
+          isFullSummer: input.isFullSummer ? 1 : 0,
+          amountCents: input.totalCents,
+          fpTransactionId: txn.id,
+          status: 'approved',
+        } as any);
+
+        // Notify owner
+        try {
+          const { notifyOwner } = await import('./_core/notification');
+          await notifyOwner({
+            title: `🏕️ New Summer Camp Enrollment — ${input.parentName}`,
+            content: `${input.parentName} (${input.parentEmail}, ${input.parentPhone}) enrolled ${studentCount} student${studentCount !== 1 ? 's' : ''} for ${weeksCount} week${weeksCount !== 1 ? 's' : ''}${input.isFullSummer ? ' (Full Summer!)' : ''}. Total: $${(input.totalCents / 100).toFixed(2)}. Students: ${studentsList}. Weeks: ${weeksList}. FP Txn: ${txn.id}`,
+          });
+        } catch {}
+
+        return { success: true, transactionId: txn.id, amountCharged: input.totalCents };
       }),
 
     // ─── Visitor SMS Trigger ──────────────────────────────────────────────────

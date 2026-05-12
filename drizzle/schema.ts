@@ -1738,3 +1738,37 @@ export const visitorSmsSent = mysqlTable("visitorSmsSent", {
 });
 export type VisitorSmsSent = typeof visitorSmsSent.$inferSelect;
 export type InsertVisitorSmsSent = typeof visitorSmsSent.$inferInsert;
+
+// ─── Summer Camp Enrollments ───────────────────────────────────────────────
+/**
+ * Tracks paid Summer Camp enrollments processed via FluidPay.
+ * One row per enrollment transaction (one parent + one or more students).
+ */
+export const summerCampEnrollments = mysqlTable("summerCampEnrollments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Parent / guardian full name */
+  parentName: varchar("parentName", { length: 255 }).notNull(),
+  /** Parent / guardian email */
+  parentEmail: varchar("parentEmail", { length: 320 }).notNull(),
+  /** Parent / guardian phone */
+  parentPhone: varchar("parentPhone", { length: 30 }).notNull(),
+  /** JSON array of { name, dob, age } objects */
+  students: text("students").notNull(),
+  /** JSON array of week theme labels */
+  weeks: text("weeks").notNull(),
+  /** Number of weeks selected */
+  weekCount: int("weekCount").notNull(),
+  /** Number of students enrolled */
+  studentCount: int("studentCount").notNull(),
+  /** Whether the full-summer 15% discount was applied */
+  isFullSummer: int("isFullSummer").notNull().default(0),
+  /** Total amount charged in cents */
+  amountCents: int("amountCents").notNull(),
+  /** FluidPay transaction ID */
+  fpTransactionId: varchar("fpTransactionId", { length: 255 }).notNull(),
+  /** Payment status: approved | declined | error */
+  status: mysqlEnum("status", ["approved", "declined", "error"]).notNull().default("approved"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SummerCampEnrollment = typeof summerCampEnrollments.$inferSelect;
+export type InsertSummerCampEnrollment = typeof summerCampEnrollments.$inferInsert;

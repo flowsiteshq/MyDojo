@@ -330,6 +330,13 @@
       "when": 1778522220597,
       "tag": "0046_lonely_rawhide_kid",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "5",
+      "when": 1778596074597,
+      "tag": "0047_kind_hydra",
+      "breakpoints": true
     }
   ]
 }
