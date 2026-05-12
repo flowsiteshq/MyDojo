@@ -19,6 +19,7 @@ import {
   Phone,
   Mail,
   Tent,
+  Download,
 } from "lucide-react";
 
 const WEEK_ORDER = [
@@ -41,6 +42,54 @@ export default function AdminCampEnrollments() {
 
   const { data: enrollments, isLoading } = trpc.campEnrollments.getAll.useQuery();
   const { data: stats } = trpc.campEnrollments.getStats.useQuery();
+
+  const exportToCsv = () => {
+    if (!enrollments || enrollments.length === 0) return;
+    const rows: string[][] = [
+      [
+        "Enrollment Date",
+        "Parent Name",
+        "Parent Email",
+        "Parent Phone",
+        "Student #",
+        "Student Name",
+        "Student Age",
+        "Student DOB",
+        "Weeks Count",
+        "Full Summer",
+        "Weeks Enrolled",
+        "Amount Charged",
+        "FluidPay Txn ID",
+      ],
+    ];
+    for (const e of enrollments) {
+      e.students.forEach((s, idx) => {
+        rows.push([
+          new Date(e.createdAt).toLocaleDateString("en-US"),
+          e.parentName,
+          e.parentEmail,
+          e.parentPhone,
+          String(idx + 1),
+          s.name,
+          String(s.age),
+          s.dob ?? "",
+          String(e.weekCount),
+          e.isFullSummer === 1 ? "Yes" : "No",
+          e.weeks.join(" | "),
+          `$${(e.amountCents / 100).toFixed(2)}`,
+          e.fpTransactionId,
+        ]);
+      });
+    }
+    const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `mydojo-camp-enrollments-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const filtered = (enrollments ?? []).filter((e) => {
     const matchesSearch =
@@ -134,7 +183,7 @@ export default function AdminCampEnrollments() {
           </div>
         )}
 
-        {/* Filters */}
+        {/* Filters + Export */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -155,6 +204,14 @@ export default function AdminCampEnrollments() {
               <option key={w} value={w}>{w}</option>
             ))}
           </select>
+          <button
+            onClick={exportToCsv}
+            disabled={!enrollments || enrollments.length === 0}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </button>
         </div>
 
         {/* Table */}

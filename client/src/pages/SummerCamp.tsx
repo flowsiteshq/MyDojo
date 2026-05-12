@@ -258,6 +258,13 @@ export default function SummerCamp() {
               >
                 CLAIM SUMMER PASS →
               </button>
+              <a
+                href="/summer-camp/enroll"
+                className="w-full py-3 px-8 font-black uppercase tracking-wider rounded transition-all hover:opacity-90 flex items-center justify-center gap-2 border-2"
+                style={{ background: "transparent", color: "#f6e05e", borderColor: "#f6e05e", fontSize: "1rem" }}
+              >
+                🏕️ ENROLL NOW — PICK YOUR WEEKS →
+              </a>
               <button
                 onClick={() => document.getElementById("schedule")?.scrollIntoView({ behavior: "smooth" })}
                 className="w-full py-2 font-bold uppercase tracking-wider text-center text-sm"
@@ -624,13 +631,22 @@ export default function SummerCamp() {
                 GIVE THEM A SUMMER THEY'LL NEVER FORGET!
               </h2>
               <p className="text-white/80 text-lg mb-8">3 Days. Endless Adventures. Lifetime Memories.</p>
-              <button
-                onClick={claimPass}
-                className="font-black uppercase tracking-wider text-black rounded-lg px-10 py-4 text-lg transition-all hover:opacity-90 hover:scale-105 shadow-2xl"
-                style={{ background: "#f6e05e" }}
-              >
-                CLAIM 3 DAYS FOR ONLY $49 →
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={claimPass}
+                  className="font-black uppercase tracking-wider text-black rounded-lg px-10 py-4 text-lg transition-all hover:opacity-90 hover:scale-105 shadow-2xl"
+                  style={{ background: "#f6e05e" }}
+                >
+                  CLAIM 3 DAYS FOR ONLY $49 →
+                </button>
+                <a
+                  href="/summer-camp/enroll"
+                  className="font-black uppercase tracking-wider text-white rounded-lg px-10 py-4 text-lg transition-all hover:opacity-90 hover:scale-105 shadow-2xl border-2 border-white flex items-center justify-center gap-2"
+                  style={{ background: "transparent" }}
+                >
+                  🏕️ ENROLL NOW
+                </a>
+              </div>
               <p className="text-white/60 text-xs uppercase tracking-widest mt-4">LIMITED SUMMER SPOTS — RESERVE TODAY!</p>
             </div>
 

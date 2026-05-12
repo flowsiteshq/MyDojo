@@ -6860,6 +6860,24 @@ Please enter your card details below to complete your registration securely. Tot
           });
         } catch {}
 
+        // Send confirmation SMS to parent
+        try {
+          const { sendSms } = await import('./sms800');
+          const firstName = input.parentName.split(' ')[0];
+          const studentNames = input.students.map(s => s.name).join(' & ');
+          const weeksLabel = input.isFullSummer ? 'the Full Summer (all 10 weeks)' : `${weeksCount} week${weeksCount !== 1 ? 's' : ''}`;
+          const amountFormatted = `$${(input.totalCents / 100).toFixed(2)}`;
+          const confirmMsg = `🏕️ Hi ${firstName}! Your MyDojo Summer Camp enrollment is CONFIRMED! 🎉\n\n` +
+            `👦 Student${studentCount !== 1 ? 's' : ''}: ${studentNames}\n` +
+            `📅 Enrolled for: ${weeksLabel}\n` +
+            `💳 Total charged: ${amountFormatted}\n\n` +
+            `We can't wait to see ${studentCount !== 1 ? 'them' : 'them'} at camp! Questions? Call us at (877) 4-MYDOJO. 🥋`;
+          await sendSms({ to: input.parentPhone, message: confirmMsg });
+        } catch (smsErr) {
+          // Non-fatal — enrollment already recorded, just log
+          console.error('[CampEnroll] Confirmation SMS failed:', smsErr);
+        }
+
         return { success: true, transactionId: txn.id, amountCharged: input.totalCents };
       }),
 
