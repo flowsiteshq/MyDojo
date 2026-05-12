@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { CookieBanner } from "@/components/CookieBanner";
 import { ProgramFinderPopup } from "@/components/ProgramFinderPopup";
 import { WebsiteVisitorPopup } from "@/components/WebsiteVisitorPopup";
+import OnlineSpecialPopup from "@/components/OnlineSpecialPopup";
 import { openIntakeChatbot } from "@/lib/chatbot";
 import { useLocationContext } from "@/contexts/LocationContext";
 import { NotificationSubscribe } from "@/components/NotificationSubscribe";
@@ -30,6 +31,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProgramsOpen, setIsProgramsOpen] = useState(false);
   const [showProgramFinder, setShowProgramFinder] = useState(false);
+  const [offerParam, setOfferParam] = useState<"kids" | "adults" | null>(null);
+
+  // Detect ?offer=kids or ?offer=adults URL param and auto-open the $29 popup
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const offer = params.get("offer");
+    if (offer === "kids") setOfferParam("kids");
+    else if (offer === "adults") setOfferParam("adults");
+  }, []);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const openPrograms = useCallback(() => {
@@ -481,6 +491,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <CookieBanner />
       <ProgramFinderPopup isOpen={showProgramFinder} onClose={() => setShowProgramFinder(false)} />
       <WebsiteVisitorPopup />
+      <OnlineSpecialPopup forceOpen={!!offerParam} defaultProgram={offerParam} />
 
       {/* Main Content */}
       <main className="flex-grow pt-0">

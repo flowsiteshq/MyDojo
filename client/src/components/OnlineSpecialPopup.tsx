@@ -79,7 +79,12 @@ const HERO_IMAGE_ADULT = "/manus-storage/popup-hero-martial-arts_f910ca46.jpg";
 const HERO_IMAGE_KIDS = "/manus-storage/popup-hero-kids_0029eb40.jpg";
 const DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-export default function OnlineSpecialPopup() {
+interface OnlineSpecialPopupProps {
+  forceOpen?: boolean;
+  defaultProgram?: "kids" | "adults" | null;
+}
+
+export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: OnlineSpecialPopupProps = {}) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"program" | "form" | "schedule" | "done">("program");
   const [selectedProgram, setSelectedProgram] = useState<typeof PROGRAMS[0] | null>(null);
@@ -103,7 +108,21 @@ export default function OnlineSpecialPopup() {
   const submitLead = trpc.popup.submitLead.useMutation();
   const checkoutMutation = trpc.popup.createIntroOfferCheckout.useMutation();
 
+  // Force-open immediately (e.g. from ?offer=kids URL param)
   useEffect(() => {
+    if (forceOpen && !hasShown.current) {
+      hasShown.current = true;
+      setOpen(true);
+      // Pre-select the kids program if defaultProgram is 'kids'
+      if (defaultProgram === "kids") {
+        const kidsProgram = PROGRAMS.find((p) => p.label === "Kids Martial Arts");
+        if (kidsProgram) setSelectedProgram(kidsProgram);
+      } else if (defaultProgram === "adults") {
+        const adultProgram = PROGRAMS.find((p) => p.label === "Teens & Adults");
+        if (adultProgram) setSelectedProgram(adultProgram);
+      }
+      return;
+    }
     if (hasShown.current) return;
     const timer = setTimeout(() => {
       if (!sessionStorage.getItem("onlineSpecialDismissed")) {
@@ -112,7 +131,7 @@ export default function OnlineSpecialPopup() {
       }
     }, 5000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [forceOpen, defaultProgram]);
 
   const fireConfetti = useCallback(() => {
     confetti({
