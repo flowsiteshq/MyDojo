@@ -25,6 +25,7 @@ import {
   Share2,
   Clock,
   PartyPopper,
+  Tent,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { trpc } from "@/lib/trpc";
@@ -161,6 +162,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/messages", label: "Messages", icon: MessageSquare },
     { href: "/admin/promo-blast", label: "Promo Blast", icon: Megaphone },
     { href: "/admin/pno-rsvps", label: "PNO RSVPs", icon: PartyPopper },
+    { href: "/admin/camp-enrollments", label: "Camp Enrollments", icon: Tent },
     { href: "/admin/social-media", label: "Social Media", icon: Share2 },
     { href: "/admin/commissions", label: "Commissions", icon: DollarSign },
   ];

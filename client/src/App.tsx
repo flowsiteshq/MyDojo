@@ -70,6 +70,7 @@ const StaffClockIn = lazy(() => import("./pages/StaffClockIn"));
 const AdminStaffHours = lazy(() => import("./pages/AdminStaffHours"));
 const AdminFamilyGroups = lazy(() => import("./pages/AdminFamilyGroups"));
 const AdminPnoRsvps = lazy(() => import("./pages/AdminPnoRsvps"));
+const AdminCampEnrollments = lazy(() => import("./pages/AdminCampEnrollments"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const IntroOfferSuccess = lazy(() => import("./pages/IntroOfferSuccess"));
 const Join = lazy(() => import("./pages/Join"));
@@ -154,6 +155,7 @@ function Router() {
         <Route path="/admin/staff-hours" component={AdminStaffHours} />
         <Route path="/admin/family-groups" component={AdminFamilyGroups} />
         <Route path="/admin/pno-rsvps" component={AdminPnoRsvps} />
+        <Route path="/admin/camp-enrollments" component={AdminCampEnrollments} />
         <Route path="/staff-clock-in" component={StaffClockIn} />
         
         {/* All other routes with Layout */}

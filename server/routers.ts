@@ -8587,5 +8587,52 @@ Please enter your card details below to complete your registration securely. Tot
         return getPnoRsvps();
       }),
   }),
+
+  // ─── Summer Camp Enrollments (admin) ──────────────────────────────────────
+  campEnrollments: router({
+    getAll: protectedProcedure
+      .query(async ({ ctx }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        const rows = await db
+          .select()
+          .from(schema.summerCampEnrollments)
+          .orderBy(schema.summerCampEnrollments.createdAt);
+        return rows.map(r => ({
+          ...r,
+          students: JSON.parse(r.students) as { name: string; age: number; dob?: string }[],
+          weeks: JSON.parse(r.weeks) as string[],
+        }));
+      }),
+
+    getStats: protectedProcedure
+      .query(async ({ ctx }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        const rows = await db
+          .select()
+          .from(schema.summerCampEnrollments)
+          .where(eq(schema.summerCampEnrollments.status, 'approved'));
+        const totalEnrollments = rows.length;
+        const totalStudents = rows.reduce((sum, r) => sum + r.studentCount, 0);
+        const totalRevenueCents = rows.reduce((sum, r) => sum + r.amountCents, 0);
+        const fullSummerCount = rows.filter(r => r.isFullSummer === 1).length;
+        // Count enrollments per week
+        const weekCounts: Record<string, number> = {};
+        for (const row of rows) {
+          const weeks = JSON.parse(row.weeks) as string[];
+          for (const w of weeks) {
+            weekCounts[w] = (weekCounts[w] || 0) + row.studentCount;
+          }
+        }
+        return { totalEnrollments, totalStudents, totalRevenueCents, fullSummerCount, weekCounts };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;
