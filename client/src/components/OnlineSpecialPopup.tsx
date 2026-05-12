@@ -287,21 +287,42 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
 
         {/* ── RIGHT PANEL ── */}
         <div className="flex-1 flex flex-col bg-white overflow-y-auto" style={{ maxHeight: "92vh" }}>
-          {/* Mobile top bar */}
-          <div className="md:hidden bg-black px-5 pt-5 pb-4 text-center">
-            <div className="inline-block bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-sm mb-2">
-              Online Special
+          {/* Mobile hero image banner */}
+          <div
+            className="md:hidden relative flex flex-col justify-end flex-shrink-0"
+            style={{
+              backgroundImage: `url(${step === "program" ? HERO_IMAGE_ADULT : heroImage})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center top",
+              height: "200px",
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-black/20" />
+            <div className="absolute top-4 left-4">
+              <div className="bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-sm">
+                Online Special
+              </div>
             </div>
-            <h2 className="text-2xl font-black text-white tracking-tight">
-              2 CLASSES FOR <span style={{ color: "#FF3B3B" }}>$29</span>
-            </h2>
-            <p className="text-white/50 text-xs uppercase tracking-widest mt-1">Uniform Included</p>
+            <button
+              onClick={handleDismiss}
+              className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="relative z-10 px-5 pb-4">
+              <h2 className="text-3xl font-black text-white leading-tight tracking-tight">
+                2 CLASSES FOR <span style={{ color: "#FF3B3B" }}>$29</span>
+              </h2>
+              <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.15em] mt-1">
+                Uniform Included · Limited Spots
+              </p>
+            </div>
           </div>
 
-          {/* Close */}
+          {/* Close — desktop only (mobile uses the one in the hero banner) */}
           <button
             onClick={handleDismiss}
-            className="absolute top-4 right-4 z-20 w-8 h-8 bg-black/10 hover:bg-black/20 text-gray-600 hover:text-black rounded-full flex items-center justify-center transition-all"
+            className="hidden md:flex absolute top-4 right-4 z-20 w-8 h-8 bg-black/10 hover:bg-black/20 text-gray-600 hover:text-black rounded-full items-center justify-center transition-all"
           >
             <X className="w-4 h-4" />
           </button>
