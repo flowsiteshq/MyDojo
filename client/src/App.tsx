@@ -80,6 +80,7 @@ const ParentsNightOut = lazy(() => import("./pages/ParentsNightOut"));
 const BirthdayParties = lazy(() => import("./pages/BirthdayParties"));
 const PrivateLessons = lazy(() => import("./pages/PrivateLessons"));
 const PrivateLessonsSuccess = lazy(() => import("./pages/PrivateLessonsSuccess"));
+const AdminFacebookAds = lazy(() => import("./pages/AdminFacebookAds"));
 
 // Loading component — subtle fade-in bar at the top, no jarring red circle
 const PageLoader = () => (
@@ -161,6 +162,7 @@ function Router() {
         <Route path="/admin/family-groups" component={AdminFamilyGroups} />
         <Route path="/admin/pno-rsvps" component={AdminPnoRsvps} />
         <Route path="/admin/camp-enrollments" component={AdminCampEnrollments} />
+        <Route path="/admin/facebook-ads" component={AdminFacebookAds} />
         <Route path="/staff-clock-in" component={StaffClockIn} />
         
         {/* All other routes with Layout */}

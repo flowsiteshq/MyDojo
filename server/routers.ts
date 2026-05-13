@@ -8704,6 +8704,58 @@ Please enter your card details below to complete your registration securely. Tot
       }),
   }),
 
+  // ── Facebook Ads ─────────────────────────────────────────────────────────────
+  facebookAds: router({
+    getCampaigns: publicProcedure
+      .input(z.object({
+        datePreset: z.string().default('last_30d'),
+      }))
+      .query(async ({ input }) => {
+        // Fetch campaigns from Meta via server-side MCP call
+        const { execSync } = await import('child_process');
+
+        const AD_ACCOUNT_ID = 'act_1144489619967778';
+
+        // Get campaigns list
+        const campaignsResult = JSON.parse(
+          execSync(
+            `manus-mcp-cli tool call meta_marketing_get_campaigns --server meta-marketing --input '${JSON.stringify({ ad_account_id: AD_ACCOUNT_ID, limit: 50 })}' 2>/dev/null && cat $(ls -t /tmp/manus-mcp/mcp_result_*.json | head -1)`,
+            { encoding: 'utf8', timeout: 30000 }
+          ).split('\n').slice(-1)[0] || '{}'
+        );
+
+        // Get insights
+        const insightsResult = JSON.parse(
+          execSync(
+            `manus-mcp-cli tool call meta_marketing_get_insights --server meta-marketing --input '${JSON.stringify({ object_type: 'ad_account', object_id: AD_ACCOUNT_ID, level: 'campaign', date_preset: input.datePreset, limit: 50 })}' 2>/dev/null && cat $(ls -t /tmp/manus-mcp/mcp_result_*.json | head -1)`,
+            { encoding: 'utf8', timeout: 30000 }
+          ).split('\n').slice(-1)[0] || '{}'
+        );
+
+        const campaigns = campaignsResult?.result?.campaigns || [];
+        const insights = insightsResult?.result?.insights || [];
+
+        // Merge campaigns with insights
+        const merged = campaigns.map((c: any) => {
+          const insight = insights.find((i: any) => i.campaign_id === c.id) || {};
+          const leads = insight.actions?.find((a: any) => a.action_type === 'lead')?.value;
+          return {
+            campaignId: c.id,
+            campaignName: c.name,
+            status: c.effective_status,
+            spend: insight.spend || '0',
+            impressions: insight.impressions || '0',
+            linkClicks: insight.inline_link_clicks || '0',
+            ctr: insight.ctr || null,
+            cpm: insight.cpm || null,
+            leads: leads ? parseInt(leads) : 0,
+          };
+        });
+
+        return { campaigns: merged };
+      }),
+  }),
+
   // ── Private Lessons ─────────────────────────────────────────────────────────
   privateLessons: router({
     createCheckout: publicProcedure
