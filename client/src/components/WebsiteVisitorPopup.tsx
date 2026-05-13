@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -102,6 +102,7 @@ export function WebsiteVisitorPopup() {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden bg-white text-black border-0 shadow-2xl" showCloseButton={false}>
+        <DialogTitle className="sr-only">Claim Your Free Class at MyDojo</DialogTitle>
         {/* Header image / hero */}
         <div className="relative bg-black h-36 flex items-center justify-center overflow-hidden">
           <div
