@@ -2206,6 +2206,70 @@ Please enter your card details below to complete your registration securely. Tot
 
         return { success: true };
       }),
+    // ── Messaging: student starts a new conversation ─────────────────────────
+    createConversation: protectedProcedure
+      .input(z.object({ message: z.string().min(1).max(2000) }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+        // Find enrollment for this user
+        const enrollmentRows = await db
+          .select({ id: schema.enrollments.id, customerName: schema.enrollments.customerName })
+          .from(schema.enrollments)
+          .where(eq(schema.enrollments.customerEmail, ctx.user.email))
+          .limit(1);
+        if (!enrollmentRows.length) throw new TRPCError({ code: 'FORBIDDEN', message: 'No enrollment found for your account.' });
+        const { id: enrollmentId, customerName } = enrollmentRows[0];
+
+        // Check if a conversation already exists for this enrollment
+        const existing = await db
+          .select({ id: schema.conversations.id })
+          .from(schema.conversations)
+          .where(
+            and(
+              eq(schema.conversations.type, 'student'),
+              eq(schema.conversations.enrollmentId, enrollmentId)
+            )
+          )
+          .limit(1);
+
+        let conversationId: number;
+        if (existing.length) {
+          // Reuse existing conversation
+          conversationId = existing[0].id;
+        } else {
+          // Create a new conversation
+          const [conv] = await db
+            .insert(schema.conversations)
+            .values({
+              type: 'student',
+              title: customerName ?? ctx.user.name ?? ctx.user.email,
+              createdBy: ctx.user.id,
+              enrollmentId,
+            })
+            .$returningId();
+          conversationId = conv.id;
+        }
+
+        // Insert the message
+        await db.insert(schema.internalMessages).values({
+          conversationId,
+          senderId: ctx.user.id,
+          senderName: ctx.user.name ?? ctx.user.email,
+          senderRole: 'user',
+          body: input.message,
+        });
+
+        // Touch updatedAt
+        await db
+          .update(schema.conversations)
+          .set({ updatedAt: new Date() })
+          .where(eq(schema.conversations.id, conversationId));
+
+        return { conversationId };
+      }),
+
     // Get active membership packages (public - used by standalone enrollment page)
     getActivePackages: publicProcedure.query(async () => {
       const db = await getDb();

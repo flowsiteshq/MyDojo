@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
-import { Send, MessageCircle, ChevronLeft, Loader2, Inbox } from "lucide-react";
+import { Send, MessageCircle, ChevronLeft, Loader2, Inbox, Plus, X } from "lucide-react";
 
 // ── Token helpers (matches MemberDashboard2 useTokens) ───────────────────────
 function useTokens(isDark: boolean) {
@@ -126,6 +126,27 @@ export function MessagesTab({ isDark, currentUserId }: MessagesTabProps) {
         refetchInterval: 10_000,
       }
     );
+
+  // ── New conversation state ────────────────────────────────────────────────
+  const [showNewMsg, setShowNewMsg] = useState(false);
+  const [newMsgText, setNewMsgText] = useState("");
+
+  const createConvMutation = trpc.member.createConversation.useMutation({
+    onSuccess: (data) => {
+      setNewMsgText("");
+      setShowNewMsg(false);
+      utils.member.getConversations.invalidate();
+      utils.member.getUnreadMessageCount.invalidate();
+      setSelectedConvId(data.conversationId);
+      setMobileShowThread(true);
+    },
+  });
+
+  const handleCreateConv = () => {
+    const text = newMsgText.trim();
+    if (!text || createConvMutation.isPending) return;
+    createConvMutation.mutate({ message: text });
+  };
 
   // ── Mutations ──────────────────────────────────────────────────────────────
   const sendMutation = trpc.member.sendMessage.useMutation({
@@ -271,9 +292,16 @@ export function MessagesTab({ isDark, currentUserId }: MessagesTabProps) {
       <div>
         <p className={`font-semibold ${t.textPrimary}`}>No messages yet</p>
         <p className={`text-sm mt-1 ${t.textSecondary}`}>
-          Your instructor will reach out here. Check back soon!
+          Send a message to your instructor to get started!
         </p>
       </div>
+      <button
+        onClick={() => setShowNewMsg(true)}
+        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#E11D2A] text-white text-sm font-semibold hover:bg-[#c01020] transition-colors"
+      >
+        <Plus className="h-4 w-4" />
+        Message Instructor
+      </button>
     </div>
   );
 
@@ -288,7 +316,49 @@ export function MessagesTab({ isDark, currentUserId }: MessagesTabProps) {
 
   // ── Main render ────────────────────────────────────────────────────────────
   return (
-    <div className={`flex h-full rounded-2xl overflow-hidden border ${t.cardBg}`} style={{ minHeight: 520 }}>
+    <div className={`relative flex h-full rounded-2xl overflow-hidden border ${t.cardBg}`} style={{ minHeight: 520 }}>
+      {/* ── New Message Modal ── */}
+      {showNewMsg && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 rounded-2xl">
+          <div className={`w-full max-w-sm mx-4 rounded-2xl shadow-2xl border p-5 ${t.cardBg}`}>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className={`font-bold text-base ${t.textPrimary}`}>Message Your Instructor</h4>
+              <button onClick={() => setShowNewMsg(false)} className={`p-1 rounded-lg ${t.hoverRow}`}>
+                <X className={`h-4 w-4 ${t.textSecondary}`} />
+              </button>
+            </div>
+            <textarea
+              value={newMsgText}
+              onChange={(e) => setNewMsgText(e.target.value)}
+              placeholder="Type your message here…"
+              rows={4}
+              className={`w-full resize-none rounded-xl border px-4 py-2.5 text-sm outline-none transition-colors focus:ring-2 focus:ring-[#E11D2A]/20 ${t.inputBg}`}
+              autoFocus
+            />
+            {createConvMutation.isError && (
+              <p className="text-xs text-red-500 mt-2">
+                {createConvMutation.error?.message ?? "Failed to send. Please try again."}
+              </p>
+            )}
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => setShowNewMsg(false)}
+                className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors ${isDark ? "border-white/10 text-white/60 hover:bg-white/5" : "border-gray-200 text-gray-500 hover:bg-gray-50"}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateConv}
+                disabled={!newMsgText.trim() || createConvMutation.isPending}
+                className="flex-1 py-2 rounded-xl text-sm font-semibold bg-[#E11D2A] text-white hover:bg-[#c01020] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {createConvMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* ── LEFT: Conversation list ── */}
       <div
         className={`flex-shrink-0 w-full sm:w-72 border-r flex flex-col ${t.divider} ${
@@ -296,11 +366,20 @@ export function MessagesTab({ isDark, currentUserId }: MessagesTabProps) {
         }`}
       >
         {/* Header */}
-        <div className={`px-4 py-4 border-b ${t.headerBg} ${t.divider}`}>
-          <h3 className={`font-bold text-base ${t.textPrimary}`}>Messages</h3>
-          <p className={`text-xs mt-0.5 ${t.textSecondary}`}>
-            {conversations.length} conversation{conversations.length !== 1 ? "s" : ""}
-          </p>
+        <div className={`px-4 py-4 border-b ${t.headerBg} ${t.divider} flex items-center justify-between`}>
+          <div>
+            <h3 className={`font-bold text-base ${t.textPrimary}`}>Messages</h3>
+            <p className={`text-xs mt-0.5 ${t.textSecondary}`}>
+              {conversations.length} conversation{conversations.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowNewMsg(true)}
+            title="New message"
+            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDark ? "hover:bg-white/10 text-white/60 hover:text-white" : "hover:bg-gray-100 text-gray-400 hover:text-gray-700"}`}
+          >
+            <Plus className="h-4 w-4" />
+          </button>
         </div>
 
         {/* List */}
