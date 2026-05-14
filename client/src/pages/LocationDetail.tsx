@@ -149,6 +149,85 @@ export default function LocationDetail() {
         <div className="relative h-2 bg-primary" />
       )}
 
+      {/* Affiliate Dojo — About Section */}
+      {!isHQ && location.isAffiliate && (
+        <section className="bg-white border-b border-gray-100">
+          <div className="relative h-2 bg-primary" />
+          {/* Story Header */}
+          <div className="bg-black text-white py-16 relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10"
+              style={{ backgroundImage: "url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/NNwrjeVElfgByBcR.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
+            />
+            <div className="container mx-auto px-4 relative z-10 max-w-4xl">
+              <div className="inline-block bg-primary text-white text-xs font-bold uppercase tracking-widest px-3 py-1 mb-4 rounded-sm">
+                MyDojo Affiliate Partner
+              </div>
+              <h2 className="text-4xl md:text-5xl font-heading font-bold mb-6">
+                PART OF THE <span className="text-primary">MYDOJO NETWORK</span>
+              </h2>
+              <p className="text-gray-300 text-lg leading-relaxed mb-4">
+                {location.description}
+              </p>
+              <p className="text-gray-300 text-lg leading-relaxed">
+                As a MyDojo affiliate, this dojo shares our commitment to excellence in martial arts instruction, character development, and building confident, disciplined students of all ages. Students and families from the MyDojo network are always welcome.
+              </p>
+            </div>
+          </div>
+
+          {/* Programs & Amenities Grid */}
+          <div className="bg-gray-50 py-16">
+            <div className="container mx-auto px-4 max-w-6xl">
+              <div className="text-center mb-12">
+                <h3 className="text-3xl md:text-4xl font-heading font-bold text-black mb-3">PROGRAMS &amp; <span className="text-primary">WHAT TO EXPECT</span></h3>
+                <p className="text-gray-500 text-lg max-w-2xl mx-auto">Quality martial arts training in a welcoming, family-friendly environment.</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  { icon: Users, title: "Kids Programs", description: "Age-appropriate classes for children starting as young as 3, building confidence and discipline." },
+                  { icon: Star, title: "Teen & Adult", description: "Traditional martial arts, kickboxing, and self-defense for teens and adults of all skill levels." },
+                  { icon: Maximize2, title: "Professional Facility", description: "Dedicated training space with professional mats and equipment for safe, effective training." },
+                  { icon: Eye, title: "Parent Viewing", description: "Comfortable viewing areas so parents can watch their children grow and progress." },
+                ].map((item, idx) => (
+                  <div key={idx} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-primary/20 transition-all duration-200 group">
+                    <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary transition-colors duration-200">
+                      <item.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <h4 className="font-bold text-black mb-2 text-sm uppercase tracking-wide">{item.title}</h4>
+                    <p className="text-gray-500 text-sm leading-relaxed">{item.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Affiliate Promise */}
+          <div className="container mx-auto px-4 py-16 max-w-4xl text-center">
+            <h3 className="text-3xl font-heading font-bold text-black mb-6">THE <span className="text-primary">MYDOJO</span> AFFILIATE PROMISE</h3>
+            <p className="text-gray-600 text-lg leading-relaxed mb-4">
+              Every dojo in the MyDojo affiliate network is hand-selected for their shared values: exceptional instruction, a welcoming community, and a genuine commitment to student growth. When you train at a MyDojo affiliate, you train with the same standards we hold at our Tomball headquarters.
+            </p>
+            <p className="text-gray-600 text-lg leading-relaxed mb-8">
+              Whether you're visiting from out of town or looking for a location closer to home, our affiliate network ensures you always have access to world-class martial arts training.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                onClick={openIntakeChatbot}
+                className="bg-primary hover:bg-primary/90 text-white text-lg px-10 py-6 h-auto font-heading uppercase tracking-wider"
+              >
+                Book Your Free Trial Class
+              </Button>
+              <Button
+                variant="outline"
+                className="text-lg px-10 py-6 h-auto font-heading uppercase tracking-wider"
+                onClick={() => window.open(`tel:${location.phone}`, '_self')}
+              >
+                Call {location.phone}
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Tomball HQ — About Our Location Story Section */}
       {isHQ && (
         <section className="bg-white border-b border-gray-100">

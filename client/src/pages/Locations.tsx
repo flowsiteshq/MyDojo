@@ -29,17 +29,17 @@ interface Location {
 const initialLocations: Location[] = [
   {
     id: "yaegers-sda",
-    name: "Yaeger's SDA",
+    name: "Yaeger's Self Defense of America",
     address: "306 East Pasadena Blvd",
     city: "Deer Park",
     state: "TX",
     zip: "77536",
-    phone: "",
+    phone: "(281) 479-3880",
     coordinates: {
       lat: 29.7052,
       lng: -95.1241
     },
-    hours: [],
+    hours: ["Mon–Fri: 5:30 PM – 9:15 PM", "Sat–Sun: Tournaments & Events"],
     isAffiliate: true
   },
   {
@@ -49,12 +49,12 @@ const initialLocations: Location[] = [
     city: "Belle Chasse",
     state: "LA",
     zip: "70037",
-    phone: "",
+    phone: "(504) 391-7200",
     coordinates: {
       lat: 29.8574,
       lng: -90.0004
     },
-    hours: [],
+    hours: ["Mon–Fri: 12:00 PM – 9:00 PM", "Sat–Sun: Closed"],
     isAffiliate: true
   },
   {
@@ -308,13 +308,11 @@ export default function Locations() {
                     }}>
                       Directions
                     </Button>
-                    {!location.isAffiliate && (
-                      <Link href={`/locations/${location.id}`}>
-                        <Button size="sm" className="flex-1 bg-primary text-white hover:bg-primary/90">
-                          Details
-                        </Button>
-                      </Link>
-                    )}
+                    <Link href={`/locations/${location.id}`}>
+                      <Button size="sm" className="flex-1 bg-primary text-white hover:bg-primary/90">
+                        Details
+                      </Button>
+                    </Link>
                   </div>
                   {location.id === 'hq' && (
                     <div className="mt-2">

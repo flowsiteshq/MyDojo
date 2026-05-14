@@ -35,21 +35,77 @@ export interface Location {
 export const locations: Location[] = [
   {
     id: "yaegers-sda",
-    name: "Yaeger's SDA",
+    name: "Yaeger's Self Defense of America",
     address: "306 East Pasadena Blvd",
     city: "Deer Park",
     state: "TX",
     zip: "77536",
-    phone: "",
+    phone: "(281) 479-3880",
     coordinates: {
       lat: 29.7052,
       lng: -95.1241
     },
     timezone: "America/Chicago",
-    hours: [],
-    description: "Yaeger's SDA is a proud affiliate dojo of MyDojo Martial Arts & Fitness, located in Deer Park, TX.",
+    hours: [
+      "Mon–Fri: 5:30 PM – 9:15 PM",
+      "Tue & Thu: 1:30 PM – 2:15 PM (Mommy & Me)",
+      "Sat–Sun: Tournaments & Special Events"
+    ],
+    description: "Yaeger's Self Defense of America is a proud affiliate dojo of MyDojo Martial Arts & Fitness, located in Deer Park, TX. Founded by Grand Master Chris Yaeger — a Hall of Famer with over 45 years of experience and trusted by multiple law enforcement agencies — Yaeger's SDA offers a blended martial arts and self-defense program for kids, teens, and adults focused on delivering real-life skills and real-world defense measures.",
     isAffiliate: true,
-    affiliateNote: "Affiliate Dojo"
+    affiliateNote: "Affiliate Dojo",
+    schedule: [
+      {
+        day: "Monday",
+        classes: [
+          { time: "5:00 PM", name: "Intermediate Dragon Kids", ageGroup: "Ages 6–11", instructor: "Grand Master Chris Yaeger" },
+          { time: "6:00 PM", name: "Beginner Dragon Kids", ageGroup: "Ages 6–11", instructor: "Grand Master Chris Yaeger" },
+          { time: "6:00 PM", name: "Fitness Kickboxing (Early)", ageGroup: "Ages 16+", instructor: "Grand Master Chris Yaeger" },
+          { time: "7:00 PM", name: "Fitness Kickboxing (Evening)", ageGroup: "Ages 16+", instructor: "Grand Master Chris Yaeger" },
+          { time: "7:00 PM", name: "Teen Warriors / Adult Beginners", ageGroup: "Ages 12+", instructor: "Grand Master Chris Yaeger" }
+        ]
+      },
+      {
+        day: "Tuesday",
+        classes: [
+          { time: "1:30 PM", name: "Mommy & Me / Little Ninjas", ageGroup: "Ages 4–5", instructor: "Grand Master Chris Yaeger" },
+          { time: "5:00 PM", name: "Beginner Dragon Kids", ageGroup: "Ages 6–11", instructor: "Grand Master Chris Yaeger" },
+          { time: "6:00 PM", name: "Intermediate Dragon Kids", ageGroup: "Ages 6–11", instructor: "Grand Master Chris Yaeger" },
+          { time: "6:00 PM", name: "Fitness Kickboxing (Early)", ageGroup: "Ages 16+", instructor: "Grand Master Chris Yaeger" },
+          { time: "7:00 PM", name: "Advanced Teen Warriors / Adult", ageGroup: "Ages 12+", instructor: "Grand Master Chris Yaeger" },
+          { time: "7:00 PM", name: "Fitness Kickboxing (Evening)", ageGroup: "Ages 16+", instructor: "Grand Master Chris Yaeger" },
+          { time: "8:15 PM", name: "Thai Kickboxing", ageGroup: "Ages 14+", instructor: "Grand Master Chris Yaeger" }
+        ]
+      },
+      {
+        day: "Wednesday",
+        classes: [
+          { time: "5:00 PM", name: "Intermediate Dragon Kids", ageGroup: "Ages 6–11", instructor: "Grand Master Chris Yaeger" },
+          { time: "6:00 PM", name: "Beginner Dragon Kids", ageGroup: "Ages 6–11", instructor: "Grand Master Chris Yaeger" },
+          { time: "6:00 PM", name: "Fitness Kickboxing (Early)", ageGroup: "Ages 16+", instructor: "Grand Master Chris Yaeger" },
+          { time: "7:00 PM", name: "Fitness Kickboxing (Evening)", ageGroup: "Ages 16+", instructor: "Grand Master Chris Yaeger" },
+          { time: "7:00 PM", name: "Teen Warriors / Adult Beginners", ageGroup: "Ages 12+", instructor: "Grand Master Chris Yaeger" }
+        ]
+      },
+      {
+        day: "Thursday",
+        classes: [
+          { time: "1:30 PM", name: "Mommy & Me / Little Ninjas", ageGroup: "Ages 4–5", instructor: "Grand Master Chris Yaeger" },
+          { time: "5:00 PM", name: "Beginner Dragon Kids", ageGroup: "Ages 6–11", instructor: "Grand Master Chris Yaeger" },
+          { time: "6:00 PM", name: "Intermediate Dragon Kids", ageGroup: "Ages 6–11", instructor: "Grand Master Chris Yaeger" },
+          { time: "6:00 PM", name: "Fitness Kickboxing (Early)", ageGroup: "Ages 16+", instructor: "Grand Master Chris Yaeger" },
+          { time: "7:00 PM", name: "Advanced Teen Warriors / Adult", ageGroup: "Ages 12+", instructor: "Grand Master Chris Yaeger" },
+          { time: "7:00 PM", name: "Fitness Kickboxing (Evening)", ageGroup: "Ages 16+", instructor: "Grand Master Chris Yaeger" },
+          { time: "8:15 PM", name: "Thai Kickboxing", ageGroup: "Ages 14+", instructor: "Grand Master Chris Yaeger" }
+        ]
+      },
+      {
+        day: "Friday",
+        classes: [
+          { time: "TBA", name: "Competition Team", ageGroup: "All Ages", instructor: "Grand Master Chris Yaeger" }
+        ]
+      }
+    ]
   },
   {
     id: "nokc-belle-chasse",
@@ -58,16 +114,70 @@ export const locations: Location[] = [
     city: "Belle Chasse",
     state: "LA",
     zip: "70037",
-    phone: "",
+    phone: "(504) 391-7200",
     coordinates: {
       lat: 29.8574,
       lng: -90.0004
     },
     timezone: "America/Chicago",
-    hours: [],
-    description: "New Orleans Karate Club Belle Chasse is a proud affiliate dojo of MyDojo Martial Arts & Fitness, located in Belle Chasse, Louisiana.",
+    hours: [
+      "Mon–Fri: 12:00 PM – 9:00 PM",
+      "Sat–Sun: Closed"
+    ],
+    description: "New Orleans Karate Club Belle Chasse is a proud affiliate dojo of MyDojo Martial Arts & Fitness. Founded in 1999 by Burton and Nancy Maben, NOKC is the premier family martial arts training center in the New Orleans metropolitan area. With decades of experience, they offer traditional karate, kickboxing, and self-defense programs for all ages — from Lil' Dragons (ages 3+) to adult competition teams — with a strong emphasis on character development, leadership, and community service.",
     isAffiliate: true,
-    affiliateNote: "Affiliate Dojo"
+    affiliateNote: "Affiliate Dojo",
+    schedule: [
+      {
+        day: "Monday",
+        classes: [
+          { time: "12:00 PM", name: "Executive Fitness", ageGroup: "Adults" },
+          { time: "4:00 PM", name: "Lil' Dragons / Tiny Tigers", ageGroup: "Ages 3–6" },
+          { time: "5:00 PM", name: "Superkids", ageGroup: "Ages 7–12" },
+          { time: "6:00 PM", name: "Teen / Adult Karate", ageGroup: "Ages 13+" },
+          { time: "7:00 PM", name: "Advanced / Black Belt", ageGroup: "Advanced Students" }
+        ]
+      },
+      {
+        day: "Tuesday",
+        classes: [
+          { time: "12:00 PM", name: "Executive Fitness", ageGroup: "Adults" },
+          { time: "4:00 PM", name: "Lil' Dragons / Tiny Tigers", ageGroup: "Ages 3–6" },
+          { time: "5:00 PM", name: "Superkids", ageGroup: "Ages 7–12" },
+          { time: "6:00 PM", name: "Teen / Adult Karate", ageGroup: "Ages 13+" },
+          { time: "7:00 PM", name: "Kickboxing / MMA", ageGroup: "Adults" }
+        ]
+      },
+      {
+        day: "Wednesday",
+        classes: [
+          { time: "12:00 PM", name: "Executive Fitness", ageGroup: "Adults" },
+          { time: "4:00 PM", name: "Lil' Dragons / Tiny Tigers", ageGroup: "Ages 3–6" },
+          { time: "5:00 PM", name: "Superkids", ageGroup: "Ages 7–12" },
+          { time: "6:00 PM", name: "Teen / Adult Karate", ageGroup: "Ages 13+" },
+          { time: "7:00 PM", name: "Advanced / Black Belt", ageGroup: "Advanced Students" }
+        ]
+      },
+      {
+        day: "Thursday",
+        classes: [
+          { time: "12:00 PM", name: "Executive Fitness", ageGroup: "Adults" },
+          { time: "4:00 PM", name: "Lil' Dragons / Tiny Tigers", ageGroup: "Ages 3–6" },
+          { time: "5:00 PM", name: "Superkids", ageGroup: "Ages 7–12" },
+          { time: "6:00 PM", name: "Teen / Adult Karate", ageGroup: "Ages 13+" },
+          { time: "7:00 PM", name: "Kickboxing / MMA", ageGroup: "Adults" }
+        ]
+      },
+      {
+        day: "Friday",
+        classes: [
+          { time: "12:00 PM", name: "Executive Fitness", ageGroup: "Adults" },
+          { time: "4:00 PM", name: "Lil' Dragons / Tiny Tigers", ageGroup: "Ages 3–6" },
+          { time: "5:00 PM", name: "Superkids", ageGroup: "Ages 7–12" },
+          { time: "6:00 PM", name: "Teen / Adult Karate", ageGroup: "Ages 13+" }
+        ]
+      }
+    ]
   },
   {
     id: "hq",
