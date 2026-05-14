@@ -22,10 +22,26 @@ interface Location {
   };
   hours: string[];
   distance?: number; // Distance in miles
+  isAffiliate?: boolean;
 }
 
-// Initial locations data (currently just HQ)
+// Initial locations data
 const initialLocations: Location[] = [
+  {
+    id: "yaegers-sda",
+    name: "Yaeger's SDA",
+    address: "306 East Pasadena Blvd",
+    city: "Deer Park",
+    state: "TX",
+    zip: "77536",
+    phone: "",
+    coordinates: {
+      lat: 29.7052,
+      lng: -95.1241
+    },
+    hours: [],
+    isAffiliate: true
+  },
   {
     id: "hq",
     name: "MyDojo Headquarters - Tomball",
@@ -237,7 +253,12 @@ export default function Locations() {
                   onClick={() => setSelectedLocation(location)}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-lg text-gray-900">{location.name}</h3>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-900">{location.name}</h3>
+                      {location.isAffiliate && (
+                        <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full mt-1">Affiliate Dojo</span>
+                      )}
+                    </div>
                     {location.distance !== undefined && (
                       <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded-full">
                         {location.distance.toFixed(1)} mi
@@ -250,10 +271,12 @@ export default function Locations() {
                       <MapPin className="w-4 h-4 mr-2 mt-0.5 shrink-0" />
                       <span>{location.address}<br/>{location.city}, {location.state} {location.zip}</span>
                     </div>
-                    <div className="flex items-center">
-                      <Phone className="w-4 h-4 mr-2 shrink-0" />
-                      <span>{location.phone}</span>
-                    </div>
+                    {location.phone && (
+                      <div className="flex items-center">
+                        <Phone className="w-4 h-4 mr-2 shrink-0" />
+                        <span>{location.phone}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-2 flex-wrap">
@@ -263,11 +286,13 @@ export default function Locations() {
                     }}>
                       Directions
                     </Button>
-                    <Link href={`/locations/${location.id}`}>
-                      <Button size="sm" className="flex-1 bg-primary text-white hover:bg-primary/90">
-                        Details
-                      </Button>
-                    </Link>
+                    {!location.isAffiliate && (
+                      <Link href={`/locations/${location.id}`}>
+                        <Button size="sm" className="flex-1 bg-primary text-white hover:bg-primary/90">
+                          Details
+                        </Button>
+                      </Link>
+                    )}
                   </div>
                   {location.id === 'hq' && (
                     <div className="mt-2">

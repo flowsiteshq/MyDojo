@@ -28,9 +28,29 @@ export interface Location {
   image?: string;
   schedule?: DaySchedule[];
   timezone?: string;
+  isAffiliate?: boolean;
+  affiliateNote?: string;
 }
 
 export const locations: Location[] = [
+  {
+    id: "yaegers-sda",
+    name: "Yaeger's SDA",
+    address: "306 East Pasadena Blvd",
+    city: "Deer Park",
+    state: "TX",
+    zip: "77536",
+    phone: "",
+    coordinates: {
+      lat: 29.7052,
+      lng: -95.1241
+    },
+    timezone: "America/Chicago",
+    hours: [],
+    description: "Yaeger's SDA is a proud affiliate dojo of MyDojo Martial Arts & Fitness, located in Deer Park, TX.",
+    isAffiliate: true,
+    affiliateNote: "Affiliate Dojo"
+  },
   {
     id: "hq",
     name: "MyDojo Headquarters - Tomball",
