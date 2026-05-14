@@ -43,6 +43,21 @@ const initialLocations: Location[] = [
     isAffiliate: true
   },
   {
+    id: "nokc-belle-chasse",
+    name: "New Orleans Karate Club - Belle Chasse",
+    address: "1510 LA-406, 2nd Floor",
+    city: "Belle Chasse",
+    state: "LA",
+    zip: "70037",
+    phone: "",
+    coordinates: {
+      lat: 29.8574,
+      lng: -90.0004
+    },
+    hours: [],
+    isAffiliate: true
+  },
+  {
     id: "hq",
     name: "MyDojo Headquarters - Tomball",
     address: "11721 Spring Cypress Rd",

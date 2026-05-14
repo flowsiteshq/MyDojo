@@ -52,6 +52,24 @@ export const locations: Location[] = [
     affiliateNote: "Affiliate Dojo"
   },
   {
+    id: "nokc-belle-chasse",
+    name: "New Orleans Karate Club - Belle Chasse",
+    address: "1510 LA-406, 2nd Floor",
+    city: "Belle Chasse",
+    state: "LA",
+    zip: "70037",
+    phone: "",
+    coordinates: {
+      lat: 29.8574,
+      lng: -90.0004
+    },
+    timezone: "America/Chicago",
+    hours: [],
+    description: "New Orleans Karate Club Belle Chasse is a proud affiliate dojo of MyDojo Martial Arts & Fitness, located in Belle Chasse, Louisiana.",
+    isAffiliate: true,
+    affiliateNote: "Affiliate Dojo"
+  },
+  {
     id: "hq",
     name: "MyDojo Headquarters - Tomball",
     address: "11721 Spring Cypress Rd",
