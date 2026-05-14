@@ -160,7 +160,15 @@ export default function Locations() {
       },
       (err) => {
         console.error(err);
-        setError("Unable to retrieve your location. Please check your browser settings.");
+        let msg = "Unable to retrieve your location.";
+        if (err.code === 1) {
+          msg = "Location access was denied. Please use the search box above to find the nearest dojo.";
+        } else if (err.code === 2) {
+          msg = "Your location could not be determined. Please try searching by city or zip code.";
+        } else if (err.code === 3) {
+          msg = "Location request timed out. Please try searching by city or zip code.";
+        }
+        setError(msg);
         setLoading(false);
       }
     );
