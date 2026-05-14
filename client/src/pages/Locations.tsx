@@ -95,15 +95,14 @@ export default function Locations() {
     return params.get("city");
   };
 
-  // Auto-trigger geolocation or search on mount
+  // Auto-trigger search if city param is in URL (no auto-geolocation on mount)
   useEffect(() => {
     const cityParam = getQueryParams();
     if (cityParam) {
       setSearchQuery(cityParam);
-      // We need to wait for geocoder to be initialized, so we'll handle the actual search in a separate effect
-    } else {
-      handleFindNearest();
+      // Actual search triggered once geocoder is ready (see effect below)
     }
+    // Do NOT auto-request geolocation — wait for user to click the button
   }, []);
 
   // Trigger search when geocoder is ready and we have a query from URL
