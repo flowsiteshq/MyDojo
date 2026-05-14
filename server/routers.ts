@@ -6060,6 +6060,74 @@ Please enter your card details below to complete your registration securely. Tot
         return { success: true };
       }),
 
+    // ─── Billing Schedule Report ──────────────────────────────────────────────
+    // Get full billing schedule for all active students (admin only)
+    getBillingSchedule: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin only' });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+
+      const activeEnrollments = await db
+        .select()
+        .from(schema.enrollments)
+        .where(eq(schema.enrollments.status, 'active'))
+        .orderBy(schema.enrollments.startDate);
+
+      const FLUIDPAY_KEY = process.env.FLUIDPAY_SECRET_KEY;
+      const results = [];
+
+      for (const e of activeEnrollments) {
+        let subAmount: number | null = null;
+        let subStatus: string | null = null;
+        let nextBillDate: string | null = null;
+        let paymentMethod = 'manual';
+
+        // Determine payment method
+        if (e.fluidpaySubscriptionId) {
+          paymentMethod = 'fluidpay';
+          try {
+            const res = await fetch(`https://app.fluidpay.com/api/recurring/subscription/${e.fluidpaySubscriptionId}`, {
+              headers: { 'Authorization': FLUIDPAY_KEY || '' }
+            });
+            const data = await res.json();
+            if (data?.data) {
+              subAmount = data.data.amount ? data.data.amount / 100 : null;
+              subStatus = data.data.status || null;
+              nextBillDate = data.data.next_run_date || null;
+            }
+          } catch {
+            subStatus = 'error';
+          }
+        } else if (e.stripeSubscriptionId) {
+          paymentMethod = 'stripe';
+        }
+
+        const billingDay = e.startDate ? new Date(e.startDate).getDate() : null;
+
+        results.push({
+          id: e.id,
+          studentName: e.studentName || e.customerName,
+          parentName: e.customerName,
+          phone: e.customerPhone,
+          email: e.customerEmail,
+          startDate: e.startDate,
+          billingDay,
+          paymentMethod,
+          fluidpaySubscriptionId: e.fluidpaySubscriptionId,
+          stripeSubscriptionId: e.stripeSubscriptionId,
+          subAmount,
+          subStatus,
+          nextBillDate,
+          remainingBalance: e.remainingBalance,
+          monthlyPaymentsRemaining: e.monthlyPaymentsRemaining,
+          isFrozen: e.isFrozen,
+          downPaymentAmount: e.downPaymentAmount,
+        });
+      }
+
+      return results;
+    }),
+
     // ─── Package Management ────────────────────────────────────────────────────
     // List all membership packages (admin only)
     getPackages: protectedProcedure.query(async ({ ctx }) => {

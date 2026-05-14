@@ -165,6 +165,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/pno-rsvps", label: "PNO RSVPs", icon: PartyPopper },
     { href: "/admin/camp-enrollments", label: "Camp Enrollments", icon: Tent },
     { href: "/admin/facebook-ads", label: "Facebook Ads", icon: BarChart3 },
+    { href: "/admin/billing-schedule", label: "Billing Schedule", icon: CalendarDays },
     { href: "/admin/social-media", label: "Social Media", icon: Share2 },
     { href: "/admin/commissions", label: "Commissions", icon: DollarSign },
   ];
