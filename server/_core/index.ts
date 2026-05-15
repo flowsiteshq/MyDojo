@@ -16,6 +16,7 @@ import { runNoShowFollowUpJob } from "../noShowFollowUpJob";
 import { runStudentReminderJob } from "../studentReminderJob";
 import { runSocialPostJob } from "../socialPostJob";
 import { runDeferredTuitionJob } from "../deferredTuitionJob";
+import { startDailyClassRosterJob } from "../dailyClassRosterJob";
 import { handleStripeWebhook } from "../stripeWebhook";
 import { handleGHLWebhook } from "../ghlWebhook";
 import { handleFacebookWebhook, verifyFacebookWebhook } from "../facebookWebhook";
@@ -192,6 +193,11 @@ async function startServer() {
       runDeferredTuitionJob().catch(console.error);
     }, 30 * 60 * 1000); // every 30 minutes
     console.log("[DeferredTuitionJob] Scheduled to run every 30 minutes.");
+
+    // Start daily class roster SMS job — sends at 7:00 AM CDT every day
+    // Texts all admin/staff with the day's class sign-up roster
+    startDailyClassRosterJob();
+    console.log("[DailyRoster] Scheduled to send at 7:00 AM CDT daily.");
   });
 }
 

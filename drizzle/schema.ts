@@ -1772,3 +1772,45 @@ export const summerCampEnrollments = mysqlTable("summerCampEnrollments", {
 });
 export type SummerCampEnrollment = typeof summerCampEnrollments.$inferSelect;
 export type InsertSummerCampEnrollment = typeof summerCampEnrollments.$inferInsert;
+
+// ─── Class Reservations ────────────────────────────────────────────────────
+/**
+ * Tracks parent/student reservations for specific class sessions.
+ * A reservation is tied to a classSchedule row (recurring slot) and a
+ * specific calendar date (so the same slot can be reserved on different days).
+ */
+export const classReservations = mysqlTable("classReservations", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The recurring class slot being reserved */
+  classScheduleId: int("classScheduleId").notNull(),
+  /** The specific date of this class session (YYYY-MM-DD) */
+  classDate: varchar("classDate", { length: 10 }).notNull(),
+  /** Enrollment ID of the student attending (links to enrollments table) */
+  enrollmentId: int("enrollmentId").notNull(),
+  /** Student name (denormalized for fast display) */
+  studentName: varchar("studentName", { length: 255 }).notNull(),
+  /** Parent/guardian name (denormalized for fast display) */
+  parentName: varchar("parentName", { length: 255 }),
+  /** Parent/guardian phone (denormalized for fast display) */
+  parentPhone: varchar("parentPhone", { length: 30 }),
+  /** Program name (denormalized for fast display) */
+  program: varchar("program", { length: 100 }).notNull(),
+  /** Class start time (denormalized for fast display, e.g. "5:00 PM") */
+  startTime: varchar("startTime", { length: 20 }).notNull(),
+  /** Class end time (denormalized for fast display, e.g. "6:00 PM") */
+  endTime: varchar("endTime", { length: 20 }),
+  /** Instructor name at time of reservation */
+  instructor: varchar("instructor", { length: 255 }),
+  /** Location of the class */
+  location: varchar("location", { length: 255 }).notNull().default("Tomball HQ"),
+  /** Reservation status */
+  status: mysqlEnum("status", ["confirmed", "cancelled", "attended"]).default("confirmed").notNull(),
+  /** Optional note from parent */
+  note: varchar("note", { length: 500 }),
+  /** Whether the daily staff SMS has already included this reservation */
+  staffNotified: int("staffNotified").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ClassReservation = typeof classReservations.$inferSelect;
+export type InsertClassReservation = typeof classReservations.$inferInsert;

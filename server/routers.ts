@@ -59,14 +59,16 @@ import { createChangeRequest, getUserChangeRequests, getPendingChangeRequests, a
 import { sendStreakMilestoneEmail, checkStreakMilestone, sendEnrollmentConfirmationEmail } from "./emailService";
 import { ENV } from "./_core/env";
 import { getWeatherForSlot } from "./weather";
-import { mealPlanRouter } from "./mealPlanRouter";
-import { heroContentRouter } from "./heroContentRouter";
+import { mealPlanRouter } from './mealPlanRouter';
+import { heroContentRouter } from './heroContentRouter';
+import { classReservationRouter } from './classReservationRouter';
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
   mealPlan: mealPlanRouter,
   heroContent: heroContentRouter,
+  classReservation: classReservationRouter,
   auth: router({
     ...authRouter._def.procedures,
     me: publicProcedure.query(opts => opts.ctx.user),

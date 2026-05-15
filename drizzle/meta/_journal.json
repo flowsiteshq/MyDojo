@@ -337,6 +337,13 @@
       "when": 1778596074597,
       "tag": "0047_kind_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "5",
+      "when": 1778876642781,
+      "tag": "0048_chilly_harpoon",
+      "breakpoints": true
     }
   ]
 }

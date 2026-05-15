@@ -82,6 +82,8 @@ const PrivateLessons = lazy(() => import("./pages/PrivateLessons"));
 const PrivateLessonsSuccess = lazy(() => import("./pages/PrivateLessonsSuccess"));
 const AdminFacebookAds = lazy(() => import("./pages/AdminFacebookAds"));
 const AdminBillingSchedule = lazy(() => import("./pages/AdminBillingSchedule"));
+const ClassSignup = lazy(() => import("./pages/ClassSignup"));
+const AdminClassRoster = lazy(() => import("./pages/AdminClassRoster"));
 
 // Loading component — subtle fade-in bar at the top, no jarring red circle
 const PageLoader = () => (
@@ -165,6 +167,8 @@ function Router() {
         <Route path="/admin/camp-enrollments" component={AdminCampEnrollments} />
         <Route path="/admin/facebook-ads" component={AdminFacebookAds} />
         <Route path="/admin/billing-schedule" component={AdminBillingSchedule} />
+        <Route path="/admin/class-roster" component={AdminClassRoster} />
+        <Route path="/classes" component={ClassSignup} />
         <Route path="/staff-clock-in" component={StaffClockIn} />
         
         {/* All other routes with Layout */}

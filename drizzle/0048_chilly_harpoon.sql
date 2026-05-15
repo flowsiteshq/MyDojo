@@ -1,0 +1,20 @@
+CREATE TABLE `classReservations` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`classScheduleId` int NOT NULL,
+	`classDate` varchar(10) NOT NULL,
+	`enrollmentId` int NOT NULL,
+	`studentName` varchar(255) NOT NULL,
+	`parentName` varchar(255),
+	`parentPhone` varchar(30),
+	`program` varchar(100) NOT NULL,
+	`startTime` varchar(20) NOT NULL,
+	`endTime` varchar(20),
+	`instructor` varchar(255),
+	`location` varchar(255) NOT NULL DEFAULT 'Tomball HQ',
+	`status` enum('confirmed','cancelled','attended') NOT NULL DEFAULT 'confirmed',
+	`note` varchar(500),
+	`staffNotified` int NOT NULL DEFAULT 0,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `classReservations_id` PRIMARY KEY(`id`)
+);
