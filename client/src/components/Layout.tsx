@@ -7,6 +7,7 @@ import { CookieBanner } from "@/components/CookieBanner";
 import { ProgramFinderPopup } from "@/components/ProgramFinderPopup";
 import { WebsiteVisitorPopup } from "@/components/WebsiteVisitorPopup";
 import OnlineSpecialPopup from "@/components/OnlineSpecialPopup";
+import BuddyDayExitPopup from "@/components/BuddyDayExitPopup";
 import { openIntakeChatbot } from "@/lib/chatbot";
 import { useLocationContext } from "@/contexts/LocationContext";
 import { NotificationSubscribe } from "@/components/NotificationSubscribe";
@@ -504,6 +505,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <ProgramFinderPopup isOpen={showProgramFinder} onClose={() => setShowProgramFinder(false)} />
       <WebsiteVisitorPopup />
       <OnlineSpecialPopup forceOpen={!!offerParam} defaultProgram={offerParam} />
+      <BuddyDayExitPopup />
 
       {/* Main Content */}
       <main className="flex-grow pt-0">
