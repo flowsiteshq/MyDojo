@@ -83,6 +83,8 @@ const PrivateLessonsSuccess = lazy(() => import("./pages/PrivateLessonsSuccess")
 const AdminFacebookAds = lazy(() => import("./pages/AdminFacebookAds"));
 const AdminBillingSchedule = lazy(() => import("./pages/AdminBillingSchedule"));
 const Shop = lazy(() => import("./pages/Shop"));
+const BuddyDay = lazy(() => import("./pages/BuddyDay"));
+const AdminBuddyDay = lazy(() => import("./pages/AdminBuddyDay"));
 const ClassSignup = lazy(() => import("./pages/ClassSignup"));
 const AdminClassRoster = lazy(() => import("./pages/AdminClassRoster"));
 
@@ -169,6 +171,7 @@ function Router() {
         <Route path="/admin/facebook-ads" component={AdminFacebookAds} />
         <Route path="/admin/billing-schedule" component={AdminBillingSchedule} />
         <Route path="/admin/class-roster" component={AdminClassRoster} />
+        <Route path="/admin/buddy-day" component={AdminBuddyDay} />
         <Route path="/classes" component={ClassSignup} />
         <Route path="/staff-clock-in" component={StaffClockIn} />
         
@@ -191,6 +194,7 @@ function Router() {
               <Route path="/about" component={About} />
               <Route path="/contact" component={Contact} />
               <Route path="/shop" component={Shop} />
+              <Route path="/buddy-day" component={BuddyDay} />
               <Route path="/locations" component={Locations} />
               <Route path="/locations/:id" component={LocationDetail} />
               <Route path="/careers" component={Careers} />

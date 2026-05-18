@@ -167,6 +167,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/facebook-ads", label: "Facebook Ads", icon: BarChart3 },
     { href: "/admin/billing-schedule", label: "Billing Schedule", icon: CalendarDays },
     { href: "/admin/class-roster", label: "Class Roster", icon: ClipboardList },
+    { href: "/admin/buddy-day", label: "Buddy Day RSVPs", icon: Users },
     { href: "/admin/social-media", label: "Social Media", icon: Share2 },
     { href: "/admin/commissions", label: "Commissions", icon: DollarSign },
   ];

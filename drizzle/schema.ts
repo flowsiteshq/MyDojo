@@ -1814,3 +1814,25 @@ export const classReservations = mysqlTable("classReservations", {
 });
 export type ClassReservation = typeof classReservations.$inferSelect;
 export type InsertClassReservation = typeof classReservations.$inferInsert;
+
+// ── Buddy Day RSVP ──────────────────────────────────────────────────────────
+export const buddyDayRsvps = mysqlTable("buddyDayRsvps", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Name of the person RSVPing (parent or adult student) */
+  name: varchar("name", { length: 255 }).notNull(),
+  /** Phone number */
+  phone: varchar("phone", { length: 30 }).notNull(),
+  /** Email address */
+  email: varchar("email", { length: 320 }),
+  /** Number of people attending (including the RSVP person) */
+  attendeeCount: int("attendeeCount").default(1).notNull(),
+  /** Names/ages of students / buddies attending */
+  attendeeDetails: text("attendeeDetails"),
+  /** Whether they are an existing member or a guest */
+  memberType: mysqlEnum("memberType", ["member", "guest"]).default("guest").notNull(),
+  /** Any special notes */
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type BuddyDayRsvp = typeof buddyDayRsvps.$inferSelect;
+export type InsertBuddyDayRsvp = typeof buddyDayRsvps.$inferInsert;

@@ -62,6 +62,7 @@ import { getWeatherForSlot } from "./weather";
 import { mealPlanRouter } from './mealPlanRouter';
 import { heroContentRouter } from './heroContentRouter';
 import { classReservationRouter } from './classReservationRouter';
+import { buddyDayRsvps } from '../drizzle/schema';
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -69,6 +70,51 @@ export const appRouter = router({
   mealPlan: mealPlanRouter,
   heroContent: heroContentRouter,
   classReservation: classReservationRouter,
+
+  buddyDay: router({
+    submit: publicProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        phone: z.string().min(7),
+        email: z.string().email().optional().or(z.literal('')),
+        attendeeCount: z.number().int().min(1).max(20).default(1),
+        attendeeDetails: z.string().optional(),
+        memberType: z.enum(['member', 'guest']),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        await db.insert(buddyDayRsvps).values({
+          name: input.name,
+          phone: input.phone,
+          email: input.email || null,
+          attendeeCount: input.attendeeCount,
+          attendeeDetails: input.attendeeDetails || null,
+          memberType: input.memberType,
+          notes: input.notes || null,
+        });
+        return { success: true };
+      }),
+
+    list: protectedProcedure
+      .query(async () => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        const rsvps = await db.select().from(buddyDayRsvps).orderBy(buddyDayRsvps.createdAt);
+        return rsvps;
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        await db.delete(buddyDayRsvps).where(eq(buddyDayRsvps.id, input.id));
+        return { success: true };
+      }),
+  }),
+
   auth: router({
     ...authRouter._def.procedures,
     me: publicProcedure.query(opts => opts.ctx.user),
