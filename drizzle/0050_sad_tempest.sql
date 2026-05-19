@@ -1,0 +1,1 @@
+ALTER TABLE `trialSignups` ADD `smsOptOut` boolean DEFAULT false NOT NULL;

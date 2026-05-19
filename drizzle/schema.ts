@@ -165,6 +165,8 @@ export const trialSignups = mysqlTable("trialSignups", {
   reminderSentAt: timestamp("reminderSentAt"),
   /** When the no-show follow-up SMS was sent to this lead (null = not yet sent) */
   noShowSentAt: timestamp("noShowSentAt"),
+  /** Whether this contact has opted out of SMS (replied STOP) */
+  smsOptOut: boolean("smsOptOut").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
