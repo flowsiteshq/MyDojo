@@ -63,6 +63,7 @@ import { mealPlanRouter } from './mealPlanRouter';
 import { heroContentRouter } from './heroContentRouter';
 import { classReservationRouter } from './classReservationRouter';
 import { buddyDayRsvps } from '../drizzle/schema';
+import { shopRouter } from './shopRouter';
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -70,6 +71,7 @@ export const appRouter = router({
   mealPlan: mealPlanRouter,
   heroContent: heroContentRouter,
   classReservation: classReservationRouter,
+  shop: shopRouter,
 
   buddyDay: router({
     submit: publicProcedure
@@ -8987,3 +8989,5 @@ Please enter your card details below to complete your registration securely. Tot
   }),
 });
 export type AppRouter = typeof appRouter;
+
+// NOTE: shop router added below via separate file to avoid size limits

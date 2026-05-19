@@ -1,21 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ExternalLink, Filter } from "lucide-react";
-import { toast } from "sonner";
+import { ShoppingCart, Filter } from "lucide-react";
+import { ShopCheckoutModal, type ShopProduct } from "@/components/ShopCheckoutModal";
 
-const SHOP_URL = "https://sensei30002003.wixstudio.com/shopmydojo";
-
-type Product = {
-  id: string;
-  name: string;
+type Product = ShopProduct & {
   subtitle: string;
-  price: number;
-  category: string;
   badge?: string;
-  image: string;
   description: string;
   features: string[];
-  wixSlug: string;
 };
 
 const products: Product[] = [
@@ -27,6 +19,7 @@ const products: Product[] = [
     category: "Uniforms & Gis",
     badge: "Beginner",
     image: "/manus-storage/kihon-gi_a810db18.webp",
+    sizes: ["0000", "000", "00", "0", "1", "2", "3", "4", "5", "6", "7"],
     description:
       "Begin your martial arts journey with the Kihon Gi, designed specifically for new students stepping onto the mat for the first time. Crafted from breathable cotton with reinforced seams for maximum comfort and freedom of movement.",
     features: [
@@ -36,7 +29,6 @@ const products: Product[] = [
       "Includes white belt",
       "Silk-screened MyDojo logo",
     ],
-    wixSlug: "mydojo-kihon-gi",
   },
   {
     id: "mydojo-classic-tshirt",
@@ -46,6 +38,7 @@ const products: Product[] = [
     category: "Apparel",
     badge: "T-Shirts",
     image: "/manus-storage/mydojo-classic-tshirt_1e2fa7c6.webp",
+    sizes: ["Youth S", "Youth M", "Youth L", "S", "M", "L", "XL"],
     description:
       "The MyDojo T-Shirt is where martial arts mindset meets everyday comfort. Whether you're training, coaching, or repping the dojo outside the gym, this tee delivers a clean, confident look built for movement and lifestyle.",
     features: [
@@ -56,7 +49,6 @@ const products: Product[] = [
       "Available in Black, White, Gray, and Red",
       "Unisex sizing: Youth to Adult XL",
     ],
-    wixSlug: "mydojo-classic-t-shirt",
   },
   {
     id: "kickboxing-gloves",
@@ -76,7 +68,6 @@ const products: Product[] = [
       "Moisture-wicking inner lining",
       "Available in Black, Red, and White",
     ],
-    wixSlug: "kickboxing-gloves",
   },
   {
     id: "kiacho-gi-middle",
@@ -86,6 +77,7 @@ const products: Product[] = [
     category: "Uniforms & Gis",
     badge: "Leadership Team",
     image: "/manus-storage/kiacho-gi-middle_90009422.webp",
+    sizes: ["0000", "000", "00", "0", "1", "2", "3", "4", "5", "6", "7"],
     description:
       "Reserved for members of the MyDojo Leadership Program, the Kaicho Gi stands out in bold red — a symbol of passion, courage, and commitment to service. Light and medium weight options for flexibility and endurance.",
     features: [
@@ -96,7 +88,6 @@ const products: Product[] = [
       "Silk-screened MyDojo branding",
       "Exclusively for Leadership Program members",
     ],
-    wixSlug: "kiacho-gi-middle-weight-uniform",
   },
   {
     id: "kiacho-gi-heavy",
@@ -106,6 +97,7 @@ const products: Product[] = [
     category: "Uniforms & Gis",
     badge: "Leadership Team",
     image: "/manus-storage/kiacho-gi-heavy_8429a824.webp",
+    sizes: ["0000", "000", "00", "0", "1", "2", "3", "4", "5", "6", "7"],
     description:
       "The Kaicho Gi Heavyweight Edition is built for those who don't just wear the title of leader — they live it. Made from durable 14 oz heavyweight cotton with premium embroidery.",
     features: [
@@ -116,7 +108,6 @@ const products: Product[] = [
       "Includes rank-appropriate belt",
       "Available only to Kaicho-level members",
     ],
-    wixSlug: "kiacho-gi-heavy-weight-uniform",
   },
   {
     id: "shinobi-gi-middle",
@@ -126,6 +117,7 @@ const products: Product[] = [
     category: "Uniforms & Gis",
     badge: "Black Belt Program",
     image: "/manus-storage/shinobi-gi-middle_ca215873.webp",
+    sizes: ["0000", "000", "00", "0", "1", "2", "3", "4", "5", "6", "7"],
     description:
       "Reserved exclusively for students enrolled in the MyDojo Black Belt Program. Built for performance and prestige, the Shinobi Gi is constructed from premium medium-weight fabric that balances durability with mobility.",
     features: [
@@ -136,7 +128,6 @@ const products: Product[] = [
       "Silk-screened MyDojo insignia",
       "Exclusive to Black Belt Program members",
     ],
-    wixSlug: "mydojo-shinobi-gi-middle-weight",
   },
   {
     id: "shinobi-gi-heavy",
@@ -146,6 +137,7 @@ const products: Product[] = [
     category: "Uniforms & Gis",
     badge: "Black Belt Program",
     image: "/manus-storage/shinobi-gi-heavy_9e348094.webp",
+    sizes: ["0000", "000", "00", "0", "1", "2", "3", "4", "5", "6", "7"],
     description:
       "Crafted for warriors in pursuit of excellence, the Shinobi Gi Heavyweight Edition is the ultimate expression of strength, skill, and commitment. Designed exclusively for MyDojo Black Belt Program members.",
     features: [
@@ -156,7 +148,6 @@ const products: Product[] = [
       "Embroidered MyDojo insignia",
       "Optional belt-rank embroidery",
     ],
-    wixSlug: "mydojo-shinobi-gi",
   },
   {
     id: "tetsujin-gi",
@@ -166,6 +157,7 @@ const products: Product[] = [
     category: "Uniforms & Gis",
     badge: "Premium",
     image: "/manus-storage/tetsujin-gi_f79ace47.webp",
+    sizes: ["0000", "000", "00", "0", "1", "2", "3", "4", "5", "6", "7"],
     description:
       "The Tetsujin Gi is more than just a uniform — it's a symbol of legacy, resilience, and mastery. Crafted for the true traditionalist and kata competitor, this heavyweight gi embodies the pure spirit of martial arts.",
     features: [
@@ -175,7 +167,6 @@ const products: Product[] = [
       "Clean, minimalist traditional design",
       "Every stitch embroidered with intention",
     ],
-    wixSlug: "tetsujin-gi",
   },
 ];
 
@@ -193,17 +184,24 @@ const badgeColors: Record<string, string> = {
 export default function Shop() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [checkoutProduct, setCheckoutProduct] = useState<ShopProduct | null>(null);
+
   const filtered =
     selectedCategory === "All"
       ? products
       : products.filter((p) => p.category === selectedCategory);
 
-  const handleBuyNow = (product: Product) => {
-    window.open(
-      `https://sensei30002003.wixstudio.com/shopmydojo/product-page/${product.wixSlug}`,
-      "_blank"
-    );
-    toast.success(`Opening ${product.name} in the MyDojo Shop...`);
+  const openCheckout = (product: Product, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setSelectedProduct(null);
+    setCheckoutProduct({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      sizes: product.sizes,
+      category: product.category,
+    });
   };
 
   return (
@@ -289,10 +287,7 @@ export default function Shop() {
                     <Button
                       size="sm"
                       className="bg-black hover:bg-primary text-white"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleBuyNow(product);
-                      }}
+                      onClick={(e) => openCheckout(product, e)}
                     >
                       <ShoppingCart className="h-4 w-4 mr-1" />
                       Buy Now
@@ -362,20 +357,10 @@ export default function Shop() {
                 <div className="mt-auto flex flex-col gap-3">
                   <Button
                     className="bg-black hover:bg-primary text-white w-full"
-                    onClick={() => handleBuyNow(selectedProduct)}
+                    onClick={() => openCheckout(selectedProduct)}
                   >
                     <ShoppingCart className="h-4 w-4 mr-2" />
                     Buy Now — ${selectedProduct.price.toFixed(2)}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() =>
-                      window.open(SHOP_URL + "/category/all-products", "_blank")
-                    }
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    View Full Store
                   </Button>
                   <button
                     className="text-sm text-gray-400 hover:text-gray-600 underline"
@@ -390,25 +375,12 @@ export default function Shop() {
         </div>
       )}
 
-      {/* Bottom CTA */}
-      <section className="bg-black text-white py-16 text-center">
-        <div className="container">
-          <h2 className="text-3xl font-heading font-bold mb-4">
-            VISIT THE FULL MYDOJO SHOP
-          </h2>
-          <p className="text-gray-300 mb-8 max-w-xl mx-auto">
-            Browse our complete collection including women's apparel, sparring
-            gear, and more — with secure checkout and fast shipping.
-          </p>
-          <Button
-            className="bg-primary hover:bg-primary/90 text-white text-lg px-10 py-6 h-auto font-heading uppercase tracking-wider"
-            onClick={() => window.open(SHOP_URL, "_blank")}
-          >
-            <ExternalLink className="h-5 w-5 mr-2" />
-            Shop All Products
-          </Button>
-        </div>
-      </section>
+      {/* FluidPay Checkout Modal */}
+      <ShopCheckoutModal
+        product={checkoutProduct}
+        open={!!checkoutProduct}
+        onClose={() => setCheckoutProduct(null)}
+      />
     </div>
   );
 }
