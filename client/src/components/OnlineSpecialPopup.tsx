@@ -136,14 +136,8 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
       }
       return;
     }
-    if (hasShown.current) return;
-    const timer = setTimeout(() => {
-      if (!sessionStorage.getItem("onlineSpecialDismissed")) {
-        setOpen(true);
-        hasShown.current = true;
-      }
-    }, 5000);
-    return () => clearTimeout(timer);
+    // Auto-timer intentionally removed — this popup only opens via forceOpen (?offer= URL param)
+    // to prevent double-popup conflict with ProgramFinderPopup (which fires at 6s)
   }, [forceOpen, defaultProgram, hasPrefilledData]);
 
   const fireConfetti = useCallback(() => {
