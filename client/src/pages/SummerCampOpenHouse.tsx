@@ -232,13 +232,14 @@ export default function SummerCampOpenHouse() {
             {[
               { icon: <Calendar className="w-6 h-6 text-primary flex-shrink-0" />, label: "Date", value: "Wednesday, May 27th" },
               { icon: <Clock className="w-6 h-6 text-primary flex-shrink-0" />, label: "Time", value: "6:00 PM" },
-              { icon: <MapPin className="w-6 h-6 text-primary flex-shrink-0" />, label: "Location", value: "MyDojo Tomball" },
+              { icon: <MapPin className="w-6 h-6 text-primary flex-shrink-0" />, label: "Location", value: "MyDojo Tomball", sub: "11721 Spring Cypress Rd, Tomball, TX 77377" },
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-4">
                 {item.icon}
                 <div className="text-left">
                   <p className="text-xs text-gray-400 uppercase tracking-wider">{item.label}</p>
                   <p className="font-bold text-lg">{item.value}</p>
+                  {(item as any).sub && <p className="text-xs text-gray-400 mt-0.5">{(item as any).sub}</p>}
                 </div>
               </div>
             ))}
@@ -588,7 +589,7 @@ export default function SummerCampOpenHouse() {
             </a>
           </div>
           <p className="mt-8 text-white/70 text-sm">
-            MyDojo Tomball · <Users className="inline w-4 h-4" /> Only 12 spots remaining
+            MyDojo Tomball · 11721 Spring Cypress Rd, Tomball, TX 77377 · <Users className="inline w-4 h-4" /> Only 12 spots remaining
           </p>
         </div>
       </section>
