@@ -31,6 +31,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const SummerCamp = lazy(() => import("./pages/SummerCamp"));
 const SummerCampEnroll = lazy(() => import("./pages/SummerCampEnroll"));
+const SummerCampOpenHouse = lazy(() => import("./pages/SummerCampOpenHouse"));
 const LeadCapture = lazy(() => import("./pages/LeadCapture"));
 const Testimonials = lazy(() => import("./pages/Testimonials"));
 const Kickboxing = lazy(() => import("./pages/Kickboxing"));
@@ -185,6 +186,7 @@ function Router() {
               <Route path="/homeschool" component={Homeschool} />
               <Route path="/waiver" component={Waiver} />
               <Route path="/programs/:slug" component={ProgramDetail} />
+              <Route path="/summer-camp/open-house" component={SummerCampOpenHouse} />
               <Route path="/summer-camp" component={SummerCamp} />
               <Route path="/birthday-parties" component={BirthdayParties} />
               <Route path="/trial" component={LeadCapture} />
