@@ -23,6 +23,7 @@ import { handleFacebookWebhook, verifyFacebookWebhook } from "../facebookWebhook
 import { handleFluidPayWebhook } from "../fluidpayWebhook";
 import { handleSitemap } from "../sitemap";
 import { handleSyncExport } from "../syncExport";
+import { handleSummerCampReminder } from "../summerCampReminderJob";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -109,6 +110,9 @@ async function startServer() {
   // Secure sync-export endpoint — returns all intro appointments and students as JSON
   // Protected by SYNC_EXPORT_API_KEY (Authorization: Bearer <key> or ?api_key=<key>)
   app.get("/api/sync-export", handleSyncExport);
+
+  // Summer Camp Open House daily reminder — fires May 23–26 at 9 AM CDT via Heartbeat cron
+  app.post("/api/scheduled/summer-camp-reminder", handleSummerCampReminder);
   
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
