@@ -3982,7 +3982,7 @@ Please enter your card details below to complete your registration securely. Tot
             amount: amountCents,
             payment_method: { token: input.token },
             billing_address: { first_name: input.name.split(' ')[0], last_name: input.name.split(' ').slice(1).join(' ') || '' },
-            order_id: `daypass-${Date.now()}`,
+            order_id: `dp-${Date.now().toString(36).slice(-10)}`,
             description: `MyDojo Day Pass – ${input.program}`,
           }),
         });
@@ -4071,7 +4071,7 @@ Please enter your card details below to complete your registration securely. Tot
               last_name: input.name.split(' ').slice(1).join(' ') || '',
               email: input.email,
             },
-            order_id: `intro-${input.packageId}-${Date.now()}`,
+            order_id: `enrl-${Date.now().toString(36).slice(-12)}`,
             description: `MyDojo ${pkg.label}`,
           }),
         });
@@ -6998,7 +6998,7 @@ Please enter your card details below to complete your registration securely. Tot
               email: input.parentEmail,
               phone: input.parentPhone,
             },
-            order_id: `camp-${Date.now()}`,
+            order_id: `camp-${Date.now().toString(36).slice(-12)}`,
             description: `MyDojo Summer Camp 2025 — ${studentCount} student${studentCount !== 1 ? 's' : ''}, ${weeksCount} week${weeksCount !== 1 ? 's' : ''}`,
           }),
         });
@@ -8378,7 +8378,7 @@ Please enter your card details below to complete your registration securely. Tot
               last_name: input.primaryContactName.split(' ').slice(1).join(' ') || 'Family',
               email: input.primaryContactEmail,
             },
-            order_id: `FAMILY-REG-${Date.now()}`,
+            order_id: `fam-${Date.now().toString(36).slice(-13)}`,
             description: 'MyDojo Family Registration Fee',
           }),
         });
@@ -8515,7 +8515,7 @@ Please enter your card details below to complete your registration securely. Tot
             currency: 'USD',
             payment_method: { customer: { id: fpCustomerId } },
             billing_address: { first_name: firstName, last_name: lastName, email: input.memberEmail },
-            order_id: `KICKBOXING-FAMILY-${Date.now()}`,
+            order_id: `kbx-${Date.now().toString(36).slice(-13)}`,
             description: `MyDojo Kickboxing Family Add-On - ${input.memberName} (First Month)`,
           }),
         });
