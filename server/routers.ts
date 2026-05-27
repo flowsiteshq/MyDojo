@@ -2426,9 +2426,10 @@ Please enter your card details below to complete your registration securely. Tot
             chargeCents = 29800;
             chargeDescription = `MyDojo Summer Camp - ${input.summerCampWeek || 'Registration'}`;
           } else if (input.waiveDownPayment) {
-            // Full down payment waived: $0 charged today, recurring subscription starts immediately
-            chargeCents = 0;
-            chargeDescription = `MyDojo ${pkg!.name} Membership - Down Payment Waived`;
+            // No enrollment fee: charge only first month's tuition today, recurring starts next month
+            const monthlyPriceAmt = parseFloat(pkg!.monthlyPrice as string);
+            chargeCents = Math.round(monthlyPriceAmt * 100);
+            chargeDescription = `MyDojo ${pkg!.name} Membership - First Month (No Enrollment Fee)`;
           } else if (input.deferTuition) {
             // Deferred tuition: charge only the $99 enrollment fee now; first month tuition charged later
             const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '99') as string);
@@ -2474,8 +2475,8 @@ Please enter your card details below to complete your registration securely. Tot
         // Step 3: Create recurring subscription for monthly billing (membership only, skip for promo-free)
         let fpSubscriptionId: string | null = null;
         if (!isPromoFree && !input.isSummerCamp && pkg && fpCustomerId) {
-          // If down payment waived, start subscription today; otherwise start next month (first month already charged)
-          const subStartDate = input.waiveDownPayment ? new Date() : (() => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d; })();
+          // Start subscription next month — first month is always charged upfront (whether via down payment or waiveDownPayment)
+          const subStartDate = (() => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d; })();
           const startDate = subStartDate.toISOString().slice(0, 10);
           const subscriptionRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
             method: 'POST',
@@ -2559,10 +2560,12 @@ Please enter your card details below to complete your registration securely. Tot
           });
           enrollmentId = (insertResult as any).insertId;
         } else if (input.waiveDownPayment) {
-          // Full down payment waived: $0 today, recurring starts immediately
+          // No enrollment fee: first month's tuition charged today, recurring starts next month
+          const monthlyPriceAmt = parseFloat(pkg!.monthlyPrice as string);
           const totalPrice = parseFloat(pkg!.totalPrice as string);
+          const remainingBalance = Math.max(0, totalPrice - monthlyPriceAmt);
           packageName = pkg!.name;
-          amountCharged = 0;
+          amountCharged = monthlyPriceAmt;
           const insertResult = await db.insert(schema.enrollments).values({
             membershipPackageId: pkg!.id,
             leadId: input.leadId || null,
@@ -2572,13 +2575,13 @@ Please enter your card details below to complete your registration securely. Tot
             studentName: input.studentName || input.customerName,
             fluidpayCustomerId: fpCustomerId,
             fluidpaySubscriptionId: fpSubscriptionId,
-            stripePaymentIntentId: null,
-            downPaymentAmount: '0.00',
-            paidFirstMonth: 0,
-            remainingBalance: totalPrice.toFixed(2),
-            monthlyPaymentsRemaining: pkg!.durationMonths,
+            stripePaymentIntentId: fpTransactionId,
+            downPaymentAmount: monthlyPriceAmt.toFixed(2),
+            paidFirstMonth: 1,
+            remainingBalance: remainingBalance.toFixed(2),
+            monthlyPaymentsRemaining: pkg!.durationMonths - 1,
             status: 'active',
-            discountApplied: 'down_payment_waived',
+            discountApplied: 'enrollment_fee_waived',
             agreementSignature: input.agreementSignature || null,
             agreementSignedAt: input.agreementSignedAt ? new Date(input.agreementSignedAt) : null,
             startDate: new Date(),
