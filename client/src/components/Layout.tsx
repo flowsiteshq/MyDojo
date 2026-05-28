@@ -56,6 +56,34 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
   }, []);
   const [isMobileProgramsOpen, setIsMobileProgramsOpen] = useState(false);
+  const [isMobileLocationsOpen, setIsMobileLocationsOpen] = useState(false);
+
+  const MOBILE_LOCATIONS = [
+    {
+      id: 'tomball',
+      name: 'MyDojo Tomball HQ',
+      address: '11721 Spring Cypress Rd, Tomball TX',
+      scheduleUrl: '/locations/tomball#schedule',
+      detailUrl: '/locations/tomball',
+      badge: '🏠 Main Location',
+    },
+    {
+      id: 'yaegers-sda',
+      name: "Yaeger's Self Defense",
+      address: '306 E Pasadena Blvd, Deer Park TX',
+      scheduleUrl: '/locations/yaegers-sda#schedule',
+      detailUrl: '/locations/yaegers-sda',
+      badge: '🤝 Affiliate',
+    },
+    {
+      id: 'nokc-belle-chasse',
+      name: 'New Orleans Karate Club',
+      address: '1510 LA-406, Belle Chasse LA',
+      scheduleUrl: '/locations/nokc-belle-chasse#schedule',
+      detailUrl: '/locations/nokc-belle-chasse',
+      badge: '🤝 Affiliate',
+    },
+  ];
   const [location] = useLocation();
   const isHome = location === "/";
   const { closestLocation } = useLocationContext();
@@ -423,6 +451,60 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       </div>
                     </Link>
                   ))}
+                </div>
+              )}
+            </div>
+
+            {/* Locations dropdown */}
+            <div>
+              <button
+                className="w-full flex items-center justify-between text-lg font-bold uppercase tracking-wider py-3 border-b border-gray-100"
+                onClick={() => setIsMobileLocationsOpen(!isMobileLocationsOpen)}
+              >
+                <span className="flex-1 text-center">Locations</span>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform duration-200",
+                  isMobileLocationsOpen ? "rotate-180" : ""
+                )} />
+              </button>
+              {isMobileLocationsOpen && (
+                <div className="bg-gray-50 rounded-lg mt-1 mb-2 overflow-hidden">
+                  {MOBILE_LOCATIONS.map((loc) => (
+                    <div key={loc.id} className="border-b border-gray-100 last:border-0">
+                      <div className="px-4 pt-3 pb-1">
+                        <span className="text-xs font-bold text-primary uppercase tracking-wider">{loc.badge}</span>
+                        <p className="font-bold text-sm mt-0.5">{loc.name}</p>
+                        <p className="text-xs text-gray-400 mb-2">{loc.address}</p>
+                      </div>
+                      <div className="flex gap-2 px-4 pb-3">
+                        <Link href={loc.scheduleUrl}>
+                          <button
+                            className="flex-1 text-xs font-bold uppercase tracking-wider bg-black text-white rounded px-3 py-2"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            📅 Schedule
+                          </button>
+                        </Link>
+                        <Link href={loc.detailUrl}>
+                          <button
+                            className="flex-1 text-xs font-bold uppercase tracking-wider border border-primary text-primary rounded px-3 py-2"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            📍 Details
+                          </button>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                  <Link href="/locations">
+                    <div
+                      className="flex items-center justify-center gap-2 px-5 py-3 text-sm font-bold text-primary cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <MapPin className="h-3.5 w-3.5" />
+                      Find All Locations
+                    </div>
+                  </Link>
                 </div>
               )}
             </div>
