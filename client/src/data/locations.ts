@@ -264,7 +264,7 @@ export const locations: Location[] = [
           { time: "8:00 AM", name: "Instructor Training", ageGroup: "Instructors Only" },
           { time: "9:00 AM", name: "Kickboxing (Dojo 2)", ageGroup: "Ages 18+" },
           { time: "10:00 AM", name: "Little Ninjas", ageGroup: "Ages 3-5" },
-          { time: "10:45 AM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
+          { time: "11:00 AM", name: "Dragon Kids", ageGroup: "Ages 5-12" },
           { time: "11:30 AM", name: "Family Class", ageGroup: "All Ages" },
           { time: "12:15 PM", name: "Teen Warriors", ageGroup: "Ages 12-17" },
           { time: "1:00 PM", name: "Demo/Competition Team", ageGroup: "Competition Team" }
