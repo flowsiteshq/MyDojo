@@ -53,7 +53,9 @@ export default function LocationDetail() {
   const [, params] = useRoute("/locations/:id");
   const [locationStatus, setLocationStatus] = useState<StatusState | null>(null);
   const [activePhoto, setActivePhoto] = useState(0);
-  const locationId = params?.id;
+  // Support both 'hq' and 'tomball' as slugs for the Tomball HQ location
+  const rawId = params?.id;
+  const locationId = rawId === 'tomball' ? 'hq' : rawId;
   const location = locations.find((loc) => loc.id === locationId);
   
   const nextClass = useNextClass(location?.schedule, location?.timezone);
