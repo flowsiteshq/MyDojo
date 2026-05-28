@@ -65,7 +65,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       address: '11721 Spring Cypress Rd, Tomball TX',
       scheduleUrl: '/locations/tomball#schedule',
       detailUrl: '/locations/tomball',
-      badge: '🏠 Main Location',
+      badge: 'Main Location',
     },
     {
       id: 'yaegers-sda',
@@ -73,7 +73,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       address: '306 E Pasadena Blvd, Deer Park TX',
       scheduleUrl: '/locations/yaegers-sda#schedule',
       detailUrl: '/locations/yaegers-sda',
-      badge: '🤝 Affiliate',
+      badge: 'Affiliate',
     },
     {
       id: 'nokc-belle-chasse',
@@ -81,7 +81,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       address: '1510 LA-406, Belle Chasse LA',
       scheduleUrl: '/locations/nokc-belle-chasse#schedule',
       detailUrl: '/locations/nokc-belle-chasse',
-      badge: '🤝 Affiliate',
+      badge: 'Affiliate',
     },
   ];
   const [location] = useLocation();
@@ -482,7 +482,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             className="flex-1 text-xs font-bold uppercase tracking-wider bg-black text-white rounded px-3 py-2"
                             onClick={() => setIsMobileMenuOpen(false)}
                           >
-                            📅 Schedule
+                            Schedule
                           </button>
                         </Link>
                         <Link href={loc.detailUrl}>
@@ -490,7 +490,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             className="flex-1 text-xs font-bold uppercase tracking-wider border border-primary text-primary rounded px-3 py-2"
                             onClick={() => setIsMobileMenuOpen(false)}
                           >
-                            📍 Details
+                            Details
                           </button>
                         </Link>
                       </div>
