@@ -213,6 +213,16 @@ export default function Locations() {
         </div>
       </section>
 
+      {/* Mobile: Quick link to Tomball page */}
+      <div className="lg:hidden bg-primary text-white py-3 px-4 text-center">
+        <Link href="/locations/tomball">
+          <span className="font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-2">
+            <MapPin className="w-4 h-4" />
+            View MyDojo Tomball — Schedule & Details →
+          </span>
+        </Link>
+      </div>
+
       <div className="container mx-auto px-4 py-12 flex-grow">
         <div className="flex flex-col lg:flex-row gap-8 h-full">
           
@@ -308,7 +318,7 @@ export default function Locations() {
                     }}>
                       Directions
                     </Button>
-                    <Link href={`/locations/${location.id}`}>
+                    <Link href={location.id === 'hq' ? '/locations/tomball' : `/locations/${location.id}`}>
                       <Button size="sm" className="flex-1 bg-primary text-white hover:bg-primary/90">
                         Details
                       </Button>
@@ -333,8 +343,8 @@ export default function Locations() {
             </div>
           </div>
 
-          {/* Map Area */}
-          <div className="lg:w-2/3 bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 min-h-[500px] relative">
+          {/* Map Area — hidden on mobile, shown on desktop */}
+          <div className="hidden lg:block lg:w-2/3 bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 min-h-[500px] relative">
             <MapView 
               className="w-full h-full absolute inset-0"
               onMapReady={(map) => {
