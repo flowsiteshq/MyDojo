@@ -456,7 +456,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               )
             ))}
 
-            {isAuthenticated && (
+            {isAuthenticated ? (
               <Link href="/dashboard">
                 <span
                   className={cn(
@@ -469,6 +469,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   My Account
                 </span>
               </Link>
+            ) : (
+              <a
+                href={getLoginUrl()}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span className="flex items-center justify-center gap-2 text-lg font-bold uppercase tracking-wider py-3 border-b border-gray-100 text-center">
+                  <User className="h-5 w-5" />
+                  Student Login
+                </span>
+              </a>
             )}
 
             <Link href="/check-in">
