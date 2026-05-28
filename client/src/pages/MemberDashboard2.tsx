@@ -660,10 +660,12 @@ function PaymentHistorySection({ isDark }: { isDark: boolean }) {
                 <div className="flex items-center gap-2">
                   <div
                     className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      isDark ? "bg-green-500/15" : "bg-green-50"
+                      p.status === "upcoming"
+                        ? isDark ? "bg-blue-500/15" : "bg-blue-50"
+                        : isDark ? "bg-green-500/15" : "bg-green-50"
                     }`}
                   >
-                    <CreditCard className="h-4 w-4 text-green-500" />
+                    <CreditCard className={`h-4 w-4 ${p.status === "upcoming" ? "text-blue-500" : "text-green-500"}`} />
                   </div>
                   <span className={`text-sm ${t.textSecondary}`}>{formatDate(p.created)}</span>
                 </div>
@@ -671,15 +673,21 @@ function PaymentHistorySection({ isDark }: { isDark: boolean }) {
                   <span className={`text-sm ${t.textPrimary}`}>{p.description}</span>
                 </div>
                 <div className="flex items-center justify-end gap-2">
-                  <span className={`text-sm font-semibold ${isDark ? "text-green-400" : "text-green-600"}`}>
+                  <span className={`text-sm font-semibold ${
+                    p.status === "upcoming"
+                      ? isDark ? "text-blue-400" : "text-blue-600"
+                      : isDark ? "text-green-400" : "text-green-600"
+                  }`}>
                     {formatAmount(p.amount)}
                   </span>
                   <span
                     className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      isDark ? "bg-green-500/15 text-green-400" : "bg-green-50 text-green-600"
+                      p.status === "upcoming"
+                        ? isDark ? "bg-blue-500/15 text-blue-400" : "bg-blue-50 text-blue-600"
+                        : isDark ? "bg-green-500/15 text-green-400" : "bg-green-50 text-green-600"
                     }`}
                   >
-                    Paid
+                    {p.status === "upcoming" ? "Scheduled" : "Paid"}
                   </span>
                 </div>
               </div>

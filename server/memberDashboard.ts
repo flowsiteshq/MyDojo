@@ -1,11 +1,14 @@
 import { getDb } from "./db";
-import { enrollments, membershipPackages, classSchedule, webhookEvents } from "../drizzle/schema";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { enrollments, membershipPackages, classSchedule } from "../drizzle/schema";
+import { eq, and, desc } from "drizzle-orm";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY!, {
   apiVersion: "2026-01-28.clover",
 });
+
+const FLUIDPAY_API_URL = "https://app.fluidpay.com";
+const FLUIDPAY_SECRET_KEY = process.env.FLUIDPAY_SECRET_KEY;
 
 /**
  * Get member's active enrollment with membership package details
@@ -68,7 +71,7 @@ export async function getMemberClassSchedules(packageName: string, location: str
 
 export type PaymentHistoryItem = {
   id: string;
-  type: "payment" | "invoice" | "fluidpay";
+  type: "payment" | "invoice" | "fluidpay" | "fluidpay_upcoming";
   amount: number;
   currency: string;
   status: string;
@@ -78,8 +81,90 @@ export type PaymentHistoryItem = {
 };
 
 /**
+ * Query FluidPay API for all transactions for a given customer vault ID.
+ * Returns both past charges and upcoming scheduled subscription payments.
+ */
+async function getFluidPayTransactions(fpCustomerId: string): Promise<PaymentHistoryItem[]> {
+  if (!FLUIDPAY_SECRET_KEY || !fpCustomerId) return [];
+
+  const fpHeaders = {
+    Authorization: FLUIDPAY_SECRET_KEY,
+    "Content-Type": "application/json",
+  };
+
+  const results: PaymentHistoryItem[] = [];
+
+  try {
+    // 1. Get all past transactions for this customer
+    const txRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction/search`, {
+      method: "POST",
+      headers: fpHeaders,
+      body: JSON.stringify({
+        customer_id: { operator: "=", value: fpCustomerId },
+        limit: 50,
+      }),
+    });
+    const txData = await txRes.json();
+
+    if (txData.status === "success" && Array.isArray(txData.data)) {
+      for (const tx of txData.data) {
+        const approvedStatuses = ["approved", "pending_settlement", "settled", "complete", "authorized"];
+        if (!approvedStatuses.includes(tx.status)) continue;
+        if (!tx.amount || tx.amount <= 0) continue;
+
+        results.push({
+          id: `fp-tx-${tx.id}`,
+          type: "fluidpay",
+          amount: tx.amount / 100,
+          currency: "USD",
+          status: "paid",
+          description: tx.description || "Membership Payment",
+          created: new Date(tx.created_at),
+        });
+      }
+    }
+
+    // 2. Get all subscriptions for this customer to show upcoming charges
+    const subRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription/search`, {
+      method: "POST",
+      headers: fpHeaders,
+      body: JSON.stringify({
+        customer_id: { operator: "=", value: fpCustomerId },
+      }),
+    });
+    const subData = await subRes.json();
+
+    if (subData.status === "success" && Array.isArray(subData.data)) {
+      for (const sub of subData.data) {
+        if (sub.status !== "active") continue;
+        if (!sub.next_bill_date) continue;
+        if (!sub.amount || sub.amount <= 0) continue;
+
+        const nextBillDate = new Date(sub.next_bill_date);
+        // Only show upcoming if it's in the future
+        if (nextBillDate > new Date()) {
+          results.push({
+            id: `fp-upcoming-${sub.id}`,
+            type: "fluidpay_upcoming",
+            amount: sub.amount / 100,
+            currency: "USD",
+            status: "upcoming",
+            description: sub.description || "Monthly Membership",
+            created: nextBillDate,
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[Member Dashboard] Error fetching FluidPay transactions:", err);
+  }
+
+  return results;
+}
+
+/**
  * Get member's full payment history.
- * Primary source: FluidPay webhook events (for most students).
+ * Primary source: FluidPay API (direct query by customer vault ID).
  * Fallback: Stripe payment intents + invoices (for legacy students).
  */
 export async function getMemberPaymentHistory(
@@ -88,15 +173,14 @@ export async function getMemberPaymentHistory(
 ): Promise<PaymentHistoryItem[]> {
   const payments: PaymentHistoryItem[] = [];
 
-  // ── 1. FluidPay webhook events ────────────────────────────────────────────
+  // ── 1. FluidPay (direct API query by customer vault ID) ───────────────────
   try {
     const db = await getDb();
     if (db) {
-      // Find all enrollments for this customer to get their FluidPay subscription IDs
+      // Find all enrollments for this customer to get their FluidPay customer IDs
       const memberEnrollments = await db
         .select({
           id: enrollments.id,
-          fluidpaySubscriptionId: enrollments.fluidpaySubscriptionId,
           fluidpayCustomerId: enrollments.fluidpayCustomerId,
           downPaymentAmount: enrollments.downPaymentAmount,
           createdAt: enrollments.createdAt,
@@ -105,51 +189,34 @@ export async function getMemberPaymentHistory(
         .where(eq(enrollments.customerEmail, customerEmail))
         .orderBy(desc(enrollments.createdAt));
 
-      const fpSubIds = memberEnrollments
-        .map(e => e.fluidpaySubscriptionId)
-        .filter((id): id is string => !!id);
+      // Collect unique FluidPay customer IDs
+      const fpCustomerIds = Array.from(new Set(
+        memberEnrollments
+          .map(e => e.fluidpayCustomerId)
+          .filter((id): id is string => !!id && id !== "NULL")
+      ));
 
-      if (fpSubIds.length > 0) {
-        // Pull all approved webhook events for these subscriptions
-        const events = await db
-          .select()
-          .from(webhookEvents)
-          .where(
-            and(
-              inArray(webhookEvents.fpSubscriptionId, fpSubIds),
-              inArray(webhookEvents.eventStatus, ["approved", "complete", "success", "settled", "pending_settlement", "authorized"])
-            )
-          )
-          .orderBy(desc(webhookEvents.createdAt))
-          .limit(60);
-
-        for (const evt of events) {
-          if (!evt.amountCents || evt.amountCents <= 0) continue;
-          payments.push({
-            id: `fp-${evt.id}`,
-            type: "fluidpay",
-            amount: evt.amountCents / 100,
-            currency: "USD",
-            status: "paid",
-            description: "Monthly Membership",
-            created: evt.createdAt,
-          });
-        }
+      // Query FluidPay API for each customer vault
+      for (const fpCustomerId of fpCustomerIds) {
+        const fpPayments = await getFluidPayTransactions(fpCustomerId);
+        payments.push(...fpPayments);
       }
 
-      // Add the down payment from each enrollment record (initial charge)
-      for (const enr of memberEnrollments) {
-        const amt = parseFloat((enr.downPaymentAmount as string) ?? "0");
-        if (amt > 0) {
-          payments.push({
-            id: `fp-down-${enr.id}`,
-            type: "fluidpay",
-            amount: amt,
-            currency: "USD",
-            status: "paid",
-            description: "Enrollment / Down Payment",
-            created: enr.createdAt ?? new Date(),
-          });
+      // If no FluidPay customer IDs, fall back to showing the down payment from DB
+      if (fpCustomerIds.length === 0) {
+        for (const enr of memberEnrollments) {
+          const amt = parseFloat((enr.downPaymentAmount as string) ?? "0");
+          if (amt > 0) {
+            payments.push({
+              id: `fp-down-${enr.id}`,
+              type: "fluidpay",
+              amount: amt,
+              currency: "USD",
+              status: "paid",
+              description: "Enrollment / Down Payment",
+              created: enr.createdAt ?? new Date(),
+            });
+          }
         }
       }
     }
@@ -195,10 +262,15 @@ export async function getMemberPaymentHistory(
     }
   }
 
-  // Sort by date descending and deduplicate
+  // Sort: upcoming first, then paid by date descending; deduplicate
   const seen = new Set<string>();
   return payments
-    .sort((a, b) => b.created.getTime() - a.created.getTime())
+    .sort((a, b) => {
+      // Upcoming payments always appear at the top
+      if (a.status === "upcoming" && b.status !== "upcoming") return -1;
+      if (b.status === "upcoming" && a.status !== "upcoming") return 1;
+      return b.created.getTime() - a.created.getTime();
+    })
     .filter(p => {
       if (seen.has(p.id)) return false;
       seen.add(p.id);
