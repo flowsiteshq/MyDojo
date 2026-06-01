@@ -22,6 +22,7 @@ const STAFF_PHONES = [
   { name: "Hector", phone: "+18187454612" },
   { name: "Dominique", phone: "+12406011818" },
   { name: "Clover", phone: "+17034997761" },
+  { name: "Brenda", phone: "+18326655442" },
 ];
 
 // ── Weekly themes with detailed activity plans ───────────────────────────────
