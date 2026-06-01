@@ -8836,6 +8836,83 @@ Please enter your card details below to complete your registration securely. Tot
         }
         return { totalEnrollments, totalStudents, totalRevenueCents, fullSummerCount, weekCounts };
       }),
+    // Public: look up enrollment by ID + phone (for form link)
+    getByPhone: publicProcedure
+      .input(z.object({
+        enrollmentId: z.number(),
+        parentPhone: z.string().min(7),
+      }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        const [row] = await db
+          .select()
+          .from(schema.summerCampEnrollments)
+          .where(and(
+            eq(schema.summerCampEnrollments.id, input.enrollmentId),
+            eq(schema.summerCampEnrollments.parentPhone, input.parentPhone),
+          ))
+          .limit(1);
+        if (!row) throw new TRPCError({ code: 'NOT_FOUND', message: 'Enrollment not found' });
+        return {
+          ...row,
+          students: JSON.parse(row.students) as { name: string; age: number; dob?: string }[],
+          weeks: JSON.parse(row.weeks) as string[],
+          tshirtSizes: row.tshirtSizes ? JSON.parse(row.tshirtSizes) as { studentName: string; size: string }[] : null,
+          medicalInfo: row.medicalInfo ? JSON.parse(row.medicalInfo) : null,
+        };
+      }),
+    // Public: submit t-shirt sizes + medical questionnaire
+    submitForms: publicProcedure
+      .input(z.object({
+        enrollmentId: z.number(),
+        parentPhone: z.string().min(7),
+        tshirtSizes: z.array(z.object({
+          studentName: z.string(),
+          size: z.enum(['YXS', 'YS', 'YM', 'YL', 'YXL', 'AS', 'AM', 'AL', 'AXL', 'A2XL']),
+        })),
+        medicalInfo: z.object({
+          allergies: z.string(),
+          medications: z.string(),
+          conditions: z.string(),
+          emergencyContact: z.string(),
+          emergencyPhone: z.string(),
+          doctorName: z.string().optional(),
+          doctorPhone: z.string().optional(),
+          canSwim: z.boolean(),
+          photoRelease: z.boolean(),
+          medicalRelease: z.boolean(),
+        }),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        const [row] = await db
+          .select()
+          .from(schema.summerCampEnrollments)
+          .where(and(
+            eq(schema.summerCampEnrollments.id, input.enrollmentId),
+            eq(schema.summerCampEnrollments.parentPhone, input.parentPhone),
+          ))
+          .limit(1);
+        if (!row) throw new TRPCError({ code: 'NOT_FOUND', message: 'Enrollment not found. Please check your phone number.' });
+        await db
+          .update(schema.summerCampEnrollments)
+          .set({
+            tshirtSizes: JSON.stringify(input.tshirtSizes),
+            medicalInfo: JSON.stringify(input.medicalInfo),
+            formsCompleted: 1,
+          } as any)
+          .where(eq(schema.summerCampEnrollments.id, input.enrollmentId));
+        try {
+          const { notifyOwner } = await import('./_core/notification');
+          await notifyOwner({
+            title: `Camp Forms Completed - ${row.parentName}`,
+            content: `${row.parentName} completed t-shirt sizes and medical questionnaire for enrollment #${row.id}. Emergency contact: ${input.medicalInfo.emergencyContact} (${input.medicalInfo.emergencyPhone}).`,
+          });
+        } catch {}
+        return { success: true };
+      }),
   }),
 
   birthday: router({

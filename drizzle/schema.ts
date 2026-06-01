@@ -1770,6 +1770,12 @@ export const summerCampEnrollments = mysqlTable("summerCampEnrollments", {
   fpTransactionId: varchar("fpTransactionId", { length: 255 }).notNull(),
   /** Payment status: approved | declined | error */
   status: mysqlEnum("status", ["approved", "declined", "error"]).notNull().default("approved"),
+  /** JSON array of { studentName, size } t-shirt size selections (YS/YM/YL/AS/AM/AL/AXL) */
+  tshirtSizes: text("tshirtSizes"),
+  /** JSON object with medical questionnaire answers */
+  medicalInfo: text("medicalInfo"),
+  /** Whether the medical questionnaire + t-shirt form has been completed */
+  formsCompleted: int("formsCompleted").notNull().default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type SummerCampEnrollment = typeof summerCampEnrollments.$inferSelect;

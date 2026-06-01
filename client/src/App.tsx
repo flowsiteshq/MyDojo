@@ -31,6 +31,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const SummerCamp = lazy(() => import("./pages/SummerCamp"));
 const SummerCampEnroll = lazy(() => import("./pages/SummerCampEnroll"));
+const SummerCampForms = lazy(() => import("./pages/SummerCampForms"));
 const SummerCampOpenHouse = lazy(() => import("./pages/SummerCampOpenHouse"));
 const LeadCapture = lazy(() => import("./pages/LeadCapture"));
 const Testimonials = lazy(() => import("./pages/Testimonials"));
@@ -130,6 +131,7 @@ function Router() {
         <Route path="/join" component={Join} />
         <Route path="/enroll" component={Enroll} />
         <Route path="/summer-camp/enroll" component={SummerCampEnroll} />
+        <Route path="/summer-camp/forms" component={SummerCampForms} />
         <Route path="/buy-day-pass" component={BuyDayPass} />
         <Route path="/instructor" component={InstructorDashboard} />
         <Route path="/check-in" component={KioskCheckIn} />
