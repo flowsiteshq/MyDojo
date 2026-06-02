@@ -365,6 +365,13 @@
       "when": 1780289111331,
       "tag": "0051_black_silver_fox",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "5",
+      "when": 1780360105006,
+      "tag": "0052_eager_chameleon",
+      "breakpoints": true
     }
   ]
 }

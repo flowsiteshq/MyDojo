@@ -27,6 +27,7 @@ import {
   PartyPopper,
   Tent,
   BarChart3,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { trpc } from "@/lib/trpc";
@@ -168,6 +169,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/billing-schedule", label: "Billing Schedule", icon: CalendarDays },
     { href: "/admin/class-roster", label: "Class Roster", icon: ClipboardList },
     { href: "/admin/buddy-day", label: "Buddy Day RSVPs", icon: Users },
+    { href: "/admin/manual-enrollment", label: "Manual Enrollment", icon: UserCheck },
     { href: "/admin/social-media", label: "Social Media", icon: Share2 },
     { href: "/admin/commissions", label: "Commissions", icon: DollarSign },
   ];

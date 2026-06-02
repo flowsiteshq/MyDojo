@@ -1844,3 +1844,54 @@ export const buddyDayRsvps = mysqlTable("buddyDayRsvps", {
 });
 export type BuddyDayRsvp = typeof buddyDayRsvps.$inferSelect;
 export type InsertBuddyDayRsvp = typeof buddyDayRsvps.$inferInsert;
+
+// ── Manual Enrollments (Staff Transfer Tool) ────────────────────────────────
+/**
+ * Staff-created enrollments for transferring students from legacy systems.
+ * Supports variable pricing, custom charge dates, and recurring billing.
+ */
+export const manualEnrollments = mysqlTable("manualEnrollments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Student's full name */
+  studentName: varchar("studentName", { length: 255 }).notNull(),
+  /** Parent/guardian name (optional for adult students) */
+  parentName: varchar("parentName", { length: 255 }),
+  /** Primary contact phone number */
+  phone: varchar("phone", { length: 30 }).notNull(),
+  /** Contact email address */
+  email: varchar("email", { length: 320 }),
+  /** Program enrolled in */
+  program: mysqlEnum("program", ["kickboxing", "martial_arts", "summer_camp", "after_school"]).notNull(),
+  /** Custom price set by staff (in dollars, e.g. 149.00) */
+  customPrice: decimal("customPrice", { precision: 10, scale: 2 }).notNull(),
+  /** Billing frequency — monthly for kickboxing/martial arts, weekly for camp/after school */
+  billingFrequency: mysqlEnum("billingFrequency", ["monthly", "weekly"]).notNull(),
+  /** The date staff selected for the next/first charge (YYYY-MM-DD) */
+  nextChargeDate: varchar("nextChargeDate", { length: 10 }).notNull(),
+  /** Whether a pre-authorization charge was run (captures card without billing) */
+  preAuthEnabled: int("preAuthEnabled").default(0).notNull(),
+  /** FluidPay pre-auth transaction ID (if pre-auth was run) */
+  preAuthTransactionId: varchar("preAuthTransactionId", { length: 64 }),
+  /** FluidPay customer vault ID (card on file) */
+  fluidpayCustomerId: varchar("fluidpayCustomerId", { length: 64 }),
+  /** FluidPay subscription/plan ID for recurring billing */
+  fluidpaySubscriptionId: varchar("fluidpaySubscriptionId", { length: 64 }),
+  /** FluidPay transaction ID for the initial charge (if charged immediately) */
+  initialTransactionId: varchar("initialTransactionId", { length: 64 }),
+  /** Card last 4 digits (for display) */
+  cardLast4: varchar("cardLast4", { length: 4 }),
+  /** Card type (Visa, Mastercard, etc.) */
+  cardType: varchar("cardType", { length: 32 }),
+  /** Enrollment status */
+  status: mysqlEnum("status", ["pending", "active", "cancelled", "failed"]).default("pending").notNull(),
+  /** Notes from staff */
+  notes: text("notes"),
+  /** Staff user ID who created this enrollment */
+  createdByStaffId: int("createdByStaffId"),
+  /** Staff name (denormalized) */
+  createdByStaffName: varchar("createdByStaffName", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ManualEnrollment = typeof manualEnrollments.$inferSelect;
+export type InsertManualEnrollment = typeof manualEnrollments.$inferInsert;
