@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import {
   Link2, Plus, Copy, ToggleLeft, ToggleRight, Trash2, RefreshCw,
   DollarSign, Repeat, ShoppingBag, Eye, ChevronDown, ChevronUp,
-  ExternalLink, CheckCircle2, XCircle, Clock, Loader2,
+  ExternalLink, CheckCircle2, XCircle, Clock, Loader2, Send, Mail, Phone,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -540,12 +540,138 @@ function SuccessDialog({ token, onClose }: { token: string; onClose: () => void 
   );
 }
 
+// ─── Send Link Dialog ────────────────────────────────────────────────────────
+
+function SendLinkDialog({ link, onClose }: { link: { id: number; title: string; token: string }; onClose: () => void }) {
+  const [customerName, setCustomerName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [customMessage, setCustomMessage] = useState("");
+  const [sent, setSent] = useState(false);
+  const [sentVia, setSentVia] = useState<{ sms: boolean; email: boolean }>({ sms: false, email: false });
+
+  const sendMutation = trpc.customPayments.sendLink.useMutation({
+    onSuccess: (data) => {
+      setSent(true);
+      setSentVia({ sms: data.smsSent, email: data.emailSent });
+      if (data.smsSent && data.emailSent) toast.success("Link sent via SMS and email!");
+      else if (data.smsSent) toast.success("Link sent via SMS!");
+      else if (data.emailSent) toast.success("Link sent via email!");
+      else toast.success("Link delivery queued.");
+    },
+    onError: (err) => toast.error(err.message || "Failed to send link"),
+  });
+
+  const handleSend = () => {
+    if (!phone.trim() && !email.trim()) {
+      toast.error("Enter a phone number or email address");
+      return;
+    }
+    sendMutation.mutate({
+      id: link.id,
+      phone: phone.trim() || undefined,
+      email: email.trim() || undefined,
+      customerName: customerName.trim() || undefined,
+      customMessage: customMessage.trim() || undefined,
+    });
+  };
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Send className="h-5 w-5 text-primary" />
+            Send Payment Link
+          </DialogTitle>
+          <DialogDescription>
+            Send <strong>{link.title}</strong> to a customer via SMS or email.
+          </DialogDescription>
+        </DialogHeader>
+
+        {sent ? (
+          <div className="py-8 flex flex-col items-center text-center gap-3">
+            <CheckCircle2 className="h-12 w-12 text-green-500" />
+            <p className="font-semibold text-lg">Link Sent!</p>
+            <div className="flex gap-3 text-sm text-muted-foreground">
+              {sentVia.sms && <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" /> SMS delivered</span>}
+              {sentVia.email && <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" /> Email delivered</span>}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 break-all">{window.location.origin}/pay/{link.token}</p>
+            <Button variant="outline" className="mt-2" onClick={onClose}>Close</Button>
+          </div>
+        ) : (
+          <div className="space-y-4 pt-1">
+            <div className="space-y-1.5">
+              <Label>Customer Name (optional)</Label>
+              <Input
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="e.g. John Smith"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> Phone Number</Label>
+              <Input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(555) 123-4567"
+                type="tel"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> Email Address</Label>
+              <Input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="customer@email.com"
+                type="email"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Custom Message (optional)</Label>
+              <Textarea
+                value={customMessage}
+                onChange={(e) => setCustomMessage(e.target.value)}
+                placeholder="e.g. Hi! Here's your enrollment payment link for this month."
+                rows={3}
+              />
+            </div>
+
+            <div className="bg-muted/40 rounded-lg p-3 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground mb-1">Preview link:</p>
+              <p className="break-all">{window.location.origin}/pay/{link.token}</p>
+            </div>
+          </div>
+        )}
+
+        {!sent && (
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button
+              onClick={handleSend}
+              disabled={sendMutation.isPending || (!phone.trim() && !email.trim())}
+            >
+              {sendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+              Send Link
+            </Button>
+          </DialogFooter>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminCustomPayments() {
   const [showCreate, setShowCreate] = useState(false);
   const [createdToken, setCreatedToken] = useState<string | null>(null);
   const [viewingId, setViewingId] = useState<number | null>(null);
+  const [sendingLink, setSendingLink] = useState<{ id: number; title: string; token: string } | null>(null);
   const [filterType, setFilterType] = useState<"all" | PaymentType>("all");
 
   const { data: links, isLoading, refetch } = trpc.customPayments.list.useQuery();
@@ -694,6 +820,15 @@ export default function AdminCustomPayments() {
                               <Button
                                 size="icon"
                                 variant="ghost"
+                                className="h-8 w-8 text-primary hover:text-primary/80"
+                                title="Send to customer"
+                                onClick={() => setSendingLink({ id: link.id, title: link.title, token: link.token })}
+                              >
+                                <Send className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
                                 className="h-8 w-8"
                                 title="Copy link"
                                 onClick={() => copyLink(link.token)}
@@ -761,6 +896,9 @@ export default function AdminCustomPayments() {
       )}
       {viewingId !== null && (
         <LinkDetailDialog linkId={viewingId} onClose={() => setViewingId(null)} />
+      )}
+      {sendingLink !== null && (
+        <SendLinkDialog link={sendingLink} onClose={() => setSendingLink(null)} />
       )}
     </AdminLayout>
   );

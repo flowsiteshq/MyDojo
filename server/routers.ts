@@ -477,6 +477,98 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    /** Send a payment link to a customer via SMS and/or email */
+    sendLink: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        phone: z.string().optional(),
+        email: z.string().email().optional().or(z.literal('')),
+        customerName: z.string().optional(),
+        customMessage: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+
+        const [link] = await db.select().from(schema.customPaymentLinks)
+          .where(eq(schema.customPaymentLinks.id, input.id));
+        if (!link) throw new TRPCError({ code: 'NOT_FOUND', message: 'Payment link not found' });
+        if (!link.isActive) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot send an inactive payment link' });
+
+        if (!input.phone && !input.email) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Provide at least a phone number or email address' });
+        }
+
+        const publicUrl = `https://mydojoma.com/pay/${link.token}`;
+        const greeting = input.customerName ? `Hi ${input.customerName.split(' ')[0]}! ` : '';
+        const customNote = input.customMessage ? `${input.customMessage} ` : '';
+        const smsSent: boolean[] = [];
+        const emailSent: boolean[] = [];
+
+        // Send SMS
+        if (input.phone && input.phone.trim()) {
+          try {
+            const { sendSms, normalizePhone } = await import('./sms800');
+            const amountStr = link.type === 'merchandise'
+              ? 'See items'
+              : `$${parseFloat(link.amount as string).toFixed(2)}`;
+            const recurringNote = link.type === 'recurring' ? ` (${link.billingInterval} billing)` : '';
+            const smsBody = `${greeting}${customNote}MyDojo Payment Request: ${link.title} — ${amountStr}${recurringNote}. Pay securely here: ${publicUrl}`;
+            const result = await sendSms({ to: normalizePhone(input.phone), message: smsBody });
+            smsSent.push(result.success);
+          } catch (e) {
+            smsSent.push(false);
+          }
+        }
+
+        // Send Email
+        if (input.email && input.email.trim()) {
+          try {
+            const { Resend } = await import('resend');
+            const resend = new Resend(process.env.RESEND_API_KEY);
+            const amountStr = link.type === 'merchandise'
+              ? 'See items below'
+              : `$${parseFloat(link.amount as string).toFixed(2)}`;
+            const recurringNote = link.type === 'recurring' ? `<p style="color:#666;font-size:14px;">Billing: ${link.billingInterval}</p>` : '';
+            const descNote = link.description ? `<p style="color:#555;font-size:15px;">${link.description}</p>` : '';
+            const customNoteHtml = input.customMessage ? `<p style="color:#333;font-size:15px;">${input.customMessage}</p>` : '';
+            const html = `
+              <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px;">
+                <img src="https://mydojoma.com/images/logo-full-black.webp" alt="MyDojo" style="height:40px;margin-bottom:24px;" />
+                <h2 style="color:#111;margin-bottom:8px;">Payment Request</h2>
+                ${customNoteHtml}
+                <div style="background:#f9f9f9;border-radius:8px;padding:20px;margin:16px 0;">
+                  <h3 style="margin:0 0 8px;color:#111;">${link.title}</h3>
+                  ${descNote}
+                  <p style="font-size:24px;font-weight:bold;color:#E10600;margin:8px 0;">${amountStr}</p>
+                  ${recurringNote}
+                </div>
+                <a href="${publicUrl}" style="display:inline-block;background:#E10600;color:#fff;text-decoration:none;padding:14px 32px;border-radius:6px;font-weight:bold;font-size:16px;margin-top:8px;">Pay Now</a>
+                <p style="color:#999;font-size:12px;margin-top:24px;">MyDojo Martial Arts &amp; Fitness &bull; mydojoma.com</p>
+              </div>`;
+            const result = await resend.emails.send({
+              from: process.env.VITE_EMAIL_FROM ?? 'noreply@mydojoma.com',
+              to: input.email,
+              subject: `MyDojo Payment Request: ${link.title}`,
+              html,
+            });
+            emailSent.push(!result.error);
+          } catch (e) {
+            emailSent.push(false);
+          }
+        }
+
+        const smsSentOk = smsSent.length > 0 && smsSent.every(Boolean);
+        const emailSentOk = emailSent.length > 0 && emailSent.every(Boolean);
+
+        return {
+          success: smsSentOk || emailSentOk || (smsSent.length === 0 && emailSent.length === 0),
+          smsSent: smsSentOk,
+          emailSent: emailSentOk,
+          url: publicUrl,
+        };
+      }),
+
     /** Delete a custom payment link */
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
