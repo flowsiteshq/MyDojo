@@ -795,6 +795,26 @@ export const appRouter = router({
           });
         } catch {}
 
+        // Alert all staff via SMS about the new student/payment
+        try {
+          const { sendSms } = await import('./sms800');
+          const STAFF_PHONES = [
+            { name: 'Vincent', phone: '+12818189288' },
+            { name: 'Debbie', phone: '+12812369283' },
+            { name: 'Hector', phone: '+18187454612' },
+            { name: 'Dominique', phone: '+12406011818' },
+            { name: 'Clover', phone: '+17034997761' },
+            { name: 'Brenda', phone: '+18326655442' },
+          ];
+          const typeLabel = link.type === 'recurring' ? `recurring ${link.billingInterval} membership` : link.type === 'merchandise' ? 'merchandise order' : 'one-time payment';
+          const staffMsg = `🎉 New Student Alert! ${input.customerName} just paid $${amountDollars.toFixed(2)} for "${link.title}" (${typeLabel}).${input.customerPhone ? ` Phone: ${input.customerPhone}` : ''}${input.customerEmail ? ` Email: ${input.customerEmail}` : ''} — MyDojo`;
+          await Promise.allSettled(
+            STAFF_PHONES.map(s => sendSms({ to: s.phone, message: staffMsg }))
+          );
+        } catch (e) {
+          console.error('[CustomPayment] Staff SMS alert failed:', e);
+        }
+
         return {
           success: true,
           transactionId,
