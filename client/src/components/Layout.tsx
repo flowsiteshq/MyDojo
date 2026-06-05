@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Phone, MapPin, Instagram, Facebook, Youtube, User, ChevronDown, ChevronRight } from "lucide-react";
+import { Menu, X, Phone, MapPin, Instagram, Facebook, Youtube, User, ChevronDown, ChevronRight, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CookieBanner } from "@/components/CookieBanner";
 import { ProgramFinderPopup } from "@/components/ProgramFinderPopup";
@@ -571,6 +571,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 🔥 Kiosk Check-In
+              </span>
+            </Link>
+
+            <Link href="/admin/login">
+              <span
+                className="flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider py-3 border-b border-gray-100 text-center text-gray-500"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Shield className="h-4 w-4" />
+                Staff Portal
               </span>
             </Link>
 
