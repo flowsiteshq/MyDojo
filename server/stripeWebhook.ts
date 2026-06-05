@@ -440,6 +440,7 @@ async function handleIntroOfferPayment(session: Stripe.Checkout.Session) {
   const customerPhone = session.metadata?.customerPhone || session.customer_details?.phone || "";
   const program = session.metadata?.program || "Not Sure";
   const amountPaid = session.amount_total ? session.amount_total / 100 : 29;
+  const isSummerCampTrial = session.metadata?.type === 'summer_camp_intro';
 
   // Map program string to valid enum value
   const programMap: Record<string, string> = {
@@ -451,8 +452,15 @@ async function handleIntroOfferPayment(session: Stripe.Checkout.Session) {
     "Adult Karate": "Adult Karate",
     "Kickboxing": "Kickboxing",
     "Kickboxing Fitness": "Kickboxing",
+    "Summer Camp": "Summer Camp",
   };
   const mappedProgram = programMap[program] || "Not Sure";
+
+  // Parse trial dates from metadata (Summer Camp 3-day trial)
+  const trialStartDate = session.metadata?.trialStartDate ? new Date(session.metadata.trialStartDate) : new Date();
+  const membershipActivationDate = session.metadata?.membershipActivationDate
+    ? new Date(session.metadata.membershipActivationDate)
+    : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
 
   // Idempotency: check if a trial signup with this session ID already exists
   const existing = await db
@@ -476,11 +484,36 @@ async function handleIntroOfferPayment(session: Stripe.Checkout.Session) {
       status: "new",
       source: "intro_offer_stripe" as any,
       location: "HQ",
-      notes: `Paid $${amountPaid} intro offer via Stripe. Session: ${session.id}`,
+      notes: `Paid $${amountPaid} ${isSummerCampTrial ? 'Summer Camp 3-day trial' : 'intro offer'} via Stripe. Session: ${session.id}`,
+      ...(isSummerCampTrial ? {
+        trialStartDate,
+        membershipActivationDate,
+        membershipActivated: false,
+      } : {}),
     } as any);
     console.log("[Stripe Webhook] Intro offer trial signup created for:", customerName, "(", customerEmail, ")");
   } catch (err) {
     console.error("[Stripe Webhook] Failed to create intro offer trial signup:", err);
+  }
+
+  // Summer Camp trial: send cancellation-by-Day-3 SMS warning
+  if (isSummerCampTrial && customerPhone) {
+    try {
+      const { sendSms } = await import('./sms800.js');
+      const activationDateStr = membershipActivationDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      const cancelDeadlineStr = new Date(membershipActivationDate.getTime() - 24 * 60 * 60 * 1000)
+        .toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      await sendSms({
+        to: customerPhone,
+        message: `🏕️ Hi ${customerName.split(' ')[0]}! Your MyDojo Summer Camp 3-Day Trial is confirmed! 🎉\n\n` +
+          `Your child can attend camp for 3 days starting today.\n\n` +
+          `⚠️ IMPORTANT: If you do NOT wish to continue with a full MyDojo membership, you MUST cancel by ${cancelDeadlineStr} (Day 3).\n\n` +
+          `On ${activationDateStr} (Day 4), your full membership will automatically activate and regular tuition will begin.\n\n` +
+          `To cancel, call or text us at (877) 4-MYDOJO before Day 3. We hope you love it! 🥋`,
+      });
+    } catch (smsErr) {
+      console.error('[Stripe Webhook] Failed to send Summer Camp trial cancellation warning SMS:', smsErr);
+    }
   }
 
   // Send welcome email to the customer

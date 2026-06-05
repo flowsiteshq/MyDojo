@@ -167,6 +167,14 @@ export const trialSignups = mysqlTable("trialSignups", {
   noShowSentAt: timestamp("noShowSentAt"),
   /** Whether this contact has opted out of SMS (replied STOP) */
   smsOptOut: boolean("smsOptOut").default(false).notNull(),
+  /** For Summer Camp 3-day trial: the date the trial started (Day 1) */
+  trialStartDate: timestamp("trialStartDate"),
+  /** For Summer Camp 3-day trial: the date full membership auto-activates (Day 4) */
+  membershipActivationDate: timestamp("membershipActivationDate"),
+  /** Whether the Day-4 membership activation has been processed */
+  membershipActivated: boolean("membershipActivated").default(false).notNull(),
+  /** Stripe subscription ID created on Day-4 auto-activation */
+  trialStripeSubscriptionId: varchar("trialStripeSubscriptionId", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

@@ -7117,6 +7117,24 @@ Please enter your card details below to complete your registration securely. Tot
           console.error('[IntroOffer] Failed to save popup lead:', leadErr);
         }
 
+        const emailLower2 = input.email.toLowerCase();
+
+        // ── RULE: No offer stacking — block if they already used the $29 intro offer ──
+        const priorIntroOffer = await db
+          .select({ id: schema.trialSignups.id })
+          .from(schema.trialSignups)
+          .where(and(
+            eq(schema.trialSignups.email, emailLower2),
+            inArray(schema.trialSignups.source as any, ['intro_offer_stripe', 'intro_offer_popup'] as any)
+          ))
+          .limit(1);
+        if (priorIntroOffer.length > 0) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'You have already used an intro offer. Intro offers are one per household. Please contact us to enroll at regular pricing.',
+          });
+        }
+
         // Determine program type
         const isKickboxing = input.program.toLowerCase().includes('kickboxing');
         const isSummerCampOffer = input.program.toLowerCase().includes('summer camp') || input.program.toLowerCase().includes('summer_camp');
@@ -7138,9 +7156,26 @@ Please enter your card details below to complete your registration securely. Tot
           return { checkoutUrl: null, isFree: true };
         }
 
-        // Summer Camp: $49 for 3-day pass, first-time participants only
+        // Summer Camp: $49 for 3-day trial — MEMBERS ONLY, first-time camp participants only
         if (isSummerCampOffer) {
           const emailLower = input.email.toLowerCase();
+
+          // ── RULE: Summer Camp requires an active membership ──────────────────────
+          const activeMembership = await db
+            .select({ id: schema.enrollments.id })
+            .from(schema.enrollments)
+            .where(and(
+              eq(schema.enrollments.customerEmail, emailLower),
+              eq(schema.enrollments.status, 'active')
+            ))
+            .limit(1);
+          if (activeMembership.length === 0) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Summer Camp enrollment requires an active MyDojo membership. Please enroll in a martial arts or kickboxing program first, then register for Summer Camp.',
+            });
+          }
+
           try {
             const priorCamp = await db
               .select()
@@ -7185,6 +7220,9 @@ Please enter your card details below to complete your registration securely. Tot
               customerEmail: input.email,
               customerPhone: input.phone || '',
               program: 'Summer Camp',
+              // Day-4 activation: trial starts today, membership activates on Day 4
+              trialStartDate: new Date().toISOString(),
+              membershipActivationDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
             },
             client_reference_id: input.email,
           });

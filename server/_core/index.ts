@@ -25,6 +25,7 @@ import { handleSitemap } from "../sitemap";
 import { handleSyncExport } from "../syncExport";
 import { handleSummerCampReminder } from "../summerCampReminderJob";
 import { handleKaiCampHourly, handleKaiCampSummary } from "../kaiCampOps";
+import { handleSummerCampTrialActivation } from "../summerCampTrialActivation";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -117,6 +118,8 @@ async function startServer() {
   // Kai Camp Operations — hourly staff SMS (9 AM–5 PM CDT) + 6 PM daily summary
   app.post("/api/scheduled/kai-camp-hourly", handleKaiCampHourly);
   app.post("/api/scheduled/kai-camp-summary", handleKaiCampSummary);
+  // Summer Camp 3-day trial auto-activation — fires daily at 8 AM CDT (13:00 UTC)
+  app.post("/api/scheduled/summer-camp-trial-activation", handleSummerCampTrialActivation);
   
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));

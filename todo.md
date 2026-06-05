@@ -1777,3 +1777,13 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 - [ ] Fix FluidPay payment integration not working
 - [ ] Update class schedule: Mon/Wed/Fri add 12 noon Kickboxing + 12 noon Kids class; 5:30 PM Kickboxing → 5:00 PM; 6:30 PM Kickboxing → 7:00 PM
 - [x] Update class schedule: 5:30PM→5:00PM intro class, 6:30PM→7:00PM kickboxing, add Mon/Wed/Fri noon Kickboxing and Dragon Kids & Teens
+
+- [x] Enforce enrollment rules: Summer Camp membership gate + no offer stacking + Day-4 auto-activation
+  - [x] Server: Block Summer Camp checkout if no active enrollment for that email
+  - [x] Server: Block offer stacking (cannot combine $29 intro offer + $49 Summer Camp trial)
+  - [x] Server: Add isMember check helper used by all Summer Camp checkout procedures
+  - [x] Server: Add trialStartDate and trialActivationDate fields to trialSignups for Day-4 tracking
+  - [x] Server: Scheduled job to auto-activate full membership on Day 4 of Summer Camp trial
+  - [x] Frontend: Show cancellation-by-Day-3 disclosure before Summer Camp trial checkout
+  - [x] Frontend: Show "members only" gate on SummerCampEnroll page for non-members
+  - [x] Frontend: Update IntroOfferCheckout to block Summer Camp program selection

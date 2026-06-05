@@ -623,6 +623,34 @@ export default function SummerCampEnroll() {
                   ))}
                 </div>
 
+                {/* ⚠️ Membership Required Notice */}
+                <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 mb-4">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">🏅</span>
+                    <div>
+                      <p className="font-black text-amber-800 text-sm mb-1">Active Membership Required</p>
+                      <p className="text-amber-700 text-xs leading-relaxed">
+                        Summer Camp enrollment is available to <strong>active MyDojo members only</strong>. By proceeding, you confirm that you have an active martial arts or kickboxing membership with MyDojo.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ⚠️ Cancellation-by-Day-3 Disclosure */}
+                <div className="bg-red-50 border border-red-300 rounded-2xl p-4 mb-4">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">⚠️</span>
+                    <div>
+                      <p className="font-black text-red-700 text-sm mb-1">Important: 3-Day Trial Terms</p>
+                      <p className="text-red-600 text-xs leading-relaxed">
+                        Your child will attend Summer Camp for <strong>3 days</strong> on a trial basis. If you do <strong>not</strong> wish to continue with a full MyDojo membership after the trial, you <strong>MUST cancel by Day 3</strong>.
+                        On <strong>Day 4</strong>, your full membership will automatically activate and regular monthly tuition will begin.
+                        To cancel, call or text us at <strong>(877) 4-MYDOJO</strong> before the end of Day 3.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* FluidPay Card Form */}
                 <div className="bg-white rounded-2xl shadow-lg p-5 mb-4 border border-orange-100">
                   <div className="flex items-center gap-2 mb-4">
