@@ -1903,3 +1903,80 @@ export const manualEnrollments = mysqlTable("manualEnrollments", {
 });
 export type ManualEnrollment = typeof manualEnrollments.$inferSelect;
 export type InsertManualEnrollment = typeof manualEnrollments.$inferInsert;
+
+/**
+ * Custom payment links created by staff.
+ * Supports one-time payments, recurring memberships, and merchandise orders.
+ * Each link has a unique public token for sharing with customers.
+ */
+export const customPaymentLinks = mysqlTable("customPaymentLinks", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Unique public token used in the shareable URL /pay/:token */
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  /** Payment type */
+  type: mysqlEnum("type", ["one_time", "recurring", "merchandise"]).notNull(),
+  /** Display title shown to the customer */
+  title: varchar("title", { length: 255 }).notNull(),
+  /** Optional description shown on the payment page */
+  description: text("description"),
+  /** Amount in dollars (for one_time and recurring; null for merchandise with variable total) */
+  amount: decimal("amount", { precision: 10, scale: 2 }),
+  /** Billing interval for recurring payments */
+  billingInterval: mysqlEnum("billingInterval", ["weekly", "monthly", "yearly"]),
+  /** Number of billing cycles (null = indefinite) */
+  billingCycles: int("billingCycles"),
+  /** Merchandise items as JSON: [{name, price, quantity}] */
+  merchandiseItems: json("merchandiseItems"),
+  /** Whether shipping address is required for merchandise */
+  requiresShipping: int("requiresShipping").default(0).notNull(),
+  /** Whether this link is still active */
+  isActive: int("isActive").default(1).notNull(),
+  /** Optional expiry date for the link */
+  expiresAt: timestamp("expiresAt"),
+  /** Staff user ID who created this link */
+  createdByStaffId: int("createdByStaffId"),
+  /** Staff name (denormalized for display) */
+  createdByStaffName: varchar("createdByStaffName", { length: 255 }),
+  /** Number of times this link has been used (paid) */
+  useCount: int("useCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CustomPaymentLink = typeof customPaymentLinks.$inferSelect;
+export type InsertCustomPaymentLink = typeof customPaymentLinks.$inferInsert;
+
+/**
+ * Payments made through custom payment links.
+ */
+export const customPaymentLinkPayments = mysqlTable("customPaymentLinkPayments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Reference to the custom payment link */
+  linkId: int("linkId").notNull(),
+  /** Customer name */
+  customerName: varchar("customerName", { length: 255 }).notNull(),
+  /** Customer email */
+  customerEmail: varchar("customerEmail", { length: 320 }),
+  /** Customer phone */
+  customerPhone: varchar("customerPhone", { length: 20 }),
+  /** Amount charged in dollars */
+  amountCharged: decimal("amountCharged", { precision: 10, scale: 2 }).notNull(),
+  /** FluidPay transaction ID */
+  fluidpayTransactionId: varchar("fluidpayTransactionId", { length: 64 }),
+  /** FluidPay customer vault ID (for recurring) */
+  fluidpayCustomerId: varchar("fluidpayCustomerId", { length: 64 }),
+  /** FluidPay subscription ID (for recurring) */
+  fluidpaySubscriptionId: varchar("fluidpaySubscriptionId", { length: 64 }),
+  /** Card last 4 digits */
+  cardLast4: varchar("cardLast4", { length: 4 }),
+  /** Card type */
+  cardType: varchar("cardType", { length: 32 }),
+  /** Payment status */
+  status: mysqlEnum("status", ["pending", "approved", "declined", "failed"]).default("pending").notNull(),
+  /** Merchandise items ordered (snapshot) */
+  merchandiseItems: json("merchandiseItems"),
+  /** Shipping address (if required) */
+  shippingAddress: text("shippingAddress"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type CustomPaymentLinkPayment = typeof customPaymentLinkPayments.$inferSelect;
+export type InsertCustomPaymentLinkPayment = typeof customPaymentLinkPayments.$inferInsert;

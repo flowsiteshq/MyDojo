@@ -90,6 +90,8 @@ const AdminBuddyDay = lazy(() => import("./pages/AdminBuddyDay"));
 const ClassSignup = lazy(() => import("./pages/ClassSignup"));
 const AdminClassRoster = lazy(() => import("./pages/AdminClassRoster"));
 const AdminManualEnrollment = lazy(() => import("./pages/AdminManualEnrollment"));
+const AdminCustomPayments = lazy(() => import("./pages/AdminCustomPayments"));
+const CustomPaymentCheckout = lazy(() => import("./pages/CustomPaymentCheckout"));
 
 // Loading component — subtle fade-in bar at the top, no jarring red circle
 const PageLoader = () => (
@@ -177,6 +179,8 @@ function Router() {
         <Route path="/admin/class-roster" component={AdminClassRoster} />
         <Route path="/admin/buddy-day" component={AdminBuddyDay} />
         <Route path="/admin/manual-enrollment" component={AdminManualEnrollment} />
+        <Route path="/admin/custom-payments" component={AdminCustomPayments} />
+        <Route path="/pay/:token" component={CustomPaymentCheckout} />
         <Route path="/classes" component={ClassSignup} />
         <Route path="/staff-clock-in" component={StaffClockIn} />
         

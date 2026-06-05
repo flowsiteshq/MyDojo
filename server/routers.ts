@@ -371,6 +371,350 @@ export const appRouter = router({
       }),
   }),
 
+  customPayments: router({
+    /** Create a new custom payment link (staff/admin only) */
+    create: protectedProcedure
+      .input(z.object({
+        type: z.enum(['one_time', 'recurring', 'merchandise']),
+        title: z.string().min(1).max(255),
+        description: z.string().optional(),
+        // For one_time and recurring:
+        amount: z.number().positive().optional(),
+        // For recurring:
+        billingInterval: z.enum(['weekly', 'monthly', 'yearly']).optional(),
+        billingCycles: z.number().int().positive().optional(),
+        // For merchandise:
+        merchandiseItems: z.array(z.object({
+          name: z.string().min(1),
+          price: z.number().nonnegative(),
+          quantity: z.number().int().positive().default(1),
+        })).optional(),
+        requiresShipping: z.boolean().default(false),
+        // Optional expiry
+        expiresAt: z.string().optional(), // ISO date string
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+
+        // Validate type-specific fields
+        if (input.type === 'one_time' && !input.amount) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Amount is required for one-time payments' });
+        }
+        if (input.type === 'recurring' && (!input.amount || !input.billingInterval)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Amount and billing interval are required for recurring payments' });
+        }
+        if (input.type === 'merchandise' && (!input.merchandiseItems || input.merchandiseItems.length === 0)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'At least one merchandise item is required' });
+        }
+
+        // Generate a unique token for the public URL
+        const { randomBytes } = await import('crypto');
+        const token = randomBytes(24).toString('hex');
+
+        const insertResult = await db.insert(schema.customPaymentLinks).values({
+          token,
+          type: input.type,
+          title: input.title,
+          description: input.description || null,
+          amount: input.amount ? input.amount.toFixed(2) : null,
+          billingInterval: input.billingInterval || null,
+          billingCycles: input.billingCycles || null,
+          merchandiseItems: input.merchandiseItems || null,
+          requiresShipping: input.requiresShipping ? 1 : 0,
+          expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+          createdByStaffId: ctx.user.id,
+          createdByStaffName: ctx.user.name || ctx.user.email,
+        });
+        const linkId = (insertResult as any).insertId;
+        return { success: true, linkId, token, url: `/pay/${token}` };
+      }),
+
+    /** List all custom payment links (staff/admin only) */
+    list: protectedProcedure
+      .query(async () => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        const links = await db.select().from(schema.customPaymentLinks)
+          .orderBy(desc(schema.customPaymentLinks.createdAt));
+        // Attach payment counts
+        const linkIds = links.map(l => l.id);
+        let paymentCounts: Record<number, number> = {};
+        if (linkIds.length > 0) {
+          const payments = await db.select().from(schema.customPaymentLinkPayments)
+            .where(inArray(schema.customPaymentLinkPayments.linkId, linkIds));
+          for (const p of payments) {
+            paymentCounts[p.linkId] = (paymentCounts[p.linkId] || 0) + 1;
+          }
+        }
+        return links.map(l => ({ ...l, paymentCount: paymentCounts[l.id] || 0 }));
+      }),
+
+    /** Get a single link by ID (staff/admin only) */
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        const [link] = await db.select().from(schema.customPaymentLinks)
+          .where(eq(schema.customPaymentLinks.id, input.id));
+        if (!link) throw new TRPCError({ code: 'NOT_FOUND', message: 'Payment link not found' });
+        const payments = await db.select().from(schema.customPaymentLinkPayments)
+          .where(eq(schema.customPaymentLinkPayments.linkId, input.id))
+          .orderBy(desc(schema.customPaymentLinkPayments.createdAt));
+        return { ...link, payments };
+      }),
+
+    /** Toggle active/inactive status of a link */
+    toggleActive: protectedProcedure
+      .input(z.object({ id: z.number(), isActive: z.boolean() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        await db.update(schema.customPaymentLinks)
+          .set({ isActive: input.isActive ? 1 : 0 })
+          .where(eq(schema.customPaymentLinks.id, input.id));
+        return { success: true };
+      }),
+
+    /** Delete a custom payment link */
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        await db.delete(schema.customPaymentLinks)
+          .where(eq(schema.customPaymentLinks.id, input.id));
+        return { success: true };
+      }),
+
+    /** Get a payment link by token (public — for the customer checkout page) */
+    getByToken: publicProcedure
+      .input(z.object({ token: z.string() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        const [link] = await db.select().from(schema.customPaymentLinks)
+          .where(eq(schema.customPaymentLinks.token, input.token));
+        if (!link) throw new TRPCError({ code: 'NOT_FOUND', message: 'Payment link not found' });
+        if (!link.isActive) throw new TRPCError({ code: 'FORBIDDEN', message: 'This payment link is no longer active' });
+        if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'This payment link has expired' });
+        }
+        // Return safe public fields only
+        return {
+          id: link.id,
+          token: link.token,
+          type: link.type,
+          title: link.title,
+          description: link.description,
+          amount: link.amount,
+          billingInterval: link.billingInterval,
+          billingCycles: link.billingCycles,
+          merchandiseItems: link.merchandiseItems,
+          requiresShipping: link.requiresShipping,
+        };
+      }),
+
+    /** Process a payment for a custom payment link (public — called from checkout page) */
+    processCheckout: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        // FluidPay tokenizer token
+        fpToken: z.string().min(1),
+        // Customer info
+        customerName: z.string().min(1),
+        customerEmail: z.string().email().optional().or(z.literal('')),
+        customerPhone: z.string().optional(),
+        // For merchandise: quantities selected
+        selectedItems: z.array(z.object({
+          name: z.string(),
+          price: z.number(),
+          quantity: z.number().int().positive(),
+        })).optional(),
+        // For merchandise with shipping
+        shippingAddress: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+
+        // Fetch and validate the link
+        const [link] = await db.select().from(schema.customPaymentLinks)
+          .where(eq(schema.customPaymentLinks.token, input.token));
+        if (!link) throw new TRPCError({ code: 'NOT_FOUND', message: 'Payment link not found' });
+        if (!link.isActive) throw new TRPCError({ code: 'FORBIDDEN', message: 'This payment link is no longer active' });
+        if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'This payment link has expired' });
+        }
+
+        const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
+        const FLUIDPAY_SECRET_KEY = process.env.FLUIDPAY_SECRET_KEY;
+        if (!FLUIDPAY_SECRET_KEY) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
+        const fpHeaders = { 'Authorization': FLUIDPAY_SECRET_KEY, 'Content-Type': 'application/json' };
+
+        const nameParts = input.customerName.trim().split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        const shortId = `cpl-${Date.now().toString(36).slice(-10)}`;
+
+        // Calculate amount
+        let amountDollars = 0;
+        let merchandiseSnapshot: any[] | null = null;
+        if (link.type === 'merchandise' && input.selectedItems && input.selectedItems.length > 0) {
+          amountDollars = input.selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+          merchandiseSnapshot = input.selectedItems;
+        } else {
+          amountDollars = parseFloat(link.amount as string);
+        }
+        const amountCents = Math.round(amountDollars * 100);
+
+        let transactionId: string | null = null;
+        let fpCustomerId: string | null = null;
+        let fpSubscriptionId: string | null = null;
+        let cardLast4 = '';
+        let cardType = '';
+        let paymentStatus: 'approved' | 'declined' | 'failed' = 'failed';
+
+        if (link.type === 'recurring') {
+          // Step 1: Create customer vault
+          const vaultRes = await fetch(`${FLUIDPAY_API_URL}/api/vault/customer`, {
+            method: 'POST',
+            headers: fpHeaders,
+            body: JSON.stringify({
+              description: `MyDojo custom payment: ${link.title} - ${input.customerName}`,
+              default_payment: { token: input.fpToken },
+              default_billing_address: {
+                first_name: firstName, last_name: lastName,
+                email: input.customerEmail || '',
+                phone: (input.customerPhone || '').replace(/\D/g, ''),
+              },
+            }),
+          });
+          const vaultData = await vaultRes.json() as any;
+          if (vaultData.status !== 'success') {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: vaultData.msg || 'Failed to save payment method' });
+          }
+          fpCustomerId = vaultData.data.id;
+          cardLast4 = vaultData.data.data?.customer?.payment_methods?.card?.[0]?.card_number?.slice(-4) || '';
+          cardType = vaultData.data.data?.customer?.payment_methods?.card?.[0]?.card_type || '';
+
+          // Step 2: Charge first period
+          const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
+            method: 'POST',
+            headers: fpHeaders,
+            body: JSON.stringify({
+              type: 'sale',
+              amount: amountCents,
+              currency: 'usd',
+              payment_method: { customer: { id: fpCustomerId, payment_method_type: 'card' } },
+              billing_address: { first_name: firstName, last_name: lastName, email: input.customerEmail || '', phone: (input.customerPhone || '').replace(/\D/g, '') },
+              order_id: shortId,
+              order_meta: { description: `${link.title} - First payment (${input.customerName})` },
+            }),
+          });
+          const chargeData = await chargeRes.json() as any;
+          if (chargeData.status !== 'success' || (chargeData.data?.status !== 'approved' && chargeData.data?.status !== 'pending_settlement')) {
+            const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.msg || 'Payment declined';
+            throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
+          }
+          transactionId = chargeData.data?.id;
+          paymentStatus = 'approved';
+
+          // Step 3: Create recurring subscription
+          const today = new Date();
+          const intervalMap: Record<string, string> = { weekly: 'weekly', monthly: 'monthly', yearly: 'monthly' };
+          const cycleIntervalMap: Record<string, number> = { weekly: 1, monthly: 1, yearly: 12 };
+          const nextBillDate = new Date(today);
+          if (link.billingInterval === 'weekly') nextBillDate.setDate(today.getDate() + 7);
+          else if (link.billingInterval === 'yearly') nextBillDate.setFullYear(today.getFullYear() + 1);
+          else nextBillDate.setMonth(today.getMonth() + 1);
+          const nextBillDateStr = nextBillDate.toISOString().slice(0, 10);
+
+          const subBody: any = {
+            description: `${link.title} - ${input.customerName}`,
+            customer: { id: fpCustomerId },
+            amount: amountCents,
+            billing_cycle_interval: cycleIntervalMap[link.billingInterval || 'monthly'],
+            billing_frequency: intervalMap[link.billingInterval || 'monthly'],
+            next_bill_date: nextBillDateStr,
+          };
+          if (link.billingCycles) subBody.billing_cycles = link.billingCycles;
+          const subRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
+            method: 'POST', headers: fpHeaders, body: JSON.stringify(subBody),
+          });
+          const subData = await subRes.json() as any;
+          if (subData.status === 'success') fpSubscriptionId = subData.data?.id || null;
+
+        } else {
+          // One-time or merchandise: direct charge with tokenizer token
+          const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
+            method: 'POST',
+            headers: fpHeaders,
+            body: JSON.stringify({
+              type: 'sale',
+              amount: amountCents,
+              currency: 'usd',
+              payment_method: { token: input.fpToken },
+              billing_address: { first_name: firstName, last_name: lastName, email: input.customerEmail || '', phone: (input.customerPhone || '').replace(/\D/g, '') },
+              order_id: shortId,
+              order_meta: { description: `${link.title} (${input.customerName})` },
+            }),
+          });
+          const chargeData = await chargeRes.json() as any;
+          if (chargeData.status !== 'success' || (chargeData.data?.status !== 'approved' && chargeData.data?.status !== 'pending_settlement')) {
+            const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.msg || 'Payment declined';
+            throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
+          }
+          transactionId = chargeData.data?.id;
+          cardLast4 = chargeData.data?.response_body?.card?.last_four || '';
+          cardType = chargeData.data?.response_body?.card?.card_type || '';
+          paymentStatus = 'approved';
+        }
+
+        // Save payment record
+        await db.insert(schema.customPaymentLinkPayments).values({
+          linkId: link.id,
+          customerName: input.customerName,
+          customerEmail: input.customerEmail || null,
+          customerPhone: input.customerPhone || null,
+          amountCharged: amountDollars.toFixed(2),
+          fluidpayTransactionId: transactionId,
+          fluidpayCustomerId: fpCustomerId,
+          fluidpaySubscriptionId: fpSubscriptionId,
+          cardLast4: cardLast4 || null,
+          cardType: cardType || null,
+          status: paymentStatus,
+          merchandiseItems: merchandiseSnapshot,
+          shippingAddress: input.shippingAddress || null,
+        });
+
+        // Increment use count
+        await db.update(schema.customPaymentLinks)
+          .set({ useCount: sql`${schema.customPaymentLinks.useCount} + 1` })
+          .where(eq(schema.customPaymentLinks.id, link.id));
+
+        // Notify owner
+        try {
+          const { notifyOwner } = await import('./_core/notification');
+          await notifyOwner({
+            title: `Payment Received: ${link.title}`,
+            content: `${input.customerName} paid $${amountDollars.toFixed(2)} via custom payment link "${link.title}". ${link.type === 'recurring' ? `Recurring ${link.billingInterval}.` : ''} Transaction: ${transactionId}`,
+          });
+        } catch {}
+
+        return {
+          success: true,
+          transactionId,
+          amountCharged: amountDollars,
+          cardLast4,
+          cardType,
+          isRecurring: link.type === 'recurring',
+          fpSubscriptionId,
+        };
+      }),
+  }),
+
   buddyDay: router({
     submit: publicProcedure
       .input(z.object({
