@@ -47,7 +47,7 @@ interface PackageFormState {
 const emptyForm = (): PackageFormState => ({
   name: "",
   monthlyPrice: "",
-  enrollmentFee: "99.00",
+  enrollmentFee: "149.00",
   description: "",
   benefits: "",
   invitationOnly: false,
@@ -211,7 +211,7 @@ function PackageDialog({ open, onClose, editingId, initialForm, onSaved }: Packa
                   className="pl-8"
                   value={form.enrollmentFee}
                   onChange={(e) => setForm({ ...form, enrollmentFee: e.target.value })}
-                  placeholder="99.00"
+                  placeholder="149.00"
                   type="number"
                   min="0"
                   step="0.01"

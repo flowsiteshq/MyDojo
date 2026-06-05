@@ -73,7 +73,7 @@ function StaffEnrollmentDialog({ open, onClose, onEnrolled }: StaffEnrollmentDia
   const activePackages = packages?.filter((p) => p.isActive) ?? [];
 
   const selectedPkg = activePackages.find((p) => String(p.id) === selectedPackageId);
-  const enrollmentFee = selectedPkg ? parseFloat(selectedPkg.enrollmentFee as string) : 99;
+  const enrollmentFee = selectedPkg ? parseFloat(selectedPkg.enrollmentFee as string) : 149;
   const monthlyPrice = selectedPkg ? parseFloat(selectedPkg.monthlyPrice as string) : 0;
   const downPayment = selectedPkg ? parseFloat(selectedPkg.downPayment as string) : 0;
   const effectiveTotal = deferTuition

@@ -763,16 +763,16 @@ function IntakeChatbotV1({ onClose }: IntakeChatbotProps) {
                             <div className="space-y-1">
                               <div className="font-semibold">Payment Breakdown</div>
                               <div className="text-xs space-y-0.5">
-                                <div>First payment: ${(Number(plan.monthlyPrice) + 99).toFixed(2)}</div>
+                                <div>First payment: ${(Number(plan.monthlyPrice) + 149).toFixed(2)}</div>
                                 <div className="text-muted-foreground">• Monthly: ${Number(plan.monthlyPrice).toFixed(2)}</div>
-                                <div className="text-muted-foreground">• Down payment: $99.00</div>
+                                <div className="text-muted-foreground">• Down payment: $149.00</div>
                                 <div className="mt-1 pt-1 border-t border-muted-foreground/20">Then ${Number(plan.monthlyPrice).toFixed(2)}/mo thereafter</div>
                               </div>
                             </div>
                           </TooltipContent>
                         </Tooltip>
                       </div>
-                      <div className="text-xs text-muted-foreground">+ $99 down payment</div>
+                      <div className="text-xs text-muted-foreground">+ $149 down payment</div>
                     </div>
                   </div>
                   {plan.description && <p className="text-sm text-muted-foreground mb-2">{plan.description}</p>}

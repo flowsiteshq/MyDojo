@@ -1787,3 +1787,18 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
   - [x] Frontend: Show cancellation-by-Day-3 disclosure before Summer Camp trial checkout
   - [x] Frontend: Show "members only" gate on SummerCampEnroll page for non-members
   - [x] Frontend: Update IntroOfferCheckout to block Summer Camp program selection
+
+- [ ] Custom Payment Dashboard in admin panel (FluidPay-powered)
+  - [ ] DB: customPaymentLinks table (id, type, title, amount, recurring, interval, description, merchandise items, status, createdBy, token, expiresAt)
+  - [ ] Server: createCustomPaymentLink procedure (one-time, recurring, merchandise)
+  - [ ] Server: getCustomPaymentLinks procedure (list all links with status)
+  - [ ] Server: deactivateCustomPaymentLink procedure
+  - [ ] Server: getPublicPaymentLink procedure (public, by token)
+  - [ ] Server: processCustomPaymentLinkCheckout procedure (FluidPay tokenizer + charge)
+  - [ ] Admin UI: /admin/custom-payments page with three creation modes
+  - [ ] Admin UI: One-time payment link builder (title, amount, description, expiry)
+  - [ ] Admin UI: Recurring membership link builder (select/create membership type, amount, billing interval)
+  - [ ] Admin UI: Merchandise link builder (add items with name/price/qty, optional shipping)
+  - [ ] Admin UI: Links list with copy-link, deactivate, and view-payments actions
+  - [ ] Public UI: /pay/:token page with FluidPay card form and order summary
+  - [ ] Add Custom Payments nav item to AdminLayout sidebar

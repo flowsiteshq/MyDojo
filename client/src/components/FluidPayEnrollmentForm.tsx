@@ -153,7 +153,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
 
   const isSummerCamp = enrollmentData.type === "summer_camp";
   const waiveEnrollmentFee = !isSummerCamp && (enrollmentData.waiveEnrollmentFee ?? false);
-  const enrollmentFee = enrollmentData.enrollmentFee ?? 99;
+  const enrollmentFee = enrollmentData.enrollmentFee ?? 149;
   const baseAmount = isSummerCamp
     ? (enrollmentData.totalAmount || 298)
     : waiveEnrollmentFee
@@ -393,7 +393,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
                   <span>Camp fee</span><span>$199.00</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>Registration fee</span><span>$99.00</span>
+                  <span>Registration fee</span><span>$149.00</span>
                 </div>
               </>
             ) : (

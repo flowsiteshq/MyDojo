@@ -1248,7 +1248,7 @@ export const appRouter = router({
                   packageId: membershipPackage.id,
                   packageName: membershipPackage.name,
                   downPayment: parseFloat(membershipPackage.downPayment as string),
-                  enrollmentFee: parseFloat((membershipPackage.enrollmentFee as string) || '99.00'),
+                  enrollmentFee: parseFloat((membershipPackage.enrollmentFee as string) || '149.00'),
                   monthlyPrice: parseFloat(membershipPackage.monthlyPrice as string),
                   durationMonths: membershipPackage.durationMonths,
                   customerName,
@@ -1532,7 +1532,7 @@ export const appRouter = router({
                   packageId: membershipPackage.id,
                   packageName: membershipPackage.name,
                   downPayment: parseFloat(membershipPackage.downPayment as string),
-                  enrollmentFee: parseFloat((membershipPackage.enrollmentFee as string) || '99.00'),
+                  enrollmentFee: parseFloat((membershipPackage.enrollmentFee as string) || '149.00'),
                   monthlyPrice: parseFloat(membershipPackage.monthlyPrice as string),
                   durationMonths: membershipPackage.durationMonths,
                   customerName: response.state.name || "",
@@ -2730,13 +2730,13 @@ Please enter your card details below to complete your registration securely. Tot
             chargeDescription = `MyDojo ${pkg!.name} Membership - First Month (No Enrollment Fee)`;
           } else if (input.deferTuition) {
             // Deferred tuition: charge only the $99 enrollment fee now; first month tuition charged later
-            const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '99') as string);
+            const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '149') as string);
             chargeCents = Math.round(enrollmentFeeAmt * 100);
             chargeDescription = `MyDojo ${pkg!.name} Membership - Enrollment Fee (Tuition deferred to ${input.deferredTuitionDate || 'later this month'})`;
           } else {
             // Membership: down payment (first month + enrollment fee), optionally waived
             const downPaymentAmt = parseFloat(pkg!.downPayment as string);
-            const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '99') as string);
+            const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '149') as string);
             const effectiveCharge = input.waiveEnrollmentFee
               ? Math.max(0, downPaymentAmt - enrollmentFeeAmt)
               : downPaymentAmt;
@@ -2824,7 +2824,7 @@ Please enter your card details below to complete your registration securely. Tot
           enrollmentId = (insertResult as any).insertId;
         } else if (input.deferTuition) {
           // Deferred tuition path: only $99 enrollment fee charged now; first month tuition deferred
-          const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '99') as string);
+          const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '149') as string);
           const monthlyPrice = parseFloat(pkg!.monthlyPrice as string);
           const totalPrice = parseFloat(pkg!.totalPrice as string);
           const remainingBalance = Math.max(0, totalPrice - enrollmentFeeAmt);
@@ -2887,7 +2887,7 @@ Please enter your card details below to complete your registration securely. Tot
           enrollmentId = (insertResult as any).insertId;
         } else {
           const downPayment = parseFloat(pkg!.downPayment as string);
-          const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '99') as string);
+          const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '149') as string);
           const effectiveDownPayment = input.waiveEnrollmentFee
             ? Math.max(0, downPayment - enrollmentFeeAmt)
             : downPayment;
@@ -2934,7 +2934,7 @@ Please enter your card details below to complete your registration securely. Tot
           packageName,
           monthlyPrice: pkg ? parseFloat(pkg.monthlyPrice as string) : null,
           // If fee was waived, show $0 in the breakdown so the email is accurate
-          enrollmentFee: input.waiveEnrollmentFee ? 0 : (pkg ? parseFloat((pkg.enrollmentFee ?? '99') as string) : 99),
+          enrollmentFee: input.waiveEnrollmentFee ? 0 : (pkg ? parseFloat((pkg.enrollmentFee ?? '149') as string) : 149),
           totalDueToday: amountCharged,
           nextBillingDate: input.isSummerCamp ? null : nextBillingDate,
           isSummerCamp: input.isSummerCamp ?? false,
@@ -6546,7 +6546,7 @@ Please enter your card details below to complete your registration securely. Tot
       .input(z.object({
         name: z.string().min(1).max(100),
         monthlyPrice: z.number().min(0),
-        enrollmentFee: z.number().min(0).default(99),
+        enrollmentFee: z.number().min(0).default(149),
         description: z.string().optional(),
         benefits: z.array(z.string()).optional(),
         invitationOnly: z.boolean().default(false),
@@ -8733,7 +8733,7 @@ Please enter your card details below to complete your registration securely. Tot
           primaryContactPhone: input.primaryContactPhone,
           registrationFeePaid: 1,
           registrationFeeTransactionId: txId,
-          registrationFeeAmount: '99.00',
+          registrationFeeAmount: '149.00',
           registrationFeePaidAt: new Date(),
           fluidpayCustomerId: fpCustomerId,
         });
