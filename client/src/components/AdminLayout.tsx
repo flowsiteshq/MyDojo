@@ -386,7 +386,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* ── Mobile Drawer ── */}
       <aside
-        className={`fixed top-0 left-0 h-full w-72 bg-white border-r border-gray-200 z-50 flex flex-col md:hidden transition-transform duration-300 ${
+        className={`fixed top-0 left-0 h-full w-72 bg-white border-r border-gray-200 z-50 flex flex-col md:hidden transition-transform duration-300 overflow-y-auto ${
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
