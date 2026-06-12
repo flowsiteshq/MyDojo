@@ -383,6 +383,8 @@ export const appRouter = router({
         // For recurring:
         billingInterval: z.enum(['weekly', 'monthly', 'yearly']).optional(),
         billingCycles: z.number().int().positive().optional(),
+        downPayment: z.number().nonnegative().optional(), // One-time charge today before recurring starts
+        firstRecurringDate: z.string().optional(), // ISO date string for first recurring charge
         // For merchandise:
         merchandiseItems: z.array(z.object({
           name: z.string().min(1),
@@ -420,6 +422,8 @@ export const appRouter = router({
           amount: input.amount ? input.amount.toFixed(2) : null,
           billingInterval: input.billingInterval || null,
           billingCycles: input.billingCycles || null,
+          downPayment: input.downPayment ? input.downPayment.toFixed(2) : null,
+          firstRecurringDate: input.firstRecurringDate ? new Date(input.firstRecurringDate) : null,
           merchandiseItems: input.merchandiseItems || null,
           requiresShipping: input.requiresShipping ? 1 : 0,
           expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
@@ -605,6 +609,8 @@ export const appRouter = router({
           billingCycles: link.billingCycles,
           merchandiseItems: link.merchandiseItems,
           requiresShipping: link.requiresShipping,
+          downPayment: link.downPayment,
+          firstRecurringDate: link.firstRecurringDate,
         };
       }),
 
@@ -691,18 +697,27 @@ export const appRouter = router({
           cardLast4 = vaultData.data.data?.customer?.payment_methods?.card?.[0]?.card_number?.slice(-4) || '';
           cardType = vaultData.data.data?.customer?.payment_methods?.card?.[0]?.card_type || '';
 
-          // Step 2: Charge first period
+          // Step 2: Determine what to charge today
+          // If there's a down payment, charge that today. Otherwise charge first recurring amount.
+          const hasDownPayment = link.downPayment && parseFloat(link.downPayment as string) > 0;
+          const todayChargeAmount = hasDownPayment
+            ? Math.round(parseFloat(link.downPayment as string) * 100)
+            : amountCents;
+          const todayChargeDesc = hasDownPayment
+            ? `${link.title} - Down payment / Registration fee (${input.customerName})`
+            : `${link.title} - First payment (${input.customerName})`;
+
           const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
             method: 'POST',
             headers: fpHeaders,
             body: JSON.stringify({
               type: 'sale',
-              amount: amountCents,
+              amount: todayChargeAmount,
               currency: 'usd',
               payment_method: { customer: { id: fpCustomerId, payment_method_type: 'card' } },
               billing_address: { first_name: firstName, last_name: lastName, email: input.customerEmail || '', phone: (input.customerPhone || '').replace(/\D/g, '') },
               order_id: shortId,
-              order_meta: { description: `${link.title} - First payment (${input.customerName})` },
+              order_meta: { description: todayChargeDesc },
             }),
           });
           const chargeData = await chargeRes.json() as any;
@@ -714,14 +729,29 @@ export const appRouter = router({
           paymentStatus = 'approved';
 
           // Step 3: Create recurring subscription
+          // Use firstRecurringDate if set, otherwise calculate based on billing interval
           const today = new Date();
           const intervalMap: Record<string, string> = { weekly: 'weekly', monthly: 'monthly', yearly: 'monthly' };
           const cycleIntervalMap: Record<string, number> = { weekly: 1, monthly: 1, yearly: 12 };
-          const nextBillDate = new Date(today);
-          if (link.billingInterval === 'weekly') nextBillDate.setDate(today.getDate() + 7);
-          else if (link.billingInterval === 'yearly') nextBillDate.setFullYear(today.getFullYear() + 1);
-          else nextBillDate.setMonth(today.getMonth() + 1);
-          const nextBillDateStr = nextBillDate.toISOString().slice(0, 10);
+          let nextBillDateStr: string;
+          if (link.firstRecurringDate) {
+            // Staff specified the first recurring charge date
+            nextBillDateStr = new Date(link.firstRecurringDate).toISOString().slice(0, 10);
+          } else if (hasDownPayment) {
+            // Down payment charged today, first recurring is next billing cycle
+            const nextBillDate = new Date(today);
+            if (link.billingInterval === 'weekly') nextBillDate.setDate(today.getDate() + 7);
+            else if (link.billingInterval === 'yearly') nextBillDate.setFullYear(today.getFullYear() + 1);
+            else nextBillDate.setMonth(today.getMonth() + 1);
+            nextBillDateStr = nextBillDate.toISOString().slice(0, 10);
+          } else {
+            // No down payment, first recurring is next billing cycle after today's charge
+            const nextBillDate = new Date(today);
+            if (link.billingInterval === 'weekly') nextBillDate.setDate(today.getDate() + 7);
+            else if (link.billingInterval === 'yearly') nextBillDate.setFullYear(today.getFullYear() + 1);
+            else nextBillDate.setMonth(today.getMonth() + 1);
+            nextBillDateStr = nextBillDate.toISOString().slice(0, 10);
+          }
 
           const subBody: any = {
             description: `${link.title} - ${input.customerName}`,

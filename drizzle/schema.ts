@@ -1925,6 +1925,10 @@ export const customPaymentLinks = mysqlTable("customPaymentLinks", {
   billingInterval: mysqlEnum("billingInterval", ["weekly", "monthly", "yearly"]),
   /** Number of billing cycles (null = indefinite) */
   billingCycles: int("billingCycles"),
+  /** Optional one-time down payment charged today before recurring starts */
+  downPayment: decimal("downPayment", { precision: 10, scale: 2 }),
+  /** Date when the first recurring charge should occur */
+  firstRecurringDate: timestamp("firstRecurringDate"),
   /** Merchandise items as JSON: [{name, price, quantity}] */
   merchandiseItems: json("merchandiseItems"),
   /** Whether shipping address is required for merchandise */

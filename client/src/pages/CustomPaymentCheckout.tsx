@@ -349,15 +349,41 @@ export default function CustomPaymentCheckout() {
               </div>
             )}
 
-            {link.type === "recurring" && (
-              <div className="flex items-start gap-2 p-2 bg-purple-50 rounded text-xs text-purple-700">
-                <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                <span>
-                  Your card will be charged <strong>${total.toFixed(2)}</strong> today and then automatically every{" "}
-                  {link.billingInterval}{link.billingCycles ? ` for ${link.billingCycles} billing cycles` : " until cancelled"}.
-                </span>
-              </div>
-            )}
+            {link.type === "recurring" && (() => {
+              const downPayment = link.downPayment ? parseFloat(link.downPayment as string) : 0;
+              const firstRecurringDate = link.firstRecurringDate
+                ? new Date(link.firstRecurringDate as unknown as string).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                : null;
+              if (downPayment > 0) {
+                return (
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
+                      <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      <span>
+                        <strong>Due today:</strong> ${downPayment.toFixed(2)} (registration / down payment)
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2 p-2 bg-purple-50 rounded text-xs text-purple-700">
+                      <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      <span>
+                        <strong>Recurring charge:</strong> ${total.toFixed(2)}/{link.billingInterval} starting{" "}
+                        {firstRecurringDate ? `on ${firstRecurringDate}` : `next ${link.billingInterval}`}
+                        {link.billingCycles ? ` for ${link.billingCycles} billing cycles` : " until cancelled"}.
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div className="flex items-start gap-2 p-2 bg-purple-50 rounded text-xs text-purple-700">
+                  <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  <span>
+                    Your card will be charged <strong>${total.toFixed(2)}</strong> today and then automatically every{" "}
+                    {link.billingInterval}{link.billingCycles ? ` for ${link.billingCycles} billing cycles` : " until cancelled"}.
+                  </span>
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
 

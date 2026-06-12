@@ -46,6 +46,8 @@ interface CreateFormState {
   amount: string;
   billingInterval: BillingInterval;
   billingCycles: string;
+  downPayment: string;
+  firstRecurringDate: string;
   merchandiseItems: MerchandiseItem[];
   requiresShipping: boolean;
   expiresAt: string;
@@ -58,6 +60,8 @@ const defaultForm = (): CreateFormState => ({
   amount: "",
   billingInterval: "monthly",
   billingCycles: "",
+  downPayment: "",
+  firstRecurringDate: "",
   merchandiseItems: [{ name: "", price: 0, quantity: 1 }],
   requiresShipping: false,
   expiresAt: "",
@@ -254,6 +258,8 @@ function CreateLinkDialog({ onClose, onCreated }: { onClose: () => void; onCreat
       amount: form.type !== "merchandise" ? parseFloat(form.amount) : undefined,
       billingInterval: form.type === "recurring" ? form.billingInterval : undefined,
       billingCycles: form.type === "recurring" && form.billingCycles ? parseInt(form.billingCycles) : undefined,
+      downPayment: form.type === "recurring" && form.downPayment && parseFloat(form.downPayment) > 0 ? parseFloat(form.downPayment) : undefined,
+      firstRecurringDate: form.type === "recurring" && form.firstRecurringDate ? form.firstRecurringDate : undefined,
       merchandiseItems: form.type === "merchandise" ? form.merchandiseItems.map(i => ({ name: i.name, price: i.price, quantity: i.quantity })) : undefined,
       requiresShipping: form.requiresShipping,
       expiresAt: form.expiresAt || undefined,
@@ -343,12 +349,12 @@ function CreateLinkDialog({ onClose, onCreated }: { onClose: () => void; onCreat
             </div>
           )}
 
-          {/* Recurring: Amount + Interval */}
+          {/* Recurring: Amount + Interval + Optional Down Payment */}
           {form.type === "recurring" && (
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Amount ($) *</Label>
+                  <Label>Recurring Amount ($) *</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -374,6 +380,42 @@ function CreateLinkDialog({ onClose, onCreated }: { onClose: () => void; onCreat
                   </Select>
                 </div>
               </div>
+
+              {/* Down Payment (optional) */}
+              <div className="border rounded-lg p-3 space-y-3 bg-amber-50 border-amber-200">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-amber-600" />
+                  <span className="text-sm font-semibold text-amber-800">Down Payment / Registration Fee <span className="font-normal text-amber-600">(optional)</span></span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Down Payment Amount ($)</Label>
+                    <div className="relative">
+                      <DollarSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        className="pl-8 bg-white"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.downPayment}
+                        onChange={(e) => setForm(f => ({ ...f, downPayment: e.target.value }))}
+                        placeholder="149.00"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">First Recurring Charge Date</Label>
+                    <Input
+                      type="date"
+                      className="bg-white"
+                      value={form.firstRecurringDate}
+                      onChange={(e) => setForm(f => ({ ...f, firstRecurringDate: e.target.value }))}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <Label>Number of Billing Cycles <span className="text-muted-foreground text-xs">(blank = unlimited)</span></Label>
                 <Input
@@ -384,9 +426,23 @@ function CreateLinkDialog({ onClose, onCreated }: { onClose: () => void; onCreat
                   placeholder="Leave blank for ongoing"
                 />
               </div>
-              {form.amount && (
-                <div className="p-3 bg-purple-50 rounded-lg text-sm text-purple-800">
-                  Customer pays <strong>${parseFloat(form.amount || "0").toFixed(2)}</strong> today, then <strong>${parseFloat(form.amount || "0").toFixed(2)}/{form.billingInterval}</strong> automatically.
+              {(form.amount || form.downPayment) && (
+                <div className="p-3 bg-purple-50 rounded-lg text-sm text-purple-800 space-y-1">
+                  {form.downPayment && parseFloat(form.downPayment) > 0 && (
+                    <div>Customer pays <strong>${parseFloat(form.downPayment).toFixed(2)}</strong> down payment today{form.firstRecurringDate ? `, then` : "."}</div>
+                  )}
+                  {form.amount && (
+                    <div>
+                      {form.downPayment && parseFloat(form.downPayment) > 0 ? "" : "Customer pays "}
+                      <strong>${parseFloat(form.amount || "0").toFixed(2)}/{form.billingInterval}</strong>
+                      {form.firstRecurringDate ? ` starting ${form.firstRecurringDate}` : " automatically"}.
+                    </div>
+                  )}
+                  {form.downPayment && form.amount && parseFloat(form.downPayment) > 0 && (
+                    <div className="font-semibold border-t border-purple-200 pt-1 mt-1">
+                      Total due today: ${(parseFloat(form.downPayment) + parseFloat(form.amount || "0")).toFixed(2)}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

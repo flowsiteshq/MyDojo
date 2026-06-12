@@ -120,6 +120,24 @@ async function startServer() {
   app.post("/api/scheduled/kai-camp-summary", handleKaiCampSummary);
   // Summer Camp 3-day trial auto-activation — fires daily at 8 AM CDT (13:00 UTC)
   app.post("/api/scheduled/summer-camp-trial-activation", handleSummerCampTrialActivation);
+  // Staff alert endpoint — send a custom SMS to all staff
+  app.post("/api/admin/staff-alert", express.json(), async (req: any, res: any) => {
+    const { message } = req.body || {};
+    if (!message) return res.status(400).json({ ok: false, error: 'message required' });
+    const { sendSms } = await import('../sms800');
+    const STAFF_PHONES = [
+      { name: 'Vincent', phone: '+12818189288' },
+      { name: 'Debbie', phone: '+12812369283' },
+      { name: 'Hector', phone: '+18187454612' },
+      { name: 'Dominique', phone: '+12406011818' },
+      { name: 'Clover', phone: '+17034997761' },
+      { name: 'Brenda', phone: '+18326655442' },
+    ];
+    const results = await Promise.allSettled(STAFF_PHONES.map(s => sendSms({ to: s.phone, message })));
+    const sent = results.filter(r => r.status === 'fulfilled' && (r.value as any).success).length;
+    console.log(`[StaffAlert] Sent to ${sent}/${STAFF_PHONES.length} staff: ${message.slice(0, 80)}`);
+    return res.json({ ok: true, sent, total: STAFF_PHONES.length });
+  });
   
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
