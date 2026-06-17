@@ -22,9 +22,7 @@ import { cn } from "@/lib/utils";
 
 // ─── Image constants ────────────────────────────────────────────────────────
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
-const HERO_IMG = `${CDN}/hero1_1d3d63d3.webp`;
-const HERO_IMG2 = `${CDN}/hero2_cef79f5f.webp`;
-const HERO_IMG3 = `${CDN}/hero3_6fed392b.webp`;
+const HERO_VIDEO = "/manus-storage/hero_montage_47ab46a1.mp4";
 const LITTLE_NINJAS_IMG = `${CDN}/little-ninjas_25d41024.webp`;
 const CORE_KIDS_IMG = `${CDN}/core-kids_baf3bc26.webp`;
 const TEENS_ADULTS_IMG = `${CDN}/teens-adults_e35f9895.webp`;
@@ -72,28 +70,21 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 function HeroSection({ onBookClass }: { onBookClass: () => void }) {
   const deadline = useMemo(() => new Date("2026-07-25T23:59:59"), []);
   const timeLeft = useCountdown(deadline);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const slides = [HERO_IMG, HERO_IMG2, HERO_IMG3];
-
-  useEffect(() => {
-    const id = setInterval(() => setCurrentSlide(i => (i + 1) % slides.length), 5000);
-    return () => clearInterval(id);
-  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-black">
-      {/* Background images with crossfade */}
-      {slides.map((src, i) => (
-        <div
-          key={i}
-          className="absolute inset-0 transition-opacity duration-1000"
-          style={{ opacity: i === currentSlide ? 1 : 0 }}
-        >
-          <img src={src} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-        </div>
-      ))}
+      {/* Background video — looping montage */}
+      <video
+        className="absolute inset-0 w-full h-full object-cover"
+        src={HERO_VIDEO}
+        autoPlay
+        loop
+        muted
+        playsInline
+      />
+      {/* Darkening overlays for text legibility */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 pt-24 pb-16">
@@ -168,16 +159,7 @@ function HeroSection({ onBookClass }: { onBookClass: () => void }) {
 
 
 
-      {/* Slide dots */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrentSlide(i)}
-            className={cn("w-2 h-2 rounded-full transition-all", i === currentSlide ? "bg-[#e63946] w-6" : "bg-white/40")}
-          />
-        ))}
-      </div>
+
     </section>
   );
 }

@@ -112,3 +112,4 @@ scripts/
 # Manus internal DB query logs (large files, not needed in production)
 .manus/db/
 .manus-logs/
+.project-config.json
