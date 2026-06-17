@@ -5761,6 +5761,7 @@ Please enter your card details below to complete your registration securely. Tot
             dateOfBirth: schema.enrollments.dateOfBirth,
             stripeSubscriptionId: schema.enrollments.stripeSubscriptionId,
             stripeCustomerId: schema.enrollments.stripeCustomerId,
+            fluidpayCustomerId: schema.enrollments.fluidpayCustomerId,
             photoUrl: schema.enrollments.photoUrl,
             currentStreak: schema.enrollments.currentStreak,
             longestStreak: schema.enrollments.longestStreak,
@@ -5775,7 +5776,8 @@ Please enter your card details below to complete your registration securely. Tot
 
         const stripeNormalized = stripeRows.map(r => ({
           id: r.id,
-          source: 'stripe' as const,
+          // Determine source: Stripe if has stripeCustomerId, FluidPay if has fluidpayCustomerId, else Manual
+          source: (r.stripeCustomerId ? 'stripe' : r.fluidpayCustomerId ? 'fluidpay' : 'manual') as 'stripe' | 'fluidpay' | 'manual',
           name: r.name,
           studentName: r.studentName,
           email: r.email,
