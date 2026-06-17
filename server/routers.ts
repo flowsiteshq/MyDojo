@@ -6968,43 +6968,135 @@ Please enter your card details below to complete your registration securely. Tot
       const db = await getDb();
       if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
 
-      const activeEnrollments = await db
+      const enrollments = await db
         .select()
         .from(schema.enrollments)
         .orderBy(schema.enrollments.startDate);
 
-      const FLUIDPAY_KEY = process.env.FLUIDPAY_SECRET_KEY;
-      const results = [];
+      // Also get membership packages for program names
+      const packages = await db.select().from(schema.membershipPackages);
+      const packageMap = new Map(packages.map(p => [p.id, p.name]));
 
-      for (const e of activeEnrollments) {
+      const FLUIDPAY_KEY = process.env.FLUIDPAY_SECRET_KEY;
+
+      // ── Step 1: Fetch ALL FluidPay transactions in one batch ──────────────────
+      type FpTx = {
+        id: string;
+        subscription_id: string;
+        customer_id: string;
+        amount: number;
+        status: string;
+        description: string;
+        created_at: string;
+        response: string;
+        billing_address?: { first_name?: string; last_name?: string; email?: string };
+      };
+      let allTx: FpTx[] = [];
+      try {
+        let offset = 0;
+        while (true) {
+          const res = await fetch('https://app.fluidpay.com/api/transaction/search', {
+            method: 'POST',
+            headers: { 'Authorization': FLUIDPAY_KEY || '', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ limit: 100, offset })
+          });
+          const data = await res.json();
+          if (!data.data || data.data.length === 0) break;
+          allTx = allTx.concat(data.data);
+          if (allTx.length >= (data.total_count || 0)) break;
+          offset += 100;
+        }
+      } catch { /* FluidPay unavailable, continue with empty */ }
+
+      // Build lookup maps: subscription_id -> txs, customer_id -> txs
+      const bySubId = new Map<string, FpTx[]>();
+      const byCustomerId = new Map<string, FpTx[]>();
+      for (const tx of allTx) {
+        if (tx.subscription_id) {
+          if (!bySubId.has(tx.subscription_id)) bySubId.set(tx.subscription_id, []);
+          bySubId.get(tx.subscription_id)!.push(tx);
+        }
+        if (tx.customer_id) {
+          if (!byCustomerId.has(tx.customer_id)) byCustomerId.set(tx.customer_id, []);
+          byCustomerId.get(tx.customer_id)!.push(tx);
+        }
+      }
+
+      // ── Step 2: Fetch FluidPay subscription details for those that have one ───
+      // Only fetch unique subscription IDs to avoid duplicate calls
+      const uniqueSubIds = Array.from(new Set(enrollments.map(e => e.fluidpaySubscriptionId).filter(Boolean))) as string[];
+      const subDetails = new Map<string, { amount: number | null; status: string | null; nextBillDate: string | null }>();
+      await Promise.all(uniqueSubIds.map(async (subId) => {
+        try {
+          const res = await fetch(`https://app.fluidpay.com/api/recurring/subscription/${subId}`, {
+            headers: { 'Authorization': FLUIDPAY_KEY || '' }
+          });
+          const data = await res.json();
+          if (data?.data) {
+            subDetails.set(subId, {
+              amount: data.data.amount ? data.data.amount / 100 : null,
+              status: data.data.status || null,
+              nextBillDate: data.data.next_bill_date || data.data.next_run_date || null,
+            });
+          }
+        } catch { /* ignore */ }
+      }));
+
+      // ── Step 3: Build result per enrollment ───────────────────────────────────
+      const now = new Date();
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      const results = enrollments.map(e => {
+        // Get transactions for this member
+        const txs: FpTx[] = [
+          ...(e.fluidpaySubscriptionId ? (bySubId.get(e.fluidpaySubscriptionId) || []) : []),
+          ...(e.fluidpayCustomerId ? (byCustomerId.get(e.fluidpayCustomerId) || []) : []),
+        ];
+        // Deduplicate by tx id
+        const seenIds = new Set<string>();
+        const uniqueTxs = txs.filter(t => { if (seenIds.has(t.id)) return false; seenIds.add(t.id); return true; });
+
+        const successTxs = uniqueTxs.filter(t => t.status === 'settled' || t.response === 'approved');
+        const failedTxs = uniqueTxs.filter(t => t.status === 'declined' || t.response === 'declined');
+
+        // Sort by date descending
+        successTxs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+        const lastPayment = successTxs[0] || null;
+        const paidThisMonth = successTxs.some(t => new Date(t.created_at) >= thisMonthStart);
+
+        // Payment history: last 12 months
+        const paymentHistory = successTxs.slice(0, 12).map(t => ({
+          date: t.created_at,
+          amount: t.amount / 100,
+          description: t.description || '',
+          txId: t.id,
+        }));
+
+        // Subscription info
+        let paymentMethod = 'manual';
         let subAmount: number | null = null;
         let subStatus: string | null = null;
         let nextBillDate: string | null = null;
-        let paymentMethod = 'manual';
 
-        // Determine payment method
         if (e.fluidpaySubscriptionId) {
           paymentMethod = 'fluidpay';
-          try {
-            const res = await fetch(`https://app.fluidpay.com/api/recurring/subscription/${e.fluidpaySubscriptionId}`, {
-              headers: { 'Authorization': FLUIDPAY_KEY || '' }
-            });
-            const data = await res.json();
-            if (data?.data) {
-              subAmount = data.data.amount ? data.data.amount / 100 : null;
-              subStatus = data.data.status || null;
-              nextBillDate = data.data.next_run_date || null;
-            }
-          } catch {
-            subStatus = 'error';
+          const sub = subDetails.get(e.fluidpaySubscriptionId);
+          if (sub) {
+            subAmount = sub.amount;
+            subStatus = sub.status;
+            nextBillDate = sub.nextBillDate;
           }
         } else if (e.stripeSubscriptionId) {
           paymentMethod = 'stripe';
+        } else if (e.fluidpayCustomerId) {
+          paymentMethod = 'fluidpay';
         }
 
         const billingDay = e.startDate ? new Date(e.startDate).getDate() : null;
+        const programName = e.membershipPackageId ? (packageMap.get(e.membershipPackageId) || 'Unknown Program') : 'Unknown Program';
 
-        results.push({
+        return {
           id: e.id,
           studentName: e.studentName || e.customerName,
           parentName: e.customerName,
@@ -7012,6 +7104,7 @@ Please enter your card details below to complete your registration securely. Tot
           email: e.customerEmail,
           startDate: e.startDate,
           billingDay,
+          programName,
           paymentMethod,
           enrollmentStatus: e.status,
           fluidpaySubscriptionId: e.fluidpaySubscriptionId,
@@ -7019,14 +7112,21 @@ Please enter your card details below to complete your registration securely. Tot
           subAmount,
           subStatus,
           nextBillDate,
+          paidThisMonth,
+          lastPaymentDate: lastPayment ? lastPayment.created_at : null,
+          lastPaymentAmount: lastPayment ? lastPayment.amount / 100 : null,
+          lastPaymentDescription: lastPayment ? lastPayment.description : null,
+          paymentHistory,
+          totalSuccessfulPayments: successTxs.length,
+          totalFailedPayments: failedTxs.length,
           remainingBalance: e.remainingBalance,
           monthlyPaymentsRemaining: e.monthlyPaymentsRemaining,
           isFrozen: e.isFrozen,
           downPaymentAmount: e.downPaymentAmount,
           cancellationRequestedAt: e.cancellationRequestedAt,
           cancellationEffectiveDate: e.cancellationEffectiveDate,
-        });
-      }
+        };
+      });
 
       return results;
     }),

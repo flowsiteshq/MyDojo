@@ -5,62 +5,33 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   RefreshCw,
   DollarSign,
   AlertTriangle,
-  CheckCircle2,
+  CheckCircle,
   XCircle,
   CreditCard,
   Download,
   Clock,
-  CalendarClock,
-  Ban,
+  Calendar,
+  Users,
+  TrendingUp,
+  ChevronRight,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 
-// ── helpers ──────────────────────────────────────────────────────────────────
-
-/** Derive a human-readable payment status for a billing row */
-function getPaymentStatus(row: BillingRow): "paid" | "overdue" | "due-soon" | "upcoming" | "cancelled" | "no-billing" {
-  if (row.enrollmentStatus === "cancelled" || row.enrollmentStatus === "inactive") return "cancelled";
-  if (row.subStatus === "failed") return "overdue";
-  if (!row.nextBillDate && row.paymentMethod === "manual") return "no-billing";
-
-  if (row.nextBillDate) {
-    const next = new Date(row.nextBillDate);
-    const now = new Date();
-    const diffDays = Math.ceil((next.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) return "overdue";
-    if (diffDays <= 7) return "due-soon";
-    if (diffDays <= 30) return "upcoming";
-    return "paid"; // next bill is > 30 days away → current month is paid
-  }
-
-  // Stripe or manual with no next date
-  return "upcoming";
-}
-
-const PAYMENT_STATUS_CONFIG = {
-  paid:       { label: "Paid",        bg: "bg-green-100 text-green-700",  icon: CheckCircle2,  rowBg: "" },
-  overdue:    { label: "Overdue",     bg: "bg-red-100 text-red-700",      icon: XCircle,       rowBg: "bg-red-50" },
-  "due-soon": { label: "Due Soon",    bg: "bg-amber-100 text-amber-700",  icon: Clock,         rowBg: "bg-amber-50" },
-  upcoming:   { label: "Upcoming",    bg: "bg-blue-100 text-blue-700",    icon: CalendarClock, rowBg: "" },
-  cancelled:  { label: "Cancelled",   bg: "bg-gray-100 text-gray-500",    icon: Ban,           rowBg: "bg-gray-50 opacity-60" },
-  "no-billing":{ label: "No Billing", bg: "bg-orange-100 text-orange-700",icon: AlertTriangle, rowBg: "bg-orange-50" },
-};
-
-const ENROLLMENT_STATUS_BADGE: Record<string, string> = {
-  active:    "bg-green-100 text-green-700",
-  pending:   "bg-blue-100 text-blue-700",
-  inactive:  "bg-gray-100 text-gray-500",
-  cancelled: "bg-red-100 text-red-600",
-  failed:    "bg-red-100 text-red-600",
-};
-
-const METHOD_BADGE: Record<string, string> = {
-  fluidpay: "bg-blue-100 text-blue-700",
-  stripe:   "bg-purple-100 text-purple-700",
-  manual:   "bg-gray-100 text-gray-600",
+// ── Types ─────────────────────────────────────────────────────────────────────
+type PaymentTx = {
+  date: string;
+  amount: number;
+  description: string;
+  txId: string;
 };
 
 type BillingRow = {
@@ -69,6 +40,7 @@ type BillingRow = {
   parentName: string | null;
   phone: string | null;
   email: string | null;
+  programName: string;
   startDate: Date | null;
   billingDay: number | null;
   paymentMethod: string;
@@ -78,6 +50,13 @@ type BillingRow = {
   subAmount: number | null;
   subStatus: string | null;
   nextBillDate: string | null;
+  paidThisMonth: boolean;
+  lastPaymentDate: string | null;
+  lastPaymentAmount: number | null;
+  lastPaymentDescription: string | null;
+  paymentHistory: PaymentTx[];
+  totalSuccessfulPayments: number;
+  totalFailedPayments: number;
   remainingBalance: string | number | null;
   monthlyPaymentsRemaining: number | null;
   isFrozen: number | boolean | null;
@@ -86,90 +65,113 @@ type BillingRow = {
   cancellationEffectiveDate: Date | null;
 };
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function getPaymentStatus(row: BillingRow): "paid" | "overdue" | "due-soon" | "unpaid" | "cancelled" | "no-billing" {
+  if (row.enrollmentStatus === "cancelled" || row.enrollmentStatus === "inactive") return "cancelled";
+  if (row.isFrozen) return "unpaid"; // frozen = paused, show as unpaid
+  if (row.paidThisMonth) return "paid";
+  if (row.subStatus === "failed") return "overdue";
+  if (!row.nextBillDate && row.paymentMethod === "manual") return "no-billing";
+  if (row.nextBillDate) {
+    const daysUntil = Math.ceil((new Date(row.nextBillDate).getTime() - Date.now()) / 86400000);
+    if (daysUntil < 0) return "overdue";
+    if (daysUntil <= 7) return "due-soon";
+  }
+  return "unpaid";
+}
+
+const STATUS_CONFIG = {
+  paid:        { label: "Paid",         color: "bg-green-100 text-green-700",  rowBg: "",              dot: "bg-green-500" },
+  overdue:     { label: "Overdue",      color: "bg-red-100 text-red-700",      rowBg: "bg-red-50/40",  dot: "bg-red-500" },
+  "due-soon":  { label: "Due Soon",     color: "bg-amber-100 text-amber-700",  rowBg: "bg-amber-50/40",dot: "bg-amber-500" },
+  unpaid:      { label: "Unpaid",       color: "bg-yellow-100 text-yellow-700",rowBg: "",              dot: "bg-yellow-400" },
+  cancelled:   { label: "Cancelled",    color: "bg-gray-100 text-gray-500",    rowBg: "opacity-60",    dot: "bg-gray-400" },
+  "no-billing":{ label: "No Billing",   color: "bg-orange-100 text-orange-700",rowBg: "bg-orange-50/30",dot: "bg-orange-400" },
+};
+
+function fmt(amount: number | null | undefined): string {
+  if (amount == null) return "—";
+  return `$${Number(amount).toFixed(2)}`;
+}
+
+function fmtDate(d: string | Date | null | undefined): string {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function fmtMonth(d: string | Date | null | undefined): string {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
 const FILTER_TABS = [
-  { key: "all",        label: "All Members" },
-  { key: "overdue",    label: "Overdue" },
-  { key: "due-soon",   label: "Due Soon (7 days)" },
-  { key: "upcoming",   label: "Upcoming" },
-  { key: "paid",       label: "Paid" },
-  { key: "cancelled",  label: "Cancelled / Inactive" },
-  { key: "no-billing", label: "No Billing Setup" },
+  { key: "all",         label: "All" },
+  { key: "paid",        label: "Paid This Month" },
+  { key: "unpaid",      label: "Unpaid" },
+  { key: "overdue",     label: "Overdue" },
+  { key: "due-soon",    label: "Due Soon" },
+  { key: "cancelled",   label: "Cancelled" },
+  { key: "no-billing",  label: "No Billing" },
 ];
 
+// ── Component ─────────────────────────────────────────────────────────────────
 export default function AdminBillingSchedule() {
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterMethod, setFilterMethod] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [selected, setSelected] = useState<BillingRow | null>(null);
 
   const { data, isLoading, refetch, isFetching } = trpc.admin.getBillingSchedule.useQuery(undefined, {
-    staleTime: 60_000,
+    staleTime: 2 * 60_000,
   });
 
   const enriched = useMemo(() => {
     if (!data) return [];
-    return (data as BillingRow[]).map((row) => ({
-      ...row,
-      paymentStatus: getPaymentStatus(row),
-    }));
+    return (data as BillingRow[]).map(row => ({ ...row, _status: getPaymentStatus(row) }));
   }, [data]);
 
   const filtered = useMemo(() => {
-    return enriched.filter((row) => {
-      const matchSearch =
-        !search ||
-        (row.studentName || "").toLowerCase().includes(search.toLowerCase()) ||
-        (row.parentName || "").toLowerCase().includes(search.toLowerCase()) ||
-        (row.phone || "").includes(search) ||
-        (row.email || "").toLowerCase().includes(search.toLowerCase());
-      const matchStatus = filterStatus === "all" || row.paymentStatus === filterStatus;
-      const matchMethod = filterMethod === "all" || row.paymentMethod === filterMethod;
-      return matchSearch && matchStatus && matchMethod;
+    return enriched.filter(row => {
+      const q = search.toLowerCase();
+      const matchSearch = !q ||
+        (row.studentName || "").toLowerCase().includes(q) ||
+        (row.parentName || "").toLowerCase().includes(q) ||
+        (row.phone || "").includes(q) ||
+        (row.email || "").toLowerCase().includes(q) ||
+        (row.programName || "").toLowerCase().includes(q);
+      const matchStatus = filterStatus === "all" || row._status === filterStatus;
+      return matchSearch && matchStatus;
     });
-  }, [enriched, search, filterStatus, filterMethod]);
+  }, [enriched, search, filterStatus]);
 
-  // Summary stats
+  // Stats
   const stats = useMemo(() => {
-    const overdue   = enriched.filter((r) => r.paymentStatus === "overdue").length;
-    const dueSoon   = enriched.filter((r) => r.paymentStatus === "due-soon").length;
-    const paid      = enriched.filter((r) => r.paymentStatus === "paid").length;
-    const noBilling = enriched.filter((r) => r.paymentStatus === "no-billing").length;
-    const seen = new Set<string>();
-    const mrr = enriched.reduce((sum, r) => {
-      if (r.subAmount && r.fluidpaySubscriptionId && !seen.has(r.fluidpaySubscriptionId)) {
-        seen.add(r.fluidpaySubscriptionId);
-        return sum + r.subAmount;
-      }
-      return sum;
-    }, 0);
-    return { overdue, dueSoon, paid, noBilling, mrr };
+    const active = enriched.filter(r => r.enrollmentStatus === "active");
+    const paid = active.filter(r => r.paidThisMonth);
+    const overdue = active.filter(r => r._status === "overdue");
+    const unpaid = active.filter(r => !r.paidThisMonth);
+    const revenue = paid.reduce((s, r) => s + (r.lastPaymentAmount || r.subAmount || 0), 0);
+    return { total: enriched.length, active: active.length, paid: paid.length, overdue: overdue.length, unpaid: unpaid.length, revenue };
   }, [enriched]);
 
   const exportCSV = () => {
     if (!filtered.length) return;
-    const headers = ["Student", "Parent", "Phone", "Email", "Enrollment Status", "Payment Status", "Bill Day", "Payment Method", "Sub Status", "Monthly $", "Next Bill Date", "Remaining Balance", "Payments Left", "Frozen"];
-    const rows = filtered.map((r) => [
-      r.studentName ?? "",
-      r.parentName ?? "",
-      r.phone ?? "",
-      r.email ?? "",
-      r.enrollmentStatus,
-      r.paymentStatus,
-      r.billingDay ?? "N/A",
-      r.paymentMethod,
-      r.subStatus ?? "N/A",
-      r.subAmount ? `$${r.subAmount.toFixed(2)}` : "N/A",
-      r.nextBillDate ? new Date(r.nextBillDate).toLocaleDateString() : "N/A",
-      `$${parseFloat(String(r.remainingBalance || 0)).toFixed(2)}`,
-      r.monthlyPaymentsRemaining ?? 0,
-      r.isFrozen ? "Yes" : "No",
+    const headers = ["Student","Parent","Phone","Email","Program","Enrollment","Payment Status","Paid This Month","Last Payment Date","Last Payment Amount","Next Due Date","Monthly Rate","Payments Made","Payments Left","Remaining Balance"];
+    const rows = filtered.map(r => [
+      r.studentName ?? "", r.parentName ?? "", r.phone ?? "", r.email ?? "",
+      r.programName, r.enrollmentStatus, r._status,
+      r.paidThisMonth ? "Yes" : "No",
+      r.lastPaymentDate ? fmtDate(r.lastPaymentDate) : "",
+      r.lastPaymentAmount ? fmt(r.lastPaymentAmount) : "",
+      r.nextBillDate ? fmtDate(r.nextBillDate) : "",
+      r.subAmount ? fmt(r.subAmount) : "",
+      r.totalSuccessfulPayments, r.monthlyPaymentsRemaining ?? "",
+      parseFloat(String(r.remainingBalance || 0)).toFixed(2),
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `billing-schedule-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
+    const a = document.createElement("a"); a.href = url;
+    a.download = `billing-${new Date().toISOString().slice(0,10)}.csv`; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -179,19 +181,17 @@ export default function AdminBillingSchedule() {
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold">Billing Schedule</h1>
+            <h1 className="text-2xl font-bold">Billing & Payments</h1>
             <p className="text-muted-foreground text-sm mt-0.5">
-              All members — who paid, who hasn't, and upcoming due dates.
+              Real transaction data — who paid, what program, what month, how much, and next due date.
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={exportCSV} disabled={!filtered.length}>
-              <Download className="h-4 w-4 mr-1" />
-              Export CSV
+              <Download className="h-4 w-4 mr-1" /> Export CSV
             </Button>
             <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-              <RefreshCw className={`h-4 w-4 mr-1 ${isFetching ? "animate-spin" : ""}`} />
-              Refresh
+              <RefreshCw className={`h-4 w-4 mr-1 ${isFetching ? "animate-spin" : ""}`} /> Refresh
             </Button>
           </div>
         </div>
@@ -201,10 +201,10 @@ export default function AdminBillingSchedule() {
           <Card>
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg shrink-0"><DollarSign className="h-5 w-5 text-green-600" /></div>
+                <div className="p-2 bg-green-100 rounded-lg shrink-0"><TrendingUp className="h-5 w-5 text-green-600" /></div>
                 <div>
-                  <p className="text-xl font-bold text-green-600">${stats.mrr.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">Monthly recurring</p>
+                  <p className="text-xl font-bold text-green-600">{fmt(stats.revenue)}</p>
+                  <p className="text-xs text-muted-foreground">Collected this month</p>
                 </div>
               </div>
             </CardContent>
@@ -212,7 +212,18 @@ export default function AdminBillingSchedule() {
           <Card>
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg shrink-0"><XCircle className="h-5 w-5 text-red-600" /></div>
+                <div className="p-2 bg-green-100 rounded-lg shrink-0"><CheckCircle className="h-5 w-5 text-green-600" /></div>
+                <div>
+                  <p className="text-xl font-bold text-green-700">{stats.paid}</p>
+                  <p className="text-xs text-muted-foreground">Paid this month</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-100 rounded-lg shrink-0"><AlertTriangle className="h-5 w-5 text-red-600" /></div>
                 <div>
                   <p className="text-xl font-bold text-red-600">{stats.overdue}</p>
                   <p className="text-xs text-muted-foreground">Overdue / Failed</p>
@@ -223,21 +234,10 @@ export default function AdminBillingSchedule() {
           <Card>
             <CardContent className="pt-4 pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-100 rounded-lg shrink-0"><Clock className="h-5 w-5 text-amber-600" /></div>
+                <div className="p-2 bg-yellow-100 rounded-lg shrink-0"><Users className="h-5 w-5 text-yellow-600" /></div>
                 <div>
-                  <p className="text-xl font-bold text-amber-600">{stats.dueSoon}</p>
-                  <p className="text-xs text-muted-foreground">Due within 7 days</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-lg shrink-0"><AlertTriangle className="h-5 w-5 text-orange-600" /></div>
-                <div>
-                  <p className="text-xl font-bold text-orange-600">{stats.noBilling}</p>
-                  <p className="text-xs text-muted-foreground">No billing setup</p>
+                  <p className="text-xl font-bold text-yellow-700">{stats.unpaid}</p>
+                  <p className="text-xs text-muted-foreground">Not yet paid</p>
                 </div>
               </div>
             </CardContent>
@@ -245,51 +245,21 @@ export default function AdminBillingSchedule() {
         </div>
 
         {/* Filters */}
-        <div className="space-y-3">
-          {/* Payment status tabs */}
+        <div className="flex flex-wrap gap-2 items-center">
           <div className="flex gap-1.5 flex-wrap">
-            {FILTER_TABS.map((tab) => {
-              const count = tab.key === "all"
-                ? enriched.length
-                : enriched.filter((r) => r.paymentStatus === tab.key).length;
+            {FILTER_TABS.map(tab => {
+              const count = tab.key === "all" ? enriched.length : enriched.filter(r => r._status === tab.key).length;
               return (
-                <button
-                  key={tab.key}
-                  onClick={() => setFilterStatus(tab.key)}
+                <button key={tab.key} onClick={() => setFilterStatus(tab.key)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                    filterStatus === tab.key
-                      ? "bg-gray-900 text-white border-gray-900"
-                      : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-                  }`}
-                >
-                  {tab.label} <span className="ml-1 opacity-70">({count})</span>
+                    filterStatus === tab.key ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                  }`}>
+                  {tab.label} <span className="ml-1 opacity-60">({count})</span>
                 </button>
               );
             })}
           </div>
-
-          {/* Search + method filter */}
-          <div className="flex gap-3 flex-wrap items-center">
-            <Input
-              placeholder="Search name, phone, or email…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="max-w-xs h-8 text-sm"
-            />
-            <div className="flex gap-1">
-              {["all", "fluidpay", "stripe", "manual"].map((m) => (
-                <Button
-                  key={m}
-                  variant={filterMethod === m ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setFilterMethod(m)}
-                  className="h-8 text-xs capitalize"
-                >
-                  {m === "all" ? "All Methods" : m === "fluidpay" ? "FluidPay" : m === "stripe" ? "Stripe" : "Manual"}
-                </Button>
-              ))}
-            </div>
-          </div>
+          <Input placeholder="Search name, phone, program…" value={search} onChange={e => setSearch(e.target.value)} className="max-w-xs h-8 text-sm ml-auto" />
         </div>
 
         {/* Table */}
@@ -298,7 +268,7 @@ export default function AdminBillingSchedule() {
             {isLoading ? (
               <div className="flex items-center justify-center py-16 text-muted-foreground">
                 <RefreshCw className="h-5 w-5 animate-spin mr-2" />
-                Loading billing data… (may take 15–30 seconds for FluidPay subscriptions)
+                Loading payment data from FluidPay…
               </div>
             ) : !filtered.length ? (
               <div className="py-12 text-center text-muted-foreground">
@@ -310,115 +280,65 @@ export default function AdminBillingSchedule() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="text-left p-3 font-medium">Payment Status</th>
-                      <th className="text-left p-3 font-medium">Student / Member</th>
-                      <th className="text-left p-3 font-medium">Contact</th>
-                      <th className="text-left p-3 font-medium">Enrollment</th>
-                      <th className="text-left p-3 font-medium">Method</th>
-                      <th className="text-left p-3 font-medium">Monthly $</th>
-                      <th className="text-left p-3 font-medium">Next Due Date</th>
-                      <th className="text-left p-3 font-medium">Bill Day</th>
-                      <th className="text-left p-3 font-medium">Remaining Balance</th>
-                      <th className="text-left p-3 font-medium">Pmts Left</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Status</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Student</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Program</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Last Payment</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Month Paid</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Amount Paid</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Monthly Rate</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Next Due</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Pmts Made</th>
+                      <th className="text-left p-3 font-semibold text-gray-700"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((row) => {
-                      const cfg = PAYMENT_STATUS_CONFIG[row.paymentStatus];
-                      const Icon = cfg.icon;
-                      const nextDate = row.nextBillDate ? new Date(row.nextBillDate) : null;
-                      const now = new Date();
-                      const daysUntil = nextDate ? Math.ceil((nextDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
+                    {filtered.map(row => {
+                      const cfg = STATUS_CONFIG[row._status as keyof typeof STATUS_CONFIG];
                       return (
-                        <tr key={row.id} className={`border-b hover:bg-muted/20 ${cfg.rowBg}`}>
-                          {/* Payment Status */}
+                        <tr key={row.id} className={`border-b hover:bg-muted/20 cursor-pointer ${cfg.rowBg}`} onClick={() => setSelected(row)}>
                           <td className="p-3">
-                            <div className="flex items-center gap-1.5">
-                              <Icon className={`h-3.5 w-3.5 ${
-                                row.paymentStatus === "paid" ? "text-green-500" :
-                                row.paymentStatus === "overdue" ? "text-red-500" :
-                                row.paymentStatus === "due-soon" ? "text-amber-500" :
-                                row.paymentStatus === "no-billing" ? "text-orange-500" :
-                                "text-gray-400"
-                              }`} />
-                              <Badge className={`text-xs ${cfg.bg}`}>{cfg.label}</Badge>
-                            </div>
+                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                              {cfg.label}
+                            </span>
                           </td>
-                          {/* Student */}
                           <td className="p-3">
-                            <div className="font-medium">{row.studentName || row.parentName || "—"}</div>
-                            {row.studentName && row.parentName && row.studentName !== row.parentName && (
-                              <div className="text-xs text-muted-foreground">Parent: {row.parentName}</div>
+                            <div className="font-medium text-gray-900">{row.studentName || row.parentName || "—"}</div>
+                            {row.parentName && row.parentName !== row.studentName && (
+                              <div className="text-xs text-gray-400">{row.parentName}</div>
                             )}
+                            {row.phone && <div className="text-xs text-gray-400">{row.phone}</div>}
                           </td>
-                          {/* Contact */}
                           <td className="p-3">
-                            <div className="text-xs text-muted-foreground">{row.phone || "—"}</div>
-                            <div className="text-xs text-muted-foreground">{row.email || "—"}</div>
+                            <span className="text-gray-700">{row.programName || "—"}</span>
                           </td>
-                          {/* Enrollment Status */}
                           <td className="p-3">
-                            <div className="flex flex-col gap-1">
-                              <Badge className={`text-xs w-fit ${ENROLLMENT_STATUS_BADGE[row.enrollmentStatus] || "bg-gray-100 text-gray-600"}`}>
-                                {row.enrollmentStatus.charAt(0).toUpperCase() + row.enrollmentStatus.slice(1)}
-                              </Badge>
-                              {row.isFrozen ? <Badge className="text-xs w-fit bg-blue-100 text-blue-700">Frozen</Badge> : null}
-                            </div>
+                            <span className="text-gray-700">{fmtDate(row.lastPaymentDate)}</span>
                           </td>
-                          {/* Method */}
                           <td className="p-3">
-                            <Badge className={`text-xs ${METHOD_BADGE[row.paymentMethod] || "bg-gray-100 text-gray-600"}`}>
-                              {row.paymentMethod === "fluidpay" ? "FluidPay" : row.paymentMethod === "stripe" ? "Stripe" : "Manual"}
-                            </Badge>
+                            <span className="text-gray-700">{fmtMonth(row.lastPaymentDate)}</span>
                           </td>
-                          {/* Monthly $ */}
-                          <td className="p-3 font-semibold">
-                            {row.subAmount != null ? (
-                              <span className="text-green-700">${row.subAmount.toFixed(2)}</span>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </td>
-                          {/* Next Due Date */}
                           <td className="p-3">
-                            {nextDate ? (
-                              <div>
-                                <div className={`font-medium text-sm ${daysUntil !== null && daysUntil < 0 ? "text-red-600" : daysUntil !== null && daysUntil <= 7 ? "text-amber-600" : ""}`}>
-                                  {nextDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {daysUntil !== null && daysUntil < 0
-                                    ? `${Math.abs(daysUntil)} days overdue`
-                                    : daysUntil === 0
-                                    ? "Due today"
-                                    : daysUntil !== null
-                                    ? `In ${daysUntil} days`
-                                    : ""}
-                                </div>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">—</span>
-                            )}
+                            <span className={`font-semibold ${row.lastPaymentAmount ? "text-green-700" : "text-gray-400"}`}>
+                              {fmt(row.lastPaymentAmount)}
+                            </span>
                           </td>
-                          {/* Bill Day */}
-                          <td className="p-3 font-mono text-center">
-                            {row.billingDay ? (
-                              <span className="font-semibold">{row.billingDay}</span>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </td>
-                          {/* Remaining Balance */}
                           <td className="p-3">
-                            {parseFloat(String(row.remainingBalance || 0)) > 0 ? (
-                              <span className="font-semibold">${parseFloat(String(row.remainingBalance)).toFixed(2)}</span>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">$0.00</span>
-                            )}
+                            <span className="text-gray-700">{fmt(row.subAmount)}/mo</span>
                           </td>
-                          {/* Payments Left */}
-                          <td className="p-3 text-center text-muted-foreground">
-                            {row.monthlyPaymentsRemaining ?? "—"}
+                          <td className="p-3">
+                            <span className={`text-gray-700 ${row.nextBillDate && new Date(row.nextBillDate) < new Date() ? "text-red-600 font-medium" : ""}`}>
+                              {fmtDate(row.nextBillDate)}
+                            </span>
+                          </td>
+                          <td className="p-3 text-center">
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                              {row.totalSuccessfulPayments}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <ChevronRight className="w-4 h-4 text-gray-400" />
                           </td>
                         </tr>
                       );
@@ -429,19 +349,70 @@ export default function AdminBillingSchedule() {
             )}
           </CardContent>
         </Card>
-
-        {/* Legend */}
-        <div className="text-xs text-muted-foreground space-y-1 border rounded-lg p-4 bg-muted/20">
-          <p className="font-semibold text-foreground mb-2">Legend</p>
-          <p><span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-green-500" /> <strong>Paid</strong></span> — Next bill date is more than 30 days away; current month is settled.</p>
-          <p><span className="inline-flex items-center gap-1"><XCircle className="h-3 w-3 text-red-500" /> <strong>Overdue</strong></span> — Subscription failed or next bill date has already passed.</p>
-          <p><span className="inline-flex items-center gap-1"><Clock className="h-3 w-3 text-amber-500" /> <strong>Due Soon</strong></span> — Payment due within the next 7 days.</p>
-          <p><span className="inline-flex items-center gap-1"><CalendarClock className="h-3 w-3 text-blue-500" /> <strong>Upcoming</strong></span> — Payment due in 8–30 days.</p>
-          <p><span className="inline-flex items-center gap-1"><AlertTriangle className="h-3 w-3 text-orange-500" /> <strong>No Billing</strong></span> — Active member with no FluidPay or Stripe subscription; must collect manually.</p>
-          <p><span className="inline-flex items-center gap-1"><Ban className="h-3 w-3 text-gray-400" /> <strong>Cancelled / Inactive</strong></span> — Membership ended or deactivated.</p>
-          <p className="mt-2"><strong>Bill Day</strong> = day of the month the recurring charge fires (based on enrollment start date).</p>
-        </div>
       </div>
+
+      {/* Payment History Dialog */}
+      <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-green-600" />
+              {selected?.studentName || selected?.parentName} — Payment History
+            </DialogTitle>
+          </DialogHeader>
+          {selected && (
+            <div className="space-y-5">
+              {/* Member summary */}
+              <div className="grid grid-cols-2 gap-3 bg-gray-50 rounded-lg p-4 text-sm">
+                <div><span className="text-gray-500">Program:</span> <span className="font-medium ml-1">{selected.programName}</span></div>
+                <div><span className="text-gray-500">Monthly Rate:</span> <span className="font-medium ml-1">{fmt(selected.subAmount)}/mo</span></div>
+                <div><span className="text-gray-500">Next Due:</span> <span className="font-medium ml-1">{fmtDate(selected.nextBillDate)}</span></div>
+                <div><span className="text-gray-500">Remaining Balance:</span> <span className="font-medium ml-1">{fmt(parseFloat(String(selected.remainingBalance || 0)))}</span></div>
+                <div><span className="text-gray-500">Payments Made:</span> <span className="font-medium text-green-700 ml-1">{selected.totalSuccessfulPayments}</span></div>
+                <div><span className="text-gray-500">Payments Left:</span> <span className="font-medium ml-1">{selected.monthlyPaymentsRemaining ?? "—"}</span></div>
+                {selected.totalFailedPayments > 0 && (
+                  <div className="col-span-2 text-red-600">
+                    <AlertTriangle className="inline w-3.5 h-3.5 mr-1" />
+                    {selected.totalFailedPayments} failed payment{selected.totalFailedPayments > 1 ? "s" : ""} on record
+                  </div>
+                )}
+              </div>
+
+              {/* Transaction history */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" /> Transaction History
+                </h3>
+                {selected.paymentHistory.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-lg text-sm">
+                    No payment transactions found in FluidPay
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {selected.paymentHistory.map((tx, i) => (
+                      <div key={tx.txId || i} className="flex items-center justify-between p-3 bg-white border rounded-lg">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                            <span className="font-medium text-gray-900">{fmtDate(tx.date)}</span>
+                            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                              {fmtMonth(tx.date)}
+                            </span>
+                          </div>
+                          {tx.description && (
+                            <div className="text-xs text-gray-500 mt-0.5 ml-6 truncate max-w-xs">{tx.description}</div>
+                          )}
+                        </div>
+                        <span className="font-semibold text-green-700 shrink-0">{fmt(tx.amount)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
