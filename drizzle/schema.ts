@@ -1984,3 +1984,59 @@ export const customPaymentLinkPayments = mysqlTable("customPaymentLinkPayments",
 });
 export type CustomPaymentLinkPayment = typeof customPaymentLinkPayments.$inferSelect;
 export type InsertCustomPaymentLinkPayment = typeof customPaymentLinkPayments.$inferInsert;
+
+// ─── AI SMS Assistant ────────────────────────────────────────────────────────
+
+/**
+ * smsConversations — one row per unique phone number thread
+ */
+export const smsConversations = mysqlTable("smsConversations", {
+  id: int("id").primaryKey().autoincrement(),
+  phone: varchar("phone", { length: 20 }).notNull().unique(),
+  contactName: varchar("contactName", { length: 255 }),
+  optedOut: boolean("optedOut").default(false).notNull(),
+  aiEnabled: boolean("aiEnabled").default(true).notNull(),
+  lastMessageAt: timestamp("lastMessageAt").defaultNow().notNull(),
+  unreadCount: int("unreadCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SmsConversation = typeof smsConversations.$inferSelect;
+export type InsertSmsConversation = typeof smsConversations.$inferInsert;
+
+/**
+ * smsMessages — individual messages within a conversation
+ */
+export const smsMessages = mysqlTable("smsMessages", {
+  id: int("id").primaryKey().autoincrement(),
+  conversationId: int("conversationId").notNull(),
+  direction: mysqlEnum("direction", ["inbound", "outbound"]).notNull(),
+  senderType: mysqlEnum("senderType", ["ai", "human", "campaign", "member"]).notNull(),
+  body: text("body").notNull(),
+  mediaUrls: json("mediaUrls"),
+  externalId: varchar("externalId", { length: 64 }),
+  status: mysqlEnum("status", ["pending", "sent", "delivered", "failed", "received"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SmsMessage = typeof smsMessages.$inferSelect;
+export type InsertSmsMessage = typeof smsMessages.$inferInsert;
+
+/**
+ * aiSmsCampaigns — outbound bulk SMS campaigns
+ */
+export const aiSmsCampaigns = mysqlTable("aiSmsCampaigns", {
+  id: int("id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: mysqlEnum("type", ["lead_followup", "class_reminder", "re_engagement", "custom"]).notNull(),
+  messageTemplate: text("messageTemplate").notNull(),
+  targetFilter: json("targetFilter"),
+  status: mysqlEnum("status", ["draft", "scheduled", "running", "completed", "cancelled"]).default("draft").notNull(),
+  scheduledAt: timestamp("scheduledAt"),
+  sentCount: int("sentCount").default(0).notNull(),
+  replyCount: int("replyCount").default(0).notNull(),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AiSmsCampaign = typeof aiSmsCampaigns.$inferSelect;
+export type InsertAiSmsCampaign = typeof aiSmsCampaigns.$inferInsert;

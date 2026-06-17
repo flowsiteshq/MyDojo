@@ -64,6 +64,7 @@ import { heroContentRouter } from './heroContentRouter';
 import { classReservationRouter } from './classReservationRouter';
 import { buddyDayRsvps } from '../drizzle/schema';
 import { shopRouter } from './shopRouter';
+import { aiSmsRouter } from './aiSmsRouter';
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -72,6 +73,7 @@ export const appRouter = router({
   heroContent: heroContentRouter,
   classReservation: classReservationRouter,
   shop: shopRouter,
+  aiSms: aiSmsRouter,
 
   // ── Manual Enrollment Tool (Staff Transfer) ────────────────────────────────
   manualEnrollments: router({

@@ -106,6 +106,18 @@ async function startServer() {
     handleFluidPayWebhook
   );
 
+  // 800.com inbound SMS webhook — receives member replies for AI SMS assistant
+  app.post("/api/sms/inbound", express.json({ limit: "1mb" }), async (req: any, res: any) => {
+    try {
+      const { handleInboundSms } = await import('../aiSms');
+      await handleInboundSms(req.body);
+      res.status(200).json({ ok: true });
+    } catch (err) {
+      console.error('[SMS Inbound] Error:', err);
+      res.status(200).json({ ok: true }); // Always 200 to prevent 800.com retries
+    }
+  });
+
   // Dynamic XML sitemap — served before Vite/static middleware so it takes priority
   app.get("/sitemap.xml", handleSitemap);
 

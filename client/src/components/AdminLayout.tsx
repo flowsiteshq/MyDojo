@@ -29,6 +29,7 @@ import {
   BarChart3,
   UserCheck,
   Link2,
+  Bot,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { trpc } from "@/lib/trpc";
@@ -163,6 +164,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/attendance", label: "Attendance Logs", icon: ClipboardList },
     { href: "/admin/milestones", label: "Streak Milestones", icon: Flame },
     { href: "/admin/messages", label: "Messages", icon: MessageSquare },
+    { href: "/admin/sms", label: "AI SMS Assistant", icon: Bot },
     { href: "/admin/promo-blast", label: "Promo Blast", icon: Megaphone },
     { href: "/admin/pno-rsvps", label: "PNO RSVPs", icon: PartyPopper },
     { href: "/admin/camp-enrollments", label: "Camp Enrollments", icon: Tent },

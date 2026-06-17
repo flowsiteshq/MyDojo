@@ -1802,3 +1802,16 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
   - [x] Admin UI: Links list with copy-link, deactivate, and view-payments actions
   - [x] Public UI: /pay/:token page with FluidPay card form and order summary
   - [x] Add Custom Payments nav item to AdminLayout sidebar
+
+## AI SMS Assistant (MyDojo Assistant)
+- [ ] Add smsConversations and smsMessages tables to schema
+- [ ] Add aiSmsCampaigns table for outbound campaigns
+- [ ] Run pnpm db:push to migrate schema
+- [ ] Build inbound SMS webhook handler at /api/sms/inbound
+- [ ] Build AI reply engine using invokeLLM with MyDojo context
+- [ ] Build STOP/HELP/opt-out handling
+- [ ] Build outbound campaign sender (lead follow-up, reminders, re-engagement)
+- [ ] Build admin SMS Conversations dashboard page (/admin/sms-conversations)
+- [ ] Build admin SMS Campaigns management page (/admin/sms-campaigns)
+- [ ] Wire up navigation to SMS pages in admin sidebar
+- [ ] Register inbound webhook URL with 800.com API
