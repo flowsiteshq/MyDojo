@@ -320,7 +320,7 @@ function SummerSpecialSection({ onBookClass }: { onBookClass: () => void }) {
                 <div className="w-48 h-48 rounded-full bg-gradient-to-br from-[#FFD700] to-[#FFA500] flex flex-col items-center justify-center shadow-[0_0_60px_rgba(255,215,0,0.4)]">
                   <span className="text-black font-black text-2xl uppercase leading-tight">SUMMER</span>
                   <span className="text-black font-black text-3xl uppercase leading-tight">SPECIAL</span>
-                  <span className="text-black text-xs font-bold mt-1">2025</span>
+                  <span className="text-black text-xs font-bold mt-1">2026</span>
                 </div>
               </div>
             </div>
