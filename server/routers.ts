@@ -5746,9 +5746,9 @@ Please enter your card details below to complete your registration securely. Tot
       .query(async ({ input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
-        // Only show real Stripe-paying members (must have a stripeCustomerId).
-        // Test/seed data entries without Stripe IDs are excluded from the roster.
-        const rows = await db
+
+        // ── 1. Stripe enrollments (legacy) ───────────────────────────────────
+        const stripeRows = await db
           .select({
             id: schema.enrollments.id,
             name: schema.enrollments.customerName,
@@ -5772,15 +5772,75 @@ Please enter your card details below to complete your registration securely. Tot
           .from(schema.enrollments)
           .leftJoin(schema.membershipPackages, eq(schema.enrollments.membershipPackageId, schema.membershipPackages.id))
           .orderBy(desc(schema.enrollments.createdAt));
-        // Map to a normalized shape for the UI
-        let filtered = rows.map(r => ({
-          ...r,
+
+        const stripeNormalized = stripeRows.map(r => ({
+          id: r.id,
+          source: 'stripe' as const,
+          name: r.name,
+          studentName: r.studentName,
+          email: r.email,
+          phone: r.phone,
           program: r.program ?? 'Unknown',
-          // Map 'failed' enrollment status to 'cancelled' for display
           status: (r.status === 'failed' ? 'cancelled' : r.status) as 'active' | 'pending' | 'inactive' | 'cancelled',
+          beltRank: r.beltRank,
+          dateOfBirth: r.dateOfBirth,
+          stripeSubscriptionId: r.stripeSubscriptionId,
+          stripeCustomerId: r.stripeCustomerId,
+          photoUrl: r.photoUrl,
+          currentStreak: r.currentStreak,
+          longestStreak: r.longestStreak,
+          beltExamEligible: r.beltExamEligible,
+          beltExamFeePaid: r.beltExamFeePaid,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
           location: 'Tomball HQ',
           age: null as null | number,
         }));
+
+        // ── 2. FluidPay (manual) enrollments ─────────────────────────────────
+        const manualRows = await db
+          .select()
+          .from(schema.manualEnrollments)
+          .orderBy(desc(schema.manualEnrollments.createdAt));
+
+        const programLabelMap: Record<string, string> = {
+          kickboxing: 'Kickboxing',
+          martial_arts: 'Martial Arts',
+          summer_camp: 'Summer Camp',
+          after_school: 'After School',
+        };
+
+        const manualNormalized = manualRows.map(r => ({
+          id: r.id + 100000, // offset to avoid ID collision with stripe enrollments
+          source: 'manual' as const,
+          name: r.parentName ?? r.studentName,
+          studentName: r.studentName,
+          email: r.email ?? '',
+          phone: r.phone,
+          program: programLabelMap[r.program] ?? r.program,
+          status: (r.status === 'failed' ? 'cancelled' : r.status) as 'active' | 'pending' | 'inactive' | 'cancelled',
+          beltRank: null as string | null,
+          dateOfBirth: null as string | null,
+          stripeSubscriptionId: null as string | null,
+          stripeCustomerId: null as string | null,
+          photoUrl: null as string | null,
+          currentStreak: null as number | null,
+          longestStreak: null as number | null,
+          beltExamEligible: null as number | null,
+          beltExamFeePaid: null as number | null,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+          location: 'Tomball HQ',
+          age: null as null | number,
+          // Extra FluidPay-specific fields for display
+          fluidpayCustomerId: r.fluidpayCustomerId,
+          notes: r.notes,
+          customPrice: r.customPrice,
+          nextChargeDate: r.nextChargeDate,
+        }));
+
+        // ── 3. Merge both sources ─────────────────────────────────────────────
+        let filtered = [...stripeNormalized, ...manualNormalized] as typeof stripeNormalized;
         if (input?.search) {
           const q = input.search.toLowerCase();
           filtered = filtered.filter(s =>

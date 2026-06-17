@@ -416,6 +416,7 @@ export default function AdminStudents() {
                 <TableHead>Belt</TableHead>
                 <TableHead>Age</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Source</TableHead>
                 <TableHead>Joined</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
@@ -423,11 +424,11 @@ export default function AdminStudents() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                    <TableCell colSpan={9} className="text-center py-12 text-gray-400">Loading members...</TableCell>
+                    <TableCell colSpan={10} className="text-center py-12 text-gray-400">Loading members...</TableCell>
                 </TableRow>
               ) : students.length === 0 ? (
                 <TableRow>
-                    <TableCell colSpan={9} className="text-center py-12 text-gray-400">
+                    <TableCell colSpan={10} className="text-center py-12 text-gray-400">
                     <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     No members found
                   </TableCell>
@@ -489,6 +490,13 @@ export default function AdminStudents() {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[student.status] ?? "bg-gray-100 text-gray-700"}`}>
                           {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        {(student as any).source === 'manual' ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">FluidPay</span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Stripe</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-gray-500 text-sm">
                         {new Date(student.createdAt).toLocaleDateString()}
