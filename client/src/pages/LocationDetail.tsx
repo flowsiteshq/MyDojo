@@ -74,7 +74,7 @@ export default function LocationDetail() {
     } else if (className.includes('teen') || className.includes('adult')) {
       setHeroImage('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/vkpYJXbOqHygXrIJ.jpg');
     } else if (className.includes('kickboxing') || className.includes('fitness')) {
-      setHeroImage('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/KIazhBWQpCfhvKFK.jpg');
+      setHeroImage('https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/kickboxing-bg_d4fcc4c5.webp');
     } else {
       setHeroImage('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/NNwrjeVElfgByBcR.jpg');
     }
