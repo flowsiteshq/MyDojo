@@ -65,7 +65,7 @@ const DEFAULT_CONTENT = {
   headline: "FUN. FIT. STRONG.",
   subheadline: "PROGRAMS FOR EVERY AGE",
   targetMessage: "Experience martial arts training for every age. Build confidence, discipline, and strength.",
-  ctaText: "Claim $29 Intro Offer",
+  ctaText: "Book Your Free Class",
   badgeText: "Limited Spots Available",
   holiday: null as string | null,
   season: "general" as string,
@@ -102,7 +102,7 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
     if (content.isMothersDay) return { text: "🌸 Happy Mother's Day — Give the Gift of Confidence!", color: "#be185d" };
     if (content.isSummerCamp) return { text: "☀️ Summer Camp Now Enrolling — Limited Spots!", color: "#0891B2" };
     if (content.holiday) return { text: `🎉 ${content.holiday} Special Offer!`, color: "#E10600" };
-    return { text: "🥋 Limited Spots Available — Claim Your Intro Offer Today!", color: "#E10600" };
+    return { text: "Limited Spots Available — Book Your Free Class Today!", color: "#E10600" };
   };
 
   const badge = getBadge();
@@ -233,16 +233,13 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
             {(content as typeof DEFAULT_CONTENT & { description?: string }).description || (content as typeof DEFAULT_CONTENT).targetMessage}
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            {/* Primary: $29 Intro Offer */}
+            {/* Primary CTA */}
             <button
               onClick={() => setOfferModalOpen(true)}
               className="bg-primary hover:bg-primary/90 text-white text-lg px-8 py-5 h-auto font-heading uppercase tracking-wider skew-x-[-10deg] w-full sm:w-auto transition-all duration-200 hover:scale-105 shadow-lg"
             >
-              <span className="skew-x-[10deg] flex flex-col items-center sm:items-start">
-                <span className="font-black">{content.ctaText || "Claim $29 Intro Offer"}</span>
-                <span className="text-xs font-normal opacity-90 mt-0.5 normal-case tracking-normal">
-                  2 Classes + Uniform Included
-                </span>
+              <span className="skew-x-[10deg] flex items-center">
+                <span className="font-black">{content.ctaText || "Book Your Free Class"}</span>
               </span>
             </button>
             <Link href={closestLocation ? `/locations/${closestLocation.id}` : (userCity ? `/locations?city=${encodeURIComponent(userCity)}` : "/locations")}>

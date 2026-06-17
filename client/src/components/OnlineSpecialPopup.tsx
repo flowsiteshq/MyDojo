@@ -13,7 +13,7 @@ const PROGRAMS = [
     color: "#6D28D9",
     gradient: "from-violet-700 to-purple-900",
     offer: "2 Classes + Uniform",
-    price: "$29",
+    price: "FREE",
     free: false,
     kids: true,
     icon: Star,
@@ -24,7 +24,7 @@ const PROGRAMS = [
     color: "#1E40AF",
     gradient: "from-blue-700 to-blue-900",
     offer: "2 Classes + Uniform",
-    price: "$29",
+    price: "FREE",
     free: false,
     kids: true,
     icon: Shield,
@@ -35,7 +35,7 @@ const PROGRAMS = [
     color: "#991B1B",
     gradient: "from-red-700 to-red-900",
     offer: "2 Classes + Uniform",
-    price: "$29",
+    price: "FREE",
     free: false,
     kids: false,
     icon: Award,
@@ -46,7 +46,7 @@ const PROGRAMS = [
     color: "#065F46",
     gradient: "from-emerald-700 to-emerald-900",
     offer: "2 Classes + Uniform",
-    price: "$29",
+    price: "FREE",
     free: false,
     kids: false,
     icon: Award,
@@ -271,7 +271,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
               2 CLASSES
             </h2>
             <h2 className="text-[42px] font-black leading-[0.95] tracking-tight mb-4" style={{ color: "#FF3B3B" }}>
-              FOR $29
+              FOR FREE
             </h2>
             <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.15em] mb-6">
               Uniform Included · Limited Spots
@@ -318,7 +318,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
             </button>
             <div className="relative z-10 px-5 pb-4">
               <h2 className="text-3xl font-black text-white leading-tight tracking-tight">
-                2 CLASSES FOR <span style={{ color: "#FF3B3B" }}>$29</span>
+                FREE CLASS
               </h2>
               <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.15em] mt-1">
                 Uniform Included · Limited Spots
@@ -420,7 +420,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
                   <p className="text-gray-400 text-sm">
                     {selectedProgram.free
                       ? "Fill out your info and we'll get you scheduled."
-                      : "Fill out your info and you'll be redirected to secure $29 checkout."}
+                      : "Fill out your info and we'll contact you to confirm your free class."}
                   </p>
                 )}
               </div>
@@ -496,7 +496,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
                   ) : selectedProgram.free ? (
                     "Claim My Free Class"
                   ) : (
-                    "Claim My $29 Intro Offer"
+                    "Book My Free Class"
                   )}
                 </button>
 

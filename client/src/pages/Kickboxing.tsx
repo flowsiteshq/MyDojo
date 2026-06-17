@@ -16,7 +16,7 @@ export default function Kickboxing() {
     <div className="flex flex-col w-full">
       <SEO
         title="Kickboxing Classes in Tomball, TX"
-        description="High-energy kickboxing classes in Tomball, TX. Burn up to 800 calories in 45 minutes. Real martial arts techniques + cardio conditioning for all fitness levels. Try your first class for $29!"
+        description="High-energy kickboxing classes in Tomball, TX. Burn up to 800 calories in 45 minutes. Real martial arts techniques + cardio conditioning for all fitness levels. Book your free first class today!"
         canonical="/programs/kickboxing"
         keywords="kickboxing Tomball TX, kickboxing classes Tomball, cardio kickboxing near me, kickboxing near me Tomball, fitness kickboxing 77377"
       />
@@ -49,7 +49,7 @@ export default function Kickboxing() {
             <div className="flex flex-col sm:flex-row gap-4">
               <a href="https://checkout.dojo-flow.ai/b/4gM9AS1Evfwgfgn7rm9Zm00" target="_blank" rel="noopener noreferrer">
                 <Button className="bg-primary hover:bg-primary/90 text-white text-lg px-10 py-7 h-auto font-heading uppercase tracking-wider">
-                  Get Your $29 Trial
+                  Book Your Free Class
                 </Button>
               </a>
               <Button 
@@ -377,7 +377,7 @@ export default function Kickboxing() {
         </div>
       </section>
 
-      {/* $29 Trial Offer Section */}
+      {/* Free Class Offer Section */}
       <section className="py-20 bg-primary text-white">
         <div className="container mx-auto px-4 text-center">
           <motion.div
@@ -397,7 +397,7 @@ export default function Kickboxing() {
               <a href="/intro-offer?package=starter" className="group block w-full sm:w-auto">
                 <div className="relative bg-white/10 border-2 border-white/30 hover:border-white rounded-2xl p-8 text-center transition-all duration-300 hover:scale-105 hover:bg-white/20 min-w-[220px]">
                   <div className="text-4xl mb-3">🥋</div>
-                  <div className="text-5xl font-black mb-1">$29</div>
+                  <div className="text-5xl font-black mb-1">FREE</div>
                   <div className="text-xl font-bold mb-2">3 Classes</div>
                   <div className="text-white/70 text-sm">Starter Pack</div>
                   <div className="mt-4 bg-white text-primary font-black uppercase tracking-wider px-6 py-3 rounded-xl text-sm group-hover:bg-black group-hover:text-white transition-colors">
@@ -645,7 +645,7 @@ export default function Kickboxing() {
             </p>
             <a href="/intro-offer">
               <Button className="bg-white text-primary hover:bg-black hover:text-white text-xl px-12 py-8 h-auto font-heading uppercase tracking-wider shadow-2xl transform hover:scale-105 transition-all">
-                Get Intro Offer — From $29
+                Book Your Free Class
               </Button>
             </a>
             <p className="text-white/80 mt-6 text-lg">No experience necessary • All fitness levels welcome • Cancel anytime</p>

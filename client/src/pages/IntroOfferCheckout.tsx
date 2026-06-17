@@ -1,7 +1,7 @@
 /**
  * IntroOfferCheckout.tsx
- * First-time participant intro offer checkout using FluidPay tokenizer.
- * Packages: $29/3 classes (starter) | $49/5 classes (explorer)
+ * Free class booking checkout using FluidPay tokenizer.
+ * Handles paid intro class packages (starter/explorer)
  * URL: /intro-offer?package=starter|explorer
  */
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -511,7 +511,7 @@ export default function IntroOfferCheckout() {
           {step !== "success" && (
             <>
               <h1 className="text-white font-black text-3xl uppercase tracking-wider mb-1">
-                Special Intro Offer
+                Book Free Class
               </h1>
               <p className="text-white/50 text-sm">First-time participants only</p>
             </>

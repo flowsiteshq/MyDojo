@@ -32,8 +32,9 @@ const PROGRAMS: Record<string, Program[]> = {
       age: "Ages 3–5",
       tagline: "Big confidence starts here.",
       benefits: ["Builds confidence & focus", "Listening & social skills", "Fun, safe environment"],
-      offer: "2 Classes + Uniform",
-      price: "$29",
+      offer: "Free Class + Uniform",
+      price: null,
+      isFree: true,
       color: "from-purple-600 to-purple-900",
       icon: <Star className="w-5 h-5" />,
     },
@@ -43,8 +44,9 @@ const PROGRAMS: Record<string, Program[]> = {
       age: "Ages 6–12",
       tagline: "Strong today. Leader tomorrow.",
       benefits: ["Anti-bullying skills", "Discipline & respect", "Improved fitness"],
-      offer: "2 Classes + Uniform",
-      price: "$29",
+      offer: "Free Class + Uniform",
+      price: null,
+      isFree: true,
       color: "from-blue-600 to-blue-900",
       icon: <Shield className="w-5 h-5" />,
     },
@@ -56,8 +58,9 @@ const PROGRAMS: Record<string, Program[]> = {
       age: "Ages 13+",
       tagline: "Confidence. Focus. Strength.",
       benefits: ["Real self-defense skills", "Stress relief", "Build confidence"],
-      offer: "2 Classes + Uniform",
-      price: "$29",
+      offer: "Free Class + Uniform",
+      price: null,
+      isFree: true,
       color: "from-red-600 to-red-900",
       icon: <Award className="w-5 h-5" />,
     },
@@ -67,8 +70,9 @@ const PROGRAMS: Record<string, Program[]> = {
       age: "Adults",
       tagline: "Discipline meets transformation.",
       benefits: ["Traditional martial arts", "Mental clarity", "Physical conditioning"],
-      offer: "2 Classes + Uniform",
-      price: "$29",
+      offer: "Free Class + Uniform",
+      price: null,
+      isFree: true,
       color: "from-gray-600 to-gray-900",
       icon: <Zap className="w-5 h-5" />,
     },
@@ -92,8 +96,9 @@ const PROGRAMS: Record<string, Program[]> = {
       age: "Ages 6–12",
       tagline: "Strong today. Leader tomorrow.",
       benefits: ["Anti-bullying skills", "Discipline & respect", "Improved fitness"],
-      offer: "2 Classes + Uniform",
-      price: "$29",
+      offer: "Free Class + Uniform",
+      price: null,
+      isFree: true,
       color: "from-blue-600 to-blue-900",
       icon: <Shield className="w-5 h-5" />,
     },
@@ -103,8 +108,9 @@ const PROGRAMS: Record<string, Program[]> = {
       age: "Ages 13+",
       tagline: "Train together. Grow together.",
       benefits: ["Family bonding", "Shared goals", "Mutual accountability"],
-      offer: "2 Classes + Uniform",
-      price: "$29",
+      offer: "Free Class + Uniform",
+      price: null,
+      isFree: true,
       color: "from-red-600 to-red-900",
       icon: <Users className="w-5 h-5" />,
     },
@@ -267,7 +273,7 @@ export function ProgramFinderPopup({ isOpen, onClose }: ProgramFinderPopupProps)
     ? "Book My Free Class"
     : selectedProgram?.id === "summer-camp"
     ? "Claim 3-Day Pass for $49"
-    : "Claim 2 Classes for $29";
+    : "Book My Free Class";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backdropFilter: "blur(8px)", backgroundColor: "rgba(0,0,0,0.85)" }}>
@@ -433,8 +439,8 @@ export function ProgramFinderPopup({ isOpen, onClose }: ProgramFinderPopupProps)
                         <Clock className="w-8 h-8" />
                       </div>
                       <div>
-                        <div className="text-white font-black text-lg leading-none">2 CLASSES FOR ONLY <span className="text-red-500">$29</span></div>
-                        <div className="text-gray-400 text-xs mt-0.5">LIMITED INTRO SPOTS AVAILABLE</div>
+                        <div className="text-white font-black text-lg leading-none">BOOK YOUR <span className="text-red-500">FREE CLASS</span></div>
+                        <div className="text-gray-400 text-xs mt-0.5">LIMITED SPOTS AVAILABLE</div>
                       </div>
                     </div>
                     <div className="text-gray-400 text-xs text-right">

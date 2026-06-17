@@ -1,6 +1,6 @@
 /**
  * IntroOfferModal.tsx
- * $29 intro offer popup with program selection → Stripe checkout
+ * Free class booking popup with program selection
  * Programs: Little Ninjas, Kids Martial Arts, Teens & Adults, Adult Karate, Kickboxing (First Class Free)
  */
 import { useState } from "react";
@@ -48,7 +48,7 @@ const PROGRAMS: Program[] = [
     tagline: "Big Confidence Starts Here",
     color: "#7C3AED",
     bgGradient: "from-purple-700 to-purple-900",
-    offer: "2 Classes for $29 — Uniform Included!",
+    offer: "Free Class — Uniform Included!",
     benefits: ["Builds Confidence", "Improves Focus", "Listening Skills", "Fun & Engaging"],
     icon: "🥋",
   },
@@ -59,7 +59,7 @@ const PROGRAMS: Program[] = [
     tagline: "Strong Today. Leader Tomorrow.",
     color: "#1D4ED8",
     bgGradient: "from-blue-700 to-blue-900",
-    offer: "2 Classes for $29 — Uniform Included!",
+    offer: "Free Class — Uniform Included!",
     benefits: ["Builds Discipline", "Anti-Bullying Skills", "Improves Fitness", "Leadership & Respect"],
     icon: "🏆",
   },
@@ -70,7 +70,7 @@ const PROGRAMS: Program[] = [
     tagline: "Confidence. Focus. Strength.",
     color: "#B91C1C",
     bgGradient: "from-red-700 to-red-900",
-    offer: "2 Classes for $29 — Uniform Included!",
+    offer: "Free Class — Uniform Included!",
     benefits: ["Self-Defense Skills", "Stress Relief", "Improved Fitness", "Build Confidence"],
     icon: "⚡",
   },
@@ -81,7 +81,7 @@ const PROGRAMS: Program[] = [
     tagline: "Discipline. Power. Mastery.",
     color: "#1F2937",
     bgGradient: "from-gray-700 to-gray-900",
-    offer: "2 Classes for $29 — Uniform Included!",
+    offer: "Free Class — Uniform Included!",
     benefits: ["Traditional Karate", "Self-Defense", "Mental Discipline", "Physical Fitness"],
     icon: "🎯",
   },
@@ -180,7 +180,7 @@ export function IntroOfferModal({ open, onClose, defaultProgramId }: IntroOfferM
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="p-0 overflow-hidden max-w-2xl w-full border-0 shadow-2xl">
-        <DialogTitle className="sr-only">Claim Your Intro Offer</DialogTitle>
+        <DialogTitle className="sr-only">Book Your Free Class</DialogTitle>
 
         {/* Header */}
         <div className="bg-black text-white px-6 py-4 flex items-center justify-between">
@@ -284,7 +284,7 @@ export function IntroOfferModal({ open, onClose, defaultProgramId }: IntroOfferM
                     <p className="text-sm mt-1 font-semibold">
                       {selectedProgram.firstClassFree
                         ? "🎉 Your First Class is FREE!"
-                        : `🎯 2 Classes for $29 — Uniform Included!`}
+                        : `Free Class — Uniform Included!`}
                     </p>
                   </div>
                   <span className="text-4xl">{selectedProgram.icon}</span>
@@ -375,7 +375,7 @@ export function IntroOfferModal({ open, onClose, defaultProgramId }: IntroOfferM
                   ) : selectedProgram.firstClassFree ? (
                     "Claim Free Class →"
                   ) : (
-                    "Claim $29 Offer →"
+                    "Book Free Class →"
                   )}
                 </Button>
               </div>
@@ -398,7 +398,7 @@ export function IntroOfferModal({ open, onClose, defaultProgramId }: IntroOfferM
               <p className="text-gray-500 text-sm">
                 {checkoutMutation.data?.isFree
                   ? "Your free kickboxing class is confirmed! We'll be in touch to schedule your first session."
-                  : "A new tab has opened with your checkout. Complete your $29 payment there to confirm your spot!"}
+                  : "A new tab has opened with your checkout. We will contact you shortly to confirm your free class!"}
               </p>
               <Loader2 className="w-6 h-6 animate-spin text-gray-400 mx-auto mt-4" />
             </div>

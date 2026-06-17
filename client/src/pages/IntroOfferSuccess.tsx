@@ -1,6 +1,6 @@
 /**
  * IntroOfferSuccess.tsx
- * Shown after a successful $29 intro offer Stripe payment.
+ * Shown after a successful free class booking.
  * URL: /intro-offer-success?name=John&program=Little+Ninjas
  */
 import { useEffect } from "react";
@@ -44,8 +44,8 @@ export default function IntroOfferSuccess() {
             {firstName}! 🥋
           </h1>
           <p className="text-gray-400 text-lg mb-8">
-            Your <strong className="text-white">{program}</strong> intro offer is confirmed.
-            You're getting <strong className="text-white">2 classes + a uniform</strong> — all for just $29.
+            Your <strong className="text-white">{program}</strong> free class is confirmed.
+            Welcome to MyDojo — we can’t wait to see you on the mat!
           </p>
 
           {/* What's Next Card */}
