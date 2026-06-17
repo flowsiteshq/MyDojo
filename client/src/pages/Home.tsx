@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -70,7 +70,7 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 
 // ─── Hero Section ─────────────────────────────────────────────────────────────
 function HeroSection({ onBookClass }: { onBookClass: () => void }) {
-  const deadline = new Date("2025-07-25T23:59:59");
+  const deadline = useMemo(() => new Date("2026-07-25T23:59:59"), []);
   const timeLeft = useCountdown(deadline);
   const [currentSlide, setCurrentSlide] = useState(0);
   const slides = [HERO_IMG, HERO_IMG2, HERO_IMG3];
