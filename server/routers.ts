@@ -6964,7 +6964,7 @@ Please enter your card details below to complete your registration securely. Tot
     // ─── Billing Schedule Report ──────────────────────────────────────────────
     // Get full billing schedule for all active students (admin only)
     getBillingSchedule: protectedProcedure.query(async ({ ctx }) => {
-      if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin only' });
+      if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin/staff only' });
       const db = await getDb();
       if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
 
