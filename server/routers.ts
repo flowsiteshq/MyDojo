@@ -7008,9 +7008,10 @@ Please enter your card details below to complete your registration securely. Tot
         }
       } catch { /* FluidPay unavailable, continue with empty */ }
 
-      // Build lookup maps: subscription_id -> txs, customer_id -> txs
+      // Build lookup maps: subscription_id -> txs, customer_id -> txs, email -> txs
       const bySubId = new Map<string, FpTx[]>();
       const byCustomerId = new Map<string, FpTx[]>();
+      const byEmail = new Map<string, FpTx[]>();
       for (const tx of allTx) {
         if (tx.subscription_id) {
           if (!bySubId.has(tx.subscription_id)) bySubId.set(tx.subscription_id, []);
@@ -7019,6 +7020,13 @@ Please enter your card details below to complete your registration securely. Tot
         if (tx.customer_id) {
           if (!byCustomerId.has(tx.customer_id)) byCustomerId.set(tx.customer_id, []);
           byCustomerId.get(tx.customer_id)!.push(tx);
+        }
+        // Also index by billing email for fallback matching
+        const email = (tx.billing_address as any)?.email;
+        if (email) {
+          const key = email.toLowerCase().trim();
+          if (!byEmail.has(key)) byEmail.set(key, []);
+          byEmail.get(key)!.push(tx);
         }
       }
 
@@ -7047,10 +7055,13 @@ Please enter your card details below to complete your registration securely. Tot
       const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
       const results = enrollments.map(e => {
-        // Get transactions for this member
+        // Get transactions for this member — match by subscription ID, customer ID, or email
+        const emailKey = e.customerEmail ? e.customerEmail.toLowerCase().trim() : null;
         const txs: FpTx[] = [
           ...(e.fluidpaySubscriptionId ? (bySubId.get(e.fluidpaySubscriptionId) || []) : []),
           ...(e.fluidpayCustomerId ? (byCustomerId.get(e.fluidpayCustomerId) || []) : []),
+          // Fallback: match by billing email if no IDs found
+          ...(!e.fluidpaySubscriptionId && !e.fluidpayCustomerId && emailKey ? (byEmail.get(emailKey) || []) : []),
         ];
         // Deduplicate by tx id
         const seenIds = new Set<string>();
