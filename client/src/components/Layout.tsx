@@ -8,6 +8,7 @@ import { CookieBanner } from "@/components/CookieBanner";
 import { openIntakeChatbot } from "@/lib/chatbot";
 import { useLocationContext } from "@/contexts/LocationContext";
 import { NotificationSubscribe } from "@/components/NotificationSubscribe";
+import { PhoneChooser } from "@/components/PhoneChooser";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 
@@ -138,10 +139,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       )}>
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <span className="flex items-center gap-2">
+            <PhoneChooser className="flex items-center gap-2 hover:text-primary transition-colors">
               <Phone className="h-3 w-3 text-primary" />
               (877) 4-MYDOJO
-            </span>
+            </PhoneChooser>
             <Link href={closestLocation ? `/locations/${closestLocation.id}` : "/locations"} className="flex items-center gap-2 hover:text-primary transition-colors cursor-pointer">
               <MapPin className="h-3 w-3 text-primary" />
               {closestLocation ? `Find a Location in ${closestLocation.city}` : "Find a Location"}
@@ -658,8 +659,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <h4 className="font-heading text-lg font-bold mb-6 text-primary">Contact</h4>
               <ul className="space-y-4 text-gray-400">
                 <li className="flex items-start gap-3">
-                  <Phone className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                  <span>(877) 4-MYDOJO<br />(877) 469-3656</span>
+                  <PhoneChooser className="flex items-start gap-3 hover:text-white transition-colors">
+                    <Phone className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <span>(877) 4-MYDOJO<br />(877) 469-3656</span>
+                  </PhoneChooser>
                 </li>
                 <li className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />

@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { PhoneChooser } from "@/components/PhoneChooser";
 import { Phone, CheckCircle, Calendar, Clock, Shirt, Users } from "lucide-react";
 import { openIntakeChatbot } from "@/lib/chatbot";
 
@@ -170,16 +171,13 @@ export function MobileHome() {
 
       {/* ── 6. STICKY BOTTOM BAR ────────────────────────────────────────── */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-primary shadow-2xl px-4 py-3 flex items-center gap-3">
-        <a
-          href="tel:8774693656"
-          className="flex items-center gap-2 text-white flex-shrink-0"
-        >
+        <PhoneChooser className="flex items-center gap-2 text-white flex-shrink-0">
           <Phone className="h-5 w-5" />
           <div className="leading-none">
-            <p className="text-[10px] text-white/80 font-medium">Call Us</p>
+            <p className="text-[10px] text-white/80 font-medium">Call or Text</p>
             <p className="text-sm font-bold">(877) 469-3656</p>
           </div>
-        </a>
+        </PhoneChooser>
         <div className="w-px h-8 bg-white/30 mx-1" />
         <Link href="/summer-camp/enroll" className="flex-1">
           <button className="w-full bg-white text-primary font-heading font-black uppercase tracking-wider py-2.5 rounded-lg text-sm">
