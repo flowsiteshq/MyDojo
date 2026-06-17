@@ -4,10 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, Phone, MapPin, Instagram, Facebook, Youtube, User, ChevronDown, ChevronRight, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CookieBanner } from "@/components/CookieBanner";
-import { ProgramFinderPopup } from "@/components/ProgramFinderPopup";
-import { WebsiteVisitorPopup } from "@/components/WebsiteVisitorPopup";
-import OnlineSpecialPopup from "@/components/OnlineSpecialPopup";
-import BuddyDayExitPopup from "@/components/BuddyDayExitPopup";
+
 import { openIntakeChatbot } from "@/lib/chatbot";
 import { useLocationContext } from "@/contexts/LocationContext";
 import { NotificationSubscribe } from "@/components/NotificationSubscribe";
@@ -31,16 +28,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isSticky, setIsSticky] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProgramsOpen, setIsProgramsOpen] = useState(false);
-  const [showProgramFinder, setShowProgramFinder] = useState(false);
-  const [offerParam, setOfferParam] = useState<"kids" | "adults" | null>(null);
 
-  // Detect ?offer=kids or ?offer=adults URL param and auto-open the $29 popup
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const offer = params.get("offer");
-    if (offer === "kids") setOfferParam("kids");
-    else if (offer === "adults") setOfferParam("adults");
-  }, []);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const openPrograms = useCallback(() => {
@@ -88,17 +76,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const isHome = location === "/";
   const { closestLocation } = useLocationContext();
 
-  // Auto-show the program finder popup after 6 seconds on homepage
-  useEffect(() => {
-    if (!isHome) return;
-    const hasSeenPopup = sessionStorage.getItem('programFinderShown');
-    if (hasSeenPopup) return;
-    const timer = setTimeout(() => {
-      setShowProgramFinder(true);
-      sessionStorage.setItem('programFinderShown', '1');
-    }, 6000);
-    return () => clearTimeout(timer);
-  }, [isHome]);
+  // Auto-popup removed per user request
   const { isAuthenticated, user } = useAuth();
   const programsRef = useRef<HTMLDivElement>(null);
 
@@ -604,10 +582,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
       <CookieBanner />
-      <ProgramFinderPopup isOpen={showProgramFinder} onClose={() => setShowProgramFinder(false)} />
-      <WebsiteVisitorPopup />
-      <OnlineSpecialPopup forceOpen={!!offerParam} defaultProgram={offerParam} />
-      <BuddyDayExitPopup />
+      {/* Auto-popups removed per user request */}
 
       {/* Main Content */}
       <main className="flex-grow pt-0">
