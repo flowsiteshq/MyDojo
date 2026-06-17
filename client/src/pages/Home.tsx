@@ -148,8 +148,8 @@ function HeroSection({ onBookClass }: { onBookClass: () => void }) {
         </div>
       </div>
 
-      {/* Urgency card — floating bottom-right */}
-      <div className="absolute bottom-8 right-4 md:right-8 z-20 bg-black/90 backdrop-blur border border-[#e63946]/50 rounded-lg p-4 max-w-[220px] shadow-2xl">
+      {/* Urgency card — floating right, below nav */}
+      <div className="absolute top-28 md:top-32 right-4 md:right-8 z-20 bg-black/90 backdrop-blur border border-[#e63946]/50 rounded-lg p-4 max-w-[220px] shadow-2xl">
         <div className="text-center mb-3">
           <p className="text-white font-black text-sm uppercase tracking-wider">LIMITED SPOTS!</p>
           <p className="text-[#e63946] font-bold text-xs mt-1">100 New Members Before July 25</p>
