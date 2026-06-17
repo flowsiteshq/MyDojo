@@ -98,6 +98,24 @@ function HeroSection({ onBookClass }: { onBookClass: () => void }) {
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 pt-24 pb-16">
         <div className="max-w-3xl">
+          {/* Urgency badge — inline above eyebrow */}
+          <div className="inline-flex items-center gap-3 bg-black/70 backdrop-blur border border-[#e63946]/50 rounded-lg px-4 py-3 mb-5 shadow-xl">
+            <div className="text-center">
+              <p className="text-white font-black text-xs uppercase tracking-wider">LIMITED SPOTS!</p>
+              <p className="text-[#e63946] font-bold text-[10px] mt-0.5">100 New Members Before July 25</p>
+            </div>
+            <div className="w-px h-8 bg-white/20" />
+            <div className="flex items-center gap-1.5">
+              <CountdownUnit value={timeLeft.days} label="Days" />
+              <span className="text-white font-black text-base pb-3">:</span>
+              <CountdownUnit value={timeLeft.hours} label="Hrs" />
+              <span className="text-white font-black text-base pb-3">:</span>
+              <CountdownUnit value={timeLeft.minutes} label="Mins" />
+              <span className="text-white font-black text-base pb-3">:</span>
+              <CountdownUnit value={timeLeft.seconds} label="Secs" />
+            </div>
+          </div>
+
           {/* Eyebrow */}
           <p className="text-[#e63946] font-bold uppercase tracking-[0.25em] text-sm mb-4">
             Tomball's Favorite Martial Arts School
@@ -148,22 +166,7 @@ function HeroSection({ onBookClass }: { onBookClass: () => void }) {
         </div>
       </div>
 
-      {/* Urgency card — floating right, below nav */}
-      <div className="absolute top-28 md:top-32 right-4 md:right-8 z-20 bg-black/90 backdrop-blur border border-[#e63946]/50 rounded-lg p-4 max-w-[220px] shadow-2xl">
-        <div className="text-center mb-3">
-          <p className="text-white font-black text-sm uppercase tracking-wider">LIMITED SPOTS!</p>
-          <p className="text-[#e63946] font-bold text-xs mt-1">100 New Members Before July 25</p>
-        </div>
-        <div className="flex justify-between gap-2">
-          <CountdownUnit value={timeLeft.days} label="Days" />
-          <div className="text-white font-black text-xl self-center pb-3">:</div>
-          <CountdownUnit value={timeLeft.hours} label="Hrs" />
-          <div className="text-white font-black text-xl self-center pb-3">:</div>
-          <CountdownUnit value={timeLeft.minutes} label="Mins" />
-          <div className="text-white font-black text-xl self-center pb-3">:</div>
-          <CountdownUnit value={timeLeft.seconds} label="Secs" />
-        </div>
-      </div>
+
 
       {/* Slide dots */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
