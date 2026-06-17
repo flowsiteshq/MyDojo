@@ -1,582 +1,823 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Star, Shield, Zap, Users } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
-import { motion } from "framer-motion";
-import { TestimonialCarousel } from "@/components/TestimonialCarousel";
-import { RatingBadges } from "@/components/RatingBadges";
-import { FAQ } from "@/components/FAQ";
-import { MasonryGallery } from "@/components/MasonryGallery";
-import { HeroSlider } from "@/components/HeroSlider";
-import { BeltJourney } from "@/components/BeltJourney";
-import { ProgramFinder } from "@/components/ProgramFinder";
-import { SocialProofTicker } from "@/components/SocialProofTicker";
-import { IntroOfferModal } from "@/components/IntroOfferModal";
-import type { ProgramId } from "@/components/IntroOfferModal";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Phone, ChevronRight, Star, Shield, Award, Users, Zap, Heart,
+  Target, BookOpen, CheckCircle, ArrowRight, ChevronLeft, ChevronRight as ChevronRightIcon,
+  Clock, MapPin, Calendar
+} from "lucide-react";
+import { openIntakeChatbot } from "@/lib/chatbot";
+import { IntakeChatbot } from "@/components/IntakeChatbot";
 import SEO from "@/components/SEO";
 import SchemaMarkup from "@/components/SchemaMarkup";
-import { openIntakeChatbot } from "@/lib/chatbot";
-import { ChatGPTChatbot } from "@/components/ChatGPTChatbot";
-import { IntakeChatbot } from "@/components/IntakeChatbot";
-import { useState, useEffect } from "react";
 import { useVisitorSms } from "@/hooks/useVisitorSms";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { MobileHome } from "@/components/MobileHome";
+import { cn } from "@/lib/utils";
 
-export default function Home() {
-  // The userAuth hooks provides authentication state
-  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
-  // Fire immediate welcome SMS when visitor arrives via ad with ?phone= param
-  useVisitorSms({ page: "home" });
+// ─── Image constants ────────────────────────────────────────────────────────
+const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
+const HERO_IMG = `${CDN}/hero1_1d3d63d3.webp`;
+const HERO_IMG2 = `${CDN}/hero2_cef79f5f.webp`;
+const HERO_IMG3 = `${CDN}/hero3_6fed392b.webp`;
+const LITTLE_NINJAS_IMG = `${CDN}/little-ninjas_25d41024.webp`;
+const CORE_KIDS_IMG = `${CDN}/core-kids_baf3bc26.webp`;
+const TEENS_ADULTS_IMG = `${CDN}/teens-adults_e35f9895.webp`;
+const KICKBOXING_IMG = `${CDN}/kickboxing-bg_d4fcc4c5.webp`;
+const POPUP_CHILD = `${CDN}/popup-card-child-bLGQWmY93vixcyFEBo3Jf9.webp`;
+const POPUP_FAMILY = `${CDN}/popup-card-family-AsxQoWfuzLKSK4vLwUoDoW.webp`;
+const POPUP_MYSELF = `${CDN}/popup-card-myself-Q28shwqFCizjLa57ncRJDq.webp`;
+const POPUP_TEEN = `${CDN}/popup-card-summer-camp-Ny6vLhvcXXKGLB6qNNbyUC.webp`;
+const TRAINING_FLOOR = `${CDN}/tomball-training-floor_9a2c684b.jpg`;
+const MAIN_FLOOR = `${CDN}/tomball-main-floor_284d59f6.jpg`;
 
-  const [showChatGPT, setShowChatGPT] = useState(false);
-  const [showIntakeBot, setShowIntakeBot] = useState(false);
-  const [useLegacyBot, setUseLegacyBot] = useState(false);
-  const [offerModalOpen, setOfferModalOpen] = useState(false);
-  const [offerProgramId, setOfferProgramId] = useState<ProgramId | undefined>();
-  const [testimonialIdx, setTestimonialIdx] = useState(0);
-
-  const HOME_TESTIMONIALS = [
-    { name: "Sarah Jenkins",    role: "Parent of Little Ninja",     text: "MyDojo has been transformative for my son. He used to be so shy, but after just 3 months his confidence has skyrocketed. The instructors are incredibly patient and encouraging.",   avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/HONlObwBdLAnGGRP.jpg",  initials: "SJ" },
-    { name: "Michael Chen",     role: "Adult Kickboxing Member",    text: "The adult kickboxing classes are intense, fun, and a great stress reliever. I've lost 15 pounds and feel stronger than ever. Best workout I've ever found!",                      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/uMNMXRfxfSZQbfbK.jpg",  initials: "MC" },
-    { name: "Jessica Williams", role: "Teen Program Student",       text: "The teen program isn't just about fighting — it's about discipline and respect. I've made great friends here and learned self-defense skills that make me feel empowered.",          avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/POUQPzFzOxDdiDNV.jpg",  initials: "JW" },
-    { name: "David Rodriguez",  role: "Parent of Core Kid",         text: "We tried soccer and baseball, but nothing stuck until MyDojo. The structure and focus required in class have helped my daughter improve her grades at school too. Highly recommend!", avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/ISYgyHwTaHvYSOvQ.jpg",  initials: "DR" },
-    { name: "Amanda Torres",    role: "Parent — Summer Camp 2025",  text: "Best summer decision we made. The perfect mix of fun, fitness and martial arts. My kids talk about camp all year long. The instructors are incredible role models!",            avatar: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/testimonial-amanda_e12fc346.jpg", initials: "AT" },
-  ];
-
-  const openOffer = (programId?: ProgramId) => {
-    setOfferProgramId(programId);
-    setOfferModalOpen(true);
-  };
-
-  // Check for legacy bot flag in URL (?bot=legacy)
-  // Check for enroll parameter to open intake chatbot
+// ─── Countdown Timer ─────────────────────────────────────────────────────────
+function useCountdown(targetDate: Date) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('bot') === 'legacy') {
-      setUseLegacyBot(true);
-    }
-    if (params.get('enroll') === 'true') {
-      setShowIntakeBot(true);
-      // Clean up URL parameter
-      window.history.replaceState({}, '', '/');
-    }
+    const calc = () => {
+      const diff = targetDate.getTime() - Date.now();
+      if (diff <= 0) return setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      setTimeLeft({
+        days: Math.floor(diff / 86400000),
+        hours: Math.floor((diff % 86400000) / 3600000),
+        minutes: Math.floor((diff % 3600000) / 60000),
+        seconds: Math.floor((diff % 60000) / 1000),
+      });
+    };
+    calc();
+    const id = setInterval(calc, 1000);
+    return () => clearInterval(id);
+  }, [targetDate]);
+  return timeLeft;
+}
+
+function CountdownUnit({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="flex flex-col items-center">
+      <span className="text-2xl font-black text-white leading-none tabular-nums">
+        {String(value).padStart(2, "0")}
+      </span>
+      <span className="text-[9px] uppercase tracking-widest text-gray-300 mt-0.5">{label}</span>
+    </div>
+  );
+}
+
+// ─── Hero Section ─────────────────────────────────────────────────────────────
+function HeroSection({ onBookClass }: { onBookClass: () => void }) {
+  const deadline = new Date("2025-07-25T23:59:59");
+  const timeLeft = useCountdown(deadline);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slides = [HERO_IMG, HERO_IMG2, HERO_IMG3];
+
+  useEffect(() => {
+    const id = setInterval(() => setCurrentSlide(i => (i + 1) % slides.length), 5000);
+    return () => clearInterval(id);
   }, []);
 
-  const fadeIn = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.6 }
-  };
+  return (
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-black">
+      {/* Background images with crossfade */}
+      {slides.map((src, i) => (
+        <div
+          key={i}
+          className="absolute inset-0 transition-opacity duration-1000"
+          style={{ opacity: i === currentSlide ? 1 : 0 }}
+        >
+          <img src={src} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+        </div>
+      ))}
 
-  const staggerContainer = {
-    animate: {
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
+      {/* Content */}
+      <div className="relative z-10 container mx-auto px-4 pt-24 pb-16">
+        <div className="max-w-3xl">
+          {/* Eyebrow */}
+          <p className="text-[#e63946] font-bold uppercase tracking-[0.25em] text-sm mb-4">
+            Tomball's Favorite Martial Arts School
+          </p>
+
+          {/* Headline */}
+          <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.0] mb-2 uppercase tracking-tight">
+            BUILD CONFIDENCE.
+          </h1>
+          <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.0] mb-2 uppercase tracking-tight">
+            LEARN SELF DEFENSE.
+          </h1>
+          <h1 className="text-5xl md:text-7xl font-black text-[#e63946] leading-[1.0] mb-6 uppercase tracking-tight">
+            HAVE FUN.
+          </h1>
+
+          {/* Feature badges */}
+          <div className="flex flex-wrap gap-3 mb-8">
+            {[
+              { icon: "🥋", label: "Ages 3+" },
+              { icon: "🥊", label: "Teens & Adults" },
+              { icon: "🥊", label: "Kickboxing" },
+            ].map(b => (
+              <div key={b.label} className="flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
+                <span>{b.icon}</span>
+                <span className="text-white font-semibold text-sm">{b.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <button
+              onClick={onBookClass}
+              className="group flex items-center justify-center gap-2 bg-[#e63946] hover:bg-[#c1121f] text-white font-black uppercase tracking-wider text-lg px-8 py-4 rounded-sm transition-all duration-200 shadow-[0_0_30px_rgba(230,57,70,0.4)]"
+            >
+              BOOK YOUR FREE CLASS
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+            <a
+              href="tel:+12816971003"
+              className="flex items-center justify-center gap-2 border-2 border-white/50 hover:border-white text-white font-bold uppercase tracking-wider text-base px-6 py-4 rounded-sm transition-all duration-200 hover:bg-white/10"
+            >
+              <Phone className="h-4 w-4" />
+              (281) 697-1003
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Urgency card — floating bottom-right */}
+      <div className="absolute bottom-8 right-4 md:right-8 z-20 bg-black/90 backdrop-blur border border-[#e63946]/50 rounded-lg p-4 max-w-[220px] shadow-2xl">
+        <div className="text-center mb-3">
+          <p className="text-white font-black text-sm uppercase tracking-wider">LIMITED SPOTS!</p>
+          <p className="text-[#e63946] font-bold text-xs mt-1">100 New Members Before July 25</p>
+        </div>
+        <div className="flex justify-between gap-2">
+          <CountdownUnit value={timeLeft.days} label="Days" />
+          <div className="text-white font-black text-xl self-center pb-3">:</div>
+          <CountdownUnit value={timeLeft.hours} label="Hrs" />
+          <div className="text-white font-black text-xl self-center pb-3">:</div>
+          <CountdownUnit value={timeLeft.minutes} label="Mins" />
+          <div className="text-white font-black text-xl self-center pb-3">:</div>
+          <CountdownUnit value={timeLeft.seconds} label="Secs" />
+        </div>
+      </div>
+
+      {/* Slide dots */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        {slides.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrentSlide(i)}
+            className={cn("w-2 h-2 rounded-full transition-all", i === currentSlide ? "bg-[#e63946] w-6" : "bg-white/40")}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── Enrollment Cards ─────────────────────────────────────────────────────────
+function EnrollmentSection({ onBookClass }: { onBookClass: () => void }) {
+  const cards = [
+    {
+      id: "child",
+      title: "My Child",
+      ages: "Ages 3-12",
+      img: POPUP_CHILD,
+      desc: "Build confidence, focus, and discipline for life.",
+    },
+    {
+      id: "teen",
+      title: "Teen",
+      ages: "Ages 13-17",
+      img: POPUP_TEEN,
+      desc: "Develop leadership, respect, and self-defense skills.",
+    },
+    {
+      id: "myself",
+      title: "Myself",
+      ages: "Adults 18+",
+      img: POPUP_MYSELF,
+      desc: "Get fit, learn self-defense, and feel unstoppable.",
+    },
+    {
+      id: "family",
+      title: "Family",
+      ages: "Multiple Members",
+      img: POPUP_FAMILY,
+      desc: "Train together, grow together, succeed together.",
+    },
+  ];
+
+  return (
+    <section className="py-16 bg-white">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-5xl font-black text-black uppercase tracking-tight">
+            WHO ARE <span className="text-[#e63946]">YOU</span> ENROLLING?
+          </h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {cards.map(card => (
+            <div
+              key={card.id}
+              className="group relative bg-white border-2 border-gray-100 hover:border-[#e63946] rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer"
+              onClick={onBookClass}
+            >
+              <div className="relative h-48 md:h-56 overflow-hidden">
+                <img
+                  src={card.img}
+                  alt={card.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              </div>
+              <div className="p-4">
+                <h3 className="font-black text-lg text-black uppercase">{card.title}</h3>
+                <p className="text-xs text-gray-500 font-medium mb-2">{card.ages}</p>
+                <p className="text-sm text-gray-600 mb-4 leading-snug">{card.desc}</p>
+                <button
+                  className="w-full flex items-center justify-center gap-2 bg-[#e63946] hover:bg-[#c1121f] text-white font-bold uppercase text-sm py-2.5 rounded transition-colors"
+                >
+                  SELECT <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── What Your Child Will Learn ───────────────────────────────────────────────
+function WhatTheyLearnSection({ onBookClass }: { onBookClass: () => void }) {
+  const values = [
+    { icon: "🏆", label: "Confidence" },
+    { icon: "🤝", label: "Respect" },
+    { icon: "🎯", label: "Focus" },
+    { icon: "⚡", label: "Discipline" },
+    { icon: "🛡️", label: "Anti-Bullying" },
+    { icon: "💪", label: "Fitness" },
+  ];
+
+  return (
+    <section className="relative py-20 overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0">
+        <img src={TRAINING_FLOOR} alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-black/80" />
+      </div>
+      <div className="relative z-10 container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
+            WHAT YOUR CHILD <span className="text-[#e63946]">WILL LEARN</span>
+          </h2>
+        </div>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-4 mb-12">
+          {values.map(v => (
+            <div key={v.label} className="flex flex-col items-center gap-3 group">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-3xl md:text-4xl group-hover:bg-[#e63946]/20 group-hover:border-[#e63946] transition-all duration-300">
+                {v.icon}
+              </div>
+              <p className="text-white font-bold text-xs md:text-sm uppercase tracking-wider text-center">{v.label}</p>
+            </div>
+          ))}
+        </div>
+        <div className="text-center">
+          <button
+            onClick={onBookClass}
+            className="inline-flex items-center gap-2 bg-[#e63946] hover:bg-[#c1121f] text-white font-black uppercase tracking-wider text-lg px-10 py-4 rounded-sm transition-all duration-200"
+          >
+            BOOK FREE CLASS <ArrowRight className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Summer Special Banner ────────────────────────────────────────────────────
+function SummerSpecialSection({ onBookClass }: { onBookClass: () => void }) {
+  return (
+    <section className="py-0 bg-black overflow-hidden">
+      <div className="relative">
+        {/* Gold/Red gradient bar */}
+        <div className="bg-gradient-to-r from-[#e63946] via-[#c1121f] to-[#e63946] py-3 text-center">
+          <p className="text-white font-black uppercase tracking-[0.3em] text-sm">
+            🌟 SUMMER SPECIAL — LIMITED TIME OFFER 🌟
+          </p>
+        </div>
+
+        <div className="container mx-auto px-4 py-16">
+          <div className="flex flex-col lg:flex-row items-center gap-12">
+            {/* Left: Summer Special badge */}
+            <div className="flex-shrink-0 text-center">
+              <div className="relative inline-block">
+                <div className="w-48 h-48 rounded-full bg-gradient-to-br from-[#FFD700] to-[#FFA500] flex flex-col items-center justify-center shadow-[0_0_60px_rgba(255,215,0,0.4)]">
+                  <span className="text-black font-black text-2xl uppercase leading-tight">SUMMER</span>
+                  <span className="text-black font-black text-3xl uppercase leading-tight">SPECIAL</span>
+                  <span className="text-black text-xs font-bold mt-1">2025</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Middle: Offers */}
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { label: "FREE", item: "Uniform", value: "$60 VALUE", icon: "🥋" },
+                { label: "FREE", item: "Beginner Class", value: "$49 VALUE", icon: "📅" },
+                { label: "FREE", item: "Confidence Assessment", value: "$49 VALUE", icon: "✅" },
+              ].map(offer => (
+                <div key={offer.item} className="text-center border border-[#FFD700]/30 rounded-xl p-6 bg-white/5">
+                  <div className="text-4xl mb-3">{offer.icon}</div>
+                  <p className="text-[#FFD700] font-black text-2xl uppercase">{offer.label}</p>
+                  <p className="text-white font-bold text-lg uppercase leading-tight">{offer.item}</p>
+                  <p className="text-gray-400 text-sm mt-1">{offer.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Right: Urgency + CTA */}
+            <div className="flex-shrink-0 text-center bg-white rounded-xl p-8 shadow-2xl">
+              <p className="text-black font-black text-lg uppercase">ONLY</p>
+              <p className="text-[#e63946] font-black text-6xl leading-none">25</p>
+              <p className="text-black font-bold text-sm uppercase mb-4">SUMMER SPOTS<br />REMAINING!</p>
+              <button
+                onClick={onBookClass}
+                className="flex items-center gap-2 bg-[#FFD700] hover:bg-[#FFC000] text-black font-black uppercase tracking-wider px-6 py-3 rounded-sm transition-colors"
+              >
+                BOOK TODAY <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Social Proof / Testimonials ──────────────────────────────────────────────
+function TestimonialsSection({ onBookClass }: { onBookClass: () => void }) {
+  const [idx, setIdx] = useState(0);
+  const testimonials = [
+    {
+      name: "Jessica M.",
+      role: "Parent",
+      text: "My son has more confidence and focus than ever before. The instructors truly care!",
+      stars: 5,
+      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/HONlObwBdLAnGGRP.jpg",
+    },
+    {
+      name: "Michael T.",
+      role: "Parent",
+      text: "The best decision we made for our daughter. She loves every class and has learned so much!",
+      stars: 5,
+      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/uMNMXRfxfSZQbfbK.jpg",
+    },
+    {
+      name: "Sarah K.",
+      role: "Parent",
+      text: "Clean facility, amazing staff, and a positive environment. Highly recommend!",
+      stars: 5,
+      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/POUQPzFzOxDdiDNV.jpg",
+    },
+    {
+      name: "David R.",
+      role: "Parent",
+      text: "Nothing stuck until MyDojo. The structure has helped my daughter improve her grades too!",
+      stars: 5,
+      avatar: "https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/ISYgyHwTaHvYSOvQ.jpg",
+    },
+    {
+      name: "Amanda T.",
+      role: "Parent — Summer Camp",
+      text: "Best summer decision we made. My kids talk about camp all year long!",
+      stars: 5,
+      avatar: `${CDN}/testimonial-amanda_e12fc346.jpg`,
+    },
+  ];
+
+  const prev = () => setIdx(i => (i - 1 + testimonials.length) % testimonials.length);
+  const next = () => setIdx(i => (i + 1) % testimonials.length);
+
+  // Show 3 at a time on desktop
+  const visible = [0, 1, 2].map(offset => testimonials[(idx + offset) % testimonials.length]);
+
+  return (
+    <section className="py-20 bg-white">
+      <div className="container mx-auto px-4">
+        {/* Header */}
+        <div className="text-center mb-4">
+          <div className="flex items-center justify-center gap-1 mb-3">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="h-6 w-6 fill-[#FFD700] text-[#FFD700]" />
+            ))}
+            <span className="ml-2 text-2xl font-black text-black">5.0</span>
+          </div>
+          <h2 className="text-3xl md:text-5xl font-black text-black uppercase tracking-tight">
+            SEE WHY FAMILIES <span className="text-[#e63946]">LOVE</span> MYDOJO
+          </h2>
+          <p className="text-gray-500 mt-2">500+ five-star reviews on Google & Facebook</p>
+        </div>
+
+        {/* Testimonial cards */}
+        <div className="relative mt-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {visible.map((t, i) => (
+              <div key={i} className="bg-gray-50 rounded-xl p-6 border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-1 mb-3">
+                  {[...Array(t.stars)].map((_, j) => (
+                    <Star key={j} className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                  ))}
+                </div>
+                <p className="text-gray-700 text-sm leading-relaxed mb-4">"{t.text}"</p>
+                <div className="flex items-center gap-3">
+                  <img
+                    src={t.avatar}
+                    alt={t.name}
+                    className="w-10 h-10 rounded-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${t.name}&background=e63946&color=fff`; }}
+                  />
+                  <div>
+                    <p className="font-bold text-sm text-black">– {t.name}</p>
+                    <p className="text-xs text-gray-500">{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div className="flex items-center justify-center gap-4 mt-8">
+            <button onClick={prev} className="w-10 h-10 rounded-full border-2 border-gray-300 hover:border-[#e63946] flex items-center justify-center transition-colors">
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <div className="flex gap-2">
+              {testimonials.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setIdx(i)}
+                  className={cn("w-2 h-2 rounded-full transition-all", i === idx ? "bg-[#e63946] w-6" : "bg-gray-300")}
+                />
+              ))}
+            </div>
+            <button onClick={next} className="w-10 h-10 rounded-full border-2 border-gray-300 hover:border-[#e63946] flex items-center justify-center transition-colors">
+              <ChevronRightIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Why MyDojo ───────────────────────────────────────────────────────────────
+function WhyMyDojoSection() {
+  const reasons = [
+    { icon: <Shield className="h-6 w-6" />, title: "Safe Facility", desc: "Clean, family-friendly environment with certified instructors." },
+    { icon: <Award className="h-6 w-6" />, title: "Experienced Instructors", desc: "Decades of combined martial arts expertise and teaching experience." },
+    { icon: <Heart className="h-6 w-6" />, title: "Character Development", desc: "We build confident, respectful, and disciplined young leaders." },
+    { icon: <BookOpen className="h-6 w-6" />, title: "Structured Curriculum", desc: "Progressive belt system with clear goals and achievements." },
+    { icon: <Zap className="h-6 w-6" />, title: "Fitness & Health", desc: "Full-body workouts that improve strength, flexibility, and cardio." },
+    { icon: <Target className="h-6 w-6" />, title: "Leadership Training", desc: "Programs designed to develop tomorrow's leaders today." },
+    { icon: <Users className="h-6 w-6" />, title: "Family Environment", desc: "A welcoming community where every member feels at home." },
+    { icon: <CheckCircle className="h-6 w-6" />, title: "Anti-Bullying Focus", desc: "Practical tools to handle conflict with confidence and calm." },
+  ];
+
+  return (
+    <section className="py-20 bg-gray-950">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
+            WHY CHOOSE <span className="text-[#e63946]">MYDOJO?</span>
+          </h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {reasons.map(r => (
+            <div key={r.title} className="group p-6 rounded-xl bg-white/5 border border-white/10 hover:border-[#e63946]/50 hover:bg-white/10 transition-all duration-300">
+              <div className="text-[#e63946] mb-3 group-hover:scale-110 transition-transform">{r.icon}</div>
+              <h3 className="text-white font-bold text-sm uppercase tracking-wide mb-2">{r.title}</h3>
+              <p className="text-gray-400 text-xs leading-relaxed">{r.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Programs Section ─────────────────────────────────────────────────────────
+function ProgramsSection({ onBookClass }: { onBookClass: () => void }) {
+  const programs = [
+    {
+      title: "Little Ninjas",
+      ages: "Ages 3–5",
+      img: LITTLE_NINJAS_IMG,
+      benefits: ["Listening skills", "Balance & coordination", "Social development", "Fun & safe environment"],
+      href: "/programs#little-ninjas",
+    },
+    {
+      title: "Kids Martial Arts",
+      ages: "Ages 5–12",
+      img: CORE_KIDS_IMG,
+      benefits: ["Self-discipline", "Anti-bullying", "Confidence building", "Belt progression"],
+      href: "/programs#dragon-kids",
+    },
+    {
+      title: "Teens & Adults",
+      ages: "Ages 13+",
+      img: TEENS_ADULTS_IMG,
+      benefits: ["Self-defense", "Leadership skills", "Stress relief", "Physical fitness"],
+      href: "/programs#teens-adults",
+    },
+    {
+      title: "Kickboxing",
+      ages: "All Ages",
+      img: KICKBOXING_IMG,
+      benefits: ["Burn 800+ calories", "Full-body workout", "Real techniques", "High energy classes"],
+      href: "/programs#kickboxing",
+    },
+  ];
+
+  return (
+    <section className="py-20 bg-black">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <p className="text-[#e63946] font-bold uppercase tracking-[0.25em] text-sm mb-2">Explore All Programs</p>
+          <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
+            CHOOSE YOUR DISCIPLINE
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {programs.map(p => (
+            <div key={p.title} className="group relative overflow-hidden rounded-xl bg-zinc-900 flex flex-col">
+              <div className="relative h-56 overflow-hidden">
+                <img
+                  src={p.img}
+                  alt={p.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80 group-hover:opacity-100"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
+                <div className="absolute bottom-4 left-4">
+                  <h3 className="text-white font-black text-xl uppercase">{p.title}</h3>
+                  <p className="text-gray-300 text-xs uppercase tracking-wider">{p.ages}</p>
+                </div>
+              </div>
+              <div className="p-5 flex flex-col flex-1">
+                <ul className="space-y-1.5 mb-5 flex-1">
+                  {p.benefits.map(b => (
+                    <li key={b} className="flex items-center gap-2 text-gray-300 text-sm">
+                      <CheckCircle className="h-3.5 w-3.5 text-[#e63946] shrink-0" />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={onBookClass}
+                  className="w-full flex items-center justify-center gap-2 bg-[#e63946] hover:bg-[#c1121f] text-white font-bold uppercase text-sm py-3 rounded transition-colors"
+                >
+                  BOOK FREE CLASS <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Schedule Section ─────────────────────────────────────────────────────────
+function ScheduleSection({ onBookClass }: { onBookClass: () => void }) {
+  const schedule = [
+    { day: "Monday", classes: ["Little Ninjas 4:00 PM", "Core Kids 5:00 PM", "Teens/Adults 6:00 PM", "Kickboxing 7:00 PM"] },
+    { day: "Tuesday", classes: ["Core Kids 4:30 PM", "Teens/Adults 5:30 PM", "Kickboxing 6:30 PM"] },
+    { day: "Wednesday", classes: ["Little Ninjas 4:00 PM", "Core Kids 5:00 PM", "Teens/Adults 6:00 PM", "Kickboxing 7:00 PM"] },
+    { day: "Thursday", classes: ["Core Kids 4:30 PM", "Teens/Adults 5:30 PM", "Kickboxing 6:30 PM"] },
+    { day: "Friday", classes: ["Core Kids 4:30 PM", "Teens/Adults 5:30 PM"] },
+    { day: "Saturday", classes: ["Little Ninjas 10:00 AM", "Core Kids 11:00 AM", "Teens/Adults 12:00 PM"] },
+  ];
+
+  return (
+    <section className="py-20 bg-white">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-5xl font-black text-black uppercase tracking-tight">
+            CLASS <span className="text-[#e63946]">SCHEDULE</span>
+          </h2>
+          <p className="text-gray-500 mt-2">Tomball HQ — 23511 FM 2920, Tomball, TX 77377</p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
+          {schedule.map(s => (
+            <div key={s.day} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <h3 className="font-black text-sm uppercase text-[#e63946] mb-3 pb-2 border-b border-gray-200">{s.day}</h3>
+              <ul className="space-y-1.5">
+                {s.classes.map(c => (
+                  <li key={c} className="text-xs text-gray-700 flex items-start gap-1.5">
+                    <Clock className="h-3 w-3 text-gray-400 mt-0.5 shrink-0" />
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="text-center">
+          <Link href="/schedule">
+            <button className="inline-flex items-center gap-2 border-2 border-black hover:bg-black hover:text-white text-black font-bold uppercase tracking-wider px-8 py-3 rounded-sm transition-all duration-200 mr-4">
+              VIEW FULL SCHEDULE
+            </button>
+          </Link>
+          <button
+            onClick={onBookClass}
+            className="inline-flex items-center gap-2 bg-[#e63946] hover:bg-[#c1121f] text-white font-black uppercase tracking-wider px-8 py-3 rounded-sm transition-all duration-200"
+          >
+            BOOK FREE CLASS <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── FAQ Section ─────────────────────────────────────────────────────────────
+function FAQSection() {
+  const faqs = [
+    { q: "What should my child wear?", a: "For the first class, comfortable workout clothes (t-shirt and sweatpants/shorts) are perfect. We train barefoot on the mats. If you decide to join, we'll help you get a proper uniform." },
+    { q: "How old does my child need to be?", a: "Our Little Ninjas program starts at age 3! We have programs for every age group from 3 to adults." },
+    { q: "What styles of martial arts do you teach?", a: "We teach a blend of traditional Karate, Kickboxing, and practical self-defense techniques — all adapted for the student's age and level." },
+    { q: "Do I need experience to start?", a: "Absolutely not! All our programs are designed for complete beginners. Our instructors will guide you every step of the way." },
+    { q: "How often should I attend classes?", a: "We recommend 2–3 classes per week for the best results. Consistency is key to progress in martial arts." },
+    { q: "How much do classes cost?", a: "We offer flexible membership options. The best way to find out is to come in for a FREE trial class — no pressure, no commitment." },
+  ];
+
+  return (
+    <section className="py-20 bg-gray-50">
+      <div className="container mx-auto px-4 max-w-3xl">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl md:text-5xl font-black text-black uppercase tracking-tight">
+            FREQUENTLY ASKED <span className="text-[#e63946]">QUESTIONS</span>
+          </h2>
+        </div>
+        <Accordion type="single" collapsible className="space-y-3">
+          {faqs.map((faq, i) => (
+            <AccordionItem key={i} value={`faq-${i}`} className="bg-white border border-gray-200 rounded-xl px-6 shadow-sm">
+              <AccordionTrigger className="font-bold text-sm uppercase tracking-wide text-black hover:text-[#e63946] hover:no-underline py-5">
+                {faq.q}
+              </AccordionTrigger>
+              <AccordionContent className="text-gray-600 text-sm leading-relaxed pb-5">
+                {faq.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
+    </section>
+  );
+}
+
+// ─── Footer CTA ───────────────────────────────────────────────────────────────
+function FinalCTASection({ onBookClass }: { onBookClass: () => void }) {
+  return (
+    <section className="relative py-20 bg-[#e63946] overflow-hidden">
+      <div className="absolute inset-0 bg-[url('/images/logo-icon-white.99cb4daa.webp')] bg-center bg-no-repeat opacity-5 bg-[length:600px]" />
+      <div className="relative z-10 container mx-auto px-4">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+          <div>
+            <h2 className="text-4xl md:text-6xl font-black text-white uppercase leading-tight">
+              DON'T WAIT.<br />
+              <span className="text-black">SPOTS ARE FILLING FAST!</span>
+            </h2>
+            <p className="text-white/90 text-lg mt-4">
+              Helping 100 new members start their martial arts journey before July 25.
+            </p>
+          </div>
+          <div className="flex flex-col items-center gap-4">
+            <button
+              onClick={onBookClass}
+              className="flex items-center gap-3 bg-white hover:bg-gray-100 text-[#e63946] font-black uppercase tracking-wider text-xl px-10 py-5 rounded-sm transition-all duration-200 shadow-2xl"
+            >
+              BOOK YOUR FREE CLASS <ArrowRight className="h-6 w-6" />
+            </button>
+            <a href="tel:+12816971003" className="text-white/80 hover:text-white text-sm font-medium flex items-center gap-2">
+              <Phone className="h-4 w-4" /> Or call (281) 697-1003
+            </a>
+          </div>
+
+          {/* 100 Members badge */}
+          <div className="flex-shrink-0">
+            <div className="w-32 h-32 rounded-full bg-black/20 border-4 border-white/30 flex flex-col items-center justify-center text-center p-3">
+              <span className="text-white font-black text-3xl leading-none">100</span>
+              <span className="text-white text-[9px] uppercase font-bold leading-tight mt-1">NEW MEMBERS<br />BY JULY 25TH<br />CHALLENGE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Sticky Mobile CTA ────────────────────────────────────────────────────────
+function StickyMobileCTA({ onBookClass }: { onBookClass: () => void }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const handler = () => setVisible(window.scrollY > 400);
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
+
+  return (
+    <div className={cn(
+      "fixed bottom-0 left-0 right-0 z-50 md:hidden transition-transform duration-300",
+      visible ? "translate-y-0" : "translate-y-full"
+    )}>
+      <div className="flex">
+        <a
+          href="tel:+12816971003"
+          className="flex-1 flex items-center justify-center gap-2 bg-black text-white font-bold uppercase text-sm py-4"
+        >
+          <Phone className="h-4 w-4" /> CALL NOW
+        </a>
+        <button
+          onClick={onBookClass}
+          className="flex-2 flex-[2] flex items-center justify-center gap-2 bg-[#e63946] text-white font-black uppercase text-sm py-4"
+        >
+          BOOK FREE CLASS <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Floating Phone Button ────────────────────────────────────────────────────
+function FloatingPhone() {
+  return (
+    <a
+      href="tel:+12816971003"
+      className="hidden md:flex fixed bottom-8 right-8 z-50 w-14 h-14 rounded-full bg-[#e63946] shadow-[0_4px_20px_rgba(230,57,70,0.5)] items-center justify-center hover:scale-110 transition-transform"
+      title="Call MyDojo"
+    >
+      <Phone className="h-6 w-6 text-white" />
+    </a>
+  );
+}
+
+// ─── Info Bar ─────────────────────────────────────────────────────────────────
+function InfoBar() {
+  return (
+    <div className="bg-black border-b border-white/10 py-2 hidden md:block">
+      <div className="container mx-auto px-4 flex items-center justify-between text-xs text-gray-400">
+        <div className="flex items-center gap-6">
+          <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3 text-[#e63946]" /> 23511 FM 2920, Tomball, TX 77377</span>
+          <span className="flex items-center gap-1.5"><Clock className="h-3 w-3 text-[#e63946]" /> Mon–Sat Classes Available</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Phone className="h-3 w-3 text-[#e63946]" />
+          <a href="tel:+12816971003" className="hover:text-white transition-colors">(281) 697-1003</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+export default function Home() {
+  const [showIntakeBot, setShowIntakeBot] = useState(false);
+  useVisitorSms({ page: "home" });
+
+  const handleBookClass = () => {
+    openIntakeChatbot();
   };
 
   return (
-    <div className="flex flex-col w-full overflow-x-hidden">
-      <SEO 
-        title="MyDojo Martial Arts & Fitness - Transform Your Life Through Martial Arts"
-        description="Premier martial arts training in Tomball, Texas. Programs for all ages: Little Ninjas (3-5), Dragon Kids (5-12), Teens, and Adults. Expert instructors, proven results. Start your free trial today!"
-        keywords="martial arts Tomball, karate classes Tomball TX, kickboxing Tomball, kids martial arts, children's karate, self defense classes, fitness martial arts, Little Ninjas, after school program, martial arts near me, best martial arts school Tomball"
+    <>
+      <SEO
+        title="MyDojo Martial Arts — Tomball's #1 Martial Arts School | Book Free Class"
+        description="Join Tomball's favorite martial arts school. Programs for kids ages 3+, teens, adults, and families. Kickboxing, Karate, and more. Book your FREE trial class today!"
+        canonical="https://www.mydojoma.com"
       />
-      {/* Schema Markup — LocalBusiness, SportsActivityLocation, FAQPage, WebSite */}
       <SchemaMarkup type="LocalBusiness" />
-      <SchemaMarkup type="WebSite" />
-      <SchemaMarkup
-        type="FAQPage"
-        faqs={[
-          { question: "Do I need any prior martial arts experience?", answer: "Not at all! Our programs are designed for all skill levels, from complete beginners to advanced practitioners. Our instructors will guide you through the basics and help you progress at your own pace." },
-          { question: "What should I wear to my first class?", answer: "For your first trial class, comfortable workout clothes (t-shirt and sweatpants/shorts) are perfect. We train barefoot on the mats. If you decide to join, we'll help you get fitted for a proper uniform (Gi)." },
-          { question: "How much do classes cost?", answer: "We offer various membership options to fit different budgets and training goals. Since every student's needs are different, we recommend coming in for a free trial class where we can discuss the best program for you." },
-          { question: "At what age can children start?", answer: "Our Little Ninjas program is specifically designed for children ages 3-5, focusing on listening skills, balance, and coordination. We have specific programs for every age group thereafter." },
-          { question: "Is sparring required?", answer: "Sparring is an optional part of our advanced curriculum. Beginners focus on technique, fitness, and drills. You will never be forced to spar before you are ready and willing." },
-          { question: "How do I get started?", answer: "The best way to start is by booking a free trial class! You can sign up right here on our website or give us a call. This gives you a chance to meet the instructors, see the facility, and try a workout risk-free." },
-          { question: "Where is MyDojo located?", answer: "MyDojo is located at 11721 Spring Cypress Rd, Tomball, TX 77377. We serve families from Tomball, Spring, Cypress, Klein, and The Woodlands." },
-          { question: "What programs do you offer?", answer: "We offer Little Ninjas (ages 3-5), Dragon Kids (ages 5-12), After School Program, Teen Warriors (ages 12-17), Adult Karate, Fitness Kickboxing, Women's Self-Defense, and Family Classes." },
-        ]}
-      />
-      {/* ── MOBILE-ONLY layout (hidden on md+) ── */}
-      <MobileHome />
 
-      {/* ── DESKTOP layout (hidden on mobile) ── */}
-      <div className="hidden md:block">
-      {/* Hero Section */}
-      <HeroSlider onOpenChatbot={openIntakeChatbot} />
+      <HeroSection onBookClass={handleBookClass} />
+      <EnrollmentSection onBookClass={handleBookClass} />
+      <WhatTheyLearnSection onBookClass={handleBookClass} />
+      <SummerSpecialSection onBookClass={handleBookClass} />
+      <TestimonialsSection onBookClass={handleBookClass} />
+      <WhyMyDojoSection />
+      <ProgramsSection onBookClass={handleBookClass} />
+      <ScheduleSection onBookClass={handleBookClass} />
+      <FAQSection />
+      <FinalCTASection onBookClass={handleBookClass} />
 
-      {/* Social Proof Ticker */}
-      <SocialProofTicker />
+      {/* Conversion elements */}
+      <StickyMobileCTA onBookClass={handleBookClass} />
+      <FloatingPhone />
 
-      {/* ── TESTIMONIALS (below hero) ─────────────────────────────────────── */}
-      <section className="py-12" style={{ background: "#111" }}>
-        <div className="max-w-7xl mx-auto px-6">
-          {/* Rating Badges */}
-          <RatingBadges className="mb-6" />
-
-          <h2 className="font-black uppercase text-2xl md:text-3xl text-white text-center mb-8">
-            WHAT OUR <span style={{ color: "#cc0000" }}>MEMBERS</span> ARE SAYING
-          </h2>
-
-          <div className="relative px-8">
-            {/* Prev */}
-            <button
-              onClick={() => setTestimonialIdx(p => (p - 1 + HOME_TESTIMONIALS.length) % HOME_TESTIMONIALS.length)}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center"
-              style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
-            >
-              <ChevronLeft className="w-5 h-5 text-white" />
-            </button>
-
-            {/* 3 cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {[0, 1, 2].map(offset => {
-                const t = HOME_TESTIMONIALS[(testimonialIdx + offset) % HOME_TESTIMONIALS.length];
-                return (
-                  <motion.div
-                    key={t.name + offset}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.4 }}
-                    className="rounded-xl p-5"
-                    style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.08)" }}
-                  >
-                    {/* Stars */}
-                    <div className="flex gap-0.5 mb-3">
-                      {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
-                    </div>
-                    <p className="text-gray-300 text-sm leading-relaxed mb-4 italic">"{t.text}"</p>
-                    {/* Avatar + name */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-red-600">
-                        <img src={t.avatar} alt={t.name} className="w-full h-full object-cover object-top" />
-                      </div>
-                      <div>
-                        <span className="text-white font-bold text-sm block">– {t.name}</span>
-                        <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{t.role}</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            {/* Next */}
-            <button
-              onClick={() => setTestimonialIdx(p => (p + 1) % HOME_TESTIMONIALS.length)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center"
-              style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
-            >
-              <ChevronRight className="w-5 h-5 text-white" />
-            </button>
-          </div>
-
-          {/* Dots */}
-          <div className="flex justify-center gap-2 mt-6">
-            {HOME_TESTIMONIALS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setTestimonialIdx(i)}
-                className="rounded-full transition-all"
-                style={{
-                  width: i === testimonialIdx ? "24px" : "8px",
-                  height: "8px",
-                  background: i === testimonialIdx ? "#cc0000" : "rgba(255,255,255,0.2)",
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Program Finder Quiz */}
-      <ProgramFinder />
-
-      {/* Philosophy Section */}
-      <section className="py-24 bg-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-gray-50 skew-x-[-12deg] transform translate-x-20 z-0"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              variants={fadeIn}
-            >
-              <h2 className="text-4xl md:text-5xl font-heading font-bold mb-6 text-black">
-                MORE THAN JUST <span className="text-primary">KICKS & PUNCHES</span>
-              </h2>
-              <p className="text-gray-600 text-lg mb-6 leading-relaxed">
-                At MyDojo, we believe martial arts is a vehicle for personal growth. Our programs are designed to not only provide a rigorous physical workout but also to strengthen the mind and spirit.
-              </p>
-              <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-                Whether you're looking to instill discipline in your child, find a stress-relieving workout for yourself, or learn practical self-defense, our world-class instructors are here to guide you every step of the way.
-              </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                <div className="flex items-start gap-4">
-                  <div className="bg-black p-3 rounded-lg text-white">
-                    <Shield className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg mb-1">Self Defense</h4>
-                    <p className="text-sm text-gray-500">Practical techniques for real-world safety.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="bg-black p-3 rounded-lg text-white">
-                    <Zap className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg mb-1">Fitness</h4>
-                    <p className="text-sm text-gray-500">Full-body conditioning and cardio health.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="bg-black p-3 rounded-lg text-white">
-                    <Star className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg mb-1">Confidence</h4>
-                    <p className="text-sm text-gray-500">Building self-esteem through achievement.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="bg-black p-3 rounded-lg text-white">
-                    <Users className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg mb-1">Community</h4>
-                    <p className="text-sm text-gray-500">Supportive environment for all ages.</p>
-                  </div>
-                </div>
-              </div>
-
-              <Link href="/about">
-                <Button variant="link" className="text-black font-bold uppercase tracking-wider p-0 hover:text-primary transition-colors group">
-                  About MyDojo Martial Arts <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="relative"
-            >
-              <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl">
-                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/philosophy-community-5cT4u2H5LumCR2qo3db4DH.webp" alt="MyDojo Community" loading="lazy" className="w-full h-auto" />
-              </div>
-              {/* Decorative elements */}
-              <div className="absolute -bottom-6 -right-6 w-full h-full border-2 border-primary rounded-2xl z-0"></div>
-              <div className="absolute -top-10 -left-10 w-32 h-32 bg-gray-100 rounded-full z-0 opacity-50"></div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Belt Journey Section */}
-      <BeltJourney />
-
-      {/* Featured Program Section */}
-      <section className="py-24 bg-zinc-900 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/kickboxing-bg_d4fcc4c5.webp" alt="Adult Kickboxing" loading="lazy" className="w-full h-full object-cover opacity-40" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
-        </div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-2xl">
-            <div className="inline-block bg-primary text-white text-sm font-bold uppercase tracking-widest px-3 py-1 mb-6 rounded-sm">
-              Featured Program
-            </div>
-            <h2 className="text-4xl md:text-6xl font-heading font-bold text-white mb-6">
-              ADULT <span className="text-primary">KICKBOXING</span>
-            </h2>
-            <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-              Burn up to 800 calories in a single session! Our high-energy kickboxing classes combine real martial arts techniques with a full-body cardio workout. Perfect for all fitness levels.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/locations/hq?program=Kickboxing">
-                <Button className="bg-primary hover:bg-primary/90 text-white text-lg px-8 py-6 h-auto font-heading uppercase tracking-wider">
-                  View Class Schedule
-                </Button>
-              </Link>
-              <Link href="/programs">
-                <Button variant="outline" className="border-white text-white hover:bg-white hover:text-black text-lg px-8 py-6 h-auto font-heading uppercase tracking-wider">
-                  View Kickboxing Classes in Tomball
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Programs Section */}
-      <section className="py-24 bg-black text-white relative">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-primary font-bold tracking-widest uppercase mb-2">Explore All Programs</h2>
-            <h3 className="text-4xl md:text-6xl font-heading font-bold text-white">CHOOSE YOUR DISCIPLINE</h3>
-          </div>
-
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: {
-                  staggerChildren: 0.2
-                }
-              }
-            }}
-          >
-            {/* Program Card 1 */}
-            <motion.div 
-              variants={{
-                hidden: { opacity: 0, y: 100, scale: 0.9 },
-                visible: { 
-                  opacity: 1, 
-                  y: 0, 
-                  scale: 1,
-                  transition: { 
-                    type: "spring",
-                    stiffness: 50,
-                    damping: 20,
-                    mass: 1
-                  }
-                }
-              }}
-              whileHover={{ y: -15, scale: 1.02, transition: { duration: 0.3 } }}
-              className="group relative overflow-hidden rounded-xl bg-zinc-900 h-[500px] shadow-2xl"
-            >
-              <div className="absolute inset-0">
-                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/little-ninjas_25d41024.webp" alt="Little Ninjas" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-              </div>
-              <div className="absolute top-4 right-4 bg-purple-600 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">
-                2 Classes $29 + Uniform!
-              </div>
-              <div className="absolute bottom-0 left-0 w-full p-8">
-                <div className="w-12 h-1 bg-primary mb-4 transform origin-left transition-all duration-300 group-hover:w-24"></div>
-                <h4 className="text-3xl font-heading font-bold mb-2">LITTLE NINJAS</h4>
-                <p className="text-gray-300 mb-2 text-sm uppercase tracking-wider">Ages 3–5</p>
-                <p className="text-gray-400 mb-4 line-clamp-3 group-hover:text-white transition-colors">
-                  Big Confidence Starts Here. Builds focus, listening skills, and self-esteem in a fun, safe environment.
-                </p>
-                <button
-                  onClick={() => openOffer("little-ninjas")}
-                  className="bg-purple-600 hover:bg-purple-700 text-white w-full uppercase tracking-wider py-2.5 text-sm font-bold transition-colors rounded"
-                >
-                  Claim $29 Intro Offer →
-                </button>
-              </div>
-            </motion.div>
-
-            {/* Program Card 2 */}
-            <motion.div 
-              variants={{
-                hidden: { opacity: 0, y: 100, scale: 0.9 },
-                visible: { 
-                  opacity: 1, 
-                  y: 0, 
-                  scale: 1,
-                  transition: { 
-                    type: "spring",
-                    stiffness: 50,
-                    damping: 20,
-                    mass: 1
-                  }
-                }
-              }}
-              whileHover={{ y: -15, scale: 1.02, transition: { duration: 0.3 } }}
-              className="group relative overflow-hidden rounded-xl bg-zinc-900 h-[500px] shadow-2xl"
-            >
-              <div className="absolute inset-0">
-                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/core-kids_baf3bc26.webp" alt="Dragon Kids" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-              </div>
-              <div className="absolute top-4 right-4 bg-blue-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">
-                2 Classes $29 + Uniform!
-              </div>
-              <div className="absolute bottom-0 left-0 w-full p-8">
-                <div className="w-12 h-1 bg-primary mb-4 transform origin-left transition-all duration-300 group-hover:w-24"></div>
-                <h4 className="text-3xl font-heading font-bold mb-2">KIDS MARTIAL ARTS</h4>
-                <p className="text-gray-300 mb-2 text-sm uppercase tracking-wider">Ages 6–12</p>
-                <p className="text-gray-400 mb-4 line-clamp-3 group-hover:text-white transition-colors">
-                  Strong Today. Leader Tomorrow. Builds discipline, anti-bullying skills, fitness, and leadership.
-                </p>
-                <button
-                  onClick={() => openOffer("kids-martial-arts")}
-                  className="bg-blue-700 hover:bg-blue-800 text-white w-full uppercase tracking-wider py-2.5 text-sm font-bold transition-colors rounded"
-                >
-                  Claim $29 Intro Offer →
-                </button>
-              </div>
-            </motion.div>
-
-            {/* Program Card 3 */}
-            <motion.div 
-              variants={{
-                hidden: { opacity: 0, y: 100, scale: 0.9 },
-                visible: { 
-                  opacity: 1, 
-                  y: 0, 
-                  scale: 1,
-                  transition: { 
-                    type: "spring",
-                    stiffness: 50,
-                    damping: 20,
-                    mass: 1
-                  }
-                }
-              }}
-              whileHover={{ y: -15, scale: 1.02, transition: { duration: 0.3 } }}
-              className="group relative overflow-hidden rounded-xl bg-zinc-900 h-[500px] shadow-2xl"
-            >
-              <div className="absolute inset-0">
-                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/teens-adults_e35f9895.webp" alt="Adults & Teens" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-              </div>
-              <div className="absolute top-4 right-4 bg-red-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">
-                2 Classes $29 + Uniform!
-              </div>
-              <div className="absolute bottom-0 left-0 w-full p-8">
-                <div className="w-12 h-1 bg-primary mb-4 transform origin-left transition-all duration-300 group-hover:w-24"></div>
-                <h4 className="text-3xl font-heading font-bold mb-2">TEENS & ADULTS</h4>
-                <p className="text-gray-300 mb-2 text-sm uppercase tracking-wider">Ages 13+</p>
-                <p className="text-gray-400 mb-4 line-clamp-3 group-hover:text-white transition-colors">
-                  Confidence. Focus. Strength. Self-defense skills, stress relief, and improved fitness.
-                </p>
-                <button
-                  onClick={() => openOffer("teens-adults")}
-                  className="bg-red-700 hover:bg-red-800 text-white w-full uppercase tracking-wider py-2.5 text-sm font-bold transition-colors rounded"
-                >
-                  Claim $29 Intro Offer →
-                </button>
-              </div>
-            </motion.div>
-
-            {/* Program Card 4 - Adult Karate */}
-            <motion.div
-              variants={{
-                hidden: { opacity: 0, y: 100, scale: 0.9 },
-                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20, mass: 1 } }
-              }}
-              whileHover={{ y: -15, scale: 1.02, transition: { duration: 0.3 } }}
-              className="group relative overflow-hidden rounded-xl bg-zinc-900 h-[500px] shadow-2xl"
-            >
-              <div className="absolute inset-0">
-                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero3_6fed392b.webp" alt="Adult Karate" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-              </div>
-              <div className="absolute top-4 right-4 bg-gray-800 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">
-                2 Classes $29 + Uniform!
-              </div>
-              <div className="absolute bottom-0 left-0 w-full p-8">
-                <div className="w-12 h-1 bg-primary mb-4 transform origin-left transition-all duration-300 group-hover:w-24"></div>
-                <h4 className="text-3xl font-heading font-bold mb-2">ADULT KARATE</h4>
-                <p className="text-gray-300 mb-2 text-sm uppercase tracking-wider">Adults</p>
-                <p className="text-gray-400 mb-4 line-clamp-3 group-hover:text-white transition-colors">
-                  Discipline. Power. Mastery. Traditional karate with real self-defense and mental discipline.
-                </p>
-                <button
-                  onClick={() => openOffer("adult-karate")}
-                  className="bg-gray-700 hover:bg-gray-600 text-white w-full uppercase tracking-wider py-2.5 text-sm font-bold transition-colors rounded"
-                >
-                  Claim $29 Intro Offer →
-                </button>
-              </div>
-            </motion.div>
-
-            {/* Program Card 5 - Kickboxing Fitness */}
-            <motion.div
-              variants={{
-                hidden: { opacity: 0, y: 100, scale: 0.9 },
-                visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 50, damping: 20, mass: 1 } }
-              }}
-              whileHover={{ y: -15, scale: 1.02, transition: { duration: 0.3 } }}
-              className="group relative overflow-hidden rounded-xl bg-zinc-900 h-[500px] shadow-2xl"
-            >
-              <div className="absolute inset-0">
-                <img src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/kickboxing-bg_d4fcc4c5.webp" alt="Kickboxing Fitness" loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-              </div>
-              <div className="absolute top-4 right-4 bg-green-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">
-                🔥 First Class FREE!
-              </div>
-              <div className="absolute bottom-0 left-0 w-full p-8">
-                <div className="w-12 h-1 bg-primary mb-4 transform origin-left transition-all duration-300 group-hover:w-24"></div>
-                <h4 className="text-3xl font-heading font-bold mb-2">KICKBOXING</h4>
-                <p className="text-gray-300 mb-2 text-sm uppercase tracking-wider">Teens & Adults</p>
-                <p className="text-gray-400 mb-4 line-clamp-3 group-hover:text-white transition-colors">
-                  Sweat Today. Feel Amazing. Burn 800 calories, relieve stress, and boost endurance.
-                </p>
-                <button
-                  onClick={() => openOffer("kickboxing")}
-                  className="bg-green-700 hover:bg-green-800 text-white w-full uppercase tracking-wider py-2.5 text-sm font-bold transition-colors rounded"
-                >
-                  Claim First Class FREE →
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-20 bg-white">
-        <TestimonialCarousel />
-      </section>
-
-      <MasonryGallery />
-
-      {/* FAQ Section */}
-      <section className="py-20 bg-white border-t border-gray-100">
-        <FAQ />
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24 bg-primary text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/cta-bg_5eebb32b.webp')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
-        <div className="container mx-auto px-4 relative z-10 text-center">
-          <h2 className="text-4xl md:text-6xl font-heading font-bold mb-6">READY TO START?</h2>
-          <p className="text-xl md:text-2xl mb-10 max-w-2xl mx-auto opacity-90">
-            Join our high-energy, fat-burning 45-minute complimentary Karate or Kickboxing class!
-          </p>
-          <Button 
-            onClick={openIntakeChatbot}
-            className="bg-white text-primary hover:bg-black hover:text-white text-lg px-10 py-8 h-auto font-heading uppercase tracking-wider skew-x-[-10deg] transition-all duration-300 shadow-xl"
-          >
-            <span className="skew-x-[10deg]">Book Free Trial</span>
-          </Button>
-        </div>
-      </section>
-
-      {/* ChatGPT Chatbot */}
-      </div>{/* end desktop wrapper */}
-
-      {/* Chatbot overlays — always rendered regardless of viewport */}
-      {showChatGPT && <ChatGPTChatbot onClose={() => setShowChatGPT(false)} />}
-      
-      {/* Intake Chatbot (State Machine POC) */}
       {showIntakeBot && <IntakeChatbot onClose={() => setShowIntakeBot(false)} />}
-
-      {/* Intro Offer Modal */}
-      <IntroOfferModal
-        open={offerModalOpen}
-        onClose={() => setOfferModalOpen(false)}
-        defaultProgramId={offerProgramId}
-      />
-    </div>
+    </>
   );
 }
