@@ -25,8 +25,27 @@ interface Location {
   isAffiliate?: boolean;
 }
 
-// Initial locations data
+// Initial locations data — MyDojo Tomball HQ is always listed first (primary location)
 const initialLocations: Location[] = [
+  {
+    id: "hq",
+    name: "MyDojo Headquarters - Tomball",
+    address: "11721 Spring Cypress Rd",
+    city: "Tomball",
+    state: "TX",
+    zip: "77377",
+    phone: "(877) 4-MYDOJO",
+    coordinates: {
+      lat: 30.0112706,
+      lng: -95.6025971
+    },
+    hours: [
+      "Mon-Thu: 12:00 PM - 9:00 PM",
+      "Fri: 12:00 PM - 8:00 PM",
+      "Sat: 9:00 AM - 2:00 PM",
+      "Sun: Closed"
+    ]
+  },
   {
     id: "yaegers-sda",
     name: "Yaeger's Self Defense of America",
@@ -56,25 +75,6 @@ const initialLocations: Location[] = [
     },
     hours: ["Mon–Fri: 12:00 PM – 9:00 PM", "Sat–Sun: Closed"],
     isAffiliate: true
-  },
-  {
-    id: "hq",
-    name: "MyDojo Headquarters - Tomball",
-    address: "11721 Spring Cypress Rd",
-    city: "Tomball",
-    state: "TX",
-    zip: "77377",
-    phone: "(877) 4-MYDOJO",
-    coordinates: {
-      lat: 30.0112706,
-      lng: -95.6025971
-    },
-    hours: [
-      "Mon-Thu: 12:00 PM - 9:00 PM",
-      "Fri: 12:00 PM - 8:00 PM",
-      "Sat: 9:00 AM - 2:00 PM",
-      "Sun: Closed"
-    ]
   }
 ];
 
@@ -127,17 +127,18 @@ export default function Locations() {
   };
 
   const updateLocationsWithDistance = (lat: number, lng: number) => {
-    const locationsWithDistance = initialLocations.map(loc => ({
+    const withDistance = initialLocations.map(loc => ({
       ...loc,
       distance: calculateDistance(lat, lng, loc.coordinates.lat, loc.coordinates.lng)
-    })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    }));
+    // Always keep Tomball HQ first; sort the rest by distance
+    const hq = withDistance.find(l => l.id === 'hq')!;
+    const others = withDistance.filter(l => l.id !== 'hq').sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    const locationsWithDistance = [hq, ...others];
 
     setLocations(locationsWithDistance);
-    
-    // Auto-select the nearest one
-    if (locationsWithDistance.length > 0) {
-      setSelectedLocation(locationsWithDistance[0]);
-    }
+    // Auto-select HQ (always primary)
+    setSelectedLocation(hq);
   };
 
   const handleFindNearest = () => {
