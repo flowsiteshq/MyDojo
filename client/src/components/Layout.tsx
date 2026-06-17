@@ -548,7 +548,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 )}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                🔥 Kiosk Check-In
+                Kiosk Check-In
               </span>
             </Link>
 
@@ -629,7 +629,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <li><Link href="/about"><span className="hover:text-white cursor-pointer transition-colors">About Us</span></Link></li>
                 <li><Link href="/contact"><span className="hover:text-white cursor-pointer transition-colors">Contact Us</span></Link></li>
                 <li><Link href="/careers"><span className="hover:text-white cursor-pointer transition-colors">Careers</span></Link></li>
-                <li><Link href="/check-in"><span className="hover:text-white cursor-pointer transition-colors font-semibold text-primary">🔥 Kiosk Check-In</span></Link></li>
+                <li><Link href="/check-in"><span className="hover:text-white cursor-pointer transition-colors font-semibold text-primary">Kiosk Check-In</span></Link></li>
                 <li>
                   <span
                     onClick={() => {

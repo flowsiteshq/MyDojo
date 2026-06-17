@@ -117,12 +117,12 @@ function HeroSection({ onBookClass }: { onBookClass: () => void }) {
           {/* Feature badges */}
           <div className="flex flex-wrap gap-3 mb-8">
             {[
-              { icon: "🥋", label: "Ages 3+" },
-              { icon: "🥊", label: "Teens & Adults" },
-              { icon: "🥊", label: "Kickboxing" },
+              { label: "Ages 3+" },
+              { label: "Teens & Adults" },
+              { label: "Kickboxing" },
             ].map(b => (
               <div key={b.label} className="flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
-                <span>{b.icon}</span>
+                <Shield className="h-4 w-4 text-[#e63946]" />
                 <span className="text-white font-semibold text-sm">{b.label}</span>
               </div>
             ))}
@@ -256,12 +256,12 @@ function EnrollmentSection({ onBookClass }: { onBookClass: () => void }) {
 // ─── What Your Child Will Learn ───────────────────────────────────────────────
 function WhatTheyLearnSection({ onBookClass }: { onBookClass: () => void }) {
   const values = [
-    { icon: "🏆", label: "Confidence" },
-    { icon: "🤝", label: "Respect" },
-    { icon: "🎯", label: "Focus" },
-    { icon: "⚡", label: "Discipline" },
-    { icon: "🛡️", label: "Anti-Bullying" },
-    { icon: "💪", label: "Fitness" },
+    { icon: <Award className="h-8 w-8 text-white" />, label: "Confidence" },
+    { icon: <Heart className="h-8 w-8 text-white" />, label: "Respect" },
+    { icon: <Target className="h-8 w-8 text-white" />, label: "Focus" },
+    { icon: <Zap className="h-8 w-8 text-white" />, label: "Discipline" },
+    { icon: <Shield className="h-8 w-8 text-white" />, label: "Anti-Bullying" },
+    { icon: <Users className="h-8 w-8 text-white" />, label: "Fitness" },
   ];
 
   return (
@@ -280,7 +280,7 @@ function WhatTheyLearnSection({ onBookClass }: { onBookClass: () => void }) {
         <div className="grid grid-cols-3 md:grid-cols-6 gap-4 mb-12">
           {values.map(v => (
             <div key={v.label} className="flex flex-col items-center gap-3 group">
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-3xl md:text-4xl group-hover:bg-[#e63946]/20 group-hover:border-[#e63946] transition-all duration-300">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-[#e63946]/20 group-hover:border-[#e63946] transition-all duration-300">
                 {v.icon}
               </div>
               <p className="text-white font-bold text-xs md:text-sm uppercase tracking-wider text-center">{v.label}</p>
@@ -308,7 +308,7 @@ function SummerSpecialSection({ onBookClass }: { onBookClass: () => void }) {
         {/* Gold/Red gradient bar */}
         <div className="bg-gradient-to-r from-[#e63946] via-[#c1121f] to-[#e63946] py-3 text-center">
           <p className="text-white font-black uppercase tracking-[0.3em] text-sm">
-            🌟 SUMMER SPECIAL — LIMITED TIME OFFER 🌟
+            SUMMER SPECIAL — LIMITED TIME OFFER
           </p>
         </div>
 
@@ -328,12 +328,12 @@ function SummerSpecialSection({ onBookClass }: { onBookClass: () => void }) {
             {/* Middle: Offers */}
             <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { label: "FREE", item: "Uniform", value: "$60 VALUE", icon: "🥋" },
-                { label: "FREE", item: "Beginner Class", value: "$49 VALUE", icon: "📅" },
-                { label: "FREE", item: "Confidence Assessment", value: "$49 VALUE", icon: "✅" },
+                { label: "FREE", item: "Uniform", value: "$60 VALUE", icon: <Shield className="h-8 w-8 text-[#FFD700]" /> },
+                { label: "FREE", item: "Beginner Class", value: "$49 VALUE", icon: <Calendar className="h-8 w-8 text-[#FFD700]" /> },
+                { label: "FREE", item: "Confidence Assessment", value: "$49 VALUE", icon: <CheckCircle className="h-8 w-8 text-[#FFD700]" /> },
               ].map(offer => (
                 <div key={offer.item} className="text-center border border-[#FFD700]/30 rounded-xl p-6 bg-white/5">
-                  <div className="text-4xl mb-3">{offer.icon}</div>
+                  <div className="flex justify-center mb-3">{offer.icon}</div>
                   <p className="text-[#FFD700] font-black text-2xl uppercase">{offer.label}</p>
                   <p className="text-white font-bold text-lg uppercase leading-tight">{offer.item}</p>
                   <p className="text-gray-400 text-sm mt-1">{offer.value}</p>
