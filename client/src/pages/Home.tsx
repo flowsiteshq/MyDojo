@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 
 // ─── Image constants ────────────────────────────────────────────────────────
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
-const HERO_VIDEO = "/manus-storage/hero_montage_47ab46a1.mp4";
+const HERO_VIDEO = "/manus-storage/hero_montage_v2_69118632.mp4";
 const LITTLE_NINJAS_IMG = `${CDN}/little-ninjas_25d41024.webp`;
 const CORE_KIDS_IMG = `${CDN}/core-kids_baf3bc26.webp`;
 const TEENS_ADULTS_IMG = `${CDN}/teens-adults_e35f9895.webp`;
