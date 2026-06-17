@@ -138,11 +138,11 @@ function HeroSection({ onBookClass }: { onBookClass: () => void }) {
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </button>
             <a
-              href="tel:+12816971003"
+              href="tel:+18774693656"
               className="flex items-center justify-center gap-2 border-2 border-white/50 hover:border-white text-white font-bold uppercase tracking-wider text-base px-6 py-4 rounded-sm transition-all duration-200 hover:bg-white/10"
             >
               <Phone className="h-4 w-4" />
-              (281) 697-1003
+              (877) 4-MYDOJO
             </a>
           </div>
         </div>
@@ -703,8 +703,8 @@ function FinalCTASection({ onBookClass }: { onBookClass: () => void }) {
             >
               BOOK YOUR FREE CLASS <ArrowRight className="h-6 w-6" />
             </button>
-            <a href="tel:+12816971003" className="text-white/80 hover:text-white text-sm font-medium flex items-center gap-2">
-              <Phone className="h-4 w-4" /> Or call (281) 697-1003
+            <a href="tel:+18774693656" className="text-white/80 hover:text-white text-sm font-medium flex items-center gap-2">
+              <Phone className="h-4 w-4" /> Or call (877) 4-MYDOJO
             </a>
           </div>
 
@@ -737,7 +737,7 @@ function StickyMobileCTA({ onBookClass }: { onBookClass: () => void }) {
     )}>
       <div className="flex">
         <a
-          href="tel:+12816971003"
+          href="tel:+18774693656"
           className="flex-1 flex items-center justify-center gap-2 bg-black text-white font-bold uppercase text-sm py-4"
         >
           <Phone className="h-4 w-4" /> CALL NOW
@@ -757,7 +757,7 @@ function StickyMobileCTA({ onBookClass }: { onBookClass: () => void }) {
 function FloatingPhone() {
   return (
     <a
-      href="tel:+12816971003"
+      href="tel:+18774693656"
       className="hidden md:flex fixed bottom-8 right-8 z-50 w-14 h-14 rounded-full bg-[#e63946] shadow-[0_4px_20px_rgba(230,57,70,0.5)] items-center justify-center hover:scale-110 transition-transform"
       title="Call MyDojo"
     >
@@ -777,7 +777,7 @@ function InfoBar() {
         </div>
         <div className="flex items-center gap-1.5">
           <Phone className="h-3 w-3 text-[#e63946]" />
-          <a href="tel:+12816971003" className="hover:text-white transition-colors">(281) 697-1003</a>
+          <a href="tel:+18774693656" className="hover:text-white transition-colors">(877) 4-MYDOJO</a>
         </div>
       </div>
     </div>
