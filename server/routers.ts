@@ -6971,7 +6971,6 @@ Please enter your card details below to complete your registration securely. Tot
       const activeEnrollments = await db
         .select()
         .from(schema.enrollments)
-        .where(eq(schema.enrollments.status, 'active'))
         .orderBy(schema.enrollments.startDate);
 
       const FLUIDPAY_KEY = process.env.FLUIDPAY_SECRET_KEY;
@@ -7014,6 +7013,7 @@ Please enter your card details below to complete your registration securely. Tot
           startDate: e.startDate,
           billingDay,
           paymentMethod,
+          enrollmentStatus: e.status,
           fluidpaySubscriptionId: e.fluidpaySubscriptionId,
           stripeSubscriptionId: e.stripeSubscriptionId,
           subAmount,
@@ -7023,6 +7023,8 @@ Please enter your card details below to complete your registration securely. Tot
           monthlyPaymentsRemaining: e.monthlyPaymentsRemaining,
           isFrozen: e.isFrozen,
           downPaymentAmount: e.downPaymentAmount,
+          cancellationRequestedAt: e.cancellationRequestedAt,
+          cancellationEffectiveDate: e.cancellationEffectiveDate,
         });
       }
 
