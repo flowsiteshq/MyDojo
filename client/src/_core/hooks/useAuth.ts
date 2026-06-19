@@ -1,7 +1,7 @@
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { TRPCClientError } from "@trpc/client";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -20,7 +20,11 @@ export function useAuth(options?: UseAuthOptions) {
 
   const logoutMutation = trpc.auth.logout.useMutation({
     onSuccess: () => {
+      // Clear ALL cached query data so no user's private data (payment history,
+      // enrollment info, messages, etc.) is ever visible to the next user who
+      // logs in on the same device/browser session.
       utils.auth.me.setData(undefined, null);
+      utils.invalidate();
     },
   });
 
@@ -59,6 +63,18 @@ export function useAuth(options?: UseAuthOptions) {
     logoutMutation.error,
     logoutMutation.isPending,
   ]);
+
+  // Track the previous user ID so we can detect when a different user logs in
+  // on the same device without an explicit logout (e.g., shared device).
+  const prevUserIdRef = useRef<string | number | null | undefined>(undefined);
+  useEffect(() => {
+    const currentId = meQuery.data?.id ?? null;
+    if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== currentId && currentId !== null) {
+      // A different user just authenticated — purge all cached private data
+      utils.invalidate();
+    }
+    prevUserIdRef.current = currentId;
+  }, [meQuery.data?.id, utils]);
 
   useEffect(() => {
     if (!redirectOnUnauthenticated) return;
