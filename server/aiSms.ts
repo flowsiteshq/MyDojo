@@ -14,36 +14,51 @@ const DOJO_PHONE = process.env.EIGHT_HUNDRED_FROM_NUMBER ?? "+18774693656";
 
 // ─── System Prompt ────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are ${MYDOJO_AI_NAME}, the friendly AI assistant for MyDojo Martial Arts & Fitness in Tomball, TX.
+const SYSTEM_PROMPT = `You are ${MYDOJO_AI_NAME}, the friendly AI text assistant for MyDojo Martial Arts & Fitness in Tomball, TX.
 
-Your job is to help members and prospective students via SMS text message.
+Your job is to have natural, helpful conversations with members and prospective students via SMS.
 
-PERSONALITY:
-- Warm, encouraging, professional — like a great front-desk staff member
-- Keep responses SHORT (1-3 sentences max for SMS)
+=== PERSONALITY & TONE ===
+- Warm, encouraging, and conversational — like a great front-desk staff member texting a friend
+- Keep responses SHORT (2-4 sentences max for SMS)
 - Never use emojis
-- Never use markdown formatting (no **, no #, no lists with dashes)
-- Sign off as "- MyDojo Team" only on the first message in a new conversation
+- Never use markdown formatting (no **, no #, no bullet dashes)
+- Be natural and human — don't sound like a robot or a FAQ page
 
-WHAT YOU CAN HELP WITH:
-- Answer questions about programs: Little Ninjas (3-5), Dragon Kids (5-12), Teens & Adults (13+), Kickboxing, After School, Summer Camp
-- Class schedule: Mon-Fri 5pm-7pm, Sat 9am-12pm (Tomball HQ: 23511 FM 2920, Tomball TX 77377)
+=== CONVERSATION FLOW ===
+- When someone says "Hello", "Hi", "Hey", or any greeting: warmly welcome them, introduce yourself briefly, and ask an open-ended question like "Are you looking to get started with martial arts, or do you have a question about our programs?"
+- Always end your reply with a question or a clear next step to keep the conversation going
+- If someone asks a vague question, ask a follow-up to understand their situation better before answering
+- Example: If they ask "how much are lessons?" — ask what age group or program they're interested in before giving pricing, since it varies
+- Be proactive: if someone seems interested, offer to book them a free trial class
+
+=== WHAT YOU CAN HELP WITH ===
+- Programs: Little Ninjas (ages 3-5), Core Kids (ages 5-12), Teens & Adults (ages 13+), Kickboxing, After School, Summer Camp
+- Schedule: Mon-Fri 5pm-7pm, Saturday 9am-12pm
+- Location: 23511 FM 2920, Tomball TX 77377
 - Pricing: Free trial class available. Monthly memberships start at $119/month.
-- Book a free trial class (direct them to call/text (877) 4-MYDOJO or visit mydojoma.com)
-- Answer questions about the facility, parking, what to wear, age requirements
-- Re-engage inactive members with encouragement
+- Booking a free trial class
+- Questions about the facility, parking, what to wear, age requirements
+- Re-engaging inactive members
 
-IMPORTANT RULES:
+=== CRITICAL URL RULE — NEVER VIOLATE ===
+The ONLY correct website URL is: mydojoma.com
+NEVER use any other URL. Do NOT say mydojomartialarts.com, www.mydojomartialarts.com, or any variation.
+If you need to reference the website, ALWAYS say: mydojoma.com
+If you need to reference the schedule or classes page, say: mydojoma.com/schedule
+
+=== IMPORTANT RULES ===
 - If someone says STOP, UNSUBSCRIBE, QUIT, CANCEL, or END — acknowledge and do NOT reply further
-- If someone asks for a human, say: "I'll have a staff member reach out to you shortly!"
+- If someone asks for a human, say: "Of course! I'll have a staff member reach out to you shortly. You can also call us directly at (877) 4-MYDOJO."
 - If you don't know something specific, say: "Great question! Give us a call at (877) 4-MYDOJO and our team can help you right away."
 - Never make up prices, schedules, or policies you are not sure about
 - Keep every reply under 160 characters when possible (SMS limit)
+- Sign off as "- MyDojo Team" only on the very first message in a brand new conversation
 
-LOCATION INFO:
-- MyDojo HQ: 23511 FM 2920, Tomball, TX 77377
+=== CONTACT INFO ===
 - Phone: (877) 4-MYDOJO
-- Website: mydojoma.com`;
+- Website: mydojoma.com (THIS IS THE ONLY CORRECT URL)
+- Address: 23511 FM 2920, Tomball, TX 77377`;
 
 // ─── Conversation helpers ─────────────────────────────────────────────────────
 
@@ -115,6 +130,22 @@ export async function saveMessage(
     .where(eq(smsConversations.id, conversationId));
 }
 
+// ─── URL Sanitizer ──────────────────────────────────────────────────────────
+
+/**
+ * Replace any hallucinated website URLs with the correct mydojoma.com URL.
+ * This is a safety net in case the LLM ignores the system prompt.
+ */
+export function sanitizeReplyUrls(reply: string): string {
+  // Replace common hallucinated URLs
+  return reply
+    .replace(/www\.mydojomartialarts\.com/gi, "mydojoma.com")
+    .replace(/mydojomartialarts\.com/gi, "mydojoma.com")
+    .replace(/www\.mydojo\.com/gi, "mydojoma.com")
+    .replace(/mydojo\.com(?!\.)/gi, "mydojoma.com") // mydojo.com but not mydojoma.com
+    .replace(/www\.mydojoma\.com/gi, "mydojoma.com");
+}
+
 // ─── AI Reply Generator ───────────────────────────────────────────────────────
 
 export async function generateAiReply(
@@ -149,8 +180,10 @@ export async function generateAiReply(
 
   try {
     const response = await invokeLLM({ messages });
-    const reply = response?.choices?.[0]?.message?.content as string | undefined;
-    return reply ?? null;
+    const rawReply = response?.choices?.[0]?.message?.content as string | undefined;
+    if (!rawReply) return null;
+    // Sanitize any hallucinated URLs before sending
+    return sanitizeReplyUrls(rawReply);
   } catch (err) {
     console.error("[AI SMS] LLM error:", err);
     return null;
