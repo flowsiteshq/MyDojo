@@ -20,6 +20,7 @@ import SchemaMarkup from "@/components/SchemaMarkup";
 import { useVisitorSms } from "@/hooks/useVisitorSms";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { trpc } from "@/lib/trpc";
 
 // ─── Image constants ────────────────────────────────────────────────────────
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
@@ -70,7 +71,12 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 // ─── Hero Section ─────────────────────────────────────────────────────────────
 function HeroSection({ onBookClass }: { onBookClass: () => void }) {
   const { t } = useTranslation();
-  const deadline = useMemo(() => new Date("2026-07-25T23:59:59"), []);
+  // Fetch deadline from admin config (same source as kiosk thermometer)
+  const { data: driveData } = trpc.kiosk.getMemberDriveProgress.useQuery();
+  const deadline = useMemo(() => {
+    if (driveData?.deadline) return new Date(driveData.deadline + "T23:59:59");
+    return new Date("2026-07-25T23:59:59"); // fallback default
+  }, [driveData?.deadline]);
   const timeLeft = useCountdown(deadline);
 
   return (
