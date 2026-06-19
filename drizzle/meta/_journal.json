@@ -407,6 +407,13 @@
       "when": 1781883958271,
       "tag": "0057_outgoing_energizer",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "5",
+      "when": 1781890109241,
+      "tag": "0058_perpetual_black_crow",
+      "breakpoints": true
     }
   ]
 }

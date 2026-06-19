@@ -1,0 +1,2 @@
+ALTER TABLE `smsConversations` MODIFY COLUMN `bookingState` enum('idle','awaiting_name','awaiting_program','awaiting_time','awaiting_time_selection','awaiting_time_freetext','confirmed') DEFAULT 'idle';--> statement-breakpoint
+ALTER TABLE `smsConversations` MODIFY COLUMN `bookingPreferredTime` text;

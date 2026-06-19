@@ -1999,10 +1999,10 @@ export const smsConversations = mysqlTable("smsConversations", {
   lastMessageAt: timestamp("lastMessageAt").defaultNow().notNull(),
   unreadCount: int("unreadCount").default(0).notNull(),
   // Trial booking state machine
-  bookingState: mysqlEnum("bookingState", ["idle", "awaiting_name", "awaiting_program", "awaiting_time", "confirmed"]).default("idle"),
+  bookingState: mysqlEnum("bookingState", ["idle", "awaiting_name", "awaiting_program", "awaiting_time", "awaiting_time_selection", "awaiting_time_freetext", "confirmed"]).default("idle"),
   bookingName: varchar("bookingName", { length: 255 }),
   bookingProgram: varchar("bookingProgram", { length: 100 }),
-  bookingPreferredTime: varchar("bookingPreferredTime", { length: 255 }),
+  bookingPreferredTime: text("bookingPreferredTime"), // stores JSON slot list or confirmed time string
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
