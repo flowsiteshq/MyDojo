@@ -65,6 +65,7 @@ import { classReservationRouter } from './classReservationRouter';
 import { buddyDayRsvps } from '../drizzle/schema';
 import { shopRouter } from './shopRouter';
 import { aiSmsRouter } from './aiSmsRouter';
+import { mydojoBucksRouter } from './mydojoBucks';
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -74,6 +75,7 @@ export const appRouter = router({
   classReservation: classReservationRouter,
   shop: shopRouter,
   aiSms: aiSmsRouter,
+  mydojoBucks: mydojoBucksRouter,
 
   // ── Manual Enrollment Tool (Staff Transfer) ────────────────────────────────
   manualEnrollments: router({
@@ -3137,6 +3139,7 @@ Please enter your card details below to complete your registration securely. Tot
         deferTuition: z.boolean().optional(), // if true, charge only $99 enrollment fee now; defer first month tuition
         deferredTuitionDate: z.string().optional(), // YYYY-MM-DD, must be within same calendar month
         waiveDownPayment: z.boolean().optional(), // if true, $0 charged today, recurring subscription starts immediately
+        referralCode: z.string().max(20).optional(), // MyDojo Bucks referral code (e.g. "JOHN-X7K2")
       }))
       .mutation(async ({ input }) => {
         const db = await getDb();
@@ -3407,6 +3410,23 @@ Please enter your card details below to complete your registration securely. Tot
             startDate: new Date(),
           });
           enrollmentId = (insertResult as any).insertId;
+        }
+
+        // Step 4b: Award MyDojo Bucks to referrer (fire-and-forget, non-blocking)
+        if (input.referralCode && enrollmentId) {
+          import('./mydojoBucks').then(({ lookupReferralCode, awardReferralBucks }) => {
+            lookupReferralCode(input.referralCode!).then(refRow => {
+              if (!refRow) return;
+              awardReferralBucks({
+                referralCodeId: refRow.id,
+                referrerId: refRow.userId,
+                referredName: input.studentName || input.customerName,
+                referredPhone: input.customerPhone,
+                referredEmail: input.customerEmail,
+                enrollmentId: enrollmentId!,
+              }).catch(err => console.error('[MyDojo Bucks] Award referral bucks error:', err));
+            }).catch(err => console.error('[MyDojo Bucks] Lookup referral code error:', err));
+          }).catch(err => console.error('[MyDojo Bucks] Import error:', err));
         }
 
         // Step 5: Send enrollment confirmation email (fire-and-forget, non-blocking)

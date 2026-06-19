@@ -48,6 +48,7 @@ import { Chart, registerables } from "chart.js";
 import { useDashboardTheme, type DashboardThemeMode } from "@/hooks/useDashboardTheme";
 import { MyChildren } from "@/components/MyChildren";
 import { MealPlanTab } from "@/components/MealPlanTab";
+import MyDojoBucksPage from "./MyDojoBucks";
 Chart.register(...registerables);
 
 // ─── Theme-aware token helper ─────────────────────────────────────────────────
@@ -716,7 +717,7 @@ function PaymentHistorySection({ isDark }: { isDark: boolean }) {
 
 export default function MemberDashboard2() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "curriculum" | "progress" | "messages" | "children" | "meal_plan" | "billing">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "curriculum" | "progress" | "messages" | "children" | "meal_plan" | "billing" | "bucks">("dashboard");
   const [profileOpen, setProfileOpen] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showFreezeDialog, setShowFreezeDialog] = useState(false);
@@ -1023,6 +1024,7 @@ export default function MemberDashboard2() {
     { id: "messages", label: "Messages" },
     { id: "children", label: "My Children" },
     { id: "billing", label: "Billing" },
+    { id: "bucks", label: "🪙 MyDojo Bucks" },
   ];
 
   return (
@@ -1274,6 +1276,11 @@ export default function MemberDashboard2() {
             <h2 className={`text-xl font-black uppercase tracking-wider ${t.textPrimary}`}>Payment History</h2>
             <PaymentHistorySection isDark={isDark} />
           </div>
+        )}
+
+        {/* ── MYDOJO BUCKS TAB ── */}
+        {activeTab === "bucks" && (
+          <MyDojoBucksPage />
         )}
 
         {/* ── DASHBOARD TAB ── */}

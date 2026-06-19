@@ -92,6 +92,17 @@ export default function Join() {
   const [contactMethod, setContactMethod] = useState<"text" | "phone" | "email">("text");
   const [submitted, setSubmitted] = useState(false);
 
+  // Capture referral code from URL (?ref=CODE) and persist to localStorage
+  // so it survives navigation to the enrollment form
+  const [referralCode] = useState<string | null>(() => {
+    const urlRef = new URLSearchParams(window.location.search).get("ref");
+    if (urlRef) {
+      try { localStorage.setItem("mydojo_ref", urlRef.toUpperCase()); } catch {}
+      return urlRef.toUpperCase();
+    }
+    return null;
+  });
+
   const createLead = trpc.trialSignups.create.useMutation({
     onSuccess: () => setSubmitted(true),
     onError: (err) => toast.error(err.message || "Something went wrong. Please try again."),

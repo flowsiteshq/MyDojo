@@ -30,6 +30,7 @@ import {
   UserCheck,
   Link2,
   Bot,
+  Coins,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { trpc } from "@/lib/trpc";
@@ -176,6 +177,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/custom-payments", label: "Custom Payments", icon: Link2 },
     { href: "/admin/social-media", label: "Social Media", icon: Share2 },
     { href: "/admin/commissions", label: "Commissions", icon: DollarSign },
+    { href: "/admin/mydojo-bucks", label: "MyDojo Bucks", icon: Coins },
   ];
 
   // Admin-only tools

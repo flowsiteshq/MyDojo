@@ -2045,3 +2045,129 @@ export const aiSmsCampaigns = mysqlTable("aiSmsCampaigns", {
 });
 export type AiSmsCampaign = typeof aiSmsCampaigns.$inferSelect;
 export type InsertAiSmsCampaign = typeof aiSmsCampaigns.$inferInsert;
+
+// ─── MyDojo Bucks Referral Rewards System ────────────────────────────────────
+
+/**
+ * Tracks each member's MyDojo Bucks balance.
+ * One row per user (member). Balance is in integer "bucks" (e.g. 500 = $5 credit).
+ */
+export const mydojoBucksAccounts = mysqlTable("mydojoBucksAccounts", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The user who owns this bucks account */
+  userId: int("userId").notNull().unique(),
+  /** Current balance in MyDojo Bucks (integer cents equivalent, e.g. 500 = 500 bucks) */
+  balance: int("balance").default(0).notNull(),
+  /** Total bucks ever earned (lifetime) */
+  totalEarned: int("totalEarned").default(0).notNull(),
+  /** Total bucks ever redeemed */
+  totalRedeemed: int("totalRedeemed").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MydojoBucksAccount = typeof mydojoBucksAccounts.$inferSelect;
+export type InsertMydojoBucksAccount = typeof mydojoBucksAccounts.$inferInsert;
+
+/**
+ * Ledger of all MyDojo Bucks transactions (earn, redeem, manual adjust).
+ */
+export const mydojoBucksTransactions = mysqlTable("mydojoBucksTransactions", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The user whose balance changed */
+  userId: int("userId").notNull(),
+  /** Amount of bucks (positive = earned, negative = redeemed/deducted) */
+  amount: int("amount").notNull(),
+  /** Transaction type */
+  type: mysqlEnum("type", ["referral_earn", "redemption", "manual_adjust", "bonus"]).notNull(),
+  /** Human-readable description shown to the member */
+  description: text("description").notNull(),
+  /** Optional: the enrollment ID that triggered this earn */
+  enrollmentId: int("enrollmentId"),
+  /** Optional: the referral record ID */
+  referralId: int("referralId"),
+  /** Optional: the redemption request ID */
+  redemptionId: int("redemptionId"),
+  /** Admin who made a manual adjustment (if applicable) */
+  adminUserId: int("adminUserId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MydojoBucksTransaction = typeof mydojoBucksTransactions.$inferSelect;
+export type InsertMydojoBucksTransaction = typeof mydojoBucksTransactions.$inferInsert;
+
+/**
+ * Referral codes — each member gets a unique shareable code.
+ * When a new student enrolls using this code, the referrer earns bucks.
+ */
+export const referralCodes = mysqlTable("referralCodes", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The member who owns this referral code */
+  userId: int("userId").notNull().unique(),
+  /** Unique short code, e.g. "JOHN-X7K2" */
+  code: varchar("code", { length: 32 }).notNull().unique(),
+  /** Total number of successful referrals */
+  totalReferrals: int("totalReferrals").default(0).notNull(),
+  /** Total bucks earned from referrals */
+  totalBucksEarned: int("totalBucksEarned").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ReferralCode = typeof referralCodes.$inferSelect;
+export type InsertReferralCode = typeof referralCodes.$inferInsert;
+
+/**
+ * Tracks each successful referral — who referred whom and when bucks were awarded.
+ */
+export const referrals = mysqlTable("referrals", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The member who made the referral */
+  referrerId: int("referrerId").notNull(),
+  /** The referral code used */
+  referralCodeId: int("referralCodeId").notNull(),
+  /** Name of the person who was referred */
+  referredName: varchar("referredName", { length: 255 }).notNull(),
+  /** Phone of the person who was referred */
+  referredPhone: varchar("referredPhone", { length: 20 }),
+  /** Email of the person who was referred */
+  referredEmail: varchar("referredEmail", { length: 320 }),
+  /** Status of the referral */
+  status: mysqlEnum("status", ["pending", "enrolled", "expired"]).default("pending").notNull(),
+  /** Bucks awarded to the referrer for this referral */
+  bucksAwarded: int("bucksAwarded").default(0).notNull(),
+  /** The enrollment that confirmed this referral (if applicable) */
+  enrollmentId: int("enrollmentId"),
+  /** When bucks were awarded */
+  bucksAwardedAt: timestamp("bucksAwardedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = typeof referrals.$inferInsert;
+
+/**
+ * Redemption requests — members request to redeem bucks for merchandise.
+ */
+export const bucksRedemptions = mysqlTable("bucksRedemptions", {
+  id: int("id").autoincrement().primaryKey(),
+  /** The member requesting redemption */
+  userId: int("userId").notNull(),
+  /** Bucks being redeemed */
+  bucksAmount: int("bucksAmount").notNull(),
+  /** What they want (free-form or from a catalog) */
+  itemDescription: text("itemDescription").notNull(),
+  /** Status of the redemption */
+  status: mysqlEnum("status", ["pending", "approved", "fulfilled", "rejected"]).default("pending").notNull(),
+  /** Admin notes */
+  adminNotes: text("adminNotes"),
+  /** Admin who processed this */
+  processedByUserId: int("processedByUserId"),
+  processedAt: timestamp("processedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BucksRedemption = typeof bucksRedemptions.$inferSelect;
+export type InsertBucksRedemption = typeof bucksRedemptions.$inferInsert;

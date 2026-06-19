@@ -37,6 +37,7 @@ interface FluidPayEnrollmentFormProps {
   onSuccess?: (message: string) => void;
   onError?: (message: string) => void;
   initialPromo?: string; // pre-applied promo code from URL
+  referralCode?: string; // MyDojo Bucks referral code to credit on enrollment
 }
 
 declare global {
@@ -98,7 +99,14 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
   );
 }
 
-export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, initialPromo }: FluidPayEnrollmentFormProps) {
+export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, initialPromo, referralCode: referralCodeProp }: FluidPayEnrollmentFormProps) {
+  // Resolve referral code: prop > URL param > localStorage
+  const resolvedReferralCode = (() => {
+    if (referralCodeProp) return referralCodeProp;
+    const urlRef = new URLSearchParams(window.location.search).get("ref");
+    if (urlRef) return urlRef.toUpperCase();
+    try { return localStorage.getItem("mydojo_ref") || undefined; } catch { return undefined; }
+  })();
   const [step, setStep] = useState<"agreement" | "payment">("agreement");
   const [agreementSig, setAgreementSig] = useState<AgreementSignature | null>(null);
 
@@ -236,6 +244,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
             waiveDownPayment: enrollmentData.waiveDownPayment || undefined,
             agreementSignature: agreementSig?.signedName,
             agreementSignedAt: agreementSig?.signedAt?.toISOString(),
+            referralCode: resolvedReferralCode || undefined,
           });
         },
         onLoad: () => {},
@@ -478,6 +487,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
                   waiverReason: `Promo code: ${appliedPromo?.code}`,
                   agreementSignature: agreementSig?.signedName,
                   agreementSignedAt: agreementSig?.signedAt?.toISOString(),
+                  referralCode: resolvedReferralCode || undefined,
                 });
               }}
               disabled={isSubmitting}
