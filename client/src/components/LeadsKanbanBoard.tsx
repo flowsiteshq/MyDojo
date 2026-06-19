@@ -47,6 +47,7 @@ const SOURCE_COLORS: Record<string, string> = {
   ghl:          "bg-orange-100 text-orange-800",
   facebook:     "bg-indigo-100 text-indigo-800",
   trial_form:   "bg-purple-100 text-purple-800",
+  sms_ai:       "bg-teal-100 text-teal-800",
 };
 
 // ─── Lead card ────────────────────────────────────────────────────────────────
@@ -95,6 +96,7 @@ function LeadCard({
     : lead.source === "facebook" ? "Facebook"
     : lead.source === "trial_form" ? "Trial Form"
     : lead.source === "landing_page" ? "Landing Page"
+    : lead.source === "sms_ai" ? "SMS AI"
     : lead.source || "Chatbot";
   const sourceClass = SOURCE_COLORS[sourceKey] || "bg-gray-100 text-gray-700";
 

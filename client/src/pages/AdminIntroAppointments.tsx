@@ -302,6 +302,7 @@ export default function AdminIntroAppointments() {
       sourceFilter === "ghl" ? (aptSource.startsWith("ghl") || aptSource === "gohighlevel") :
       sourceFilter === "website" ? ["chatbot", "landing_page", "trial_form", "website"].includes(aptSource) :
       sourceFilter === "kiosk" ? aptSource === "kiosk" :
+      sourceFilter === "sms_ai" ? aptSource === "sms_ai" :
       aptSource === sourceFilter
     );
     const matchesFollowUp = !needsFollowUp || (() => {
@@ -712,6 +713,7 @@ export default function AdminIntroAppointments() {
             if (s.startsWith("ghl") || s === "gohighlevel") return "GoHighLevel";
             if (["chatbot", "landing_page", "trial_form", "website"].includes(s)) return "Website";
             if (s === "kiosk") return "Kiosk";
+            if (s === "sms_ai") return "SMS AI";
             if (s === "") return "Manual";
             return raw; // keep unknown sources as-is
           };
@@ -721,6 +723,7 @@ export default function AdminIntroAppointments() {
             "GoHighLevel": "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200",
             "Website":     "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200",
             "Kiosk":       "bg-violet-100 text-violet-800 border-violet-200 hover:bg-violet-200",
+            "SMS AI":      "bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-200",
             "Manual":      "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200",
           };
           const sourceActiveColors: Record<string, string> = {
@@ -728,6 +731,7 @@ export default function AdminIntroAppointments() {
             "GoHighLevel": "bg-orange-500 text-white border-orange-500",
             "Website":     "bg-emerald-600 text-white border-emerald-600",
             "Kiosk":       "bg-violet-600 text-white border-violet-600",
+            "SMS AI":      "bg-teal-600 text-white border-teal-600",
             "Manual":      "bg-gray-500 text-white border-gray-500",
           };
           const filterKeys: Record<string, string> = {
@@ -735,6 +739,7 @@ export default function AdminIntroAppointments() {
             "GoHighLevel": "ghl",
             "Website":     "website",
             "Kiosk":       "kiosk",
+            "SMS AI":      "sms_ai",
             "Manual":      "",
           };
 

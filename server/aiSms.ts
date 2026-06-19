@@ -8,6 +8,7 @@ import { smsConversations, smsMessages, trialSignups, classSchedule, membershipP
 import { eq, desc, and } from "drizzle-orm";
 import { sendSms } from "./sms800";
 import { invokeLLM } from "./_core/llm";
+import { handleBookingFlow } from "./smsTrialBooking";
 
 const MYDOJO_AI_NAME = "MyDojo Assistant";
 const DOJO_PHONE = process.env.EIGHT_HUNDRED_FROM_NUMBER ?? "+18774693656";
@@ -108,8 +109,15 @@ Your job is to have natural, helpful conversations with members and prospective 
 - Always end your reply with a question or a clear next step to keep the conversation going
 - If someone asks a vague question, ask a follow-up to understand their situation better before answering
 - Example: If they ask "how much are lessons?" — ask what age group or program they're interested in before giving pricing, since it varies by program
-- Be proactive: if someone seems interested, offer to book them a free trial class
+- Be proactive: if someone seems interested in joining, offer to book them a free trial class
 - If someone asks about schedule for a specific program, give them the specific days and times from the schedule data below
+
+=== FREE TRIAL BOOKING (IMPORTANT) ===
+- You can book a free trial class directly through this text conversation — no website visit needed!
+- When someone wants to book, says "I want to try a class", "sign me up", "book a trial", "schedule a class", or similar — encourage them and say something like: "I can get you set up right now! Just say 'book a trial' and I'll walk you through it in a few quick steps."
+- The booking system will automatically take over and guide them through: their name, which program, and preferred time
+- Once booked, our staff will confirm the exact date and time with them
+- Remind people the trial class is completely FREE with no commitment required
 
 === PROGRAMS ===
 - Little Ninjas (ages 3–5): Foundation martial arts for toddlers. Focus on listening, coordination, and confidence.
@@ -380,6 +388,31 @@ export async function handleInboundSms(payload: InboundSmsPayload): Promise<void
     const humanReply = "Of course! I'll have a staff member reach out to you shortly. You can also call us directly at (877) 4-MYDOJO.";
     const result = await sendSms({ to: sender, message: humanReply });
     await saveMessage(conv.id, "outbound", "ai", humanReply, result.messageId, result.success ? "sent" : "failed");
+    return;
+  }
+
+  // ── Trial booking state machine ──────────────────────────────────────────
+  // Re-fetch conv to get latest booking state fields
+  const freshConvRows = await db.select().from(smsConversations).where(eq(smsConversations.id, conv.id)).limit(1);
+  const freshConv = freshConvRows[0] as any ?? conv as any;
+
+  const bookingReply = await handleBookingFlow(
+    {
+      id: freshConv.id,
+      phone: freshConv.phone,
+      contactName: freshConv.contactName ?? null,
+      bookingState: freshConv.bookingState ?? "idle",
+      bookingName: freshConv.bookingName ?? null,
+      bookingProgram: freshConv.bookingProgram ?? null,
+      bookingPreferredTime: freshConv.bookingPreferredTime ?? null,
+    },
+    body
+  );
+
+  if (bookingReply) {
+    const bookResult = await sendSms({ to: sender, message: bookingReply });
+    await saveMessage(conv.id, "outbound", "ai", bookingReply, bookResult.messageId, bookResult.success ? "sent" : "failed");
+    console.log(`[AI SMS] Booking flow reply to ${sender}: "${bookingReply}"`);
     return;
   }
 

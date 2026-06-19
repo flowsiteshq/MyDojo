@@ -1998,6 +1998,11 @@ export const smsConversations = mysqlTable("smsConversations", {
   aiEnabled: boolean("aiEnabled").default(true).notNull(),
   lastMessageAt: timestamp("lastMessageAt").defaultNow().notNull(),
   unreadCount: int("unreadCount").default(0).notNull(),
+  // Trial booking state machine
+  bookingState: mysqlEnum("bookingState", ["idle", "awaiting_name", "awaiting_program", "awaiting_time", "confirmed"]).default("idle"),
+  bookingName: varchar("bookingName", { length: 255 }),
+  bookingProgram: varchar("bookingProgram", { length: 100 }),
+  bookingPreferredTime: varchar("bookingPreferredTime", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

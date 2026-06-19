@@ -17,6 +17,8 @@ import {
   Megaphone,
   RefreshCw,
   ChevronRight,
+  CalendarCheck,
+  ClipboardList,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
@@ -209,6 +211,16 @@ export default function SmsConversations() {
                         <span className="text-xs text-red-500">Opted Out</span>
                       )}
                     </div>
+                    {(conv as any).bookingState === "confirmed" && (
+                      <span className="text-xs text-emerald-600 flex items-center gap-1 mt-0.5">
+                        <CalendarCheck className="w-3 h-3" /> Trial Booked
+                      </span>
+                    )}
+                    {(conv as any).bookingState && (conv as any).bookingState !== "idle" && (conv as any).bookingState !== "confirmed" && (
+                      <span className="text-xs text-amber-600 flex items-center gap-1 mt-0.5">
+                        <ClipboardList className="w-3 h-3" /> Booking in progress
+                      </span>
+                    )}
                     {conv.lastMessageAt && (
                       <div className="text-xs text-gray-400 mt-0.5">
                         {formatDistanceToNow(new Date(conv.lastMessageAt), { addSuffix: true })}
@@ -251,6 +263,28 @@ export default function SmsConversations() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
+                  {/* Booking status summary in header */}
+                  {(convDetail.conversation as any).bookingState === "confirmed" && (
+                    <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5">
+                      <CalendarCheck className="w-4 h-4 text-emerald-600" />
+                      <div className="text-xs">
+                        <div className="font-semibold text-emerald-700">Trial Booked via SMS</div>
+                        <div className="text-emerald-600">
+                          {(convDetail.conversation as any).bookingProgram || "Program TBD"}
+                          {(convDetail.conversation as any).bookingPreferredTime ? ` · ${(convDetail.conversation as any).bookingPreferredTime}` : ""}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {(convDetail.conversation as any).bookingState && (convDetail.conversation as any).bookingState !== "idle" && (convDetail.conversation as any).bookingState !== "confirmed" && (
+                    <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+                      <ClipboardList className="w-4 h-4 text-amber-600" />
+                      <div className="text-xs">
+                        <div className="font-semibold text-amber-700">Booking In Progress</div>
+                        <div className="text-amber-600 capitalize">{((convDetail.conversation as any).bookingState ?? "").replace("awaiting_", "Waiting for: ")}</div>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2">
                     <Label htmlFor="ai-toggle" className="text-sm text-gray-600">
                       AI Replies
