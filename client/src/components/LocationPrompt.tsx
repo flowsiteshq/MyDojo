@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, X, Navigation } from "lucide-react";
@@ -5,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useLocationContext } from "@/contexts/LocationContext";
 
 export function LocationPrompt() {
+  const { t } = useTranslation();
   const { showPrompt, requestPreciseLocation, dismissPrompt, isLocating } = useLocationContext();
   
   if (!showPrompt) return null;

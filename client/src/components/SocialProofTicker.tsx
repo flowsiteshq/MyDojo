@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 /**
  * SocialProofTicker.tsx
  * Real-time social proof notifications showing recent enrollments.
@@ -95,6 +96,7 @@ const DEFAULT_CONFIG: ProgramConfig = {
 };
 
 export function SocialProofTicker() {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);

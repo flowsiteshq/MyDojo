@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 /**
  * IntroOfferModal.tsx
  * Free class booking popup with program selection
@@ -108,6 +109,7 @@ interface IntroOfferModalProps {
 }
 
 export function IntroOfferModal({ open, onClose, defaultProgramId }: IntroOfferModalProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<Step>("select");
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(
     defaultProgramId ? PROGRAMS.find((p) => p.id === defaultProgramId) || null : null

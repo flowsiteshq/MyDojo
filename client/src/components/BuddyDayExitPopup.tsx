@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Calendar, Clock, MapPin, Users } from "lucide-react";
 import { Link } from "wouter";
@@ -7,6 +8,7 @@ const STORAGE_KEY = "mydojo_buddy_day_exit_popup_v1";
 const MIN_TIME_ON_PAGE_MS = 20_000;
 
 export default function BuddyDayExitPopup() {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const triggered = useRef(false);
   const pageEnterTime = useRef(Date.now());

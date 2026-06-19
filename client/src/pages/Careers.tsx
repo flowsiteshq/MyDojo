@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Check, Mail, Briefcase, Heart, Zap, Users, MapPin } from "lucide-react";
 import SEO from "@/components/SEO";
@@ -5,6 +6,7 @@ import { LeadCaptureModal } from "@/components/LeadCaptureModal";
 import { JobApplicationModal } from "@/components/JobApplicationModal";
 
 export default function Careers() {
+  const { t } = useTranslation();
   const benefits = [
     {
       icon: <Heart className="h-6 w-6 text-primary" />,

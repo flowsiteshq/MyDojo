@@ -1,3 +1,4 @@
+import "./lib/i18n";
 import { trpc } from "@/lib/trpc";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -7,7 +8,6 @@ import { HelmetProvider } from "react-helmet-async";
 import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
-import { LanguageProvider } from "./contexts/LanguageContext";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -58,9 +58,7 @@ createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
-        <LanguageProvider>
-          <App />
-        </LanguageProvider>
+        <App />
       </HelmetProvider>
     </QueryClientProvider>
   </trpc.Provider>

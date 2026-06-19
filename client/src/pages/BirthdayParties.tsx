@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import SEO from "@/components/SEO";
+import { useTranslation } from "react-i18next";
 
 const PACKAGES = [
   {
@@ -91,6 +92,7 @@ const PERKS = [
 ];
 
 export default function BirthdayParties() {
+  const { t } = useTranslation();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [form, setForm] = useState({
     parentName: "",

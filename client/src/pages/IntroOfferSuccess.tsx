@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 /**
  * IntroOfferSuccess.tsx
  * Shown after a successful free class booking.
@@ -9,6 +10,7 @@ import { CheckCircle2, Calendar, MapPin, Phone, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button";
 
 export default function IntroOfferSuccess() {
+  const { t } = useTranslation();
   const params = new URLSearchParams(window.location.search);
   const name = params.get("name") || "there";
   const program = params.get("program") || "your program";

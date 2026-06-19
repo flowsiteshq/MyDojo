@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { Phone, MessageSquare, X } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 const PHONE_NUMBER = "8774693656";
 const PHONE_DISPLAY = "(877) 4-MYDOJO";
@@ -18,7 +18,7 @@ interface PhoneChooserProps {
 
 export function PhoneChooser({ children, className }: PhoneChooserProps) {
   const [open, setOpen] = useState(false);
-  const { t } = useLanguage();
+  const { t } = useTranslation();
 
   const handleCall = () => {
     window.location.href = `tel:${PHONE_NUMBER}`;

@@ -3,8 +3,10 @@ import { beltLevels, BeltLevel } from "@/data/belt-journey";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ChevronRight, Star, Shield, Zap } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function BeltJourney() {
+  const { t } = useTranslation();
   const [selectedBelt, setSelectedBelt] = useState<BeltLevel>(beltLevels[0]);
 
   return (
@@ -12,10 +14,10 @@ export function BeltJourney() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-heading font-bold mb-4">
-            Your Path to <span className="text-primary">Black Belt</span>
+            {t("belt_journey.title").split("Black Belt")[0]}<span className="text-primary">{t("belt_journey.black")}</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Every master was once a beginner. Explore the journey of growth, discipline, and excellence that awaits every student at MyDojo.
+            {t("belt_journey.subtitle")}
           </p>
         </div>
 
@@ -115,7 +117,7 @@ export function BeltJourney() {
                     <div className="bg-gray-50 p-6 rounded-2xl">
                       <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <Shield className="w-5 h-5 text-primary" />
-                        Core Values
+                        {t("about.values_title")}
                       </h4>
                       <ul className="space-y-3">
                         {selectedBelt.values.map((value, i) => (
@@ -131,7 +133,7 @@ export function BeltJourney() {
                     <div className="bg-gray-50 p-6 rounded-2xl">
                       <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <Zap className="w-5 h-5 text-primary" />
-                        Key Skills
+                        {t("belt_journey.expert")}
                       </h4>
                       <ul className="space-y-3">
                         {selectedBelt.skills.map((skill, i) => (

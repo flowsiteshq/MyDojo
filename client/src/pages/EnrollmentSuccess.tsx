@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { CheckCircle2, UserPlus, Home } from "lucide-react";
 
 export default function EnrollmentSuccess() {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [sessionId, setSessionId] = useState<string | null>(null);
 

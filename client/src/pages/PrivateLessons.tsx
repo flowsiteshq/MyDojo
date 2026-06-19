@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,7 @@ const INSTRUCTORS = [
 ];
 
 export default function PrivateLessons() {
+  const { t } = useTranslation();
   const [selectedInstructor, setSelectedInstructor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 

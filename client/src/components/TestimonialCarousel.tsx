@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { Star, Quote } from 'lucide-react';
@@ -49,6 +50,7 @@ const testimonials: Testimonial[] = [
 ];
 
 export function TestimonialCarousel() {
+  const { t } = useTranslation();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: 'start' });
 
   const scrollPrev = React.useCallback(() => {

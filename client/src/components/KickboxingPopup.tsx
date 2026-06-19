@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { X, CheckCircle, Loader2, Flame, Zap } from "lucide-react";
@@ -7,6 +8,7 @@ const STORAGE_KEY = "mydojo_kickboxing_popup_v1";
 const SCROLL_THRESHOLD = 0.60;
 
 export default function KickboxingPopup() {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

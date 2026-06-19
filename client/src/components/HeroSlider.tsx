@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { openIntakeChatbot } from "@/lib/chatbot";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useLocationContext } from "@/contexts/LocationContext";
+import { useTranslation } from "react-i18next";
 import { trpc } from "@/lib/trpc";
 import { ProgramFinderPopup } from "@/components/ProgramFinderPopup";
 
@@ -80,6 +81,7 @@ interface HeroSliderProps {
 }
 
 export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
+  const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -239,13 +241,13 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
               className="bg-primary hover:bg-primary/90 text-white text-lg px-8 py-5 h-auto font-heading uppercase tracking-wider skew-x-[-10deg] w-full sm:w-auto transition-all duration-200 hover:scale-105 shadow-lg"
             >
               <span className="skew-x-[10deg] flex items-center">
-                <span className="font-black">{content.ctaText || "Book Your Free Class"}</span>
+                <span className="font-black">{content.ctaText || t("general.book_free_class")}</span>
               </span>
             </button>
             <Link href={closestLocation ? `/locations/${closestLocation.id}` : (userCity ? `/locations?city=${encodeURIComponent(userCity)}` : "/locations")}>
               <Button className="bg-white text-black hover:bg-gray-200 text-lg px-8 py-6 h-auto font-heading uppercase tracking-wider skew-x-[-10deg] w-full sm:w-auto">
                 <span className="skew-x-[10deg]">
-                  {closestLocation ? `Classes in ${closestLocation.city}` : (userCity ? `Classes in ${userCity}` : "Find a Class")}
+                  {closestLocation ? `${t("schedule.all_classes")} in ${closestLocation.city}` : (userCity ? `${t("schedule.all_classes")} in ${userCity}` : t("general.view_schedule"))}
                 </span>
               </Button>
             </Link>
@@ -254,7 +256,7 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
                 variant="outline"
                 className="border-white text-white hover:bg-white hover:text-black text-lg px-8 py-6 h-auto font-heading uppercase tracking-wider skew-x-[-10deg] w-full sm:w-auto"
               >
-                <span className="skew-x-[10deg]">View Programs</span>
+                <span className="skew-x-[10deg]">{t("general.view_all")}</span>
               </Button>
             </Link>
           </div>
@@ -268,7 +270,7 @@ export function HeroSlider({ onOpenChatbot }: HeroSliderProps = {}) {
               ))}
             </div>
             <p className="text-sm text-gray-300">
-              <span className="text-white font-bold">500+</span> families enrolled this year
+              <span className="text-white font-bold">500+</span> {t("lang.english") === "English" ? "families enrolled this year" : "familias inscritas este año"}
             </p>
           </div>
         </motion.div>

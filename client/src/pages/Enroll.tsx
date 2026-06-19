@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 /**
  * Enroll.tsx
  * Standalone enrollment page that students reach by scanning the kiosk QR code.
@@ -25,6 +26,7 @@ interface PersonalInfo {
 }
 
 export default function Enroll() {
+  const { t } = useTranslation();
   const [step, setStep] = useState<Step>("package");
   const [selectedPackageId, setSelectedPackageId] = useState<number | null>(null);
   const [info, setInfo] = useState<PersonalInfo>({

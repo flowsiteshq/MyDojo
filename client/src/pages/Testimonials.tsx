@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { useState } from "react";
 import SEO from "@/components/SEO";
 
 export default function Testimonials() {
+  const { t } = useTranslation();
   const [selectedProgram, setSelectedProgram] = useState<string | undefined>(undefined);
   const [selectedRating, setSelectedRating] = useState<number | undefined>(undefined);
 

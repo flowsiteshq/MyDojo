@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Filter } from "lucide-react";
@@ -182,6 +183,7 @@ const badgeColors: Record<string, string> = {
 };
 
 export default function Shop() {
+  const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [checkoutProduct, setCheckoutProduct] = useState<ShopProduct | null>(null);

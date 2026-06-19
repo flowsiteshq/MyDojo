@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useMemo, useEffect } from "react";
 import { useSearch } from "wouter";
 import { DaySchedule } from "@/data/locations";
@@ -40,6 +41,7 @@ function getProgramColor(name: string): string {
 }
 
 export function ScheduleWidget({ schedule }: ScheduleWidgetProps) {
+  const { t } = useTranslation();
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const [activeDay, setActiveDay] = useState("Monday");
   const [filter, setFilter] = useState("all");

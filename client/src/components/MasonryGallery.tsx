@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Heart, MessageCircle, Instagram } from "lucide-react";
 import { socialFeed } from "@/data/social-feed";
 
 export function MasonryGallery() {
+  const { t } = useTranslation();
   return (
     <section className="py-24 bg-background relative overflow-hidden">
       <div className="container px-4 mx-auto">

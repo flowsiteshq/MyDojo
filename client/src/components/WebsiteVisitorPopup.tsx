@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -10,6 +11,7 @@ import { CheckCircle2, Loader2, X } from "lucide-react";
 const STORAGE_KEY = "mydojo-visitor-lead-captured";
 
 export function WebsiteVisitorPopup() {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");

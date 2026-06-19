@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Accordion,
   AccordionContent,
@@ -20,6 +19,7 @@ import SEO from "@/components/SEO";
 import SchemaMarkup from "@/components/SchemaMarkup";
 import { useVisitorSms } from "@/hooks/useVisitorSms";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 // ─── Image constants ────────────────────────────────────────────────────────
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
@@ -69,6 +69,7 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 
 // ─── Hero Section ─────────────────────────────────────────────────────────────
 function HeroSection({ onBookClass }: { onBookClass: () => void }) {
+  const { t } = useTranslation();
   const deadline = useMemo(() => new Date("2026-07-25T23:59:59"), []);
   const timeLeft = useCountdown(deadline);
 
@@ -93,12 +94,12 @@ function HeroSection({ onBookClass }: { onBookClass: () => void }) {
           {/* Urgency badge — inline above eyebrow */}
           <div className="inline-flex items-center gap-3 bg-black/70 backdrop-blur border border-[#e63946]/50 rounded-lg px-4 py-3 mb-5 shadow-xl">
             <div className="text-center">
-              <p className="text-white font-black text-xs uppercase tracking-wider">LIMITED SPOTS!</p>
-              <p className="text-[#e63946] font-bold text-[10px] mt-0.5">100 New Members Before July 25</p>
+              <p className="text-white font-black text-xs uppercase tracking-wider">{t("general.limited_spots")}</p>
+              <p className="text-[#e63946] font-bold text-[10px] mt-0.5">{t("general.limited_desc")}</p>
             </div>
             <div className="w-px h-8 bg-white/20" />
             <div className="flex items-center gap-1.5">
-              <CountdownUnit value={timeLeft.days} label="Days" />
+              <CountdownUnit value={timeLeft.days} label={t("schedule.monday").slice(0,4)} />
               <span className="text-white font-black text-base pb-3">:</span>
               <CountdownUnit value={timeLeft.hours} label="Hrs" />
               <span className="text-white font-black text-base pb-3">:</span>
@@ -110,26 +111,26 @@ function HeroSection({ onBookClass }: { onBookClass: () => void }) {
 
           {/* Eyebrow */}
           <p className="text-[#e63946] font-bold uppercase tracking-[0.25em] text-sm mb-4">
-            Tomball's Favorite Martial Arts School
+            {t("hero.subtitle")}
           </p>
 
           {/* Headline */}
           <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.0] mb-2 uppercase tracking-tight">
-            BUILD CONFIDENCE.
+            {t("hero.tagline1")}
           </h1>
           <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.0] mb-2 uppercase tracking-tight">
-            LEARN SELF DEFENSE.
+            {t("hero.tagline2")}
           </h1>
           <h1 className="text-5xl md:text-7xl font-black text-[#e63946] leading-[1.0] mb-6 uppercase tracking-tight">
-            HAVE FUN.
+            {t("hero.tagline3")}
           </h1>
 
           {/* Feature badges */}
           <div className="flex flex-wrap gap-3 mb-8">
             {[
-              { label: "Ages 3+" },
-              { label: "Teens & Adults" },
-              { label: "Kickboxing" },
+              { label: t("hero.ages3") },
+              { label: t("hero.teens_adults") },
+              { label: t("hero.kickboxing") },
             ].map(b => (
               <div key={b.label} className="flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
                 <Shield className="h-4 w-4 text-[#e63946]" />
@@ -144,54 +145,51 @@ function HeroSection({ onBookClass }: { onBookClass: () => void }) {
               onClick={onBookClass}
               className="group flex items-center justify-center gap-2 bg-[#e63946] hover:bg-[#c1121f] text-white font-black uppercase tracking-wider text-lg px-8 py-4 rounded-sm transition-all duration-200 shadow-[0_0_30px_rgba(230,57,70,0.4)]"
             >
-              BOOK YOUR FREE CLASS
+              {t("home.book_your_free_class")}
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </button>
             <PhoneChooser className="flex items-center justify-center gap-2 border-2 border-white/50 hover:border-white text-white font-bold uppercase tracking-wider text-base px-6 py-4 rounded-sm transition-all duration-200 hover:bg-white/10">
               <Phone className="h-4 w-4" />
-              (877) 4-MYDOJO
+              {t("general.phone_number")}
             </PhoneChooser>
           </div>
         </div>
       </div>
-
-
-
-
     </section>
   );
 }
 
 // ─── Enrollment Cards ─────────────────────────────────────────────────────────
 function EnrollmentSection({ onBookClass }: { onBookClass: () => void }) {
+  const { t } = useTranslation();
   const cards = [
     {
       id: "child",
-      title: "My Child",
-      ages: "Ages 3-12",
+      title: t("home.enroll_child"),
+      ages: t("home.enroll_child_ages"),
       img: POPUP_CHILD,
-      desc: "Build confidence, focus, and discipline for life.",
+      desc: t("home.enroll_child_desc"),
     },
     {
       id: "teen",
-      title: "Teen",
-      ages: "Ages 13-17",
+      title: t("home.enroll_teen"),
+      ages: t("home.enroll_teen_ages"),
       img: POPUP_TEEN,
-      desc: "Develop leadership, respect, and self-defense skills.",
+      desc: t("home.enroll_teen_desc"),
     },
     {
       id: "myself",
-      title: "Myself",
-      ages: "Adults 18+",
+      title: t("home.enroll_myself"),
+      ages: t("home.enroll_myself_ages"),
       img: POPUP_MYSELF,
-      desc: "Get fit, learn self-defense, and feel unstoppable.",
+      desc: t("home.enroll_myself_desc"),
     },
     {
       id: "family",
-      title: "Family",
-      ages: "Multiple Members",
+      title: t("home.enroll_family"),
+      ages: t("home.enroll_family_ages"),
       img: POPUP_FAMILY,
-      desc: "Train together, grow together, succeed together.",
+      desc: t("home.enroll_family_desc"),
     },
   ];
 
@@ -200,7 +198,7 @@ function EnrollmentSection({ onBookClass }: { onBookClass: () => void }) {
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className="text-3xl md:text-5xl font-black text-black uppercase tracking-tight">
-            WHO ARE <span className="text-[#e63946]">YOU</span> ENROLLING?
+            {t("home.enrolling_title")} <span className="text-[#e63946]">{t("home.enrolling_accent")}</span> {t("home.enrolling_suffix")}
           </h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -225,7 +223,7 @@ function EnrollmentSection({ onBookClass }: { onBookClass: () => void }) {
                 <button
                   className="w-full flex items-center justify-center gap-2 bg-[#e63946] hover:bg-[#c1121f] text-white font-bold uppercase text-sm py-2.5 rounded transition-colors"
                 >
-                  SELECT <ArrowRight className="h-3.5 w-3.5" />
+                  {t("home.select")} <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
@@ -238,13 +236,14 @@ function EnrollmentSection({ onBookClass }: { onBookClass: () => void }) {
 
 // ─── What Your Child Will Learn ───────────────────────────────────────────────
 function WhatTheyLearnSection({ onBookClass }: { onBookClass: () => void }) {
+  const { t } = useTranslation();
   const values = [
-    { icon: <Award className="h-8 w-8 text-white" />, label: "Confidence" },
-    { icon: <Heart className="h-8 w-8 text-white" />, label: "Respect" },
-    { icon: <Target className="h-8 w-8 text-white" />, label: "Focus" },
-    { icon: <Zap className="h-8 w-8 text-white" />, label: "Discipline" },
-    { icon: <Shield className="h-8 w-8 text-white" />, label: "Anti-Bullying" },
-    { icon: <Users className="h-8 w-8 text-white" />, label: "Fitness" },
+    { icon: <Award className="h-8 w-8 text-white" />, label: t("home.confidence_label") },
+    { icon: <Heart className="h-8 w-8 text-white" />, label: t("home.respect_label") },
+    { icon: <Target className="h-8 w-8 text-white" />, label: t("home.focus_label") },
+    { icon: <Zap className="h-8 w-8 text-white" />, label: t("home.discipline_label") },
+    { icon: <Shield className="h-8 w-8 text-white" />, label: t("home.antibullying_label") },
+    { icon: <Users className="h-8 w-8 text-white" />, label: t("home.fitness_label") },
   ];
 
   return (
@@ -257,7 +256,7 @@ function WhatTheyLearnSection({ onBookClass }: { onBookClass: () => void }) {
       <div className="relative z-10 container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
-            WHAT YOUR CHILD <span className="text-[#e63946]">WILL LEARN</span>
+            {t("home.what_learn_title")} <span className="text-[#e63946]">{t("home.what_learn_accent")}</span>
           </h2>
         </div>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-4 mb-12">
@@ -275,7 +274,7 @@ function WhatTheyLearnSection({ onBookClass }: { onBookClass: () => void }) {
             onClick={onBookClass}
             className="inline-flex items-center gap-2 bg-[#e63946] hover:bg-[#c1121f] text-white font-black uppercase tracking-wider text-lg px-10 py-4 rounded-sm transition-all duration-200"
           >
-            BOOK FREE CLASS <ArrowRight className="h-5 w-5" />
+            {t("home.book_free_class")} <ArrowRight className="h-5 w-5" />
           </button>
         </div>
       </div>
@@ -285,13 +284,14 @@ function WhatTheyLearnSection({ onBookClass }: { onBookClass: () => void }) {
 
 // ─── Summer Special Banner ────────────────────────────────────────────────────
 function SummerSpecialSection({ onBookClass }: { onBookClass: () => void }) {
+  const { t } = useTranslation();
   return (
     <section className="py-0 bg-black overflow-hidden">
       <div className="relative">
         {/* Gold/Red gradient bar */}
         <div className="bg-gradient-to-r from-[#e63946] via-[#c1121f] to-[#e63946] py-3 text-center">
           <p className="text-white font-black uppercase tracking-[0.3em] text-sm">
-            SUMMER SPECIAL — LIMITED TIME OFFER
+            {t("home.summer_special_banner")}
           </p>
         </div>
 
@@ -301,9 +301,9 @@ function SummerSpecialSection({ onBookClass }: { onBookClass: () => void }) {
             <div className="flex-shrink-0 text-center">
               <div className="relative inline-block">
                 <div className="w-48 h-48 rounded-full bg-gradient-to-br from-[#FFD700] to-[#FFA500] flex flex-col items-center justify-center shadow-[0_0_60px_rgba(255,215,0,0.4)]">
-                  <span className="text-black font-black text-2xl uppercase leading-tight">SUMMER</span>
-                  <span className="text-black font-black text-3xl uppercase leading-tight">SPECIAL</span>
-                  <span className="text-black text-xs font-bold mt-1">2026</span>
+                  <span className="text-black font-black text-2xl uppercase leading-tight">{t("home.summer_special_title")}</span>
+                  <span className="text-black font-black text-3xl uppercase leading-tight">{t("home.summer_special_sub")}</span>
+                  <span className="text-black text-xs font-bold mt-1">{t("home.summer_year")}</span>
                 </div>
               </div>
             </div>
@@ -311,11 +311,11 @@ function SummerSpecialSection({ onBookClass }: { onBookClass: () => void }) {
             {/* Middle: Offers */}
             <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { label: "FREE", item: "Uniform", value: "$60 VALUE", icon: <Shield className="h-8 w-8 text-[#FFD700]" /> },
-                { label: "FREE", item: "Beginner Class", value: "$49 VALUE", icon: <Calendar className="h-8 w-8 text-[#FFD700]" /> },
-                { label: "FREE", item: "Confidence Assessment", value: "$49 VALUE", icon: <CheckCircle className="h-8 w-8 text-[#FFD700]" /> },
+                { label: "FREE", item: t("home.free_uniform"), value: t("home.value_60"), icon: <Shield className="h-8 w-8 text-[#FFD700]" /> },
+                { label: "FREE", item: t("home.free_class"), value: t("home.value_49"), icon: <Calendar className="h-8 w-8 text-[#FFD700]" /> },
+                { label: "FREE", item: t("home.free_assessment"), value: t("home.value_49"), icon: <CheckCircle className="h-8 w-8 text-[#FFD700]" /> },
               ].map(offer => (
-                <div key={offer.item} className="text-center border border-[#FFD700]/30 rounded-xl p-6 bg-white/5">
+                <div key={offer.item} className="text-center border border-white/10 rounded-xl p-6">
                   <div className="flex justify-center mb-3">{offer.icon}</div>
                   <p className="text-[#FFD700] font-black text-2xl uppercase">{offer.label}</p>
                   <p className="text-white font-bold text-lg uppercase leading-tight">{offer.item}</p>
@@ -326,14 +326,14 @@ function SummerSpecialSection({ onBookClass }: { onBookClass: () => void }) {
 
             {/* Right: Urgency + CTA */}
             <div className="flex-shrink-0 text-center bg-white rounded-xl p-8 shadow-2xl">
-              <p className="text-black font-black text-lg uppercase">ONLY</p>
+              <p className="text-black font-black text-lg uppercase">{t("home.only")}</p>
               <p className="text-[#e63946] font-black text-6xl leading-none">25</p>
-              <p className="text-black font-bold text-sm uppercase mb-4">SUMMER SPOTS<br />REMAINING!</p>
+              <p className="text-black font-bold text-sm uppercase mb-4 whitespace-pre-line">{t("home.summer_spots")}</p>
               <button
                 onClick={onBookClass}
                 className="flex items-center gap-2 bg-[#FFD700] hover:bg-[#FFC000] text-black font-black uppercase tracking-wider px-6 py-3 rounded-sm transition-colors"
               >
-                BOOK TODAY <ArrowRight className="h-4 w-4" />
+                {t("home.book_today")} <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -345,6 +345,7 @@ function SummerSpecialSection({ onBookClass }: { onBookClass: () => void }) {
 
 // ─── Social Proof / Testimonials ──────────────────────────────────────────────
 function TestimonialsSection({ onBookClass }: { onBookClass: () => void }) {
+  const { t } = useTranslation();
   const [idx, setIdx] = useState(0);
   const testimonials = [
     {
@@ -402,32 +403,32 @@ function TestimonialsSection({ onBookClass }: { onBookClass: () => void }) {
             <span className="ml-2 text-2xl font-black text-black">5.0</span>
           </div>
           <h2 className="text-3xl md:text-5xl font-black text-black uppercase tracking-tight">
-            SEE WHY FAMILIES <span className="text-[#e63946]">LOVE</span> MYDOJO
+            {t("home.testimonials_title")} <span className="text-[#e63946]">{t("home.testimonials_accent")}</span> {t("home.testimonials_suffix")}
           </h2>
-          <p className="text-gray-500 mt-2">500+ five-star reviews on Google & Facebook</p>
+          <p className="text-gray-500 mt-2">{t("home.testimonials_reviews")}</p>
         </div>
 
         {/* Testimonial cards */}
         <div className="relative mt-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {visible.map((t, i) => (
+            {visible.map((t2, i) => (
               <div key={i} className="bg-gray-50 rounded-xl p-6 border border-gray-100 shadow-sm">
                 <div className="flex items-center gap-1 mb-3">
-                  {[...Array(t.stars)].map((_, j) => (
+                  {[...Array(t2.stars)].map((_, j) => (
                     <Star key={j} className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
                   ))}
                 </div>
-                <p className="text-gray-700 text-sm leading-relaxed mb-4">"{t.text}"</p>
+                <p className="text-gray-700 text-sm leading-relaxed mb-4">"{t2.text}"</p>
                 <div className="flex items-center gap-3">
                   <img
-                    src={t.avatar}
-                    alt={t.name}
+                    src={t2.avatar}
+                    alt={t2.name}
                     className="w-10 h-10 rounded-full object-cover"
-                    onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${t.name}&background=e63946&color=fff`; }}
+                    onError={e => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${t2.name}&background=e63946&color=fff`; }}
                   />
                   <div>
-                    <p className="font-bold text-sm text-black">– {t.name}</p>
-                    <p className="text-xs text-gray-500">{t.role}</p>
+                    <p className="font-bold text-sm text-black">– {t2.name}</p>
+                    <p className="text-xs text-gray-500">{t2.role}</p>
                   </div>
                 </div>
               </div>
@@ -460,15 +461,16 @@ function TestimonialsSection({ onBookClass }: { onBookClass: () => void }) {
 
 // ─── Why MyDojo ───────────────────────────────────────────────────────────────
 function WhyMyDojoSection() {
+  const { t } = useTranslation();
   const reasons = [
-    { icon: <Shield className="h-6 w-6" />, title: "Safe Facility", desc: "Clean, family-friendly environment with certified instructors." },
-    { icon: <Award className="h-6 w-6" />, title: "Experienced Instructors", desc: "Decades of combined martial arts expertise and teaching experience." },
-    { icon: <Heart className="h-6 w-6" />, title: "Character Development", desc: "We build confident, respectful, and disciplined young leaders." },
-    { icon: <BookOpen className="h-6 w-6" />, title: "Structured Curriculum", desc: "Progressive belt system with clear goals and achievements." },
-    { icon: <Zap className="h-6 w-6" />, title: "Fitness & Health", desc: "Full-body workouts that improve strength, flexibility, and cardio." },
-    { icon: <Target className="h-6 w-6" />, title: "Leadership Training", desc: "Programs designed to develop tomorrow's leaders today." },
-    { icon: <Users className="h-6 w-6" />, title: "Family Environment", desc: "A welcoming community where every member feels at home." },
-    { icon: <CheckCircle className="h-6 w-6" />, title: "Anti-Bullying Focus", desc: "Practical tools to handle conflict with confidence and calm." },
+    { icon: <Shield className="h-6 w-6" />, title: t("home.safe_facility"), desc: t("home.safe_facility_desc") },
+    { icon: <Award className="h-6 w-6" />, title: t("home.experienced_instructors"), desc: t("home.experienced_instructors_desc") },
+    { icon: <Heart className="h-6 w-6" />, title: t("home.character_dev"), desc: t("home.character_dev_desc") },
+    { icon: <BookOpen className="h-6 w-6" />, title: t("home.structured_curriculum"), desc: t("home.structured_curriculum_desc") },
+    { icon: <Zap className="h-6 w-6" />, title: t("home.fitness_health"), desc: t("home.fitness_health_desc") },
+    { icon: <Target className="h-6 w-6" />, title: t("home.leadership"), desc: t("home.leadership_desc") },
+    { icon: <Users className="h-6 w-6" />, title: t("home.family_env"), desc: t("home.family_env_desc") },
+    { icon: <CheckCircle className="h-6 w-6" />, title: t("home.antibullying"), desc: t("home.antibullying_desc") },
   ];
 
   return (
@@ -476,7 +478,7 @@ function WhyMyDojoSection() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
-            WHY CHOOSE <span className="text-[#e63946]">MYDOJO?</span>
+            {t("home.why_title")} <span className="text-[#e63946]">{t("home.why_accent")}</span>
           </h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -495,33 +497,34 @@ function WhyMyDojoSection() {
 
 // ─── Programs Section ─────────────────────────────────────────────────────────
 function ProgramsSection({ onBookClass }: { onBookClass: () => void }) {
+  const { t } = useTranslation();
   const programs = [
     {
-      title: "Little Ninjas",
-      ages: "Ages 3–5",
+      title: t("home.little_ninjas_title"),
+      ages: t("home.little_ninjas_ages"),
       img: LITTLE_NINJAS_IMG,
-      benefits: ["Listening skills", "Balance & coordination", "Social development", "Fun & safe environment"],
+      benefits: [t("home.little_ninjas_b1"), t("home.little_ninjas_b2"), t("home.little_ninjas_b3"), t("home.little_ninjas_b4")],
       href: "/programs#little-ninjas",
     },
     {
-      title: "Kids Martial Arts",
-      ages: "Ages 5–12",
+      title: t("home.kids_ma_title"),
+      ages: t("home.kids_ma_ages"),
       img: CORE_KIDS_IMG,
-      benefits: ["Self-discipline", "Anti-bullying", "Confidence building", "Belt progression"],
+      benefits: [t("home.kids_ma_b1"), t("home.kids_ma_b2"), t("home.kids_ma_b3"), t("home.kids_ma_b4")],
       href: "/programs#dragon-kids",
     },
     {
-      title: "Teens & Adults",
-      ages: "Ages 13+",
+      title: t("home.teens_adults_title"),
+      ages: t("home.teens_adults_ages"),
       img: TEENS_ADULTS_IMG,
-      benefits: ["Self-defense", "Leadership skills", "Stress relief", "Physical fitness"],
+      benefits: [t("home.teens_adults_b1"), t("home.teens_adults_b2"), t("home.teens_adults_b3"), t("home.teens_adults_b4")],
       href: "/programs#teens-adults",
     },
     {
-      title: "Kickboxing",
-      ages: "All Ages",
+      title: t("home.kickboxing_title"),
+      ages: t("home.kickboxing_ages"),
       img: KICKBOXING_IMG,
-      benefits: ["Burn 800+ calories", "Full-body workout", "Real techniques", "High energy classes"],
+      benefits: [t("home.kickboxing_b1"), t("home.kickboxing_b2"), t("home.kickboxing_b3"), t("home.kickboxing_b4")],
       href: "/programs#kickboxing",
     },
   ];
@@ -530,9 +533,9 @@ function ProgramsSection({ onBookClass }: { onBookClass: () => void }) {
     <section className="py-20 bg-black">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <p className="text-[#e63946] font-bold uppercase tracking-[0.25em] text-sm mb-2">Explore All Programs</p>
+          <p className="text-[#e63946] font-bold uppercase tracking-[0.25em] text-sm mb-2">{t("home.programs_subtitle")}</p>
           <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
-            CHOOSE YOUR DISCIPLINE
+            {t("home.programs_title")}
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -563,7 +566,7 @@ function ProgramsSection({ onBookClass }: { onBookClass: () => void }) {
                   onClick={onBookClass}
                   className="w-full flex items-center justify-center gap-2 bg-[#e63946] hover:bg-[#c1121f] text-white font-bold uppercase text-sm py-3 rounded transition-colors"
                 >
-                  BOOK FREE CLASS <ArrowRight className="h-3.5 w-3.5" />
+                  {t("home.book_free_class")} <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
@@ -576,13 +579,14 @@ function ProgramsSection({ onBookClass }: { onBookClass: () => void }) {
 
 // ─── Schedule Section ─────────────────────────────────────────────────────────
 function ScheduleSection({ onBookClass }: { onBookClass: () => void }) {
+  const { t } = useTranslation();
   const schedule = [
-    { day: "Monday", classes: ["Little Ninjas 4:00 PM", "Core Kids 5:00 PM", "Teens/Adults 6:00 PM", "Kickboxing 7:00 PM"] },
-    { day: "Tuesday", classes: ["Core Kids 4:30 PM", "Teens/Adults 5:30 PM", "Kickboxing 6:30 PM"] },
-    { day: "Wednesday", classes: ["Little Ninjas 4:00 PM", "Core Kids 5:00 PM", "Teens/Adults 6:00 PM", "Kickboxing 7:00 PM"] },
-    { day: "Thursday", classes: ["Core Kids 4:30 PM", "Teens/Adults 5:30 PM", "Kickboxing 6:30 PM"] },
-    { day: "Friday", classes: ["Core Kids 4:30 PM", "Teens/Adults 5:30 PM"] },
-    { day: "Saturday", classes: ["Little Ninjas 10:00 AM", "Core Kids 11:00 AM", "Teens/Adults 12:00 PM"] },
+    { day: t("home.mon_classes"), classes: ["Little Ninjas 4:00 PM", "Core Kids 5:00 PM", "Teens/Adults 6:00 PM", "Kickboxing 7:00 PM"] },
+    { day: t("home.tue_classes"), classes: ["Core Kids 4:30 PM", "Teens/Adults 5:30 PM", "Kickboxing 6:30 PM"] },
+    { day: t("home.wed_classes"), classes: ["Little Ninjas 4:00 PM", "Core Kids 5:00 PM", "Teens/Adults 6:00 PM", "Kickboxing 7:00 PM"] },
+    { day: t("home.thu_classes"), classes: ["Core Kids 4:30 PM", "Teens/Adults 5:30 PM", "Kickboxing 6:30 PM"] },
+    { day: t("home.fri_classes"), classes: ["Core Kids 4:30 PM", "Teens/Adults 5:30 PM"] },
+    { day: t("home.sat_classes"), classes: ["Little Ninjas 10:00 AM", "Core Kids 11:00 AM", "Teens/Adults 12:00 PM"] },
   ];
 
   return (
@@ -590,9 +594,9 @@ function ScheduleSection({ onBookClass }: { onBookClass: () => void }) {
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className="text-3xl md:text-5xl font-black text-black uppercase tracking-tight">
-            CLASS <span className="text-[#e63946]">SCHEDULE</span>
+            {t("home.schedule_title")} <span className="text-[#e63946]">{t("home.schedule_accent")}</span>
           </h2>
-          <p className="text-gray-500 mt-2">Tomball HQ — 23511 FM 2920, Tomball, TX 77377</p>
+          <p className="text-gray-500 mt-2">{t("home.schedule_address")}</p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
           {schedule.map(s => (
@@ -612,14 +616,14 @@ function ScheduleSection({ onBookClass }: { onBookClass: () => void }) {
         <div className="text-center">
           <Link href="/schedule">
             <button className="inline-flex items-center gap-2 border-2 border-black hover:bg-black hover:text-white text-black font-bold uppercase tracking-wider px-8 py-3 rounded-sm transition-all duration-200 mr-4">
-              VIEW FULL SCHEDULE
+              {t("home.view_full_schedule")}
             </button>
           </Link>
           <button
             onClick={onBookClass}
             className="inline-flex items-center gap-2 bg-[#e63946] hover:bg-[#c1121f] text-white font-black uppercase tracking-wider px-8 py-3 rounded-sm transition-all duration-200"
           >
-            BOOK FREE CLASS <ArrowRight className="h-4 w-4" />
+            {t("home.book_free_class")} <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -629,13 +633,14 @@ function ScheduleSection({ onBookClass }: { onBookClass: () => void }) {
 
 // ─── FAQ Section ─────────────────────────────────────────────────────────────
 function FAQSection() {
+  const { t } = useTranslation();
   const faqs = [
-    { q: "What should my child wear?", a: "For the first class, comfortable workout clothes (t-shirt and sweatpants/shorts) are perfect. We train barefoot on the mats. If you decide to join, we'll help you get a proper uniform." },
-    { q: "How old does my child need to be?", a: "Our Little Ninjas program starts at age 3! We have programs for every age group from 3 to adults." },
-    { q: "What styles of martial arts do you teach?", a: "We teach a blend of traditional Karate, Kickboxing, and practical self-defense techniques — all adapted for the student's age and level." },
-    { q: "Do I need experience to start?", a: "Absolutely not! All our programs are designed for complete beginners. Our instructors will guide you every step of the way." },
-    { q: "How often should I attend classes?", a: "We recommend 2–3 classes per week for the best results. Consistency is key to progress in martial arts." },
-    { q: "How much do classes cost?", a: "We offer flexible membership options. The best way to find out is to come in for a FREE trial class — no pressure, no commitment." },
+    { q: t("home.faq_q1"), a: t("home.faq_a1") },
+    { q: t("home.faq_q2"), a: t("home.faq_a2") },
+    { q: t("home.faq_q3"), a: t("home.faq_a3") },
+    { q: t("home.faq_q4"), a: t("home.faq_a4") },
+    { q: t("home.faq_q5"), a: t("home.faq_a5") },
+    { q: t("home.faq_q6"), a: t("home.faq_a6") },
   ];
 
   return (
@@ -643,7 +648,7 @@ function FAQSection() {
       <div className="container mx-auto px-4 max-w-3xl">
         <div className="text-center mb-10">
           <h2 className="text-3xl md:text-5xl font-black text-black uppercase tracking-tight">
-            FREQUENTLY ASKED <span className="text-[#e63946]">QUESTIONS</span>
+            {t("home.faq_title")} <span className="text-[#e63946]">{t("home.faq_accent")}</span>
           </h2>
         </div>
         <Accordion type="single" collapsible className="space-y-3">
@@ -665,6 +670,7 @@ function FAQSection() {
 
 // ─── Footer CTA ───────────────────────────────────────────────────────────────
 function FinalCTASection({ onBookClass }: { onBookClass: () => void }) {
+  const { t } = useTranslation();
   return (
     <section className="relative py-20 bg-[#e63946] overflow-hidden">
       <div className="absolute inset-0 bg-[url('/images/logo-icon-white.99cb4daa.webp')] bg-center bg-no-repeat opacity-5 bg-[length:600px]" />
@@ -672,11 +678,11 @@ function FinalCTASection({ onBookClass }: { onBookClass: () => void }) {
         <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
           <div>
             <h2 className="text-4xl md:text-6xl font-black text-white uppercase leading-tight">
-              DON'T WAIT.<br />
-              <span className="text-black">SPOTS ARE FILLING FAST!</span>
+              {t("home.final_cta_title")}<br />
+              <span className="text-black">{t("home.final_cta_accent")}</span>
             </h2>
             <p className="text-white/90 text-lg mt-4">
-              Helping 100 new members start their martial arts journey before July 25.
+              {t("home.final_cta_desc")}
             </p>
           </div>
           <div className="flex flex-col items-center gap-4">
@@ -684,18 +690,18 @@ function FinalCTASection({ onBookClass }: { onBookClass: () => void }) {
               onClick={onBookClass}
               className="flex items-center gap-3 bg-white hover:bg-gray-100 text-[#e63946] font-black uppercase tracking-wider text-xl px-10 py-5 rounded-sm transition-all duration-200 shadow-2xl"
             >
-              BOOK YOUR FREE CLASS <ArrowRight className="h-6 w-6" />
+              {t("home.book_your_free_class")} <ArrowRight className="h-6 w-6" />
             </button>
             <PhoneChooser className="text-white/80 hover:text-white text-sm font-medium flex items-center gap-2">
-              <Phone className="h-4 w-4" /> Or call (877) 4-MYDOJO
+              <Phone className="h-4 w-4" /> {t("home.or_call")}
             </PhoneChooser>
           </div>
 
           {/* 100 Members badge */}
           <div className="flex-shrink-0">
             <div className="w-32 h-32 rounded-full bg-black/20 border-4 border-white/30 flex flex-col items-center justify-center text-center p-3">
-              <span className="text-white font-black text-3xl leading-none">100</span>
-              <span className="text-white text-[9px] uppercase font-bold leading-tight mt-1">NEW MEMBERS<br />BY JULY 25TH<br />CHALLENGE</span>
+              <span className="text-white font-black text-3xl leading-none">{t("home.100_members")}</span>
+              <span className="text-white text-[9px] uppercase font-bold leading-tight mt-1 whitespace-pre-line">{t("home.100_members_label")}</span>
             </div>
           </div>
         </div>
@@ -706,6 +712,7 @@ function FinalCTASection({ onBookClass }: { onBookClass: () => void }) {
 
 // ─── Sticky Mobile CTA ────────────────────────────────────────────────────────
 function StickyMobileCTA({ onBookClass }: { onBookClass: () => void }) {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const handler = () => setVisible(window.scrollY > 400);
@@ -720,13 +727,13 @@ function StickyMobileCTA({ onBookClass }: { onBookClass: () => void }) {
     )}>
       <div className="flex">
         <PhoneChooser className="flex-1 flex items-center justify-center gap-2 bg-black text-white font-bold uppercase text-sm py-4">
-          <Phone className="h-4 w-4" /> CALL OR TEXT
+          <Phone className="h-4 w-4" /> {t("home.call_or_text")}
         </PhoneChooser>
         <button
           onClick={onBookClass}
           className="flex-2 flex-[2] flex items-center justify-center gap-2 bg-[#e63946] text-white font-black uppercase text-sm py-4"
         >
-          BOOK FREE CLASS <ArrowRight className="h-4 w-4" />
+          {t("home.book_free_class")} <ArrowRight className="h-4 w-4" />
         </button>
       </div>
     </div>
@@ -744,16 +751,17 @@ function FloatingPhone() {
 
 // ─── Info Bar ─────────────────────────────────────────────────────────────────
 function InfoBar() {
+  const { t } = useTranslation();
   return (
     <div className="bg-black border-b border-white/10 py-2 hidden md:block">
       <div className="container mx-auto px-4 flex items-center justify-between text-xs text-gray-400">
         <div className="flex items-center gap-6">
-          <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3 text-[#e63946]" /> 23511 FM 2920, Tomball, TX 77377</span>
-          <span className="flex items-center gap-1.5"><Clock className="h-3 w-3 text-[#e63946]" /> Mon–Sat Classes Available</span>
+          <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3 text-[#e63946]" /> {t("home.info_address")}</span>
+          <span className="flex items-center gap-1.5"><Clock className="h-3 w-3 text-[#e63946]" /> {t("home.info_hours")}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Phone className="h-3 w-3 text-[#e63946]" />
-          <PhoneChooser className="hover:text-white transition-colors cursor-pointer">(877) 4-MYDOJO</PhoneChooser>
+          <PhoneChooser className="hover:text-white transition-colors cursor-pointer">{t("general.phone_number")}</PhoneChooser>
         </div>
       </div>
     </div>

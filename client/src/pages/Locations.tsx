@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapView } from "@/components/Map";
 import SEO from "@/components/SEO";
+import { useTranslation } from "react-i18next";
 
 // Define the Location type
 interface Location {
@@ -79,6 +80,7 @@ const initialLocations: Location[] = [
 ];
 
 export default function Locations() {
+  const { t } = useTranslation();
   const [locations, setLocations] = useState<Location[]>(initialLocations);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -207,9 +209,9 @@ export default function Locations() {
       <section className="bg-black text-white py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/QCDmgxbjdlfUOCPT.jpg')] bg-cover bg-center opacity-30"></div>
         <div className="container mx-auto px-4 relative z-10 text-center">
-          <h1 className="text-4xl md:text-6xl font-heading font-bold mb-4">FIND A LOCATION</h1>
+          <h1 className="text-4xl md:text-6xl font-heading font-bold mb-4">{t("locations.find_location")}</h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Discover a MyDojo near you and start your martial arts journey today.
+            {t("locations.find_location_desc")}
           </p>
         </div>
       </section>
@@ -232,15 +234,15 @@ export default function Locations() {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
               <h2 className="text-xl font-bold mb-4 flex items-center">
                 <Navigation className="w-5 h-5 mr-2 text-primary" />
-                Find Nearest Dojo
+                {t("locations.find_nearest")}
               </h2>
               
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-bold text-gray-700 mb-2 block">Search by Location</label>
+                  <label className="text-sm font-bold text-gray-700 mb-2 block">{t("locations.search_by_location")}</label>
                   <div className="flex gap-2">
                     <Input 
-                      placeholder="Enter city, zip, or address" 
+                      placeholder={t("locations.search_placeholder")} 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -267,7 +269,7 @@ export default function Locations() {
                   variant="outline"
                   className="w-full border-primary text-primary hover:bg-primary/5"
                 >
-                  {loading ? "Locating..." : "Use My Current Location"}
+                  {loading ? t("locations.locating") : t("locations.use_my_location")}
                 </Button>
               </div>
               
@@ -317,11 +319,11 @@ export default function Locations() {
                       e.stopPropagation();
                       window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${location.address}, ${location.city}, ${location.state} ${location.zip}`)}`, '_blank');
                     }}>
-                      Directions
+                      {t("locations.get_directions")}
                     </Button>
                     <Link href={location.id === 'hq' ? '/locations/tomball' : `/locations/${location.id}`}>
                       <Button size="sm" className="flex-1 bg-primary text-white hover:bg-primary/90">
-                        Details
+                        {t("locations.details")}
                       </Button>
                     </Link>
                   </div>

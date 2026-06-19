@@ -3,8 +3,10 @@ import { motion } from "framer-motion";
 import SEO from "@/components/SEO";
 import SchemaMarkup from "@/components/SchemaMarkup";
 import { openIntakeChatbot } from "@/lib/chatbot";
+import { useTranslation } from "react-i18next";
 
 export default function About() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-white">
       <SEO 
@@ -24,9 +26,9 @@ export default function About() {
       <div className="bg-black text-white py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/qYVQxVSfHBmyqxTB.jpg')] bg-cover bg-center opacity-20"></div>
         <div className="container mx-auto px-4 relative z-10 text-center">
-          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">ABOUT US</h1>
+          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">{t("about.title")}</h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Empowering lives through the art of self-defense and fitness.
+            {t("about.subtitle")}
           </p>
         </div>
       </div>
@@ -35,33 +37,33 @@ export default function About() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-primary font-bold tracking-widest uppercase mb-4">Our Mission</h2>
-            <h3 className="text-4xl md:text-5xl font-heading font-bold mb-8">BUILDING CONFIDENCE, DISCIPLINE, AND STRENGTH</h3>
+            <h2 className="text-primary font-bold tracking-widest uppercase mb-4">{t("about.mission_title")}</h2>
+            <h3 className="text-4xl md:text-5xl font-heading font-bold mb-8">{t("about.mission_headline")}</h3>
             <p className="text-xl text-gray-600 leading-relaxed mb-12">
-              At MyDojo, our goal is to help every student be the best they can be at everything they put their minds to. We believe that martial arts is a vehicle for developing life skills that extend far beyond the dojo walls.
+              {t("about.mission_desc")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
             <div className="text-center p-8 bg-gray-50 rounded-xl">
               <div className="text-6xl font-heading font-bold text-gray-200 mb-4">01</div>
-              <h4 className="text-2xl font-bold mb-4">Fun</h4>
+              <h4 className="text-2xl font-bold mb-4">{t("about.value_fun")}</h4>
               <p className="text-gray-600">
-                We believe learning should be enjoyable. Our classes are high-energy, engaging, and designed to keep students motivated.
+                {t("about.value_fun_desc")}
               </p>
             </div>
             <div className="text-center p-8 bg-gray-50 rounded-xl">
               <div className="text-6xl font-heading font-bold text-gray-200 mb-4">02</div>
-              <h4 className="text-2xl font-bold mb-4">Fit</h4>
+              <h4 className="text-2xl font-bold mb-4">{t("about.value_fit")}</h4>
               <p className="text-gray-600">
-                Physical fitness is the foundation of a healthy life. Our programs improve strength, flexibility, and cardiovascular health.
+                {t("about.value_fit_desc")}
               </p>
             </div>
             <div className="text-center p-8 bg-gray-50 rounded-xl">
               <div className="text-6xl font-heading font-bold text-gray-200 mb-4">03</div>
-              <h4 className="text-2xl font-bold mb-4">Strong</h4>
+              <h4 className="text-2xl font-bold mb-4">{t("about.value_strong")}</h4>
               <p className="text-gray-600">
-                Strength of body and mind. We teach mental fortitude, focus, and the resilience to overcome challenges.
+                {t("about.value_strong_desc")}
               </p>
             </div>
           </div>
@@ -72,7 +74,7 @@ export default function About() {
       <section className="py-20 bg-black text-white relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/BRDAWpxDTQGxESXr.jpg')] bg-cover bg-center opacity-10"></div>
         <div className="container mx-auto px-4 relative z-10">
-          <h2 className="text-center text-4xl font-heading font-bold mb-16">WHAT OUR STUDENTS SAY</h2>
+          <h2 className="text-center text-4xl font-heading font-bold mb-16">{t("about.students_say")}</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <motion.div 
@@ -119,12 +121,12 @@ export default function About() {
       {/* CTA */}
       <section className="py-20 bg-primary text-white text-center">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-heading font-bold mb-8">JOIN THE MYDOJO FAMILY</h2>
+          <h2 className="text-4xl font-heading font-bold mb-8">{t("about.join_family")}</h2>
           <Button 
             onClick={openIntakeChatbot}
             className="bg-white text-primary hover:bg-black hover:text-white text-lg px-10 py-8 h-auto font-heading uppercase tracking-wider skew-x-[-10deg] shadow-xl"
           >
-            <span className="skew-x-[10deg]">Start Your Journey Today</span>
+            <span className="skew-x-[10deg]">{t("about.start_journey")}</span>
           </Button>
         </div>
       </section>

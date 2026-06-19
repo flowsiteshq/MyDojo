@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { X, Star, ChevronRight, Shield, Zap, Users, Award, Flame, ArrowRight, Check, Clock } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -187,6 +188,7 @@ interface ProgramFinderPopupProps {
 }
 
 export function ProgramFinderPopup({ isOpen, onClose }: ProgramFinderPopupProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<Step>(1);
   const [audience, setAudience] = useState<Audience>(null);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);

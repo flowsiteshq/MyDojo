@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,6 +83,7 @@ const PROGRAM_MAP: Record<string, "Little Ninjas" | "Dragon Kids" | "Teens" | "A
 };
 
 export default function Join() {
+  const { t } = useTranslation();
   const [selectedProgram, setSelectedProgram] = useState<string>("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");

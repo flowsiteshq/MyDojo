@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 /**
  * RatingBadges.tsx
  * Displays Google 5.0 and Facebook 4.9 star rating badges side by side.
@@ -26,6 +27,7 @@ interface RatingBadgesProps {
 }
 
 export function RatingBadges({ className = "" }: RatingBadgesProps) {
+  const { t } = useTranslation();
   return (
     <div className={`flex flex-wrap items-center justify-center gap-4 ${className}`}>
       {/* Google Badge */}

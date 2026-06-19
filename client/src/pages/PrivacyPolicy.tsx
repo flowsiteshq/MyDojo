@@ -1,6 +1,8 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 
 export default function PrivacyPolicy() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-white pt-32 pb-20">
       <div className="container mx-auto px-4 max-w-4xl">

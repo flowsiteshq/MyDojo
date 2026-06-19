@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Calendar, User, ArrowRight, Tag } from "lucide-react";
@@ -7,6 +8,7 @@ import { blogPosts } from "@/data/blog-posts";
 import SEO from "@/components/SEO";
 
 export default function Blog() {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col min-h-screen">
       <SEO

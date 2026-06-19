@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { X, Shield, CheckCircle, Loader2 } from "lucide-react";
@@ -5,6 +6,7 @@ import { X, Shield, CheckCircle, Loader2 } from "lucide-react";
 const STORAGE_KEY = "mydojo_lead_magnet_dismissed";
 
 export default function LeadMagnetPopup() {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");

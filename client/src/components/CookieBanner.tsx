@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
@@ -15,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 export function CookieBanner() {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);

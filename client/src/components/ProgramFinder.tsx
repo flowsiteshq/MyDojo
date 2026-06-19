@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { quizQuestions, programResults, QuizQuestion, ProgramResult } from "@/data/program-quiz";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +12,7 @@ const iconMap: Record<string, any> = {
 };
 
 export function ProgramFinder() {
+  const { t } = useTranslation();
   const [currentQuestionId, setCurrentQuestionId] = useState<string>("q1");
   const [result, setResult] = useState<ProgramResult | null>(null);
   const [history, setHistory] = useState<string[]>([]);

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Clock, ChevronRight, CheckCircle2, Shield, Zap, Users, Star, Flame, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,7 @@ interface OnlineSpecialPopupProps {
 }
 
 export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: OnlineSpecialPopupProps = {}) {
+  const { t } = useTranslation();
   // Read pre-fill data from URL params (e.g. from Facebook Lead Ad redirect)
   const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
   const urlName = urlParams?.get("name") ?? "";

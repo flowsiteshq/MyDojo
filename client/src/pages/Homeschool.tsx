@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Clock, Calendar, Users, BookOpen, Star, Shield, Zap, Heart, CheckCircle, GraduationCap, Sun } from "lucide-react";
 import { Link } from "wouter";
@@ -6,6 +7,7 @@ import SEO from "@/components/SEO";
 import { openIntakeChatbot } from "@/lib/chatbot";
 
 export default function Homeschool() {
+  const { t } = useTranslation();
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },

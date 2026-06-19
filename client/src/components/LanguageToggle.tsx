@@ -1,14 +1,17 @@
-import { useLanguage } from "@/contexts/LanguageContext";
 import { Globe } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface LanguageToggleProps {
   variant?: "desktop" | "mobile";
 }
 
 export function LanguageToggle({ variant = "desktop" }: LanguageToggleProps) {
-  const { language, setLanguage } = useLanguage();
+  const { i18n } = useTranslation();
+  const isSpanish = i18n.language === "es";
 
-  const toggle = () => setLanguage(language === "en" ? "es" : "en");
+  const toggle = () => {
+    i18n.changeLanguage(isSpanish ? "en" : "es");
+  };
 
   if (variant === "mobile") {
     return (
@@ -18,7 +21,7 @@ export function LanguageToggle({ variant = "desktop" }: LanguageToggleProps) {
         aria-label="Toggle language"
       >
         <Globe className="h-4 w-4 text-primary" />
-        <span>{language === "en" ? "Español" : "English"}</span>
+        <span>{isSpanish ? "🇺🇸 English" : "🇲🇽 Español"}</span>
       </button>
     );
   }
@@ -28,10 +31,10 @@ export function LanguageToggle({ variant = "desktop" }: LanguageToggleProps) {
       onClick={toggle}
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/30 text-white text-xs font-bold uppercase tracking-wider hover:bg-white/20 transition-colors"
       aria-label="Toggle language"
-      title={language === "en" ? "Switch to Spanish" : "Cambiar a Inglés"}
+      title={isSpanish ? "Switch to English" : "Cambiar a Español"}
     >
       <Globe className="h-3.5 w-3.5" />
-      <span>{language === "en" ? "ES" : "EN"}</span>
+      <span>{isSpanish ? "EN" : "ES"}</span>
     </button>
   );
 }

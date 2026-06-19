@@ -7,6 +7,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, Star, Shield, Zap, Users, Heart
 import SEO from "@/components/SEO";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 // ─── CDN base ─────────────────────────────────────────────────────────────────
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
@@ -56,6 +57,7 @@ const FAQS = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function SummerCamp() {
+  const { t } = useTranslation();
   // Fire immediate welcome SMS when visitor arrives via ad with ?phone= param
   useVisitorSms({ page: "summer-camp" });
 

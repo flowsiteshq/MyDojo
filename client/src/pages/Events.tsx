@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
@@ -5,6 +6,7 @@ import { Calendar, Award, Gift, PartyPopper } from "lucide-react";
 import SEO from "@/components/SEO";
 
 export default function Events() {
+  const { t } = useTranslation();
   const events = [
     {
       title: "Fun Friday Events",

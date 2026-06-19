@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Flame, Heart, Zap, Users, Music, Lightbulb } from "lucide-react";
@@ -6,6 +7,7 @@ import { openIntakeChatbot } from "@/lib/chatbot";
 import SEO from "@/components/SEO";
 
 export default function Kickboxing() {
+  const { t } = useTranslation();
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },

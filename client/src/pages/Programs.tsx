@@ -6,8 +6,10 @@ import { programs } from "@/data/programs";
 import UniformGuide from "@/components/UniformGuide";
 import SEO from "@/components/SEO";
 import SchemaMarkup from "@/components/SchemaMarkup";
+import { useTranslation } from "react-i18next";
 
 export default function Programs() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-gray-50">
       <SEO 
@@ -38,9 +40,9 @@ export default function Programs() {
       <div className="bg-black text-white py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/cta-bg_5eebb32b.webp')] bg-cover bg-center opacity-20"></div>
         <div className="container mx-auto px-4 relative z-10 text-center">
-          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">PROGRAMS</h1>
+          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">{t("programs.title")}</h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            MyDojo offers the very best in Martial Arts training for Ages 3 & Up. Find the perfect program for you or your child.
+            {t("programs.subtitle")}
           </p>
         </div>
       </div>
@@ -66,12 +68,12 @@ export default function Programs() {
                       alt={program.title} 
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                      <span className="text-white font-heading text-2xl font-bold border-2 border-white px-6 py-2 rounded-full">View Details</span>
+                      <span className="text-white font-heading text-2xl font-bold border-2 border-white px-6 py-2 rounded-full">{t("general.learn_more")}</span>
                     </div>
                     
                     {/* Floating Badge */}
                     <div className="absolute top-6 right-6 bg-primary text-white px-6 py-3 rounded-lg shadow-lg font-bold font-heading text-lg transform rotate-3 group-hover:rotate-0 transition-transform duration-300">
-                      {program.id === 'homeschool' ? 'Noon Classes' : 'Free Trial Available'}
+                      {program.id === 'homeschool' ? t("homeschool.features") : t("general.free_trial")}
                     </div>
                   </div>
                 </Link>
@@ -113,12 +115,12 @@ export default function Programs() {
                 <div className="flex flex-wrap gap-4">
                   <Link href={program.id === 'homeschool' ? '/homeschool' : `/programs/${program.id}`}>
                     <Button className="bg-black hover:bg-primary text-white px-8 py-6 h-auto font-heading uppercase tracking-wider text-lg transition-colors">
-                      View {program.title} Details <ArrowRight className="ml-2 h-5 w-5" />
+                      {t("general.learn_more")} <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
                   <Link href={program.id === 'homeschool' ? '/homeschool' : `/programs/${program.id}#lead-form`}>
                     <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white px-8 py-6 h-auto font-heading uppercase tracking-wider text-lg transition-colors">
-                      Free Trial
+                      {t("programs.free_trial")}
                     </Button>
                   </Link>
                 </div>
@@ -133,27 +135,27 @@ export default function Programs() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-red-600/20 border border-red-500/40 rounded-full px-4 py-2 mb-6">
-              <span className="text-red-300 text-sm font-bold uppercase tracking-wider">👨‍👩‍👧‍👦 Family Savings Program</span>
+              <span className="text-red-300 text-sm font-bold uppercase tracking-wider">👨‍👩‍👧‍👦 {t("programs.family_savings")}</span>
             </div>
-            <h2 className="text-3xl md:text-5xl font-black mb-4">TRAIN TOGETHER,{" "}<span className="text-red-500">SAVE TOGETHER</span></h2>
+            <h2 className="text-3xl md:text-5xl font-black mb-4">{t("programs.train_together")}{" "}<span className="text-red-500">{t("programs.save_together")}</span></h2>
             <p className="text-white/70 text-lg mb-8 max-w-2xl mx-auto">
-              Enroll your whole family and unlock exclusive savings — one registration fee covers everyone, and your 2nd family member gets 50% off monthly tuition.
+              {t("programs.family_desc")}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-left">
               <div className="bg-red-900/30 border border-red-500/30 rounded-xl p-6">
                 <div className="text-3xl font-black text-red-400 mb-2">50% OFF</div>
-                <div className="font-bold text-lg mb-1">2nd Family Member's Monthly Tuition</div>
-                <p className="text-white/60 text-sm">Every additional family member enrolls at half the monthly tuition — every month, for the life of their membership.</p>
+                <div className="font-bold text-lg mb-1">{t("programs.family_50off_title")}</div>
+                <p className="text-white/60 text-sm">{t("programs.family_50off_desc")}</p>
               </div>
               <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-6">
                 <div className="text-3xl font-black text-yellow-400 mb-2">$99</div>
-                <div className="font-bold text-lg mb-1">One Family Registration Fee</div>
-                <p className="text-white/60 text-sm">One $99 registration fee covers your entire family — no per-person fees, no matter how many members enroll.</p>
+                <div className="font-bold text-lg mb-1">{t("programs.family_reg_title")}</div>
+                <p className="text-white/60 text-sm">{t("programs.family_reg_desc")}</p>
               </div>
             </div>
             <Link href="/family-enrollment">
               <Button className="bg-red-600 hover:bg-red-700 text-white font-black text-lg px-10 py-6 h-auto uppercase tracking-wider">
-                Create Family Account — $99 One-Time Fee
+                {t("programs.family_cta")}
               </Button>
             </Link>
           </div>
@@ -166,7 +168,7 @@ export default function Programs() {
       {/* Disclaimer */}
       <div className="bg-gray-100 py-8 text-center text-gray-500 text-sm">
         <div className="container mx-auto px-4">
-          <p>*Class schedules and availability subject to change.</p>
+          <p>{t("programs.disclaimer")}</p>
         </div>
       </div>
     </div>

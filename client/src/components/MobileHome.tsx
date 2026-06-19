@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { PhoneChooser } from "@/components/PhoneChooser";
 import { Phone, CheckCircle, Calendar, Clock, Shirt, Users } from "lucide-react";
@@ -12,6 +13,7 @@ import { openIntakeChatbot } from "@/lib/chatbot";
  *  4. Sticky bottom bar — phone + ENROLL NOW
  */
 export function MobileHome() {
+  const { t } = useTranslation();
   return (
     <div className="md:hidden flex flex-col w-full">
       {/* ── 1. HERO ─────────────────────────────────────────────────────── */}

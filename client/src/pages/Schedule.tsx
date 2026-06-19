@@ -6,8 +6,10 @@ import { motion } from "framer-motion";
 import { Download } from "lucide-react";
 import SEO from "@/components/SEO";
 import SchemaMarkup from "@/components/SchemaMarkup";
+import { useTranslation } from "react-i18next";
 
 export default function Schedule() {
+  const { t } = useTranslation();
   const scheduleData = [
     { program: "Little Ninjas (Ages 3-5)", mon: "5:00PM", tue: "5:00PM", wed: "5:00PM", thu: "5:00PM", fri: "N/A", sat: "10:00AM" },
     { program: "Little Ninjas & Me", mon: "N/A", tue: "N/A", wed: "2:00PM", thu: "N/A", fri: "2:00PM", sat: "N/A" },
@@ -108,9 +110,9 @@ export default function Schedule() {
       <div className="bg-black text-white py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/qYVQxVSfHBmyqxTB.jpg')] bg-cover bg-center opacity-20"></div>
         <div className="container mx-auto px-4 relative z-10 text-center">
-          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">CLASS SCHEDULE</h1>
+          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">{t("schedule.title")}</h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Find a class time that fits your busy lifestyle. Click any class to add it to your calendar!
+            {t("schedule.subtitle")}
           </p>
         </div>
       </div>
@@ -126,7 +128,7 @@ export default function Schedule() {
           <table className="w-full min-w-[800px] border-collapse bg-white">
             <thead>
               <tr className="bg-black text-white">
-                <th className="p-6 text-left font-heading text-xl font-bold border-b border-gray-800 sticky left-0 bg-black z-10">Program</th>
+                <th className="p-6 text-left font-heading text-xl font-bold border-b border-gray-800 sticky left-0 bg-black z-10">{t("schedule.program")}</th>
                 {days.map(day => (
                   <th key={day} className="p-6 text-center font-heading text-lg font-bold border-b border-gray-800 border-l border-gray-800">
                     {day}
@@ -173,20 +175,20 @@ export default function Schedule() {
         </motion.div>
 
         <div className="mt-8 text-center flex flex-col items-center gap-6">
-          <p className="text-gray-500">*Class schedules are subject to change. Updated February 2026</p>
+          <p className="text-gray-500">{t("schedule.disclaimer")}</p>
           
           <div className="flex flex-col md:flex-row gap-4">
             <a href="/MyDojo_Schedule.pdf" download="MyDojo_Schedule.pdf">
               <Button variant="outline" className="border-primary text-primary hover:bg-primary/5 px-8 py-6 h-auto font-heading uppercase tracking-wider text-lg skew-x-[-10deg]">
                 <span className="skew-x-[10deg] flex items-center gap-2">
                   <Download className="w-5 h-5" />
-                  Download PDF
+                  {t("schedule.download_pdf")}
                 </span>
               </Button>
             </a>
 
             <Button className="bg-primary hover:bg-primary/90 text-white px-10 py-6 h-auto font-heading uppercase tracking-wider text-lg skew-x-[-10deg]">
-              <span className="skew-x-[10deg]">Book Your First Class</span>
+              <span className="skew-x-[10deg]">{t("schedule.book_first_class")}</span>
             </Button>
           </div>
         </div>

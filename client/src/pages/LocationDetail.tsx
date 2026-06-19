@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useRoute } from "wouter";
 import { locations } from "@/data/locations";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ const TOMBALL_AMENITIES = [
 ];
 
 export default function LocationDetail() {
+  const { t } = useTranslation();
   const [, params] = useRoute("/locations/:id");
   const [locationStatus, setLocationStatus] = useState<StatusState | null>(null);
   const [activePhoto, setActivePhoto] = useState(0);

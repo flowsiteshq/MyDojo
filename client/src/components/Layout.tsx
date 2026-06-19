@@ -11,7 +11,7 @@ import { NotificationSubscribe } from "@/components/NotificationSubscribe";
 import { PhoneChooser } from "@/components/PhoneChooser";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "react-i18next";
 import { LanguageToggle } from "@/components/LanguageToggle";
 
 // Programs sub-menu items
@@ -31,7 +31,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isSticky, setIsSticky] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProgramsOpen, setIsProgramsOpen] = useState(false);
-  const { t } = useLanguage();
+  const { t } = useTranslation();
 
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

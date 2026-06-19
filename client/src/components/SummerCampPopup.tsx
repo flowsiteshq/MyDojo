@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { X, Sun, CheckCircle, Loader2, Star } from "lucide-react";
@@ -8,6 +9,7 @@ const DELAY_MS = 8000;
 const SCROLL_THRESHOLD = 0.40;
 
 export default function SummerCampPopup() {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

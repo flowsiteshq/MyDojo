@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useRoute, Link } from "wouter";
 import { motion } from "framer-motion";
@@ -7,6 +8,7 @@ import { blogPosts } from "@/data/blog-posts";
 import NotFound from "./NotFound";
 
 export default function BlogPost() {
+  const { t } = useTranslation();
   const [match, params] = useRoute("/blog/:slug");
   const slug = params?.slug;
   

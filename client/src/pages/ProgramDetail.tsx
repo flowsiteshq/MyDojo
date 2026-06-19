@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useRoute, Link } from "wouter";
 import { programs } from "@/data/programs";
@@ -13,6 +14,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
 export default function ProgramDetail() {
+  const { t } = useTranslation();
   const [match, params] = useRoute("/programs/:id");
 
   // Lead form state

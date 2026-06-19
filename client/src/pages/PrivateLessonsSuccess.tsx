@@ -1,9 +1,11 @@
+import { useTranslation } from "react-i18next";
 import { useSearch } from "wouter";
 import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 
 export default function PrivateLessonsSuccess() {
+  const { t } = useTranslation();
   const search = useSearch();
   const params = new URLSearchParams(search);
   const instructor = params.get("instructor") || "your instructor";
