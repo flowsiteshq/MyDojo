@@ -4,6 +4,7 @@
  */
 import { useState } from "react";
 import { Phone, MessageSquare, X } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PHONE_NUMBER = "8774693656";
 const PHONE_DISPLAY = "(877) 4-MYDOJO";
@@ -17,6 +18,7 @@ interface PhoneChooserProps {
 
 export function PhoneChooser({ children, className }: PhoneChooserProps) {
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
 
   const handleCall = () => {
     window.location.href = `tel:${PHONE_NUMBER}`;
@@ -64,13 +66,13 @@ export function PhoneChooser({ children, className }: PhoneChooserProps) {
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-4 pb-2">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Contact Us</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">{t("contact.title")}</p>
                 <p className="text-lg font-bold text-black">{PHONE_DISPLAY}</p>
               </div>
               <button
                 onClick={() => setOpen(false)}
                 className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500"
-                aria-label="Close"
+                  aria-label={t("general.close")}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -89,8 +91,8 @@ export function PhoneChooser({ children, className }: PhoneChooserProps) {
                   <Phone className="h-5 w-5 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="text-base font-black">Call Us</p>
-                  <p className="text-xs font-normal text-gray-400 normal-case tracking-normal">Speak with a staff member now</p>
+                  <p className="text-base font-black">{t("general.call_us")}</p>
+                  <p className="text-xs font-normal text-gray-400 normal-case tracking-normal">{t("phone.call_desc") || "Speak with a staff member now"}</p>
                 </div>
               </button>
 
@@ -102,15 +104,15 @@ export function PhoneChooser({ children, className }: PhoneChooserProps) {
                   <MessageSquare className="h-5 w-5 text-white" />
                 </div>
                 <div className="text-left">
-                  <p className="text-base font-black">Text Us</p>
-                  <p className="text-xs font-normal text-white/80 normal-case tracking-normal">Chat with our AI assistant instantly</p>
+                  <p className="text-base font-black">{t("general.text_us")}</p>
+                  <p className="text-xs font-normal text-white/80 normal-case tracking-normal">{t("phone.text_desc") || "Chat with our AI assistant instantly"}</p>
                 </div>
               </button>
             </div>
 
             {/* Footer note */}
             <p className="text-center text-xs text-gray-400 pb-6 px-6">
-              Texting uses our AI assistant — available 24/7
+              {t("phone.ai_note") || "Texting uses our AI assistant — available 24/7"}
             </p>
           </div>
         </div>

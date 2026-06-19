@@ -11,6 +11,8 @@ import { NotificationSubscribe } from "@/components/NotificationSubscribe";
 import { PhoneChooser } from "@/components/PhoneChooser";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageToggle } from "@/components/LanguageToggle";
 
 // Programs sub-menu items
 const PROGRAM_LINKS = [
@@ -29,6 +31,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isSticky, setIsSticky] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProgramsOpen, setIsProgramsOpen] = useState(false);
+  const { t } = useLanguage();
 
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -155,6 +158,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" /></svg>
             </a>
             <a href="https://www.youtube.com/@mydojomartialartsfitness3287" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors"><Youtube className="h-3 w-3" /></a>
+            <div className="ml-2 border-l border-white/20 pl-3">
+              <LanguageToggle variant="desktop" />
+            </div>
           </div>
         </div>
       </div>
@@ -553,6 +559,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </span>
             </Link>
 
+            {/* Language toggle in mobile menu */}
+            <div className="py-2 border-b border-gray-100">
+              <LanguageToggle variant="mobile" />
+            </div>
+
             <Link href="/admin/login">
               <span
                 className="flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider py-3 border-b border-gray-100 text-center text-gray-500"
@@ -570,14 +581,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               }}
               className="w-full bg-primary text-white font-heading uppercase mt-4 py-6 text-lg"
             >
-              Join Now
+              {t("nav.join")}
             </Button>
             <Button
               variant="ghost"
               className="mt-2 text-gray-500"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Close
+              {t("general.close")}
             </Button>
           </div>
         </div>
@@ -599,7 +610,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <img src="/images/logo-icon-white.99cb4daa.webp" alt="MyDojo Logo" className="h-12 w-auto object-contain" />
               </div>
               <p className="text-gray-400 mb-6 leading-relaxed">
-                Empowering lives through martial arts. Building confidence, discipline, and strength for all ages.
+                {t("footer.tagline")}
               </p>
               <div className="flex gap-4">
                 <a href="https://www.facebook.com/MyDojoFitnessClubs/" target="_blank" rel="noopener noreferrer" className="bg-white/10 p-2 rounded-full hover:bg-primary transition-colors"><Facebook className="h-4 w-4" /></a>
@@ -611,7 +622,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
             <div>
-              <h4 className="font-heading text-lg font-bold mb-6 text-primary">Programs</h4>
+              <h4 className="font-heading text-lg font-bold mb-6 text-primary">{t("footer.programs")}</h4>
               <ul className="space-y-3 text-gray-400">
                 <li><Link href="/programs#little-ninjas"><span className="hover:text-white cursor-pointer transition-colors">Little Ninjas (3-5)</span></Link></li>
                 <li><Link href="/programs#dragon-kids"><span className="hover:text-white cursor-pointer transition-colors">Dragon Kids (5-12)</span></Link></li>
@@ -623,7 +634,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </ul>
             </div>
             <div>
-              <h4 className="font-heading text-lg font-bold mb-6 text-primary">Quick Links</h4>
+              <h4 className="font-heading text-lg font-bold mb-6 text-primary">{t("footer.quick_links")}</h4>
               <ul className="space-y-3 text-gray-400">
                 <li><Link href="/locations"><span className="hover:text-white cursor-pointer transition-colors">Class Schedule</span></Link></li>
                 <li><Link href="/events"><span className="hover:text-white cursor-pointer transition-colors">Upcoming Events</span></Link></li>
@@ -656,7 +667,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </ul>
             </div>
             <div>
-              <h4 className="font-heading text-lg font-bold mb-6 text-primary">Contact</h4>
+              <h4 className="font-heading text-lg font-bold mb-6 text-primary">{t("footer.contact")}</h4>
               <ul className="space-y-4 text-gray-400">
                 <li className="flex items-start gap-3">
                   <PhoneChooser className="flex items-start gap-3 hover:text-white transition-colors">
@@ -667,7 +678,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <li className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                   <Link href="/locations">
-                    <span className="hover:text-white cursor-pointer transition-colors">Find a Location</span>
+                    <span className="hover:text-white cursor-pointer transition-colors">{t("nav.find_location")}</span>
                   </Link>
                 </li>
                 <li>
@@ -676,7 +687,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     variant="outline"
                     className="w-full border-white/20 text-white hover:bg-white hover:text-black mt-2"
                   >
-                    Book Free Trial
+                    {t("locations.book_trial")}
                   </Button>
                 </li>
               </ul>
@@ -688,13 +699,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
           <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
             <p>
-              &copy; 2025 MyDojo Martial Arts &amp; Fitness LLC. All Rights Reserved.
+              &copy; 2025 MyDojo Martial Arts &amp; Fitness LLC. {t("footer.rights")}
               {/* Inconspicuous admin access — blends into copyright text */}
               <a href="/admin/login" className="ml-1 opacity-0 hover:opacity-20 transition-opacity duration-300 text-gray-600" tabIndex={-1} aria-hidden="true">&bull;</a>
             </p>
             <div className="flex gap-6">
-              <Link href="/privacy-policy"><span className="hover:text-white transition-colors cursor-pointer">Privacy Policy</span></Link>
-              <Link href="/terms-of-service"><span className="hover:text-white transition-colors cursor-pointer">Terms &amp; Conditions</span></Link>
+              <Link href="/privacy-policy"><span className="hover:text-white transition-colors cursor-pointer">{t("footer.privacy")}</span></Link>
+              <Link href="/terms-of-service"><span className="hover:text-white transition-colors cursor-pointer">{t("footer.terms")}</span></Link>
               <a href="#" className="hover:text-white transition-colors">DMCA Policy</a>
             </div>
           </div>
