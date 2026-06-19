@@ -4,17 +4,95 @@
  * and manages conversation state in the database.
  */
 import { getDb } from "./db";
-import { smsConversations, smsMessages, trialSignups } from "../drizzle/schema";
-import { eq, desc } from "drizzle-orm";
+import { smsConversations, smsMessages, trialSignups, classSchedule, membershipPackages } from "../drizzle/schema";
+import { eq, desc, and } from "drizzle-orm";
 import { sendSms } from "./sms800";
 import { invokeLLM } from "./_core/llm";
 
 const MYDOJO_AI_NAME = "MyDojo Assistant";
 const DOJO_PHONE = process.env.EIGHT_HUNDRED_FROM_NUMBER ?? "+18774693656";
 
-// ─── System Prompt ────────────────────────────────────────────────────────────
+// ─── Dynamic Context Builder ──────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are ${MYDOJO_AI_NAME}, the friendly AI text assistant for MyDojo Martial Arts & Fitness in Tomball, TX.
+/**
+ * Builds a live context block from the database containing the current
+ * class schedule and membership pricing. Injected into the system prompt
+ * so the AI always has accurate, up-to-date information.
+ */
+async function buildLiveContext(): Promise<string> {
+  const db = await getDb();
+  if (!db) return "";
+
+  try {
+    // Fetch active class schedule
+    const classes = await db
+      .select({
+        program: classSchedule.program,
+        dayOfWeek: classSchedule.dayOfWeek,
+        startTime: classSchedule.startTime,
+        endTime: classSchedule.endTime,
+        instructor: classSchedule.instructor,
+      })
+      .from(classSchedule)
+      .where(eq(classSchedule.isActive, 1))
+      .execute();
+
+    // Group schedule by program
+    const scheduleByProgram: Record<string, string[]> = {};
+    const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const sorted = classes.sort((a, b) => {
+      if (a.program !== b.program) return a.program.localeCompare(b.program);
+      return dayOrder.indexOf(a.dayOfWeek) - dayOrder.indexOf(b.dayOfWeek);
+    });
+    for (const c of sorted) {
+      if (!scheduleByProgram[c.program]) scheduleByProgram[c.program] = [];
+      const instructor = c.instructor ? ` with ${c.instructor}` : "";
+      scheduleByProgram[c.program].push(`${c.dayOfWeek} ${c.startTime}–${c.endTime}${instructor}`);
+    }
+
+    const scheduleLines = Object.entries(scheduleByProgram)
+      .map(([prog, times]) => `${prog}:\n  ${times.join("\n  ")}`)
+      .join("\n\n");
+
+    // Fetch active membership packages
+    const packages = await db
+      .select({
+        name: membershipPackages.name,
+        monthlyPrice: membershipPackages.monthlyPrice,
+        durationMonths: membershipPackages.durationMonths,
+        enrollmentFee: membershipPackages.enrollmentFee,
+        description: membershipPackages.description,
+        invitationOnly: membershipPackages.invitationOnly,
+      })
+      .from(membershipPackages)
+      .where(eq(membershipPackages.isActive, 1))
+      .execute();
+
+    const pricingLines = packages
+      .map((p) => {
+        const invite = p.invitationOnly ? " (invitation only)" : "";
+        return `${p.name}${invite}: $${p.monthlyPrice}/month, enrollment fee $${p.enrollmentFee ?? 0}`;
+      })
+      .join("\n");
+
+    return `
+=== LIVE CLASS SCHEDULE (All times CST, location: 23511 FM 2920, Tomball TX 77377) ===
+${scheduleLines}
+
+=== LIVE MEMBERSHIP PRICING ===
+${pricingLines}
+Free trial class: Always available — no commitment required.
+Day pass: $25
+`;
+  } catch (err) {
+    console.error("[AI SMS] Failed to build live context:", err);
+    return "";
+  }
+}
+
+// ─── Static System Prompt Base ────────────────────────────────────────────────
+
+const SYSTEM_PROMPT_BASE = `You are ${MYDOJO_AI_NAME}, the friendly AI text assistant for MyDojo Martial Arts & Fitness in Tomball, TX.
 
 Your job is to have natural, helpful conversations with members and prospective students via SMS.
 
@@ -29,17 +107,30 @@ Your job is to have natural, helpful conversations with members and prospective 
 - When someone says "Hello", "Hi", "Hey", or any greeting: warmly welcome them, introduce yourself briefly, and ask an open-ended question like "Are you looking to get started with martial arts, or do you have a question about our programs?"
 - Always end your reply with a question or a clear next step to keep the conversation going
 - If someone asks a vague question, ask a follow-up to understand their situation better before answering
-- Example: If they ask "how much are lessons?" — ask what age group or program they're interested in before giving pricing, since it varies
+- Example: If they ask "how much are lessons?" — ask what age group or program they're interested in before giving pricing, since it varies by program
 - Be proactive: if someone seems interested, offer to book them a free trial class
+- If someone asks about schedule for a specific program, give them the specific days and times from the schedule data below
 
-=== WHAT YOU CAN HELP WITH ===
-- Programs: Little Ninjas (ages 3-5), Core Kids (ages 5-12), Teens & Adults (ages 13+), Kickboxing, After School, Summer Camp
-- Schedule: Mon-Fri 5pm-7pm, Saturday 9am-12pm
-- Location: 23511 FM 2920, Tomball TX 77377
-- Pricing: Free trial class available. Monthly memberships start at $119/month.
-- Booking a free trial class
-- Questions about the facility, parking, what to wear, age requirements
-- Re-engaging inactive members
+=== PROGRAMS ===
+- Little Ninjas (ages 3–5): Foundation martial arts for toddlers. Focus on listening, coordination, and confidence.
+- Core Kids (ages 5–12): Traditional martial arts with belt progression. Builds discipline, focus, and self-defense skills.
+- Teens (ages 13–17): Advanced techniques, leadership, and competition prep.
+- Teens & Adults (ages 13+): High-energy classes combining traditional martial arts and fitness.
+- Kickboxing: Cardio kickboxing for all fitness levels. Burns up to 800 calories per session.
+- After School Program: Mon–Fri 3–6pm. Homework help + martial arts training.
+- Summer Camp: Full-day program Mon–Fri 8am–6pm. Martial arts, games, and activities.
+- Women's Self-Defense: Practical self-defense techniques for women.
+
+=== WHAT TO WEAR / BRING ===
+- First class: Comfortable workout clothes (athletic pants, t-shirt). No shoes needed on the mat.
+- After joining: A uniform (gi) is provided or available for purchase.
+- Bring water and a positive attitude!
+
+=== FACILITY INFO ===
+- Parking: Free parking lot on site
+- Changing rooms available
+- Air-conditioned facility
+- Viewing area for parents
 
 === CRITICAL URL RULE — NEVER VIOLATE ===
 The ONLY correct website URL is: mydojoma.com
@@ -51,7 +142,7 @@ If you need to reference the schedule or classes page, say: mydojoma.com/schedul
 - If someone says STOP, UNSUBSCRIBE, QUIT, CANCEL, or END — acknowledge and do NOT reply further
 - If someone asks for a human, say: "Of course! I'll have a staff member reach out to you shortly. You can also call us directly at (877) 4-MYDOJO."
 - If you don't know something specific, say: "Great question! Give us a call at (877) 4-MYDOJO and our team can help you right away."
-- Never make up prices, schedules, or policies you are not sure about
+- Never make up prices, schedules, or policies not listed in the data below
 - Keep every reply under 160 characters when possible (SMS limit)
 - Sign off as "- MyDojo Team" only on the very first message in a brand new conversation
 
@@ -137,12 +228,11 @@ export async function saveMessage(
  * This is a safety net in case the LLM ignores the system prompt.
  */
 export function sanitizeReplyUrls(reply: string): string {
-  // Replace common hallucinated URLs
   return reply
     .replace(/www\.mydojomartialarts\.com/gi, "mydojoma.com")
     .replace(/mydojomartialarts\.com/gi, "mydojoma.com")
     .replace(/www\.mydojo\.com/gi, "mydojoma.com")
-    .replace(/mydojo\.com(?!\.)/gi, "mydojoma.com") // mydojo.com but not mydojoma.com
+    .replace(/mydojo\.com(?!a)/gi, "mydojoma.com") // mydojo.com but not mydojoma.com
     .replace(/www\.mydojoma\.com/gi, "mydojoma.com");
 }
 
@@ -168,12 +258,20 @@ export async function generateAiReply(
     content: msg.body,
   }));
 
-  const systemWithName = contactName
-    ? `${SYSTEM_PROMPT}\n\nThe member's name is ${contactName}. Address them by first name when natural.`
-    : SYSTEM_PROMPT;
+  // Build live context from DB (schedule + pricing)
+  const liveContext = await buildLiveContext();
+
+  // Build full system prompt with live data injected
+  let systemPrompt = SYSTEM_PROMPT_BASE;
+  if (liveContext) {
+    systemPrompt += `\n\n${liveContext}`;
+  }
+  if (contactName) {
+    systemPrompt += `\n\nThe member's name is ${contactName}. Address them by first name when natural.`;
+  }
 
   const messages = [
-    { role: "system" as const, content: systemWithName },
+    { role: "system" as const, content: systemPrompt },
     ...historyMessages,
     { role: "user" as const, content: inboundMessage },
   ];
@@ -279,7 +377,7 @@ export async function handleInboundSms(payload: InboundSmsPayload): Promise<void
       .set({ aiEnabled: false } as Partial<typeof smsConversations.$inferInsert>)
       .where(eq(smsConversations.id, conv.id));
 
-    const humanReply = "I'll have a staff member reach out to you shortly! You can also call us at (877) 4-MYDOJO.";
+    const humanReply = "Of course! I'll have a staff member reach out to you shortly. You can also call us directly at (877) 4-MYDOJO.";
     const result = await sendSms({ to: sender, message: humanReply });
     await saveMessage(conv.id, "outbound", "ai", humanReply, result.messageId, result.success ? "sent" : "failed");
     return;
