@@ -16,17 +16,13 @@ type IdentificationMethod = "qr" | "phone" | "name";
 // Instructor mapping based on program
 const getInstructorForProgram = (program: string): string => {
   switch (program) {
-    case "Little Ninjas":
-      return "Coach Kleila Mari";
     case "Dragon Kids":
       return "Sensei Kamil Ahmed";
     case "Teens":
     case "Adult Karate":
       return "Master Vincent Holmes";
-    case "Kickboxing":
-      return "Coach Kleila Mari";
     default:
-      return "Coach";
+      return "MyDojo Instructor";
   }
 };
 
