@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { soundManager } from "@/lib/soundManager";
 import { KioskAdminLock } from "@/components/KioskAdminLock";
 import { KioskDayPass } from "@/components/KioskDayPass";
 import { KioskEnrollQR } from "@/components/KioskEnrollQR";
+import { KioskThermometer } from "@/components/KioskThermometer";
 
 type KioskScreen = "idle" | "identification" | "confirmation" | "success" | "dayPass" | "enroll";
 type IdentificationMethod = "qr" | "phone" | "name";
@@ -75,6 +76,36 @@ export default function KioskCheckIn() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [showThermometer, setShowThermometer] = useState(false);
+
+  // Idle timer — show thermometer after 20s of inactivity on the idle screen
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resetIdleTimer = () => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    setShowThermometer(false);
+    if (screen === "idle") {
+      idleTimerRef.current = setTimeout(() => setShowThermometer(true), 20_000);
+    }
+  };
+
+  // Start/stop idle timer based on screen
+  useEffect(() => {
+    if (screen === "idle") {
+      idleTimerRef.current = setTimeout(() => setShowThermometer(true), 20_000);
+    } else {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      setShowThermometer(false);
+    }
+    return () => { if (idleTimerRef.current) clearTimeout(idleTimerRef.current); };
+  }, [screen]);
+
+  // Reset idle timer on any user interaction
+  useEffect(() => {
+    const events = ["touchstart", "mousedown", "keydown", "mousemove"];
+    events.forEach(e => window.addEventListener(e, resetIdleTimer, { passive: true }));
+    return () => events.forEach(e => window.removeEventListener(e, resetIdleTimer));
+  }, [screen]);
 
   // Store utils reference at component level (required by Rules of Hooks)
   const utils = trpc.useUtils();
@@ -248,6 +279,17 @@ export default function KioskCheckIn() {
     return (
       <>
         <KioskAdminLock onVolumeChange={handleVolumeChange} onReset={handleReset} />
+        {/* Member Drive Thermometer — shown after 20s of inactivity */}
+        {showThermometer && (
+          <KioskThermometer
+            onDismiss={() => {
+              setShowThermometer(false);
+              // Restart idle timer after dismissal
+              if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+              idleTimerRef.current = setTimeout(() => setShowThermometer(true), 20_000);
+            }}
+          />
+        )}
         
         {/* DRAMATIC RED NEBULA BACKGROUND */}
         <div className="min-h-screen w-screen relative overflow-hidden">

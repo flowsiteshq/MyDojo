@@ -53,7 +53,7 @@ import QRCode from "qrcode";
 import { getDb } from "./db";
 import * as schema from "../drizzle/schema";
 import { chatbotConversations, trialSignups, conversationStates } from "../drizzle/schema";
-import { eq, and, or, desc, asc, isNull, isNotNull, ne, sql, inArray, like, not, between } from "drizzle-orm";
+import { eq, and, or, desc, asc, isNull, isNotNull, ne, sql, inArray, like, not, between, gte, count } from "drizzle-orm";
 import { getMemberEnrollment, getMemberClassSchedules, getMemberPaymentHistory, getMemberSubscription } from "./memberDashboard";
 import { createChangeRequest, getUserChangeRequests, getPendingChangeRequests, approveChangeRequest, denyChangeRequest } from "./membershipChangeRequests";
 import { sendStreakMilestoneEmail, checkStreakMilestone, sendEnrollmentConfirmationEmail } from "./emailService";
@@ -4916,6 +4916,53 @@ Please enter your card details below to complete your registration securely. Tot
           expiresAt,
         };
       }),
+
+    // ── Member Drive Progress (Thermometer) ─────────────────────────────────────
+    // Returns live count of new members enrolled since the drive start date,
+    // plus the goal and deadline from adminConfig.
+    getMemberDriveProgress: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return { current: 0, goal: 100, deadline: null, daysLeft: null, driveStartDate: null };
+
+      // Read drive config from adminConfig table
+      const configKeys = ['memberDriveGoal', 'memberDriveDeadline', 'memberDriveStartDate'];
+      const configs = await db
+        .select()
+        .from(schema.adminConfig)
+        .where(inArray(schema.adminConfig.key, configKeys));
+
+      const configMap = Object.fromEntries(configs.map(c => [c.key, c.value]));
+      const goal = parseInt(configMap['memberDriveGoal'] || '100');
+      const deadline = configMap['memberDriveDeadline'] || null; // ISO date string e.g. '2025-07-25'
+      const driveStartDate = configMap['memberDriveStartDate'] || null;
+
+      // Count active enrollments since drive start date
+      let current = 0;
+      try {
+        const whereClause = driveStartDate
+          ? and(
+              eq(schema.enrollments.status, 'active'),
+              gte(schema.enrollments.createdAt, new Date(driveStartDate))
+            )
+          : eq(schema.enrollments.status, 'active');
+
+        const [row] = await db
+          .select({ count: count() })
+          .from(schema.enrollments)
+          .where(whereClause);
+        current = row?.count ?? 0;
+      } catch {}
+
+      // Calculate days left
+      let daysLeft: number | null = null;
+      if (deadline) {
+        const deadlineDate = new Date(deadline);
+        const now = new Date();
+        daysLeft = Math.max(0, Math.ceil((deadlineDate.getTime() - now.getTime()) / 86400000));
+      }
+
+      return { current, goal, deadline, daysLeft, driveStartDate };
+    }),
   }),
   // Admin router for management dashboard
   admin: router({    // Get all intro appointments
@@ -6892,6 +6939,43 @@ Please enter your card details below to complete your registration securely. Tot
           .onDuplicateKeyUpdate({ set: { value: input.amountCents.toString() } });
         return { success: true, amountCents: input.amountCents };
       }),
+    /** Get member drive config (admin only) */
+    getMemberDriveConfig: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin only' });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+      const keys = ['memberDriveGoal', 'memberDriveDeadline', 'memberDriveStartDate'];
+      const rows = await db.select().from(schema.adminConfig).where(inArray(schema.adminConfig.key, keys));
+      const map = Object.fromEntries(rows.map(r => [r.key, r.value]));
+      return {
+        goal: parseInt(map['memberDriveGoal'] || '100'),
+        deadline: map['memberDriveDeadline'] || '',
+        startDate: map['memberDriveStartDate'] || '',
+      };
+    }),
+
+    /** Set member drive config (admin only) */
+    setMemberDriveConfig: protectedProcedure
+      .input(z.object({
+        goal: z.number().int().min(1).max(10000),
+        deadline: z.string(), // ISO date string e.g. '2025-07-25'
+        startDate: z.string(), // ISO date string e.g. '2025-06-01'
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin only' });
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        const upserts = [
+          { key: 'memberDriveGoal', value: input.goal.toString() },
+          { key: 'memberDriveDeadline', value: input.deadline },
+          { key: 'memberDriveStartDate', value: input.startDate },
+        ];
+        for (const u of upserts) {
+          await db.insert(schema.adminConfig).values(u).onDuplicateKeyUpdate({ set: { value: u.value } });
+        }
+        return { success: true };
+      }),
+
     // Get recent payment failures (admin only)
     getPaymentFailures: protectedProcedure
       .input(z.object({ limit: z.number().int().min(1).max(200).default(50) }))

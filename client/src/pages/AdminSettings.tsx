@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Ticket, KeyRound, CheckCircle2, AlertCircle, Loader2, DollarSign } from "lucide-react";
+import { Ticket, KeyRound, CheckCircle2, AlertCircle, Loader2, DollarSign, Flame } from "lucide-react";
 import { toast } from "sonner";
 
 // ─── Day Pass Price Section ───────────────────────────────────────────────────
@@ -258,6 +258,105 @@ function DeletePinSection() {
   );
 }
 
+// ─── Member Drive Section ────────────────────────────────────────────────────
+function MemberDriveSection() {
+  const { data, isLoading, refetch } = trpc.admin.getMemberDriveConfig.useQuery();
+  const setConfig = trpc.admin.setMemberDriveConfig.useMutation({
+    onSuccess: () => {
+      toast.success("Member drive settings saved!");
+      refetch();
+      setEditing(false);
+    },
+    onError: (err) => toast.error(err.message || "Failed to save settings"),
+  });
+  const [editing, setEditing] = useState(false);
+  const [goalInput, setGoalInput] = useState("");
+  const [deadlineInput, setDeadlineInput] = useState("");
+  const [startDateInput, setStartDateInput] = useState("");
+
+  const handleStartEdit = () => {
+    setGoalInput(String(data?.goal ?? 100));
+    setDeadlineInput(data?.deadline ?? "");
+    setStartDateInput(data?.startDate ?? "");
+    setEditing(true);
+  };
+
+  const handleSave = () => {
+    const goal = parseInt(goalInput);
+    if (isNaN(goal) || goal < 1) { toast.error("Goal must be at least 1."); return; }
+    setConfig.mutate({ goal, deadline: deadlineInput, startDate: startDateInput });
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center">
+            <Flame className="w-5 h-5 text-orange-500" />
+          </div>
+          <div>
+            <CardTitle className="text-lg">Member Drive Thermometer</CardTitle>
+            <CardDescription>
+              Configure the student drive goal shown on the kiosk idle screen after 20 seconds.
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-gray-500">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">Loading settings…</span>
+          </div>
+        ) : !editing ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-4 text-sm">
+              <span className="text-gray-500">Goal:</span>
+              <Badge variant="outline">{data?.goal ?? 100} new members</Badge>
+            </div>
+            <div className="flex items-center gap-4 text-sm">
+              <span className="text-gray-500">Deadline:</span>
+              <Badge variant="outline">
+                {data?.deadline ? new Date(data.deadline + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "Not set"}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-4 text-sm">
+              <span className="text-gray-500">Count members enrolled since:</span>
+              <Badge variant="outline">
+                {data?.startDate ? new Date(data.startDate + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "All time"}
+              </Badge>
+            </div>
+            <Button onClick={handleStartEdit} variant="outline" className="mt-3">Edit</Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="drive-goal" className="text-sm font-medium mb-1.5 block">Goal (# of new members)</Label>
+                <Input id="drive-goal" type="number" min="1" value={goalInput} onChange={e => setGoalInput(e.target.value)} placeholder="100" />
+              </div>
+              <div>
+                <Label htmlFor="drive-deadline" className="text-sm font-medium mb-1.5 block">Deadline Date</Label>
+                <Input id="drive-deadline" type="date" value={deadlineInput} onChange={e => setDeadlineInput(e.target.value)} />
+              </div>
+              <div>
+                <Label htmlFor="drive-start" className="text-sm font-medium mb-1.5 block">Count members since</Label>
+                <Input id="drive-start" type="date" value={startDateInput} onChange={e => setStartDateInput(e.target.value)} />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleSave} disabled={setConfig.isPending} className="bg-[#E10600] hover:bg-[#C10500] text-white">
+                {setConfig.isPending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving…</> : "Save Settings"}
+              </Button>
+              <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AdminSettings() {
   return (
@@ -275,9 +374,16 @@ export default function AdminSettings() {
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
               Kiosk
             </h2>
-            <DayPassPriceSection />
+                      <DayPassPriceSection />
           </div>
-
+          <Separator />
+          {/* Member Drive section */}
+          <div>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              Member Drive
+            </h2>
+            <MemberDriveSection />
+          </div>
           <Separator />
 
           {/* Security section */}
