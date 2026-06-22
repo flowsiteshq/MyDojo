@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Flame, Heart, Zap, Users, Music, Lightbulb } from "lucide-react";
 import { motion } from "framer-motion";
-import { openIntakeChatbot } from "@/lib/chatbot";
+import { openBookFreeClassGate } from "@/lib/chatbot";
 import SEO from "@/components/SEO";
 
 export default function Kickboxing() {
@@ -96,7 +96,7 @@ export default function Kickboxing() {
               <p className="text-gray-600 text-lg mb-8 leading-relaxed">
                 We're all about fitness, community, and lifting each other up. Whether you're just getting started or looking for something new, you'll find your place here. From the supportive coaches who help you push beyond your limits to the people sweating it out alongside you, every 45-minute workout is a team effort—where encouragement and energy fuel your journey.
               </p>
-              <Button onClick={openIntakeChatbot} className="bg-black hover:bg-black/90 text-white text-lg px-8 py-6 h-auto font-heading uppercase tracking-wider">
+              <Button onClick={openBookFreeClassGate} className="bg-black hover:bg-black/90 text-white text-lg px-8 py-6 h-auto font-heading uppercase tracking-wider">
                 Start Your Journey
               </Button>
             </motion.div>
@@ -259,7 +259,7 @@ export default function Kickboxing() {
             </div>
 
             <div className="text-center">
-              <Button onClick={openIntakeChatbot} className="bg-primary hover:bg-primary/90 text-white text-lg px-10 py-7 h-auto font-heading uppercase tracking-wider">
+              <Button onClick={openBookFreeClassGate} className="bg-primary hover:bg-primary/90 text-white text-lg px-10 py-7 h-auto font-heading uppercase tracking-wider">
                 Book Your Free Trial
               </Button>
             </div>

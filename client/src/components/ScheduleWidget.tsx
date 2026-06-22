@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Users, Filter, LayoutList, CalendarDays } from "lucide-react";
-import { openIntakeChatbot } from "@/lib/chatbot";
+import { openBookFreeClassGate } from "@/lib/chatbot";
 
 interface ScheduleWidgetProps {
   schedule: DaySchedule[];
@@ -282,7 +282,7 @@ export function ScheduleWidget({ schedule }: ScheduleWidgetProps) {
                             </div>
                           </div>
                         </div>
-                        <Button size="sm" variant="outline" className="shrink-0" onClick={openIntakeChatbot}>
+                        <Button size="sm" variant="outline" className="shrink-0" onClick={openBookFreeClassGate}>
                           Book Trial
                         </Button>
                       </div>
@@ -369,7 +369,7 @@ export function ScheduleWidget({ schedule }: ScheduleWidgetProps) {
                                   {classesAtTime.map((cls, i) => (
                                     <button
                                       key={i}
-                                      onClick={openIntakeChatbot}
+                                      onClick={openBookFreeClassGate}
                                       className={`w-full text-left rounded-md border px-2 py-1.5 text-xs font-medium leading-tight hover:opacity-80 transition-opacity ${getProgramColor(cls.name)}`}
                                     >
                                       <div className="font-semibold truncate">{cls.name}</div>

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Phone, Clock, ArrowLeft, Wifi, Coffee, Car, Users, Maximize2, Star, ShoppingBag, Eye } from "lucide-react";
 import { Link } from "wouter";
 import { MapView } from "@/components/Map";
-import { openIntakeChatbot } from "@/lib/chatbot";
+import { openBookFreeClassGate } from "@/lib/chatbot";
 import { ScheduleWidget } from "@/components/ScheduleWidget";
 import { NextClassTimer } from "@/components/NextClassTimer";
 import { LocationClock } from "@/components/LocationClock";
@@ -215,7 +215,7 @@ export default function LocationDetail() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
-                onClick={openIntakeChatbot}
+                onClick={openBookFreeClassGate}
                 className="bg-primary hover:bg-primary/90 text-white text-lg px-10 py-6 h-auto font-heading uppercase tracking-wider"
               >
                 Book Your Free Trial Class
@@ -335,7 +335,7 @@ export default function LocationDetail() {
               Whether you are a parent watching your child earn their first stripe, an adult pushing through a kickboxing class, or a competitor preparing for your next tournament — this facility was built for you. Reserved parking, a comfortable waiting lounge, a hospitality coffee bar, vending, and free Wi-Fi mean that coming to class is never an inconvenience. It is the highlight of your week.
             </p>
             <Button
-              onClick={openIntakeChatbot}
+              onClick={openBookFreeClassGate}
               className="bg-primary hover:bg-primary/90 text-white text-lg px-10 py-6 h-auto font-heading uppercase tracking-wider"
             >
               Book Your Free Trial Class
@@ -411,7 +411,7 @@ export default function LocationDetail() {
               <h3 className="text-xl font-bold mb-2">Ready to Start?</h3>
               <p className="mb-6 text-white/90">Book your free trial class today and experience the MyDojo difference.</p>
               <Button 
-                onClick={openIntakeChatbot}
+                onClick={openBookFreeClassGate}
                 className="w-full bg-white text-primary hover:bg-gray-100 font-bold"
               >
                 Book Free Trial

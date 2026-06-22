@@ -1,12 +1,14 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { ChatGPTChatbot } from "@/components/ChatGPTChatbot";
 import { IntakeChatbot } from "@/components/IntakeChatbot";
+import { LeadCaptureModal, LeadData } from "@/components/LeadCaptureModal";
 
 interface ChatbotContextType {
   isOpen: boolean;
   openChatbot: () => void;
   closeChatbot: () => void;
   openIntake: () => void;
+  openBookFreeClassGate: () => void;
 }
 
 const ChatbotContext = createContext<ChatbotContextType | undefined>(undefined);
@@ -14,10 +16,20 @@ const ChatbotContext = createContext<ChatbotContextType | undefined>(undefined);
 export function ChatbotProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isIntakeOpen, setIsIntakeOpen] = useState(false);
+  const [isGateOpen, setIsGateOpen] = useState(false);
+  const [leadData, setLeadData] = useState<LeadData | null>(null);
 
   const openChatbot = () => setIsOpen(true);
   const closeChatbot = () => setIsOpen(false);
   const openIntake = () => setIsIntakeOpen(true);
+  const openBookFreeClassGate = () => setIsGateOpen(true);
+
+  /** Called when the lead-capture form is submitted successfully */
+  function handleLeadCaptured(lead: LeadData) {
+    setIsGateOpen(false);
+    setLeadData(lead);
+    setIsIntakeOpen(true);
+  }
 
   // Mount guard to prevent double initialization
   useEffect(() => {
@@ -26,42 +38,72 @@ export function ChatbotProvider({ children }: { children: ReactNode }) {
       return;
     }
     (window as any).__KAI_WIDGET_LOADED = true;
-    
-    // Dev indicator
+
     if (import.meta.env.DEV) {
       console.log('🤖 [KAI BOT INIT: v2] ChatGPT-powered assistant loaded');
     }
 
-    // Listen for global openTrialChatbot (legacy ChatGPT bot) events
+    // Legacy ChatGPT bot
     const handleOpenChatbot = () => {
       console.log('[KAI BOT] Opening chatbot via event');
       setIsOpen(true);
     };
-    // Listen for global openIntakeChatbot (primary enrollment bot) events
-    const handleOpenIntakeChatbot = () => {
+
+    // Intake chatbot — optionally carries lead data in event.detail
+    const handleOpenIntakeChatbot = (e: Event) => {
       console.log('[KAI BOT] Opening intake chatbot via event');
+      const detail = (e as CustomEvent).detail as LeadData | null;
+      if (detail?.name) {
+        setLeadData(detail);
+      }
       setIsIntakeOpen(true);
     };
+
+    // Book-a-free-class gate
+    const handleOpenGate = () => {
+      console.log('[KAI BOT] Opening lead-capture gate via event');
+      setIsGateOpen(true);
+    };
+
     window.addEventListener('openTrialChatbot', handleOpenChatbot);
     window.addEventListener('openIntakeChatbot', handleOpenIntakeChatbot);
-    
+    window.addEventListener('openBookFreeClassGate', handleOpenGate);
+
     return () => {
       window.removeEventListener('openTrialChatbot', handleOpenChatbot);
       window.removeEventListener('openIntakeChatbot', handleOpenIntakeChatbot);
+      window.removeEventListener('openBookFreeClassGate', handleOpenGate);
       (window as any).__KAI_WIDGET_LOADED = false;
     };
   }, []);
 
   return (
-    <ChatbotContext.Provider value={{ isOpen, openChatbot, closeChatbot, openIntake }}>
+    <ChatbotContext.Provider
+      value={{ isOpen, openChatbot, closeChatbot, openIntake, openBookFreeClassGate }}
+    >
       {children}
-      {/* Primary enrollment chatbot — IntakeChatbot */}
-      {isIntakeOpen && <IntakeChatbot onClose={() => setIsIntakeOpen(false)} />}
+
+      {/* ── Lead-capture gate ── */}
+      {isGateOpen && (
+        <LeadCaptureModal
+          onSuccess={handleLeadCaptured}
+          onClose={() => setIsGateOpen(false)}
+        />
+      )}
+
+      {/* ── Primary enrollment chatbot — IntakeChatbot ── */}
+      {isIntakeOpen && (
+        <IntakeChatbot
+          onClose={() => { setIsIntakeOpen(false); setLeadData(null); }}
+          leadData={leadData}
+        />
+      )}
+
+      {/* ── Legacy ChatGPT bot ── */}
       {isOpen && (
         <>
-          {/* Dev indicator - only visible in development */}
           {import.meta.env.DEV && (
-            <div 
+            <div
               style={{
                 position: 'fixed',
                 bottom: '80px',

@@ -5,7 +5,7 @@ import { Menu, X, Phone, MapPin, Instagram, Facebook, Youtube, User, ChevronDown
 import { cn } from "@/lib/utils";
 import { CookieBanner } from "@/components/CookieBanner";
 
-import { openIntakeChatbot } from "@/lib/chatbot";
+import { openBookFreeClassGate } from "@/lib/chatbot";
 import { useLocationContext } from "@/contexts/LocationContext";
 import { NotificationSubscribe } from "@/components/NotificationSubscribe";
 import { PhoneChooser } from "@/components/PhoneChooser";
@@ -362,7 +362,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
 
             <Button
-              onClick={openIntakeChatbot}
+              onClick={openBookFreeClassGate}
               className={cn(
                 "bg-primary hover:bg-primary/90 text-white font-heading uppercase tracking-wider text-sm skew-x-[-10deg] transition-all duration-500 shadow-lg hover:shadow-xl hover:-translate-y-0.5",
                 isSticky ? "py-2 px-6 text-xs h-10" : "py-4 px-8 h-14 text-base"
@@ -576,7 +576,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             <Button
               onClick={() => {
-                openIntakeChatbot();
+                openBookFreeClassGate();
                 setIsMobileMenuOpen(false);
               }}
               className="w-full bg-primary text-white font-heading uppercase mt-4 py-6 text-lg"
@@ -683,7 +683,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </li>
                 <li>
                   <Button
-                    onClick={openIntakeChatbot}
+                    onClick={openBookFreeClassGate}
                     variant="outline"
                     className="w-full border-white/20 text-white hover:bg-white hover:text-black mt-2"
                   >

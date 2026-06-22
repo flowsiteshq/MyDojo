@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import SEO from "@/components/SEO";
 import SchemaMarkup from "@/components/SchemaMarkup";
-import { openIntakeChatbot } from "@/lib/chatbot";
+import { openBookFreeClassGate } from "@/lib/chatbot";
 import { useTranslation } from "react-i18next";
 
 export default function About() {
@@ -123,7 +123,7 @@ export default function About() {
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-heading font-bold mb-8">{t("about.join_family")}</h2>
           <Button 
-            onClick={openIntakeChatbot}
+            onClick={openBookFreeClassGate}
             className="bg-white text-primary hover:bg-black hover:text-white text-lg px-10 py-8 h-auto font-heading uppercase tracking-wider skew-x-[-10deg] shadow-xl"
           >
             <span className="skew-x-[10deg]">{t("about.start_journey")}</span>

@@ -28,6 +28,8 @@ interface IntakeSlot {
 
 interface IntakeChatbotProps {
   onClose: () => void;
+  /** Pre-collected lead data from the lead-capture gate */
+  leadData?: { name?: string; phone?: string; email?: string } | null;
 }
 
 // Format timestamp like iMessage: "Today 7:24 PM" or "Mon 5:30 PM"
@@ -292,7 +294,7 @@ function MessageList({ messages, isProcessing }: { messages: Message[]; isProces
 
 // ─── V2 Trial-First Chatbot ────────────────────────────────────────────────
 
-function IntakeChatbotV2({ onClose }: IntakeChatbotProps) {
+function IntakeChatbotV2({ onClose, leadData }: IntakeChatbotProps) {
   const [sessionId] = useState(() => `intake-v2-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -318,6 +320,8 @@ function IntakeChatbotV2({ onClose }: IntakeChatbotProps) {
   const isDev = import.meta.env.DEV;
 
   const greetingQuery = trpc.chat.getIntakeGreetingV2.useQuery();
+  // First name extracted from lead data for personalised greeting
+  const leadFirstName = leadData?.name ? leadData.name.split(' ')[0] : undefined;
 
   const intakeStepV2Mutation = trpc.chat.intakeStepV2.useMutation({
     onSuccess: (data) => {
@@ -369,10 +373,15 @@ function IntakeChatbotV2({ onClose }: IntakeChatbotProps) {
       // Show typing indicator for 2 seconds before greeting appears
       setIsProcessing(true);
       setTimeout(() => {
+        // Personalise the greeting if we have the visitor's first name
+        const baseMsg = greetingQuery.data!.message;
+        const personalMsg = leadFirstName
+          ? baseMsg.replace(/^(Hi!|Hello!|Hey!|Good \w+!)/i, `Hi ${leadFirstName}!`)
+          : baseMsg;
         setMessages([{
           id: "greeting",
           role: "assistant",
-          content: greetingQuery.data!.message,
+          content: personalMsg,
           timestamp: new Date(),
         }]);
         setTfState(greetingQuery.data!.state);
@@ -380,7 +389,7 @@ function IntakeChatbotV2({ onClose }: IntakeChatbotProps) {
         setIsProcessing(false);
       }, 2000);
     }
-  }, [greetingQuery.data]);
+  }, [greetingQuery.data, leadFirstName]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -544,7 +553,7 @@ function IntakeChatbotV2({ onClose }: IntakeChatbotProps) {
 
 // ─── V1 Legacy Chatbot ─────────────────────────────────────────────────────
 
-function IntakeChatbotV1({ onClose }: IntakeChatbotProps) {
+function IntakeChatbotV1({ onClose, leadData }: IntakeChatbotProps) {
   const [sessionId] = useState(() => `intake-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const [bookingRequestId] = useState(() => `booking-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -599,16 +608,21 @@ function IntakeChatbotV1({ onClose }: IntakeChatbotProps) {
     },
   });
 
+  const leadFirstNameV1 = leadData?.name ? leadData.name.split(' ')[0] : undefined;
   useEffect(() => {
     if (greetingQuery.data?.message) {
+      const baseMsg = greetingQuery.data.message;
+      const personalMsg = leadFirstNameV1
+        ? baseMsg.replace(/^(Hi!|Hello!|Hey!|Good \w+!)/i, `Hi ${leadFirstNameV1}!`)
+        : baseMsg;
       setMessages([{
         id: "greeting",
         role: "assistant",
-        content: greetingQuery.data.message,
+        content: personalMsg,
         timestamp: new Date(),
       }]);
     }
-  }, [greetingQuery.data]);
+  }, [greetingQuery.data, leadFirstNameV1]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -814,9 +828,9 @@ function IntakeChatbotV1({ onClose }: IntakeChatbotProps) {
 
 // ─── Feature-Flag Router ───────────────────────────────────────────────────
 
-export function IntakeChatbot({ onClose }: IntakeChatbotProps) {
+export function IntakeChatbot({ onClose, leadData }: IntakeChatbotProps) {
   if (USE_TRIAL_FIRST_V2) {
-    return <IntakeChatbotV2 onClose={onClose} />;
+    return <IntakeChatbotV2 onClose={onClose} leadData={leadData} />;
   }
-  return <IntakeChatbotV1 onClose={onClose} />;
+  return <IntakeChatbotV1 onClose={onClose} leadData={leadData} />;
 }

@@ -12,7 +12,7 @@ import {
   Target, BookOpen, CheckCircle, ArrowRight, ChevronLeft, ChevronRight as ChevronRightIcon,
   Clock, MapPin, Calendar
 } from "lucide-react";
-import { openIntakeChatbot } from "@/lib/chatbot";
+import { openBookFreeClassGate } from "@/lib/chatbot";
 import { PhoneChooser } from "@/components/PhoneChooser";
 import { IntakeChatbot } from "@/components/IntakeChatbot";
 import SEO from "@/components/SEO";
@@ -780,7 +780,7 @@ export default function Home() {
   useVisitorSms({ page: "home" });
 
   const handleBookClass = () => {
-    openIntakeChatbot();
+    openBookFreeClassGate();
   };
 
   return (

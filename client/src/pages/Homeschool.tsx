@@ -4,7 +4,7 @@ import { Clock, Calendar, Users, BookOpen, Star, Shield, Zap, Heart, CheckCircle
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import SEO from "@/components/SEO";
-import { openIntakeChatbot } from "@/lib/chatbot";
+import { openBookFreeClassGate } from "@/lib/chatbot";
 
 export default function Homeschool() {
   const { t } = useTranslation();
@@ -173,7 +173,7 @@ export default function Homeschool() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
-                onClick={openIntakeChatbot}
+                onClick={openBookFreeClassGate}
                 className="bg-primary hover:bg-primary/90 text-white text-lg px-8 py-6 h-auto font-heading uppercase tracking-wider"
               >
                 Book a Free Trial Class
@@ -442,7 +442,7 @@ export default function Homeschool() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
-                onClick={openIntakeChatbot}
+                onClick={openBookFreeClassGate}
                 className="bg-primary hover:bg-primary/90 text-white text-xl px-12 py-8 h-auto font-heading uppercase tracking-wider shadow-2xl"
               >
                 Book Free Trial Class

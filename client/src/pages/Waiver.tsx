@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
-import { openIntakeChatbot } from "@/lib/chatbot";
+import { openBookFreeClassGate } from "@/lib/chatbot";
 import { useState } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
@@ -359,7 +359,7 @@ export default function Waiver() {
               Join our high-energy, fat-burning 45-minute complimentary Karate or Kickboxing class!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button onClick={openIntakeChatbot} className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg font-heading uppercase">
+              <Button onClick={openBookFreeClassGate} className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg font-heading uppercase">
                 Book Free Trial
               </Button>
               <Link href="/contact">

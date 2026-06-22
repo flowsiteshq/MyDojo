@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ParticleButton } from "@/components/ui/ParticleButton";
 import { Link } from "wouter";
-import { openIntakeChatbot } from "@/lib/chatbot";
+import { openBookFreeClassGate } from "@/lib/chatbot";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { useLocationContext } from "@/contexts/LocationContext";
 import { useTranslation } from "react-i18next";

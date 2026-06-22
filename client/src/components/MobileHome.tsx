@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { PhoneChooser } from "@/components/PhoneChooser";
 import { Phone, CheckCircle, Calendar, Clock, Shirt, Users } from "lucide-react";
-import { openIntakeChatbot } from "@/lib/chatbot";
+import { openBookFreeClassGate } from "@/lib/chatbot";
 
 /**
  * MobileHome — shown ONLY on mobile (< md breakpoint).
@@ -161,7 +161,7 @@ export function MobileHome() {
         <h3 className="text-white font-heading font-black text-2xl mb-2">Try a FREE Class!</h3>
         <p className="text-gray-400 text-sm mb-4">No experience needed. All ages welcome.</p>
         <button
-          onClick={openIntakeChatbot}
+          onClick={openBookFreeClassGate}
           className="w-full bg-primary text-white font-heading font-black uppercase tracking-wider py-3.5 rounded-xl text-base"
         >
           Book Free Trial
