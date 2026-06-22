@@ -39,6 +39,8 @@ import {
   CreditCard,
   Receipt,
   ChevronUp,
+  Package,
+  MapPin,
 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { getLoginUrl } from "@/const";
@@ -49,6 +51,8 @@ import { useDashboardTheme, type DashboardThemeMode } from "@/hooks/useDashboard
 import { MyChildren } from "@/components/MyChildren";
 import { MealPlanTab } from "@/components/MealPlanTab";
 import MyDojoBucksPage from "./MyDojoBucks";
+import { toast } from "sonner";
+import { programs } from "@/data/programs";
 Chart.register(...registerables);
 
 // ─── Theme-aware token helper ─────────────────────────────────────────────────
@@ -882,6 +886,56 @@ export default function MemberDashboard2() {
     enabled: isAuthenticated && !!enrollment,
   });
 
+  // ── Today's classes (dashboard home tab) ─────────────────────────────────
+  const { data: todayClasses, isLoading: todayClassesLoading, refetch: refetchTodayClasses } = trpc.attendance.getTodayClasses.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+
+  const [checkingInId, setCheckingInId] = useState<number | null>(null);
+  const [selectedClass, setSelectedClass] = useState<(typeof todayClasses extends (infer T)[] | undefined ? T : never) | null>(null);
+
+  const checkInMutation = trpc.attendance.checkIn.useMutation({
+    onSuccess: () => {
+      refetchTodayClasses();
+      setCheckingInId(null);
+      toast.success("Checked in! See you on the mat.");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Check-in failed. Please try again.");
+      setCheckingInId(null);
+    },
+  });
+
+  const handleCheckIn = (classScheduleId: number) => {
+    setCheckingInId(classScheduleId);
+    const today = new Date().toISOString().split('T')[0];
+    checkInMutation.mutate({ classScheduleId, attendanceDate: today });
+  };
+
+  // Map class program name to programs data for the detail modal
+  const PROGRAM_TITLE_MAP: Record<string, string> = {
+    "Little Ninjas": "little-ninjas",
+    "Little Ninjas & Me": "little-ninjas",
+    "Dragon Kids": "core-kids",
+    "Dragon Kids & Teens": "core-kids",
+    "Teens": "teens",
+    "Teen Warriors": "teens",
+    "Adult Karate": "adult-karate",
+    "Adult Karate + Kickboxing": "adult-karate",
+    "Kickboxing": "kickboxing",
+    "After School": "after-school",
+    "Summer Camp": "summer-camp",
+    "Intro Class": "adult-karate",
+    "Leadership": "adult-karate",
+    "Sparring": "adult-karate",
+    "Weapons Class": "adult-karate",
+    "Women's Self-Defense": "adult-karate",
+    "Advanced/Black Belt + Kickboxing": "adult-karate",
+    "Family Class": "core-kids",
+    "Instructor Training": "adult-karate",
+    "Demo/Competition Team": "adult-karate",
+  };
+
   // Belt progress stats (used by both dashboard tab progress card and Progress tab)
   const { data: progressStats } = trpc.member.getProgressStats.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -1283,12 +1337,269 @@ export default function MemberDashboard2() {
           <MyDojoBucksPage />
         )}
 
+        {/* ── CLASS DETAIL MODAL ── */}
+        {selectedClass && (() => {
+          const programId = PROGRAM_TITLE_MAP[selectedClass.program];
+          const programData = programs.find(p => p.id === programId);
+          return (
+            <div
+              className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4"
+              onClick={() => setSelectedClass(null)}
+            >
+              <div
+                className={`w-full sm:max-w-lg max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl shadow-2xl ${
+                  isDark ? 'bg-zinc-900 border border-white/10' : 'bg-white'
+                }`}
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Modal header */}
+                <div
+                  className="relative h-36 sm:h-44 rounded-t-3xl sm:rounded-t-2xl overflow-hidden flex-shrink-0"
+                  style={{ background: 'linear-gradient(135deg, #1a0505, #3d0a0a)' }}
+                >
+                  {programData?.image && (
+                    <img src={programData.image} alt={selectedClass.program} className="absolute inset-0 w-full h-full object-cover opacity-30" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                  <button
+                    onClick={() => setSelectedClass(null)}
+                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/40 flex items-center justify-center text-white/70 hover:text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <div className="absolute bottom-0 left-0 p-5">
+                    <p className="text-[10px] font-bold tracking-widest text-[#E11D2A] uppercase mb-1">
+                      {selectedClass.dayOfWeek} · {selectedClass.startTime} – {selectedClass.endTime}
+                    </p>
+                    <h3 className="text-2xl font-black text-white leading-tight">{selectedClass.program}</h3>
+                    <p className={`text-sm text-white/60 mt-0.5`}>{selectedClass.location}</p>
+                  </div>
+                </div>
+
+                <div className="p-5 space-y-5">
+                  {/* Check-in status or button */}
+                  {selectedClass.isCheckedIn ? (
+                    <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold ${
+                      isDark ? 'bg-green-500/15 text-green-400' : 'bg-green-100 text-green-700'
+                    }`}>
+                      <CheckCircle2 className="h-5 w-5" />
+                      You're checked in for this class
+                    </div>
+                  ) : (() => {
+                    const now = new Date();
+                    const nowMins = now.getHours() * 60 + now.getMinutes();
+                    const [rawH, rawM] = selectedClass.startTime.replace(/(AM|PM)/i, '').trim().split(':').map(Number);
+                    const isPM = /PM/i.test(selectedClass.startTime);
+                    const h24 = isPM && rawH !== 12 ? rawH + 12 : (!isPM && rawH === 12 ? 0 : rawH);
+                    const classMins = h24 * 60 + (rawM || 0);
+                    const isPast = classMins + 60 < nowMins;
+                    return isPast ? null : (
+                      <button
+                        onClick={() => { handleCheckIn(selectedClass.id); setSelectedClass(null); }}
+                        disabled={checkingInId === selectedClass.id}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-white transition-all hover:opacity-90 disabled:opacity-60"
+                        style={{ background: 'linear-gradient(135deg, #E11D2A, #b01520)' }}
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        Check In for This Class
+                      </button>
+                    );
+                  })()}
+
+                  {/* Instructor */}
+                  {selectedClass.instructor && (
+                    <div>
+                      <p className={`text-xs font-bold tracking-widest uppercase mb-2 ${t.textLabel}`}>Instructor</p>
+                      <div className={`flex items-center gap-3 p-3 rounded-xl ${
+                        isDark ? 'bg-white/5' : 'bg-gray-50'
+                      }`}>
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
+                          style={{ background: 'linear-gradient(135deg, #E11D2A, #b01520)' }}
+                        >
+                          {selectedClass.instructor.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className={`font-bold text-sm ${t.textPrimary}`}>{selectedClass.instructor}</p>
+                          <p className={`text-xs ${t.textMuted}`}>MyDojo Certified Instructor</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Class description */}
+                  {programData && (
+                    <div>
+                      <p className={`text-xs font-bold tracking-widest uppercase mb-2 ${t.textLabel}`}>About This Class</p>
+                      <p className={`text-sm leading-relaxed ${t.textSecondary}`}>{programData.longDescription || programData.description}</p>
+                    </div>
+                  )}
+
+                  {/* What you'll work on */}
+                  {programData?.features && programData.features.length > 0 && (
+                    <div>
+                      <p className={`text-xs font-bold tracking-widest uppercase mb-2 ${t.textLabel}`}>What You'll Work On</p>
+                      <div className="space-y-1.5">
+                        {programData.features.map((f, i) => (
+                          <div key={i} className={`flex items-start gap-2 text-sm ${t.textSecondary}`}>
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#E11D2A] mt-1.5 shrink-0" />
+                            {f}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Required equipment */}
+                  {programData?.equipment && programData.equipment.length > 0 && (
+                    <div>
+                      <p className={`text-xs font-bold tracking-widest uppercase mb-2 ${t.textLabel}`}>What to Bring</p>
+                      <div className="space-y-1.5">
+                        {programData.equipment.map((item, i) => (
+                          <div key={i} className={`flex items-start gap-2 text-sm ${
+                            isDark ? 'bg-white/4 border border-white/8' : 'bg-gray-50 border border-gray-100'
+                          } rounded-lg px-3 py-2`}>
+                            <Package className="h-4 w-4 text-[#E11D2A] shrink-0 mt-0.5" />
+                            <span className={t.textSecondary}>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Duration */}
+                  {programData && (
+                    <div className={`flex items-center gap-4 pt-2 border-t ${
+                      isDark ? 'border-white/8' : 'border-gray-100'
+                    }`}>
+                      <div className="flex items-center gap-1.5">
+                        <Clock className={`h-4 w-4 ${t.textMuted}`} />
+                        <span className={`text-xs ${t.textMuted}`}>{programData.duration}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Users className={`h-4 w-4 ${t.textMuted}`} />
+                        <span className={`text-xs ${t.textMuted}`}>{programData.ages}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ── DASHBOARD TAB ── */}
         {activeTab === "dashboard" && (
           <div className="space-y-6">
 
+            {/* Today's Date Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold tracking-widest text-[#E11D2A] uppercase">
+                  {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                </p>
+                <h2 className={`text-2xl font-black mt-0.5 ${t.textPrimary}`}>Today's Classes</h2>
+              </div>
+              <div className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${
+                isDark ? 'border-white/10 text-white/50' : 'border-gray-200 text-gray-500'
+              }`}>
+                {todayClasses?.length ?? 0} class{(todayClasses?.length ?? 0) !== 1 ? 'es' : ''} scheduled
+              </div>
+            </div>
+
+            {/* Classes List */}
+            {todayClassesLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-10 h-10 rounded-full border-4 border-[#E11D2A] border-t-transparent animate-spin" />
+              </div>
+            ) : !todayClasses || todayClasses.length === 0 ? (
+              <div className={`rounded-2xl border p-12 text-center ${
+                isDark ? 'border-white/8 bg-white/3' : 'border-gray-200 bg-white'
+              }`}>
+                <Calendar className={`h-12 w-12 mx-auto mb-4 ${
+                  isDark ? 'text-white/20' : 'text-gray-300'
+                }`} />
+                <p className={`font-bold text-lg mb-1 ${t.textPrimary}`}>No Classes Today</p>
+                <p className={`text-sm ${t.textMuted}`}>There are no classes scheduled for today. See you next time!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {todayClasses.map((cls) => {
+                  const now = new Date();
+                  const nowMins = now.getHours() * 60 + now.getMinutes();
+                  const [rawH, rawM] = cls.startTime.replace(/(AM|PM)/i, '').trim().split(':').map(Number);
+                  const isPM = /PM/i.test(cls.startTime);
+                  const h24 = isPM && rawH !== 12 ? rawH + 12 : (!isPM && rawH === 12 ? 0 : rawH);
+                  const classMins = h24 * 60 + (rawM || 0);
+                  const isPast = classMins + 60 < nowMins;
+
+                  return (
+                    <button
+                      key={cls.id}
+                      onClick={() => setSelectedClass(cls)}
+                      className={`w-full rounded-2xl border p-5 flex items-center gap-4 transition-all text-left cursor-pointer ${
+                        cls.isCheckedIn
+                          ? isDark ? 'border-green-500/30 bg-green-500/5 hover:bg-green-500/10' : 'border-green-200 bg-green-50 hover:bg-green-100'
+                          : isPast
+                          ? isDark ? 'border-white/5 bg-white/2 opacity-50' : 'border-gray-100 bg-gray-50 opacity-60'
+                          : isDark ? 'border-white/10 bg-white/4 hover:bg-white/8' : 'border-gray-200 bg-white hover:bg-gray-50'
+                      }`}
+                    >
+                      {/* Time column */}
+                      <div className="shrink-0 text-center min-w-[56px]">
+                        <p className={`text-lg font-black leading-none ${
+                          cls.isCheckedIn ? 'text-green-500' : isPast ? t.textMuted : 'text-[#E11D2A]'
+                        }`}>{cls.startTime.replace(':00', '').replace(' ', '')}</p>
+                        <p className={`text-xs mt-0.5 ${t.textMuted}`}>{cls.endTime.replace(':00', '').replace(' ', '')}</p>
+                      </div>
+
+                      {/* Divider */}
+                      <div className={`w-px self-stretch ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
+
+                      {/* Class info */}
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-bold text-base leading-tight ${t.textPrimary}`}>{cls.program}</p>
+                        <div className={`flex items-center gap-3 mt-1 text-xs ${t.textMuted}`}>
+                          {cls.instructor && (
+                            <span className="flex items-center gap-1">
+                              <Users className="h-3 w-3" />{cls.instructor}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />{cls.location}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right side: check-in badge or arrow */}
+                      <div className="shrink-0 flex items-center gap-2">
+                        {cls.isCheckedIn ? (
+                          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${
+                            isDark ? 'bg-green-500/15 text-green-400' : 'bg-green-100 text-green-700'
+                          }`}>
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Checked In
+                          </div>
+                        ) : isPast ? (
+                          <span className={`text-xs ${t.textMuted}`}>Ended</span>
+                        ) : (
+                          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${
+                            isDark ? 'border-white/10 text-white/50' : 'border-gray-200 text-gray-500'
+                          }`}>
+                            Tap for details
+                          </div>
+                        )}
+                        <ChevronRight className={`h-4 w-4 shrink-0 ${t.textMuted}`} />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Hidden original dashboard rows — kept for reference only */}
             {/* Row 1: Welcome + Hero */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6" style={{ display: 'none' }}>
               <Card className="lg:col-span-1 p-6 flex flex-col items-center text-center gap-4" isDark={isDark}>
                 <p className="text-xs font-bold tracking-widest text-[#E11D2A] uppercase">Welcome Back</p>
                 <h2 className={`text-2xl font-black leading-tight ${t.textPrimary}`}>{firstName.toUpperCase()}!</h2>

@@ -9,6 +9,7 @@ export interface Program {
   benefits: string[];
   features: string[];
   schedule: string;
+  equipment?: string[];
 }
 
 export const programs: Program[] = [
@@ -34,7 +35,12 @@ export const programs: Program[] = [
       "Motor skill development",
       "Social interaction"
     ],
-    schedule: "Classes available weekday afternoons and Saturday mornings."
+    schedule: "Classes available weekday afternoons and Saturday mornings.",
+    equipment: [
+      "Comfortable athletic clothing",
+      "White karate uniform (gi) — provided at enrollment",
+      "Bare feet or martial arts shoes"
+    ]
   },
   {
     id: "core-kids",
@@ -58,7 +64,13 @@ export const programs: Program[] = [
       "Fitness and conditioning",
       "Focus and concentration drills"
     ],
-    schedule: "Classes available daily after school."
+    schedule: "Classes available daily after school.",
+    equipment: [
+      "Karate uniform (gi) — provided at enrollment",
+      "Comfortable athletic clothing underneath",
+      "Bare feet or martial arts shoes",
+      "Water bottle"
+    ]
   },
   {
     id: "teens",
@@ -82,7 +94,13 @@ export const programs: Program[] = [
       "Confidence building",
       "Peer support network"
     ],
-    schedule: "Evening classes available."
+    schedule: "Evening classes available.",
+    equipment: [
+      "Karate uniform (gi) or athletic clothing",
+      "Sparring gear (required for sparring sessions): gloves, shin guards, mouthguard, headgear",
+      "Bare feet or martial arts shoes",
+      "Water bottle"
+    ]
   },
   {
     id: "adult-karate",
@@ -106,7 +124,13 @@ export const programs: Program[] = [
       "Mind-body connection",
       "Respectful community"
     ],
-    schedule: "Morning and evening classes available."
+    schedule: "Morning and evening classes available.",
+    equipment: [
+      "Karate uniform (gi) — provided at enrollment",
+      "Sparring gear (for sparring classes): gloves, shin guards, mouthguard, headgear",
+      "Bare feet or martial arts shoes",
+      "Water bottle"
+    ]
   },
   {
     id: "kickboxing",
@@ -130,7 +154,14 @@ export const programs: Program[] = [
       "Dynamic lighting",
       "All fitness levels welcome"
     ],
-    schedule: "Evening classes with music and lights."
+    schedule: "Evening classes with music and lights.",
+    equipment: [
+      "Boxing gloves (16 oz recommended) — available for purchase at the dojo",
+      "Hand wraps",
+      "Comfortable athletic clothing",
+      "Athletic shoes or bare feet",
+      "Water bottle"
+    ]
   },
   {
     id: "summer-camp",
@@ -154,7 +185,13 @@ export const programs: Program[] = [
       "Healthy snacks & lunch",
       "Certified staff"
     ],
-    schedule: "Summer weeks, Monday - Friday 9 AM - 3 PM."
+    schedule: "Summer weeks, Monday - Friday 9 AM - 3 PM.",
+    equipment: [
+      "Comfortable athletic clothing",
+      "Closed-toe athletic shoes",
+      "Water bottle",
+      "Snack (optional)"
+    ]
   },
   {
     id: "after-school",
@@ -178,7 +215,13 @@ export const programs: Program[] = [
       "Physical activity",
       "Socialization"
     ],
-    schedule: "Monday - Friday until 6:30 PM."
+    schedule: "Monday - Friday until 6:30 PM.",
+    equipment: [
+      "Karate uniform (gi) or athletic clothing",
+      "Bare feet or martial arts shoes",
+      "Water bottle",
+      "Homework materials (for after-school homework time)"
+    ]
   },
   {
     id: "homeschool",
@@ -202,6 +245,12 @@ export const programs: Program[] = [
       "Belt rank progression",
       "Homeschool co-op discounts available"
     ],
-    schedule: "Monday, Wednesday & Thursday at 12:00 PM."
+    schedule: "Monday, Wednesday & Thursday at 12:00 PM.",
+    equipment: [
+      "Karate uniform (gi) or athletic clothing",
+      "Boxing gloves (for kickboxing sessions)",
+      "Bare feet or martial arts shoes",
+      "Water bottle"
+    ]
   }
 ];
