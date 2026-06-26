@@ -95,6 +95,7 @@ const CustomPaymentCheckout = lazy(() => import("./pages/CustomPaymentCheckout")
 const SmsConversations = lazy(() => import("./pages/admin/SmsConversations"));
 const MyDojoBucks = lazy(() => import("./pages/MyDojoBucks"));
 const AdminMyDojoBucks = lazy(() => import("./pages/admin/AdminMyDojoBucks"));
+const Founder = lazy(() => import("./pages/Founder"));
 
 // Loading component — subtle fade-in bar at the top, no jarring red circle
 const PageLoader = () => (
@@ -208,6 +209,7 @@ function Router() {
               <Route path="/events" component={Events} />
               <Route path="/testimonials" component={Testimonials} />
               <Route path="/about" component={About} />
+              <Route path="/founder" component={Founder} />
               <Route path="/contact" component={Contact} />
               <Route path="/shop" component={Shop} />
               <Route path="/buddy-day" component={BuddyDay} />

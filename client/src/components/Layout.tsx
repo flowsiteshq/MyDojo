@@ -126,6 +126,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { name: "Events", path: "/events" },
     { name: "Testimonials", path: "/testimonials" },
     { name: "About", path: "/about" },
+    { name: "Our Founder", path: "/founder" },
     { name: "Shop", path: "/shop" },
     { name: "Contact", path: "/contact" },
     { name: "Learning Center", path: "/blog" },
