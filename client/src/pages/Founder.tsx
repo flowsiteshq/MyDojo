@@ -72,7 +72,7 @@ export default function Founder() {
         {/* Background image */}
         <div className="absolute inset-0">
           <img
-            src="/images/program-teens-adults-branded.png"
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero1_1d3d63d3.webp"
             alt="Master Vincent Holmes"
             className="w-full h-full object-cover object-top opacity-40"
           />
@@ -141,7 +141,7 @@ export default function Founder() {
             >
               <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl aspect-[3/4]">
                 <img
-                  src="/images/community-candid-logo.png"
+                  src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/mobile-community-real-FdFDeMEGn6uNdyceZgaSWm.webp"
                   alt="Master Vincent Holmes with students"
                   className="w-full h-full object-cover"
                 />
@@ -204,7 +204,7 @@ export default function Founder() {
       <section className="py-24 bg-zinc-950 text-white relative overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="/images/featured-kickboxing.jpg"
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/kickboxing-bg_d4fcc4c5.webp"
             alt="Dojo background"
             className="w-full h-full object-cover opacity-10"
           />
@@ -276,12 +276,12 @@ export default function Founder() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
-              "/images/program-little-ninjas.jpg",
-              "/images/program-core-kids.jpg",
-              "/images/program-teens-adults-branded.png",
-              "/images/community-candid-logo.png",
-              "/images/featured-kickboxing.jpg",
-              "/images/social/instagram-post-1.jpg",
+            "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/little-ninjas_25d41024.webp",
+            "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/core-kids_baf3bc26.webp",
+            "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/teens-adults_e35f9895.webp",
+            "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/mobile-community-real-FdFDeMEGn6uNdyceZgaSWm.webp",
+            "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/kickboxing-bg_d4fcc4c5.webp",
+            "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero2_cef79f5f.webp",
             ].map((src, i) => (
               <motion.div
                 key={src}
@@ -300,7 +300,7 @@ export default function Founder() {
 
       {/* CTA */}
       <section className="py-24 bg-primary text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/images/hero-main.jpg')] bg-cover bg-center opacity-10" />
+        <div className="absolute inset-0 bg-[url('https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero1_1d3d63d3.webp')] bg-cover bg-center opacity-10" />
         <div className="container mx-auto px-4 relative z-10 text-center">
           <motion.div {...fadeUp}>
             <h2 className="text-4xl md:text-6xl font-heading font-black mb-6">TRAIN WITH A LEGEND</h2>
