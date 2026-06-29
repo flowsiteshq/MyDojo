@@ -240,7 +240,85 @@ function EnrollmentSection({ onBookClass }: { onBookClass: () => void }) {
   );
 }
 
-// ─── What Your Child Will Learn ───────────────────────────────────────────────
+// ─── Stats Bar ──────────────────────────────────────────────────────────────
+function StatsBar() {
+  const stats = [
+    { value: "500+", label: "Students Trained" },
+    { value: "20+", label: "Years of Excellence" },
+    { value: "8th", label: "Degree Black Belt Founder" },
+    { value: "4.9★", label: "Google Rating" },
+  ];
+  return (
+    <section className="bg-[#e63946] py-6">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          {stats.map(s => (
+            <div key={s.label}>
+              <p className="text-white font-black text-3xl md:text-4xl leading-none">{s.value}</p>
+              <p className="text-white/80 text-xs uppercase tracking-wider font-bold mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Founder Spotlight ───────────────────────────────────────────────────────
+function FounderSpotlight({ onBookClass }: { onBookClass: () => void }) {
+  const CDN_BASE = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
+  return (
+    <section className="py-20 bg-white">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col lg:flex-row items-center gap-12">
+          <div className="relative flex-shrink-0">
+            <div className="w-72 h-80 md:w-80 md:h-96 rounded-2xl overflow-hidden shadow-2xl">
+              <img
+                src={`${CDN_BASE}/teens-adults_e35f9895.webp`}
+                alt="Master Vincent Holmes"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="absolute -bottom-4 -right-4 bg-[#e63946] text-white rounded-xl px-5 py-3 shadow-xl text-center">
+              <p className="font-black text-2xl leading-none">8th</p>
+              <p className="text-xs font-bold uppercase tracking-wider">Degree</p>
+              <p className="text-xs font-bold uppercase tracking-wider">Black Belt</p>
+            </div>
+          </div>
+          <div className="flex-1">
+            <p className="text-[#e63946] font-bold uppercase tracking-[0.25em] text-sm mb-3">Meet Your Instructor</p>
+            <h2 className="text-3xl md:text-5xl font-black text-black uppercase tracking-tight mb-6">
+              Achieve Your Full Potential<br />
+              <span className="text-[#e63946]">With Master Holmes</span>
+            </h2>
+            <p className="text-gray-600 text-lg leading-relaxed mb-4">
+              Master Vincent Holmes, 8th Degree Black Belt and founder of MyDojo, has dedicated over 20 years to transforming lives through martial arts in the Tomball community.
+            </p>
+            <p className="text-gray-600 leading-relaxed mb-8">
+              His philosophy is simple: martial arts is not about fighting — it's about building a person. Every student who walks through our doors receives world-class instruction in a safe, family-oriented environment.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={onBookClass}
+                className="flex items-center gap-2 bg-[#e63946] hover:bg-[#c1121f] text-white font-black uppercase tracking-wider px-8 py-4 rounded-sm transition-all duration-200"
+              >
+                Book Your Free Class <ArrowRight className="h-4 w-4" />
+              </button>
+              <a
+                href="/founder"
+                className="flex items-center gap-2 border-2 border-black hover:bg-black hover:text-white text-black font-bold uppercase tracking-wider px-8 py-4 rounded-sm transition-all duration-200"
+              >
+                About Master Holmes
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── What Your Child Will Learn (REMOVED — kept for reference) ────────────────
 function WhatTheyLearnSection({ onBookClass }: { onBookClass: () => void }) {
   const { t } = useTranslation();
   const values = [
@@ -793,13 +871,11 @@ export default function Home() {
       <SchemaMarkup type="LocalBusiness" />
 
       <HeroSection onBookClass={handleBookClass} />
+      <StatsBar />
       <EnrollmentSection onBookClass={handleBookClass} />
-      <WhatTheyLearnSection onBookClass={handleBookClass} />
-      <SummerSpecialSection onBookClass={handleBookClass} />
-      <TestimonialsSection onBookClass={handleBookClass} />
-      <WhyMyDojoSection />
       <ProgramsSection onBookClass={handleBookClass} />
-      <ScheduleSection onBookClass={handleBookClass} />
+      <TestimonialsSection onBookClass={handleBookClass} />
+      <FounderSpotlight onBookClass={handleBookClass} />
       <FAQSection />
       <FinalCTASection onBookClass={handleBookClass} />
 

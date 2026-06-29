@@ -122,14 +122,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, []);
 
   const navLinks: { name: string; path: string; external?: boolean }[] = [
-    { name: "Home", path: "/" },
-    { name: "Events", path: "/events" },
-    { name: "Testimonials", path: "/testimonials" },
-    { name: "About", path: "/about" },
-    { name: "Our Founder", path: "/founder" },
+    { name: "About Us", path: "/about" },
     { name: "Shop", path: "/shop" },
-    { name: "Contact", path: "/contact" },
-    { name: "Learning Center", path: "/blog" },
   ];
 
   const isOnPrograms = location === "/programs" || location === "/summer-camp" || location === "/homeschool" || location.startsWith("/programs");
@@ -362,6 +356,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </Link>
             )}
 
+            <PhoneChooser
+              className={cn(
+                "flex items-center gap-1.5 font-bold uppercase tracking-wider text-sm transition-colors cursor-pointer hover:text-primary",
+                (isHome && !isSticky) ? "text-white" : "text-black"
+              )}
+            >
+              <Phone className="h-4 w-4 text-primary" />
+              <span className="hidden lg:inline">Call</span>
+            </PhoneChooser>
+
             <Button
               onClick={openBookFreeClassGate}
               className={cn(
@@ -369,7 +373,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 isSticky ? "py-2 px-6 text-xs h-10" : "py-4 px-8 h-14 text-base"
               )}
             >
-              <span className="skew-x-[10deg]">Join Now</span>
+              <span className="skew-x-[10deg]">I'm Interested</span>
             </Button>
           </nav>
 
@@ -582,7 +586,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               }}
               className="w-full bg-primary text-white font-heading uppercase mt-4 py-6 text-lg"
             >
-              {t("nav.join")}
+              I'm Interested
             </Button>
             <Button
               variant="ghost"
