@@ -9,6 +9,7 @@ type Product = ShopProduct & {
   badge?: string;
   description: string;
   features: string[];
+  imageBack?: string;
 };
 
 const products: Product[] = [
@@ -19,7 +20,8 @@ const products: Product[] = [
     price: 49.0,
     category: "Uniforms & Gis",
     badge: "Beginner",
-    image: "/manus-storage/kihon-gi_a810db18.webp",
+    image: "/manus-storage/kihon_gi_front_user_72651701.png",
+    imageBack: "/manus-storage/kihon_gi_back_user_158a8a7c.png",
     sizes: ["0000", "000", "00", "0", "1", "2", "3", "4", "5", "6", "7"],
     description:
       "Begin your martial arts journey with the Kihon Gi, designed specifically for new students stepping onto the mat for the first time. Crafted from breathable cotton with reinforced seams for maximum comfort and freedom of movement.",
@@ -38,7 +40,8 @@ const products: Product[] = [
     price: 29.0,
     category: "Apparel",
     badge: "T-Shirts",
-    image: "/manus-storage/mydojo-classic-tshirt_1e2fa7c6.webp",
+    image: "/manus-storage/tshirt_front_d16e6472.png",
+    imageBack: "/manus-storage/tshirt_back_92772bf8.png",
     sizes: ["Youth S", "Youth M", "Youth L", "S", "M", "L", "XL"],
     description:
       "The MyDojo T-Shirt is where martial arts mindset meets everyday comfort. Whether you're training, coaching, or repping the dojo outside the gym, this tee delivers a clean, confident look built for movement and lifestyle.",
@@ -58,7 +61,8 @@ const products: Product[] = [
     price: 69.0,
     category: "Fight Gear",
     badge: "Kickboxing",
-    image: "/manus-storage/kickboxing-gloves_2b12e422.webp",
+    image: "/manus-storage/gloves_front_98a1c3db.png",
+    imageBack: "/manus-storage/gloves_back_082f8856.png",
     description:
       "Designed for all-around performance, the MyDojo 12 oz Kickboxing Gloves offer the perfect balance of speed, protection, and power. Crafted from durable synthetic leather with multi-layer padding.",
     features: [
@@ -77,7 +81,8 @@ const products: Product[] = [
     price: 68.5,
     category: "Uniforms & Gis",
     badge: "Leadership Team",
-    image: "/manus-storage/kiacho-gi-middle_90009422.webp",
+    image: "/manus-storage/kiacho_front_d8d3190b.png",
+    imageBack: "/manus-storage/kiacho_back_c2e4ef61.png",
     sizes: ["0000", "000", "00", "0", "1", "2", "3", "4", "5", "6", "7"],
     description:
       "Reserved for members of the MyDojo Leadership Program, the Kaicho Gi stands out in bold red — a symbol of passion, courage, and commitment to service. Light and medium weight options for flexibility and endurance.",
@@ -97,7 +102,8 @@ const products: Product[] = [
     price: 99.0,
     category: "Uniforms & Gis",
     badge: "Leadership Team",
-    image: "/manus-storage/kiacho-gi-heavy_8429a824.webp",
+    image: "/manus-storage/kiacho_front_d8d3190b.png",
+    imageBack: "/manus-storage/kiacho_back_c2e4ef61.png",
     sizes: ["0000", "000", "00", "0", "1", "2", "3", "4", "5", "6", "7"],
     description:
       "The Kaicho Gi Heavyweight Edition is built for those who don't just wear the title of leader — they live it. Made from durable 14 oz heavyweight cotton with premium embroidery.",
@@ -117,7 +123,8 @@ const products: Product[] = [
     price: 68.5,
     category: "Uniforms & Gis",
     badge: "Black Belt Program",
-    image: "/manus-storage/shinobi-gi-middle_ca215873.webp",
+    image: "/manus-storage/shinobi_front_7f4a7c28.png",
+    imageBack: "/manus-storage/shinobi_back_b06a9f0b.png",
     sizes: ["0000", "000", "00", "0", "1", "2", "3", "4", "5", "6", "7"],
     description:
       "Reserved exclusively for students enrolled in the MyDojo Black Belt Program. Built for performance and prestige, the Shinobi Gi is constructed from premium medium-weight fabric that balances durability with mobility.",
@@ -137,7 +144,8 @@ const products: Product[] = [
     price: 99.0,
     category: "Uniforms & Gis",
     badge: "Black Belt Program",
-    image: "/manus-storage/shinobi-gi-heavy_9e348094.webp",
+    image: "/manus-storage/shinobi_front_7f4a7c28.png",
+    imageBack: "/manus-storage/shinobi_back_b06a9f0b.png",
     sizes: ["0000", "000", "00", "0", "1", "2", "3", "4", "5", "6", "7"],
     description:
       "Crafted for warriors in pursuit of excellence, the Shinobi Gi Heavyweight Edition is the ultimate expression of strength, skill, and commitment. Designed exclusively for MyDojo Black Belt Program members.",
@@ -157,7 +165,8 @@ const products: Product[] = [
     price: 225.0,
     category: "Uniforms & Gis",
     badge: "Premium",
-    image: "/manus-storage/tetsujin-gi_f79ace47.webp",
+    image: "/manus-storage/tetsujin_front_8d12442b.png",
+    imageBack: "/manus-storage/tetsujin_back_4aaca650.png",
     sizes: ["0000", "000", "00", "0", "1", "2", "3", "4", "5", "6", "7"],
     description:
       "The Tetsujin Gi is more than just a uniform — it's a symbol of legacy, resilience, and mastery. Crafted for the true traditionalist and kata competitor, this heavyweight gi embodies the pure spirit of martial arts.",
@@ -187,11 +196,18 @@ export default function Shop() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [checkoutProduct, setCheckoutProduct] = useState<ShopProduct | null>(null);
+  const [showBack, setShowBack] = useState<Record<string, boolean>>({});
+  const [modalShowBack, setModalShowBack] = useState(false);
 
   const filtered =
     selectedCategory === "All"
       ? products
       : products.filter((p) => p.category === selectedCategory);
+
+  const openModal = (product: Product) => {
+    setModalShowBack(false);
+    setSelectedProduct(product);
+  };
 
   const openCheckout = (product: Product, e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -256,12 +272,12 @@ export default function Shop() {
               <div
                 key={product.id}
                 className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
-                onClick={() => setSelectedProduct(product)}
+                onClick={() => openModal(product)}
               >
                 {/* Image */}
                 <div className="relative bg-gray-50 h-64 overflow-hidden">
                   <img
-                    src={product.image}
+                    src={showBack[product.id] && product.imageBack ? product.imageBack : product.image}
                     alt={product.name}
                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                   />
@@ -271,6 +287,14 @@ export default function Shop() {
                     >
                       {product.badge}
                     </span>
+                  )}
+                  {product.imageBack && (
+                    <button
+                      className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full hover:bg-black transition-colors"
+                      onClick={(e) => { e.stopPropagation(); setShowBack(prev => ({ ...prev, [product.id]: !prev[product.id] })); }}
+                    >
+                      {showBack[product.id] ? "Front" : "Back"}
+                    </button>
                   )}
                 </div>
 
@@ -310,16 +334,29 @@ export default function Shop() {
         >
           <div
             className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); }}
+
           >
             <div className="grid grid-cols-1 md:grid-cols-2">
               {/* Image */}
-              <div className="bg-gray-50 flex items-center justify-center p-8 rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none min-h-72">
+              <div className="bg-gray-50 flex flex-col items-center justify-center p-8 rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none min-h-72 gap-4">
                 <img
-                  src={selectedProduct.image}
+                  src={modalShowBack && selectedProduct.imageBack ? selectedProduct.imageBack : selectedProduct.image}
                   alt={selectedProduct.name}
-                  className="max-h-80 object-contain"
+                  className="max-h-72 object-contain"
                 />
+                {selectedProduct.imageBack && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setModalShowBack(false)}
+                      className={`px-3 py-1 text-xs rounded-full font-semibold transition-colors ${!modalShowBack ? 'bg-black text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+                    >Front</button>
+                    <button
+                      onClick={() => setModalShowBack(true)}
+                      className={`px-3 py-1 text-xs rounded-full font-semibold transition-colors ${modalShowBack ? 'bg-black text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}
+                    >Back</button>
+                  </div>
+                )}
               </div>
 
               {/* Details */}
