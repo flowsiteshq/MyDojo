@@ -16,9 +16,8 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 
 // Programs sub-menu items — TSK-style top-level program pages
 const PROGRAM_LINKS = [
-  { name: "Kids Martial Arts", path: "/kids-martial-arts", description: "Ages 3–12" },
-  { name: "Adult Kickboxing", path: "/adult-kickboxing", description: "All fitness levels" },
-  { name: "Karate Classes", path: "/adult-kickboxing#adult-karate", description: "Ages 13+" },
+  { name: "Kids Martial Arts", path: "/kids-martial-arts", description: "Ages 3–17" },
+  { name: "Adult Kickboxing", path: "/adult-kickboxing", description: "Ages 16+" },
   { name: "After School", path: "/programs#after-school", description: "Ages 5–12" },
   { name: "Summer Camp", path: "/summer-camp", description: "Seasonal" },
   { name: "Homeschool", path: "/homeschool", description: "Noon classes daily" },
@@ -122,7 +121,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const navLinks: { name: string; path: string; external?: boolean }[] = [
     { name: "Kids Martial Arts", path: "/kids-martial-arts" },
     { name: "Adult Kickboxing", path: "/adult-kickboxing" },
-    { name: "Karate Classes", path: "/adult-kickboxing#adult-karate" },
     { name: "About Us", path: "/about" },
     { name: "Shop", path: "/shop" },
   ];
