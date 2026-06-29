@@ -115,35 +115,14 @@ function HeroSection({ onBookClass }: { onBookClass: () => void }) {
             </div>
           </div>
 
-          {/* Eyebrow */}
-          <p className="text-[#e63946] font-bold uppercase tracking-[0.25em] text-sm mb-4">
-            {t("hero.subtitle")}
-          </p>
-
-          {/* Headline */}
-          <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.0] mb-2 uppercase tracking-tight">
-            {t("hero.tagline1")}
+          {/* Headline — TSK-style: short, bold, 2 lines */}
+          <p className="text-[#e63946] font-bold uppercase tracking-[0.3em] text-sm mb-4">Martial Arts | Kickboxing | Karate</p>
+          <h1 className="text-6xl md:text-8xl font-black text-white leading-[0.95] mb-3 uppercase tracking-tight">
+            LIVE
           </h1>
-          <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.0] mb-2 uppercase tracking-tight">
-            {t("hero.tagline2")}
+          <h1 className="text-6xl md:text-8xl font-black text-[#e63946] leading-[0.95] mb-10 uppercase tracking-tight">
+            FEARLESSLY
           </h1>
-          <h1 className="text-5xl md:text-7xl font-black text-[#e63946] leading-[1.0] mb-6 uppercase tracking-tight">
-            {t("hero.tagline3")}
-          </h1>
-
-          {/* Feature badges */}
-          <div className="flex flex-wrap gap-3 mb-8">
-            {[
-              { label: t("hero.ages3") },
-              { label: t("hero.teens_adults") },
-              { label: t("hero.kickboxing") },
-            ].map(b => (
-              <div key={b.label} className="flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-2">
-                <Shield className="h-4 w-4 text-[#e63946]" />
-                <span className="text-white font-semibold text-sm">{b.label}</span>
-              </div>
-            ))}
-          </div>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 mb-8">
