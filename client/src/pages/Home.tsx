@@ -94,51 +94,28 @@ function HeroSection({ onBookClass }: { onBookClass: () => void }) {
       <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
 
-      {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 pt-24 pb-16">
-        <div className="max-w-3xl">
-          {/* Urgency badge — inline above eyebrow */}
-          <div className="inline-flex items-center gap-3 bg-black/70 backdrop-blur border border-[#e63946]/50 rounded-lg px-4 py-3 mb-5 shadow-xl">
-            <div className="text-center">
-              <p className="text-white font-black text-xs uppercase tracking-wider">{t("general.limited_spots")}</p>
-              <p className="text-[#e63946] font-bold text-[10px] mt-0.5">{t("general.limited_desc")}</p>
-            </div>
-            <div className="w-px h-8 bg-white/20" />
-            <div className="flex items-center gap-1.5">
-              <CountdownUnit value={timeLeft.days} label={t("schedule.monday").slice(0,4)} />
-              <span className="text-white font-black text-base pb-3">:</span>
-              <CountdownUnit value={timeLeft.hours} label="Hrs" />
-              <span className="text-white font-black text-base pb-3">:</span>
-              <CountdownUnit value={timeLeft.minutes} label="Mins" />
-              <span className="text-white font-black text-base pb-3">:</span>
-              <CountdownUnit value={timeLeft.seconds} label="Secs" />
-            </div>
-          </div>
+      {/* Content — centered like TSK */}
+      <div className="relative z-10 w-full flex flex-col items-center justify-center text-center px-4 pt-24 pb-16 min-h-screen">
+        {/* Headline */}
+        <h1 className="text-6xl md:text-8xl font-black text-white leading-[0.95] mb-2 uppercase tracking-tight">
+          BUILD YOUR
+        </h1>
+        <h1 className="text-6xl md:text-8xl font-black text-[#e63946] leading-[0.95] mb-5 uppercase tracking-tight">
+          BEST SELF.
+        </h1>
 
-          {/* Headline — TSK-style: short, bold, 2 lines */}
-          <p className="text-[#e63946] font-bold uppercase tracking-[0.3em] text-sm mb-4">Martial Arts | Kickboxing | Karate</p>
-          <h1 className="text-6xl md:text-8xl font-black text-white leading-[0.95] mb-3 uppercase tracking-tight">
-            LIVE
-          </h1>
-          <h1 className="text-6xl md:text-8xl font-black text-[#e63946] leading-[0.95] mb-10 uppercase tracking-tight">
-            FEARLESSLY
-          </h1>
+        {/* Subtitle */}
+        <p className="text-white/90 text-lg md:text-xl font-semibold tracking-wide mb-8">
+          Martial Arts &nbsp;|&nbsp; Kickboxing &nbsp;|&nbsp; Karate
+        </p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
-            <button
-              onClick={onBookClass}
-              className="group flex items-center justify-center gap-2 bg-[#e63946] hover:bg-[#c1121f] text-white font-black uppercase tracking-wider text-lg px-8 py-4 rounded-sm transition-all duration-200 shadow-[0_0_30px_rgba(230,57,70,0.4)]"
-            >
-              {t("home.book_your_free_class")}
-              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <PhoneChooser className="flex items-center justify-center gap-2 border-2 border-white/50 hover:border-white text-white font-bold uppercase tracking-wider text-base px-6 py-4 rounded-sm transition-all duration-200 hover:bg-white/10">
-              <Phone className="h-4 w-4" />
-              {t("general.phone_number")}
-            </PhoneChooser>
-          </div>
-        </div>
+        {/* Single CTA — like TSK */}
+        <button
+          onClick={onBookClass}
+          className="bg-[#e63946] hover:bg-[#c1121f] text-white font-black uppercase tracking-widest text-base px-10 py-4 rounded-sm transition-all duration-200 shadow-[0_0_30px_rgba(230,57,70,0.5)]"
+        >
+          I'M INTERESTED
+        </button>
       </div>
     </section>
   );
