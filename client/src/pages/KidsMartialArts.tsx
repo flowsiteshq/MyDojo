@@ -4,6 +4,7 @@ import { CheckCircle, ArrowRight, Star, Shield, Brain, Heart, Users, Trophy } fr
 import { Link } from "wouter";
 
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
+const TEENS_IMG = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/teens_martial_arts-imWkeSprHmEgaYUSsW63SN.png";
 
 const PROGRAMS = [
   {
@@ -49,6 +50,21 @@ const PROGRAMS = [
       "Healthy snacks provided",
       "Safe supervised environment",
       "Daily martial arts training",
+    ],
+  },
+  {
+    id: "teens",
+    name: "Teens Program",
+    ages: "Ages 13–17",
+    image: TEENS_IMG,
+    icon: `${CDN}/program-teens-adults-icon-LpWWvsSRjwWK2grH4tDkJg.webp`,
+    description:
+      "A dedicated program designed for teenagers that builds confidence, fitness, and leadership. Teens train in a structured environment that challenges them physically and mentally while building lasting character.",
+    benefits: [
+      "Builds teen confidence & leadership",
+      "Anti-bullying & self-defense",
+      "Positive peer community",
+      "Academic focus & discipline",
     ],
   },
 ];
@@ -105,7 +121,7 @@ export default function KidsMartialArts() {
               <p className="text-xs md:text-sm font-semibold uppercase tracking-wider opacity-90">Kids Enrolled</p>
             </div>
             <div>
-              <p className="text-3xl md:text-4xl font-black">Ages 3–12</p>
+              <p className="text-3xl md:text-4xl font-black">Ages 3–17</p>
               <p className="text-xs md:text-sm font-semibold uppercase tracking-wider opacity-90">All Levels Welcome</p>
             </div>
             <div>

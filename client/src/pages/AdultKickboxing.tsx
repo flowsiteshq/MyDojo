@@ -36,21 +36,6 @@ const PROGRAMS = [
       "Practical self-defense skills",
     ],
   },
-  {
-    id: "teens",
-    name: "Teens Program",
-    ages: "Ages 13–17",
-    image: `${CDN}/martial-arts-sports-crosstraining_0d4be133.jpg`,
-    icon: `${CDN}/program-teens-adults-icon-LpWWvsSRjwWK2grH4tDkJg.webp`,
-    description:
-      "A dedicated program designed for teenagers that builds confidence, fitness, and leadership. Teens train in a structured environment that challenges them physically and mentally while building lasting character.",
-    benefits: [
-      "Builds teen confidence & leadership",
-      "Anti-bullying & self-defense",
-      "Positive peer community",
-      "Academic focus & discipline",
-    ],
-  },
 ];
 
 const BENEFITS = [
@@ -105,7 +90,7 @@ export default function AdultKickboxing() {
               <p className="text-xs md:text-sm font-semibold uppercase tracking-wider opacity-90">Calories / Class</p>
             </div>
             <div>
-              <p className="text-3xl md:text-4xl font-black">Ages 13+</p>
+              <p className="text-3xl md:text-4xl font-black">Ages 16+</p>
               <p className="text-xs md:text-sm font-semibold uppercase tracking-wider opacity-90">All Levels Welcome</p>
             </div>
             <div>
