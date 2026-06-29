@@ -96,6 +96,8 @@ const SmsConversations = lazy(() => import("./pages/admin/SmsConversations"));
 const MyDojoBucks = lazy(() => import("./pages/MyDojoBucks"));
 const AdminMyDojoBucks = lazy(() => import("./pages/admin/AdminMyDojoBucks"));
 const Founder = lazy(() => import("./pages/Founder"));
+const KidsMartialArts = lazy(() => import("./pages/KidsMartialArts"));
+const AdultKickboxing = lazy(() => import("./pages/AdultKickboxing"));
 
 // Loading component — subtle fade-in bar at the top, no jarring red circle
 const PageLoader = () => (
@@ -196,6 +198,8 @@ function Router() {
           <Layout>
             <Switch>
               <Route path="/" component={Home} />
+              <Route path="/kids-martial-arts" component={KidsMartialArts} />
+              <Route path="/adult-kickboxing" component={AdultKickboxing} />
               <Route path="/programs" component={Programs} />
               <Route path="/programs/kickboxing" component={Kickboxing} />
               <Route path="/homeschool" component={Homeschool} />
