@@ -14,15 +14,13 @@ import { getLoginUrl } from "@/const";
 import { useTranslation } from "react-i18next";
 import { LanguageToggle } from "@/components/LanguageToggle";
 
-// Programs sub-menu items
+// Programs sub-menu items — TSK-style top-level program pages
 const PROGRAM_LINKS = [
-  { name: "Little Ninjas", path: "/programs#little-ninjas", description: "Ages 3–5" },
-  { name: "Dragon Kids", path: "/programs#dragon-kids", description: "Ages 5–12" },
-  { name: "Teens & Adults", path: "/programs#teens-adults", description: "Ages 13+" },
-  { name: "Kickboxing", path: "/programs#kickboxing", description: "All ages" },
+  { name: "Kids Martial Arts", path: "/programs#dragon-kids", description: "Ages 3–12" },
+  { name: "Adult Kickboxing", path: "/programs#kickboxing", description: "All fitness levels" },
+  { name: "Karate Classes", path: "/programs#teens-adults", description: "Ages 13+" },
   { name: "After School", path: "/programs#after-school", description: "Ages 5–12" },
   { name: "Summer Camp", path: "/summer-camp", description: "Seasonal" },
-  { name: "Birthday Parties", path: "/birthday-parties", description: "Celebrate with us!" },
   { name: "Homeschool", path: "/homeschool", description: "Noon classes daily" },
 ];
 
@@ -122,6 +120,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, []);
 
   const navLinks: { name: string; path: string; external?: boolean }[] = [
+    { name: "Kids Martial Arts", path: "/programs#dragon-kids" },
+    { name: "Adult Kickboxing", path: "/programs#kickboxing" },
+    { name: "Karate Classes", path: "/programs#teens-adults" },
     { name: "About Us", path: "/about" },
     { name: "Shop", path: "/shop" },
   ];
@@ -221,81 +222,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
 
-            {/* Programs Dropdown */}
-            <div className="relative" ref={programsRef}>
-              <button
-                onMouseEnter={openPrograms}
-                onMouseLeave={scheduleClosePrograms}
-                onClick={() => setIsProgramsOpen((v) => !v)}
-                className={cn(
-                  "flex items-center gap-1 text-sm font-bold uppercase tracking-wider cursor-pointer hover:text-primary transition-all duration-300 relative group",
-                  isOnPrograms ? "text-primary" : "",
-                  (isHome && !isSticky) ? "text-white" : "text-black"
-                )}
-              >
-                Programs
-                <ChevronDown className={cn(
-                  "h-3.5 w-3.5 transition-transform duration-200",
-                  isProgramsOpen ? "rotate-180" : ""
-                )} />
-                <span className={cn(
-                  "absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full",
-                  isOnPrograms ? "w-full" : ""
-                )} />
-              </button>
-
-              {/* Invisible hover bridge fills the gap between button and panel */}
-              <div
-                onMouseEnter={cancelClosePrograms}
-                onMouseLeave={scheduleClosePrograms}
-                className="absolute top-full left-0 right-0 h-3"
-                aria-hidden="true"
-              />
-
-              {/* Dropdown Panel */}
-              <div
-                onMouseEnter={cancelClosePrograms}
-                onMouseLeave={scheduleClosePrograms}
-                className={cn(
-                  "absolute top-full left-1/2 -translate-x-1/2 mt-3 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-200 origin-top",
-                  isProgramsOpen ? "opacity-100 scale-y-100 pointer-events-auto" : "opacity-0 scale-y-95 pointer-events-none"
-                )}
-              >
-                {/* Arrow */}
-                <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-l border-t border-gray-100 rotate-45" />
-                <div className="py-2">
-                  {PROGRAM_LINKS.map((prog) => (
-                    <Link key={prog.path} href={prog.path}>
-                      <div className={cn(
-                        "flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition-colors cursor-pointer group/item",
-                        location === prog.path ? "bg-primary/5" : ""
-                      )}>
-                        <div>
-                          <p className={cn(
-                            "text-sm font-bold text-gray-900 group-hover/item:text-primary transition-colors",
-                            location === prog.path ? "text-primary" : ""
-                          )}>
-                            {prog.name}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-0.5">{prog.description}</p>
-                        </div>
-                        <ChevronRight className="h-3.5 w-3.5 text-gray-300 group-hover/item:text-primary transition-colors" />
-                      </div>
-                    </Link>
-                  ))}
-                  <div className="border-t border-gray-100 mt-1 pt-1 pb-1 px-3">
-                    <Link href="/programs">
-                      <div className="flex items-center justify-center gap-1 py-2 text-xs font-bold uppercase tracking-wider text-primary hover:text-primary/80 transition-colors cursor-pointer">
-                        View All Programs
-                        <ChevronRight className="h-3 w-3" />
-                      </div>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Other nav links */}
+            {/* Nav links — TSK-style flat top-level items */}
             {navLinks.map((link, index) => (
               link.external ? (
                 <a
