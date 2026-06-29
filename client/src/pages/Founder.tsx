@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { openBookFreeClassGate } from "@/lib/chatbot";
 import { motion } from "framer-motion";
 import {
   Award,
@@ -189,11 +190,9 @@ export default function Founder() {
                     Explore Our Programs <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
-                <Link href="/private-lessons">
-                  <Button variant="outline" className="border-black text-black hover:bg-black hover:text-white font-heading uppercase tracking-wider px-8 py-6 h-auto text-base">
-                    Train with Master Holmes
+                <Button onClick={() => openBookFreeClassGate()} variant="outline" className="border-black text-black hover:bg-black hover:text-white font-heading uppercase tracking-wider px-8 py-6 h-auto text-base">
+                    Talk to Kai
                   </Button>
-                </Link>
               </div>
             </motion.div>
           </div>
@@ -303,21 +302,14 @@ export default function Founder() {
         <div className="absolute inset-0 bg-[url('https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero1_1d3d63d3.webp')] bg-cover bg-center opacity-10" />
         <div className="container mx-auto px-4 relative z-10 text-center">
           <motion.div {...fadeUp}>
-            <h2 className="text-4xl md:text-6xl font-heading font-black mb-6">TRAIN WITH A LEGEND</h2>
+            <h2 className="text-4xl md:text-6xl font-heading font-black mb-6">READY TO BEGIN?</h2>
             <p className="text-xl md:text-2xl mb-10 max-w-2xl mx-auto opacity-90">
-              Book a private lesson with Master Vincent Holmes and experience world-class martial arts instruction firsthand.
+              Take the first step on your martial arts journey. Chat with Kai to find the right program for you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/private-lessons">
-                <Button className="bg-white text-primary hover:bg-black hover:text-white text-lg px-10 py-8 h-auto font-heading uppercase tracking-wider shadow-xl">
-                  Book a Private Lesson
-                </Button>
-              </Link>
-              <Link href="/join">
-                <Button variant="outline" className="border-white text-white hover:bg-white hover:text-primary text-lg px-10 py-8 h-auto font-heading uppercase tracking-wider">
-                  Start Your Free Trial
-                </Button>
-              </Link>
+              <Button onClick={() => openBookFreeClassGate()} className="bg-white text-primary hover:bg-black hover:text-white text-lg px-10 py-8 h-auto font-heading uppercase tracking-wider shadow-xl">
+                Book Your Free Class
+              </Button>
             </div>
           </motion.div>
         </div>
