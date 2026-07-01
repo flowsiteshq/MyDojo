@@ -73,9 +73,9 @@ export default function Founder() {
         {/* Background image */}
         <div className="absolute inset-0">
           <img
-            src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero1_1d3d63d3.webp"
+            src="https://files.manuscdn.com/manus-storage/master-holmes-kick_b53d8ff8.jpeg"
             alt="Master Vincent Holmes"
-            className="w-full h-full object-cover object-top opacity-40"
+            className="w-full h-full object-cover object-top opacity-50"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-transparent" />
@@ -142,8 +142,8 @@ export default function Founder() {
             >
               <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl aspect-[3/4]">
                 <img
-                  src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/mobile-community-real-FdFDeMEGn6uNdyceZgaSWm.webp"
-                  alt="Master Vincent Holmes with students"
+                  src="https://files.manuscdn.com/manus-storage/master-holmes-seiza_260a2caf.jpg"
+                  alt="Master Vincent Holmes in seiza on the mat"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -275,11 +275,11 @@ export default function Founder() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
-            "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/little-ninjas_25d41024.webp",
-            "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/core-kids_baf3bc26.webp",
-            "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/teens-adults_e35f9895.webp",
-            "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/mobile-community-real-FdFDeMEGn6uNdyceZgaSWm.webp",
-            "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/kickboxing-bg_d4fcc4c5.webp",
+            "https://files.manuscdn.com/manus-storage/master-holmes-kick_b53d8ff8.jpeg",
+            "https://files.manuscdn.com/manus-storage/master-holmes-stance_86d12feb.jpeg",
+            "https://files.manuscdn.com/manus-storage/master-holmes-seiza_260a2caf.jpg",
+            "https://files.manuscdn.com/manus-storage/master-holmes-rashguard_fdaa5c57.jpeg",
+            "https://files.manuscdn.com/manus-storage/master-holmes-headshot_cd686d71.jpg",
             "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero2_cef79f5f.webp",
             ].map((src, i) => (
               <motion.div

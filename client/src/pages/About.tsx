@@ -24,7 +24,7 @@ export default function About() {
       />
       {/* Header */}
       <div className="bg-black text-white py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/qYVQxVSfHBmyqxTB.jpg')] bg-cover bg-center opacity-20"></div>
+        <div className="absolute inset-0 bg-[url('https://files.manuscdn.com/manus-storage/master-holmes-stance_86d12feb.jpeg')] bg-cover bg-center opacity-20"></div>
         <div className="container mx-auto px-4 relative z-10 text-center">
           <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">{t("about.title")}</h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">

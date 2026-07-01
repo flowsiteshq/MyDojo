@@ -230,9 +230,9 @@ function FounderSpotlight({ onBookClass }: { onBookClass: () => void }) {
           <div className="relative flex-shrink-0">
             <div className="w-72 h-80 md:w-80 md:h-96 rounded-2xl overflow-hidden shadow-2xl">
               <img
-                src={`${CDN_BASE}/teens-adults_e35f9895.webp`}
+                src="https://files.manuscdn.com/manus-storage/master-holmes-headshot_cd686d71.jpg"
                 alt="Master Vincent Holmes"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
               />
             </div>
             <div className="absolute -bottom-4 -right-4 bg-[#e63946] text-white rounded-xl px-5 py-3 shadow-xl text-center">
