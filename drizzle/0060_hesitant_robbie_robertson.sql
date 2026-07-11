@@ -1,0 +1,22 @@
+CREATE TABLE `scheduledPayments` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`customerName` varchar(255) NOT NULL,
+	`customerEmail` varchar(255),
+	`customerPhone` varchar(30),
+	`amount` decimal(10,2) NOT NULL,
+	`description` varchar(500) NOT NULL,
+	`scheduledDate` date NOT NULL,
+	`fluidpayCustomerId` varchar(100),
+	`fluidpayPaymentMethodId` varchar(100),
+	`authTransactionId` varchar(100),
+	`cardLast4` varchar(4),
+	`cardBrand` varchar(30),
+	`status` enum('pending','charged','failed','cancelled') NOT NULL DEFAULT 'pending',
+	`chargeTransactionId` varchar(100),
+	`failureReason` varchar(500),
+	`createdByUserId` int,
+	`chargedAt` timestamp,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `scheduledPayments_id` PRIMARY KEY(`id`)
+);

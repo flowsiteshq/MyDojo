@@ -16,6 +16,7 @@ import { runNoShowFollowUpJob } from "../noShowFollowUpJob";
 import { runStudentReminderJob } from "../studentReminderJob";
 import { runSocialPostJob } from "../socialPostJob";
 import { runDeferredTuitionJob } from "../deferredTuitionJob";
+import { runScheduledPaymentsJob } from "../scheduledPaymentsJob";
 import { startDailyClassRosterJob } from "../dailyClassRosterJob";
 import { handleStripeWebhook } from "../stripeWebhook";
 import { handleGHLWebhook } from "../ghlWebhook";
@@ -234,6 +235,14 @@ async function startServer() {
       runDeferredTuitionJob().catch(console.error);
     }, 30 * 60 * 1000); // every 30 minutes
     console.log("[DeferredTuitionJob] Scheduled to run every 30 minutes.");
+
+    // Start scheduled payments auto-charge job — runs every hour
+    // Charges future-dated payments when their scheduled date arrives
+    runScheduledPaymentsJob().catch(console.error); // run once at startup
+    setInterval(() => {
+      runScheduledPaymentsJob().catch(console.error);
+    }, 60 * 60 * 1000); // every hour
+    console.log("[ScheduledPaymentsJob] Scheduled to run every hour.");
 
     // Start daily class roster SMS job — sends at 7:00 AM CDT every day
     // Texts all admin/staff with the day's class sign-up roster

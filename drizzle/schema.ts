@@ -1,4 +1,4 @@
-import { boolean, bigint, int, json, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal } from "drizzle-orm/mysql-core";
+import { boolean, bigint, date, int, json, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -2171,3 +2171,66 @@ export const bucksRedemptions = mysqlTable("bucksRedemptions", {
 
 export type BucksRedemption = typeof bucksRedemptions.$inferSelect;
 export type InsertBucksRedemption = typeof bucksRedemptions.$inferInsert;
+
+// ─── Scheduled (Future-Dated) Payments ────────────────────────────────────────
+/**
+ * Stores payments that should be charged on a future date.
+ *
+ * Flow:
+ *  1. Admin collects card via FluidPay iframe → system runs a $1 auth to vault
+ *     the card and keep the token alive, then voids the auth.
+ *  2. The FluidPay customer ID + payment method ID are stored here along with
+ *     the scheduled charge date and amount.
+ *  3. The scheduledPaymentsJob heartbeat runs daily and charges any rows where
+ *     scheduledDate <= now and status = 'pending'.
+ */
+export const scheduledPayments = mysqlTable("scheduledPayments", {
+  id: int("id").autoincrement().primaryKey(),
+
+  // ── Customer info ──────────────────────────────────────────────────────────
+  customerName: varchar("customerName", { length: 255 }).notNull(),
+  customerEmail: varchar("customerEmail", { length: 255 }),
+  customerPhone: varchar("customerPhone", { length: 30 }),
+
+  // ── Payment details ────────────────────────────────────────────────────────
+  /** Amount in dollars (e.g. 149.00) */
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  description: varchar("description", { length: 500 }).notNull(),
+  /** The date on which the charge should be executed */
+  scheduledDate: date("scheduledDate").notNull(),
+
+  // ── FluidPay vault references ──────────────────────────────────────────────
+  /** FluidPay customer vault ID (created during $1 auth) */
+  fluidpayCustomerId: varchar("fluidpayCustomerId", { length: 100 }),
+  /** FluidPay payment method ID within the vault */
+  fluidpayPaymentMethodId: varchar("fluidpayPaymentMethodId", { length: 100 }),
+  /** Transaction ID of the $1 authorization (for auditing; already voided) */
+  authTransactionId: varchar("authTransactionId", { length: 100 }),
+  /** Last 4 digits of the card (for display) */
+  cardLast4: varchar("cardLast4", { length: 4 }),
+  /** Card brand (Visa, Mastercard, etc.) */
+  cardBrand: varchar("cardBrand", { length: 30 }),
+
+  // ── Status ─────────────────────────────────────────────────────────────────
+  /**
+   * pending   – waiting for scheduled date
+   * charged   – successfully charged
+   * failed    – charge attempt failed
+   * cancelled – manually cancelled before charge
+   */
+  status: mysqlEnum("status", ["pending", "charged", "failed", "cancelled"]).default("pending").notNull(),
+  /** FluidPay transaction ID of the actual charge (populated on success) */
+  chargeTransactionId: varchar("chargeTransactionId", { length: 100 }),
+  /** Human-readable failure reason (populated on failure) */
+  failureReason: varchar("failureReason", { length: 500 }),
+
+  // ── Audit ──────────────────────────────────────────────────────────────────
+  /** Admin user who created this scheduled payment */
+  createdByUserId: int("createdByUserId"),
+  chargedAt: timestamp("chargedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ScheduledPayment = typeof scheduledPayments.$inferSelect;
+export type InsertScheduledPayment = typeof scheduledPayments.$inferInsert;

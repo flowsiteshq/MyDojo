@@ -91,6 +91,7 @@ const ClassSignup = lazy(() => import("./pages/ClassSignup"));
 const AdminClassRoster = lazy(() => import("./pages/AdminClassRoster"));
 const AdminManualEnrollment = lazy(() => import("./pages/AdminManualEnrollment"));
 const AdminCustomPayments = lazy(() => import("./pages/AdminCustomPayments"));
+const AdminScheduledPayments = lazy(() => import("./pages/AdminScheduledPayments"));
 const CustomPaymentCheckout = lazy(() => import("./pages/CustomPaymentCheckout"));
 const SmsConversations = lazy(() => import("./pages/admin/SmsConversations"));
 const MyDojoBucks = lazy(() => import("./pages/MyDojoBucks"));
@@ -186,6 +187,7 @@ function Router() {
         <Route path="/admin/buddy-day" component={AdminBuddyDay} />
         <Route path="/admin/manual-enrollment" component={AdminManualEnrollment} />
         <Route path="/admin/custom-payments" component={AdminCustomPayments} />
+        <Route path="/admin/scheduled-payments" component={AdminScheduledPayments} />
         <Route path="/admin/sms" component={SmsConversations} />
         <Route path="/admin/mydojo-bucks" component={AdminMyDojoBucks} />
         <Route path="/mydojo-bucks" component={MyDojoBucks} />

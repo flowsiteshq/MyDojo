@@ -421,6 +421,13 @@
       "when": 1781902108835,
       "tag": "0059_chubby_norrin_radd",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "5",
+      "when": 1783788485987,
+      "tag": "0060_hesitant_robbie_robertson",
+      "breakpoints": true
     }
   ]
 }

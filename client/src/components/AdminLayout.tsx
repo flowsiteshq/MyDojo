@@ -31,6 +31,7 @@ import {
   Link2,
   Bot,
   Coins,
+  CalendarClock,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { trpc } from "@/lib/trpc";
@@ -175,6 +176,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/buddy-day", label: "Buddy Day RSVPs", icon: Users },
     { href: "/admin/manual-enrollment", label: "Manual Enrollment", icon: UserCheck },
     { href: "/admin/custom-payments", label: "Custom Payments", icon: Link2 },
+    { href: "/admin/scheduled-payments", label: "Scheduled Payments", icon: CalendarClock },
     { href: "/admin/social-media", label: "Social Media", icon: Share2 },
     { href: "/admin/commissions", label: "Commissions", icon: DollarSign },
     { href: "/admin/mydojo-bucks", label: "MyDojo Bucks", icon: Coins },
