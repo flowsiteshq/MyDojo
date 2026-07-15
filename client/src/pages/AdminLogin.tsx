@@ -1,35 +1,52 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
-import { Shield, Award, Users, Calendar, ChevronRight, Lock } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { Shield, Award, Users, Calendar, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
-  const { user, loading } = useAuth();
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const { user, loading, refresh } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  const loginMutation = trpc.auth.login.useMutation({
+    onSuccess: async () => {
+      await refresh();
+    },
+    onError: (err) => {
+      setError(err.message || "Invalid email or password");
+    },
+  });
+
+  const logoutMutation = trpc.auth.logout.useMutation({
+    onSuccess: () => {
+      window.location.href = "/admin/login";
+    },
+  });
 
   useEffect(() => {
     if (!loading && user) {
-      if (user.role === 'admin' || user.role === 'staff') {
+      if (user.role === "admin" || user.role === "staff") {
         setLocation("/admin");
       }
-      // Users without admin/staff role stay on this page and see the access denied state
     }
   }, [user, loading, setLocation]);
 
-  const handleLogin = () => {
-    setIsRedirecting(true);
-    window.location.href = getLoginUrl();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!email || !password) {
+      setError("Please enter your email and password");
+      return;
+    }
+    loginMutation.mutate({ email, password });
   };
 
-  const handleLogout = async () => {
-    // Clear session and reload so they can try a different account
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
-    window.location.href = '/admin/login';
-  };
-
-  if (loading || isRedirecting) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
@@ -41,7 +58,7 @@ export default function AdminLogin() {
   }
 
   // Logged in but NOT an admin or staff — show access denied
-  if (user && user.role !== 'admin' && user.role !== 'staff') {
+  if (user && user.role !== "admin" && user.role !== "staff") {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-8">
         <div className="w-full max-w-md text-center">
@@ -58,47 +75,41 @@ export default function AdminLogin() {
             </p>
             <div className="flex flex-col gap-3">
               <button
-                onClick={handleLogout}
-                className="w-full bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-wider text-sm px-6 py-3 rounded-xl transition-all"
+                onClick={() => logoutMutation.mutate()}
+                className="w-full bg-white/10 hover:bg-white/20 text-white font-semibold py-3 rounded-xl transition-all"
               >
                 Sign Out & Try Another Account
               </button>
-              <a
-                href="/"
-                className="w-full text-gray-500 hover:text-gray-300 text-sm transition-colors py-2"
-              >
+              <a href="/" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">
                 ← Back to MyDojo website
               </a>
             </div>
           </div>
-          <p className="text-gray-600 text-xs mt-6">
-            Need access? Call{" "}
-            <a href="tel:8774693656" className="text-primary hover:underline">(877) 4-MYDOJO</a>
-          </p>
         </div>
       </div>
     );
   }
 
   const features = [
-    { icon: Users, label: "Student Roster", desc: "View and manage all enrolled students" },
-    { icon: Calendar, label: "Class Schedule", desc: "Today's classes and attendance tracking" },
-    { icon: Award, label: "Progress & Feedback", desc: "Track belt progress and leave feedback" },
-    { icon: Shield, label: "Enrollment Management", desc: "Review memberships and change requests" },
+    { icon: Users, label: "Student Management", desc: "Track enrollments, attendance, and belt progress" },
+    { icon: Calendar, label: "Class Scheduling", desc: "Manage class times, instructors, and capacity" },
+    { icon: Award, label: "Belt Promotions", desc: "Record and celebrate student achievements" },
+    { icon: Shield, label: "Secure Access", desc: "Role-based permissions for staff and instructors" },
   ];
 
   return (
-    <div className="min-h-screen bg-black flex flex-col lg:flex-row">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left panel — branding */}
-      <div className="lg:w-1/2 relative flex flex-col justify-between p-10 overflow-hidden">
+      <div className="lg:w-1/2 bg-black relative overflow-hidden flex flex-col justify-between p-10 lg:p-16 min-h-[300px] lg:min-h-screen">
         <div className="absolute inset-0">
           <img
             src="/images/hero-main.webp"
             alt="MyDojo"
-            className="w-full h-full object-cover opacity-30" loading="lazy" />
+            className="w-full h-full object-cover opacity-30"
+            loading="lazy"
+          />
           <div className="absolute inset-0 bg-gradient-to-br from-black via-black/80 to-primary/20" />
         </div>
-
         <div className="relative z-10">
           <a href="/" className="inline-block">
             <img
@@ -111,7 +122,6 @@ export default function AdminLogin() {
             />
           </a>
         </div>
-
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 bg-primary/20 border border-primary/40 rounded-full px-4 py-1.5 mb-6">
             <Lock className="h-3.5 w-3.5 text-primary" />
@@ -124,7 +134,6 @@ export default function AdminLogin() {
           <p className="text-gray-300 text-lg mb-10 max-w-md">
             Your command center for managing students, classes, and dojo operations — all in one place.
           </p>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {features.map(({ icon: Icon, label, desc }) => (
               <div key={label} className="flex items-start gap-3">
@@ -139,7 +148,6 @@ export default function AdminLogin() {
             ))}
           </div>
         </div>
-
         <div className="relative z-10 mt-10">
           <p className="text-gray-500 text-xs">
             © {new Date().getFullYear()} MyDojo Martial Arts & Fitness · Tomball, TX
@@ -147,7 +155,7 @@ export default function AdminLogin() {
         </div>
       </div>
 
-      {/* Right panel — login */}
+      {/* Right panel — login form */}
       <div className="lg:w-1/2 flex items-center justify-center p-8 bg-zinc-950">
         <div className="w-full max-w-md">
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-8 shadow-2xl">
@@ -157,35 +165,64 @@ export default function AdminLogin() {
               </div>
               <h2 className="text-2xl font-bold text-white mb-1">Staff Sign In</h2>
               <p className="text-gray-400 text-sm">
-                Sign in with your MyDojo account to access the instructor portal.
+                Sign in with your MyDojo staff account to access the instructor portal.
               </p>
             </div>
 
-            <button
-              onClick={handleLogin}
-              className="w-full flex items-center justify-between bg-primary hover:bg-primary/90 text-white font-heading font-bold uppercase tracking-wider text-sm px-6 py-4 rounded-xl transition-all shadow-lg shadow-primary/20 group"
-            >
-              <span>Sign In to Staff Portal</span>
-              <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </button>
-
-            <div className="flex items-center gap-3 my-6">
-              <div className="flex-1 h-px bg-white/10" />
-              <span className="text-gray-500 text-xs uppercase tracking-wider">Secure Login</span>
-              <div className="flex-1 h-px bg-white/10" />
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <Lock className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-gray-300 text-sm font-medium mb-1">Admin access required</p>
-                  <p className="text-gray-500 text-xs leading-relaxed">
-                    This portal is restricted to authorized instructors and staff. If you need access, contact your dojo manager.
-                  </p>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="staff@mydojoma.com"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                  autoComplete="email"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">Password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                    autoComplete="current-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
               </div>
-            </div>
+
+              {error && (
+                <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+                  <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+                  <p className="text-red-400 text-sm">{error}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loginMutation.isPending}
+                className="w-full flex items-center justify-center bg-primary hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed text-white font-heading font-bold uppercase tracking-wider text-sm px-6 py-4 rounded-xl transition-all shadow-lg shadow-primary/20"
+              >
+                {loginMutation.isPending ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                ) : (
+                  "Sign In to Staff Portal"
+                )}
+              </button>
+            </form>
 
             <div className="text-center mt-6">
               <a href="/" className="text-gray-500 hover:text-gray-300 text-sm transition-colors">
@@ -193,7 +230,6 @@ export default function AdminLogin() {
               </a>
             </div>
           </div>
-
           <p className="text-center text-gray-600 text-xs mt-6">
             Having trouble? Call{" "}
             <a href="tel:8774693656" className="text-primary hover:underline">
