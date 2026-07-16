@@ -40,10 +40,12 @@ import {
   Loader2,
   PlusCircle,
   Tag,
+  CreditCard,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { FluidPayEnrollmentForm } from "@/components/FluidPayEnrollmentForm";
+import { UpdatePaymentMethodModal } from "@/components/UpdatePaymentMethodModal";
 
 // ─── Staff Enrollment Dialog ──────────────────────────────────────────────────
 
@@ -367,6 +369,12 @@ export default function AdminEnrollments() {
   const utils = trpc.useUtils();
   const { data: enrollments, isLoading, error } = trpc.member.getAllEnrollments.useQuery();
   const [showNewEnrollment, setShowNewEnrollment] = useState(false);
+  const [updateCardEnrollment, setUpdateCardEnrollment] = useState<{
+    id: number;
+    customerName: string;
+    fluidpayCustomerId?: string | null;
+    stripeCustomerId?: string | null;
+  } | null>(null);
 
   // Redirect if not admin
   if (!authLoading && (!user || user.role !== "admin")) {
@@ -657,7 +665,7 @@ export default function AdminEnrollments() {
                         </Badge>
                       )}
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex flex-col items-end gap-2">
                       {enrollment.stripeSubscriptionId ? (
                         <>
                           <p className="text-sm text-gray-600">Subscription ID</p>
@@ -668,6 +676,20 @@ export default function AdminEnrollments() {
                       ) : (
                         <p className="text-sm text-gray-500">No subscription</p>
                       )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex items-center gap-1.5 text-xs border-red-200 text-red-700 hover:bg-red-50"
+                        onClick={() => setUpdateCardEnrollment({
+                          id: enrollment.id,
+                          customerName: enrollment.customerName,
+                          fluidpayCustomerId: enrollment.fluidpayCustomerId,
+                          stripeCustomerId: enrollment.stripeCustomerId,
+                        })}
+                      >
+                        <CreditCard className="h-3.5 w-3.5" />
+                        Update Card
+                      </Button>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
@@ -708,6 +730,14 @@ export default function AdminEnrollments() {
         onEnrolled={() => {
           utils.member.getAllEnrollments.invalidate();
         }}
+      />
+
+      {/* Update Payment Method Modal */}
+      <UpdatePaymentMethodModal
+        enrollment={updateCardEnrollment}
+        open={!!updateCardEnrollment}
+        onClose={() => setUpdateCardEnrollment(null)}
+        onSuccess={() => utils.member.getAllEnrollments.invalidate()}
       />
     </div>
     </AdminLayout>

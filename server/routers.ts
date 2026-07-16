@@ -2376,6 +2376,8 @@ Please enter your card details below to complete your registration securely. Tot
           stripeCustomerId: schema.enrollments.stripeCustomerId,
           stripeSubscriptionId: schema.enrollments.stripeSubscriptionId,
           stripePaymentIntentId: schema.enrollments.stripePaymentIntentId,
+          fluidpayCustomerId: schema.enrollments.fluidpayCustomerId,
+          fluidpaySubscriptionId: schema.enrollments.fluidpaySubscriptionId,
           downPaymentAmount: schema.enrollments.downPaymentAmount,
           remainingBalance: schema.enrollments.remainingBalance,
           monthlyPaymentsRemaining: schema.enrollments.monthlyPaymentsRemaining,
@@ -7102,6 +7104,169 @@ Please enter your card details below to complete your registration securely. Tot
           .set({ status: 'active' })
           .where(eq(schema.enrollments.id, failure.enrollmentId));
         return { success: true };
+      }),
+
+    // ─── Update Enrollment Payment Method ────────────────────────────────────
+    // Admin: swap the credit card on file for a FluidPay or Stripe enrollment.
+    // For FluidPay: accepts a tokenizer token, adds a new card to the vault,
+    //   updates the subscription's default payment method.
+    // For Stripe: accepts a PaymentMethod ID (from Stripe.js), attaches it to
+    //   the customer, and sets it as the subscription's default.
+    updateEnrollmentPaymentMethod: protectedProcedure
+      .input(z.object({
+        enrollmentId: z.number().int(),
+        // For FluidPay enrollments — tokenizer token from FluidPay.js
+        fpToken: z.string().optional(),
+        // For Stripe enrollments — PaymentMethod ID from Stripe.js
+        stripePaymentMethodId: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin/staff only' });
+        }
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+
+        const [enrollment] = await db
+          .select()
+          .from(schema.enrollments)
+          .where(eq(schema.enrollments.id, input.enrollmentId))
+          .limit(1);
+        if (!enrollment) throw new TRPCError({ code: 'NOT_FOUND', message: 'Enrollment not found' });
+
+        const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
+        const FLUIDPAY_KEY = process.env.FLUIDPAY_SECRET_KEY || process.env.FLUIDPAY_DEMO_SECRET_KEY || '';
+
+        // ── FluidPay path ─────────────────────────────────────────────────────
+        if (input.fpToken && enrollment.fluidpayCustomerId) {
+          // 1. Add new card to existing customer vault
+          const addCardRes = await fetch(
+            `${FLUIDPAY_API_URL}/api/vault/customer/${enrollment.fluidpayCustomerId}/paymentmethod/card`,
+            {
+              method: 'POST',
+              headers: { 'Authorization': FLUIDPAY_KEY, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ token_id: input.fpToken }),
+            }
+          );
+          const addCardData = await addCardRes.json() as any;
+          if (addCardData.status !== 'success') {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: addCardData.msg || 'Failed to add card to vault',
+            });
+          }
+
+          // 2. Get the new payment method ID
+          const newPmId: string = addCardData.data?.id;
+          const cardLast4: string = addCardData.data?.card_number?.slice(-4) || '';
+          const cardType: string = addCardData.data?.card_type || '';
+
+          // 3. Set as default payment method on the customer vault
+          await fetch(
+            `${FLUIDPAY_API_URL}/api/vault/customer/${enrollment.fluidpayCustomerId}`,
+            {
+              method: 'POST',
+              headers: { 'Authorization': FLUIDPAY_KEY, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ default_payment_method_id: newPmId }),
+            }
+          );
+
+          // 4. Update the subscription's payment method if one exists
+          if (enrollment.fluidpaySubscriptionId) {
+            await fetch(
+              `${FLUIDPAY_API_URL}/api/recurring/subscription/${enrollment.fluidpaySubscriptionId}`,
+              {
+                method: 'POST',
+                headers: { 'Authorization': FLUIDPAY_KEY, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  payment_method: {
+                    customer: {
+                      id: enrollment.fluidpayCustomerId,
+                      payment_method_type: 'card',
+                      payment_method_id: newPmId,
+                    },
+                  },
+                }),
+              }
+            );
+          }
+
+          return { success: true, processor: 'fluidpay', cardLast4, cardType };
+        }
+
+        // ── Stripe path ───────────────────────────────────────────────────────
+        if (input.stripePaymentMethodId && enrollment.stripeCustomerId) {
+          const Stripe = (await import('stripe')).default;
+          const stripe = new Stripe(
+            process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '',
+            { apiVersion: '2026-01-28.clover' as any }
+          );
+
+          // 1. Attach the payment method to the customer
+          await stripe.paymentMethods.attach(input.stripePaymentMethodId, {
+            customer: enrollment.stripeCustomerId,
+          });
+
+          // 2. Set it as the customer's default
+          await stripe.customers.update(enrollment.stripeCustomerId, {
+            invoice_settings: { default_payment_method: input.stripePaymentMethodId },
+          });
+
+          // 3. Update the subscription's default payment method if one exists
+          if (enrollment.stripeSubscriptionId) {
+            await stripe.subscriptions.update(enrollment.stripeSubscriptionId, {
+              default_payment_method: input.stripePaymentMethodId,
+            });
+          }
+
+          // 4. Retrieve last4 for confirmation
+          const pm = await stripe.paymentMethods.retrieve(input.stripePaymentMethodId);
+          const cardLast4 = pm.card?.last4 || '';
+          const cardBrand = pm.card?.brand || '';
+
+          return { success: true, processor: 'stripe', cardLast4, cardType: cardBrand };
+        }
+
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Provide either fpToken (FluidPay) or stripePaymentMethodId (Stripe) along with the matching customer ID on the enrollment.',
+        });
+      }),
+
+    // ─── Create SetupIntent for Enrollment Card Update ──────────────────────────
+    // Admin: create a Stripe SetupIntent for collecting a new card for a Stripe enrollment.
+    createSetupIntentForEnrollment: protectedProcedure
+      .input(z.object({ enrollmentId: z.number().int() }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin/staff only' });
+        }
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+
+        const [enrollment] = await db
+          .select()
+          .from(schema.enrollments)
+          .where(eq(schema.enrollments.id, input.enrollmentId))
+          .limit(1);
+        if (!enrollment) throw new TRPCError({ code: 'NOT_FOUND', message: 'Enrollment not found' });
+        if (!enrollment.stripeCustomerId) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This enrollment does not have a Stripe customer ID' });
+        }
+
+        const Stripe = (await import('stripe')).default;
+        const stripe = new Stripe(
+          process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '',
+          { apiVersion: '2026-01-28.clover' as any }
+        );
+
+        const setupIntent = await stripe.setupIntents.create({
+          customer: enrollment.stripeCustomerId,
+          payment_method_types: ['card'],
+          usage: 'off_session',
+        });
+
+        return { clientSecret: setupIntent.client_secret };
       }),
 
     // ─── Billing Schedule Report ──────────────────────────────────────────────
