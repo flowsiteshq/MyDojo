@@ -1157,6 +1157,18 @@ export const popupLeads = mysqlTable("popupLeads", {
   source: varchar("source", { length: 100 }).default("popup").notNull(),
   /** Whether a confirmation/follow-up email was sent */
   emailSent: boolean("emailSent").default(false).notNull(),
+  /** Who the lessons are for: 'myself' | 'child' | 'someone' */
+  lessonsFor: varchar("lessonsFor", { length: 20 }),
+  /** Child's name if lessonsFor === 'child' */
+  childName: varchar("childName", { length: 255 }),
+  /** Child's age if lessonsFor === 'child' */
+  childAge: int("childAge"),
+  /** Other person's name if lessonsFor === 'someone' */
+  otherName: varchar("otherName", { length: 255 }),
+  /** Appointment day selected (e.g. 'Monday') */
+  appointmentDay: varchar("appointmentDay", { length: 50 }),
+  /** Appointment time slot selected (e.g. '6:00 PM – 7:00 PM') */
+  appointmentTime: varchar("appointmentTime", { length: 100 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type PopupLead = typeof popupLeads.$inferSelect;

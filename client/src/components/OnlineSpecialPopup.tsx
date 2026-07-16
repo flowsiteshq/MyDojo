@@ -95,7 +95,11 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
   const hasPrefilledData = !!(urlName || urlPhone || urlEmail);
 
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<"program" | "form" | "schedule" | "done">("program");
+  const [step, setStep] = useState<"program" | "form" | "who" | "schedule" | "done">("program");
+  const [lessonsFor, setLessonsFor] = useState<"myself" | "child" | "someone" | null>(null);
+  const [childName, setChildName] = useState("");
+  const [childAge, setChildAge] = useState("");
+  const [otherName, setOtherName] = useState("");
   const [selectedProgram, setSelectedProgram] = useState<typeof PROGRAMS[0] | null>(null);
   const [name, setName] = useState(urlName);
   const [phone, setPhone] = useState(urlPhone);
@@ -116,6 +120,8 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
 
   const submitLead = trpc.popup.submitLead.useMutation();
   const checkoutMutation = trpc.popup.createIntroOfferCheckout.useMutation();
+  const updateFunnelAnswers = trpc.popup.updateLeadFunnelAnswers.useMutation();
+  const [leadId, setLeadId] = useState<number | null>(null);
 
   // Force-open immediately (e.g. from ?offer=kids URL param)
   useEffect(() => {
@@ -172,7 +178,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
     setIsLoading(true);
     try {
       if (selectedProgram.free) {
-        await submitLead.mutateAsync({
+        const leadResult = await submitLead.mutateAsync({
           campaign: "online_special",
           name: name.trim(),
           email: email.trim(),
@@ -180,7 +186,8 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
           program: selectedProgram.label,
           source: "popup_online_special",
         });
-        setStep("schedule");
+        if (leadResult.leadId) setLeadId(leadResult.leadId);
+        setStep("who");
       } else {
         const result = await checkoutMutation.mutateAsync({
           name: name.trim(),
@@ -226,10 +233,23 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
   };
 
   const handleBookSlot = (slot: any) => {
+    const slotTime = `${slot.startTime} – ${slot.endTime}`;
     setSelectedSlot({ day: slot.dayOfWeek, time: slot.startTime, program: slot.program });
     setSelectedDate(getNextDate(slot.dayOfWeek));
     setStep("done");
     setTimeout(() => fireConfetti(), 200);
+    // Save funnel answers and appointment to DB (fire-and-forget)
+    if (leadId) {
+      updateFunnelAnswers.mutate({
+        leadId,
+        lessonsFor: lessonsFor ?? undefined,
+        childName: childName.trim() || undefined,
+        childAge: childAge ? parseInt(childAge, 10) : undefined,
+        otherName: otherName.trim() || undefined,
+        appointmentDay: slot.dayOfWeek,
+        appointmentTime: slotTime,
+      });
+    }
   };
 
   const heroImage = selectedProgram?.kids ? HERO_IMAGE_KIDS : HERO_IMAGE_ADULT;
@@ -507,6 +527,117 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
                   Secure checkout · No commitment · Cancel anytime
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* ── STEP: Who are lessons for ── */}
+          {step === "who" && (
+            <div className="p-6 sm:p-7 flex flex-col flex-1">
+              <div className="flex items-center gap-3 mb-6">
+                <button onClick={() => setStep("form")} className="text-xs text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">← Back</button>
+              </div>
+              <div className="mb-5">
+                <h3 className="text-2xl font-black text-black tracking-tight mb-1">Who are the lessons for?</h3>
+                <p className="text-gray-400 text-sm">This helps us personalize your experience.</p>
+              </div>
+
+              <div className="space-y-3 flex-1">
+                {/* Myself */}
+                <button
+                  onClick={() => { setLessonsFor("myself"); setStep("schedule"); }}
+                  className="group w-full flex items-center gap-4 p-4 rounded-xl border-2 border-gray-100 hover:border-red-400 hover:bg-red-50 transition-all text-left"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center flex-shrink-0">
+                    <span className="text-2xl">🥋</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-black text-base text-black">Myself</p>
+                    <p className="text-xs text-gray-400">I want to train</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-red-500 transition-colors" />
+                </button>
+
+                {/* My Child */}
+                <div className="rounded-xl border-2 border-gray-100 hover:border-blue-400 transition-all overflow-hidden">
+                  <button
+                    onClick={() => setLessonsFor(lessonsFor === "child" ? null : "child")}
+                    className="group w-full flex items-center gap-4 p-4 text-left"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center flex-shrink-0">
+                      <span className="text-2xl">⭐</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-black text-base text-black">My Child</p>
+                      <p className="text-xs text-gray-400">Enrolling my son or daughter</p>
+                    </div>
+                    <ChevronRight className={`w-5 h-5 transition-all ${lessonsFor === "child" ? "rotate-90 text-blue-500" : "text-gray-300 group-hover:text-blue-500"}`} />
+                  </button>
+                  {lessonsFor === "child" && (
+                    <div className="px-4 pb-4 space-y-2 border-t border-gray-100 pt-3">
+                      <input
+                        placeholder="Child's Name"
+                        value={childName}
+                        onChange={(e) => setChildName(e.target.value)}
+                        className="w-full h-11 px-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 placeholder:text-gray-300"
+                      />
+                      <input
+                        placeholder="Child's Age"
+                        type="number"
+                        min="2"
+                        max="18"
+                        value={childAge}
+                        onChange={(e) => setChildAge(e.target.value)}
+                        className="w-full h-11 px-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 placeholder:text-gray-300"
+                      />
+                      <button
+                        onClick={() => { if (childName.trim()) setStep("schedule"); }}
+                        disabled={!childName.trim()}
+                        className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-800 text-white font-black text-sm rounded-xl uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-all"
+                      >
+                        Continue →
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Someone Else */}
+                <div className="rounded-xl border-2 border-gray-100 hover:border-purple-400 transition-all overflow-hidden">
+                  <button
+                    onClick={() => setLessonsFor(lessonsFor === "someone" ? null : "someone")}
+                    className="group w-full flex items-center gap-4 p-4 text-left"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center flex-shrink-0">
+                      <span className="text-2xl">👥</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-black text-base text-black">Someone Else</p>
+                      <p className="text-xs text-gray-400">A family member or friend</p>
+                    </div>
+                    <ChevronRight className={`w-5 h-5 transition-all ${lessonsFor === "someone" ? "rotate-90 text-purple-500" : "text-gray-300 group-hover:text-purple-500"}`} />
+                  </button>
+                  {lessonsFor === "someone" && (
+                    <div className="px-4 pb-4 space-y-2 border-t border-gray-100 pt-3">
+                      <input
+                        placeholder="Their Name"
+                        value={otherName}
+                        onChange={(e) => setOtherName(e.target.value)}
+                        className="w-full h-11 px-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 placeholder:text-gray-300"
+                      />
+                      <button
+                        onClick={() => { if (otherName.trim()) setStep("schedule"); }}
+                        disabled={!otherName.trim()}
+                        className="w-full h-11 bg-gradient-to-r from-purple-600 to-purple-800 text-white font-black text-sm rounded-xl uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-all"
+                      >
+                        Continue →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <button onClick={handleDismiss} className="text-xs text-gray-300 hover:text-gray-500 transition-colors w-full text-center mt-4">
+                Skip this step
+              </button>
             </div>
           )}
 

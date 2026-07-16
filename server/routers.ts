@@ -7611,9 +7611,10 @@ Please enter your card details below to complete your registration securely. Tot
           .limit(1);
 
         const alreadyExists = existing.length > 0;
+        let leadId: number | null = null;
         // Only insert if new lead
         if (!alreadyExists) {
-          await db.insert(schema.popupLeads).values({
+          const insertResult = await db.insert(schema.popupLeads).values({
             campaign: input.campaign,
             name: input.name ?? null,
             email: emailLower,
@@ -7621,6 +7622,9 @@ Please enter your card details below to complete your registration securely. Tot
             source: input.source ?? 'popup',
             emailSent: false,
           });
+          leadId = Number(insertResult[0].insertId);
+        } else {
+          leadId = existing[0].id;
         }
 
         // Send welcome SMS to the prospect (fire-and-forget)
@@ -7852,7 +7856,37 @@ Please enter your card details below to complete your registration securely. Tot
           });
         } catch (_) {}
 
-        return { success: true, alreadySubmitted: false };
+        return { success: true, alreadySubmitted: false, leadId };
+      }),
+
+    // Update funnel answers after appointment booking
+    updateLeadFunnelAnswers: publicProcedure
+      .input(z.object({
+        leadId: z.number().int().positive(),
+        lessonsFor: z.enum(['myself', 'child', 'someone']).optional(),
+        childName: z.string().max(255).optional(),
+        childAge: z.number().int().min(1).max(99).optional(),
+        otherName: z.string().max(255).optional(),
+        appointmentDay: z.string().max(50).optional(),
+        appointmentTime: z.string().max(100).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+
+        await db
+          .update(schema.popupLeads)
+          .set({
+            lessonsFor: input.lessonsFor ?? null,
+            childName: input.childName ?? null,
+            childAge: input.childAge ?? null,
+            otherName: input.otherName ?? null,
+            appointmentDay: input.appointmentDay ?? null,
+            appointmentTime: input.appointmentTime ?? null,
+          })
+          .where(eq(schema.popupLeads.id, input.leadId));
+
+        return { success: true };
       }),
 
     // Admin: list all popup leads
