@@ -1,12 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Clock, ChevronRight, CheckCircle2, Shield, Zap, Users, Star, Flame, Award, Loader2 } from "lucide-react";
+import { X, Clock, ChevronRight, CheckCircle2, Shield, Zap, Users, Star, Flame, Award, Loader2, Phone, MessageCircle, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
+import { openIntakeChatbot } from "@/lib/chatbot";
 
 const PROGRAMS = [
   {
@@ -81,8 +82,8 @@ const HERO_IMAGE_ADULT = "/manus-storage/popup-hero-martial-arts_f910ca46.jpg";
 const HERO_IMAGE_KIDS = "/manus-storage/popup-hero-kids_0029eb40.jpg";
 const DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-// Step order for determining slide direction
-const STEP_ORDER = ["program", "form", "who", "schedule", "done"] as const;
+// Step order: form → who → program → schedule → done
+const STEP_ORDER = ["form", "who", "program", "schedule", "done"] as const;
 type Step = typeof STEP_ORDER[number];
 
 interface OnlineSpecialPopupProps {
@@ -91,7 +92,7 @@ interface OnlineSpecialPopupProps {
   onClose?: () => void;
 }
 
-// Slide variants: forward = slide left-to-right, backward = slide right-to-left
+// Slide variants: forward = slide left, backward = slide right
 const makeVariants = (direction: 1 | -1) => ({
   initial: { x: direction * 40, opacity: 0 },
   animate: { x: 0, opacity: 1 },
@@ -102,7 +103,6 @@ const TRANSITION = { duration: 0.28, ease: [0.4, 0, 0.2, 1] as [number, number, 
 
 export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose }: OnlineSpecialPopupProps = {}) {
   const { t } = useTranslation();
-  // Read pre-fill data from URL params (e.g. from Facebook Lead Ad redirect)
   const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
   const urlName = urlParams?.get("name") ?? "";
   const urlPhone = urlParams?.get("phone") ?? "";
@@ -110,25 +110,35 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
   const hasPrefilledData = !!(urlName || urlPhone || urlEmail);
 
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<Step>("program");
-  const [direction, setDirection] = useState<1 | -1>(1); // 1 = forward, -1 = backward
-  const [lessonsFor, setLessonsFor] = useState<"myself" | "child" | "someone" | null>(null);
-  const [childName, setChildName] = useState("");
-  const [childAge, setChildAge] = useState("");
-  const [otherName, setOtherName] = useState("");
-  const [selectedProgram, setSelectedProgram] = useState<typeof PROGRAMS[0] | null>(null);
+  const [step, setStep] = useState<Step>("form");
+  const [direction, setDirection] = useState<1 | -1>(1);
+
+  // Step 1: contact info
   const [name, setName] = useState(urlName);
   const [phone, setPhone] = useState(urlPhone);
   const [email, setEmail] = useState(urlEmail);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Step 2: who are lessons for
+  const [lessonsFor, setLessonsFor] = useState<"myself" | "child" | "someone" | null>(null);
+  const [childName, setChildName] = useState("");
+  const [childAge, setChildAge] = useState("");
+  const [otherName, setOtherName] = useState("");
+
+  // Step 3: program
+  const [selectedProgram, setSelectedProgram] = useState<typeof PROGRAMS[0] | null>(null);
+
+  // Step 4: schedule
   const [selectedSlot, setSelectedSlot] = useState<{ day: string; time: string; program: string } | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
+
   const [isLoading, setIsLoading] = useState(false);
+  const [leadId, setLeadId] = useState<number | null>(null);
   const hasShown = useRef(false);
 
-  // Navigate to a step, automatically computing forward/backward direction
-  const goTo = useCallback((next: Step) => {
-    const currentIdx = STEP_ORDER.indexOf(step);
+  const goTo = useCallback((next: Step, currentStep?: Step) => {
+    const cur = currentStep ?? step;
+    const currentIdx = STEP_ORDER.indexOf(cur);
     const nextIdx = STEP_ORDER.indexOf(next);
     setDirection(nextIdx >= currentIdx ? 1 : -1);
     setStep(next);
@@ -145,31 +155,24 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
   const submitLead = trpc.popup.submitLead.useMutation();
   const checkoutMutation = trpc.popup.createIntroOfferCheckout.useMutation();
   const updateFunnelAnswers = trpc.popup.updateLeadFunnelAnswers.useMutation();
-  const [leadId, setLeadId] = useState<number | null>(null);
 
-  // Force-open immediately (e.g. from ?offer=kids URL param)
   useEffect(() => {
     if (forceOpen && !hasShown.current) {
       hasShown.current = true;
       setOpen(true);
 
       // Pre-select program based on defaultProgram
-      let preSelectedProgram: typeof PROGRAMS[0] | null = null;
       if (defaultProgram === "kids") {
-        preSelectedProgram = PROGRAMS.find((p) => p.label === "Kids Martial Arts") ?? null;
+        const prog = PROGRAMS.find((p) => p.label === "Kids Martial Arts") ?? null;
+        if (prog) setSelectedProgram(prog);
       } else if (defaultProgram === "adults") {
-        preSelectedProgram = PROGRAMS.find((p) => p.label === "Teens & Adults") ?? null;
+        const prog = PROGRAMS.find((p) => p.label === "Teens & Adults") ?? null;
+        if (prog) setSelectedProgram(prog);
       }
-      if (preSelectedProgram) setSelectedProgram(preSelectedProgram);
 
-      // If name/phone/email are pre-filled from URL, skip straight to the form step
-      if (hasPrefilledData && preSelectedProgram) {
-        setStep("form");
-      }
-      return;
+      // If pre-filled from URL, start at form step
+      setStep("form");
     }
-    // Auto-timer intentionally removed — this popup only opens via forceOpen (?offer= URL param)
-    // to prevent double-popup conflict with ProgramFinderPopup (which fires at 6s)
   }, [forceOpen, defaultProgram, hasPrefilledData]);
 
   const fireConfetti = useCallback(() => {
@@ -198,38 +201,73 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = async () => {
-    if (!validate() || !selectedProgram) return;
+  // Step 1 → 2: submit contact info and save lead
+  const handleSubmitContact = async () => {
+    if (!validate()) return;
     setIsLoading(true);
     try {
-      if (selectedProgram.free) {
-        const leadResult = await submitLead.mutateAsync({
-          campaign: "online_special",
-          name: name.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          program: selectedProgram.label,
-          source: "popup_online_special",
-        });
-        if (leadResult.leadId) setLeadId(leadResult.leadId);
-        goTo("who");
-      } else {
+      const leadResult = await submitLead.mutateAsync({
+        campaign: "online_special",
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        program: selectedProgram?.label ?? "Unknown",
+        source: "popup_online_special",
+      });
+      if (leadResult.leadId) setLeadId(leadResult.leadId);
+      goTo("who");
+    } catch {
+      goTo("who");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Step 3: program selected → go to schedule (or checkout for paid programs)
+  const handleProgramSelect = async (prog: typeof PROGRAMS[0]) => {
+    setSelectedProgram(prog);
+    if (!prog.free) {
+      // Paid intro offer → Stripe checkout
+      setIsLoading(true);
+      try {
         const result = await checkoutMutation.mutateAsync({
           name: name.trim(),
           email: email.trim(),
           phone: phone.trim(),
-          program: selectedProgram.label,
+          program: prog.label,
         });
         if (result.checkoutUrl) {
           window.open(result.checkoutUrl, "_blank");
-          goTo("done");
+          goTo("done", "program");
           setTimeout(() => fireConfetti(), 200);
         }
+      } catch {
+        goTo("schedule", "program");
+      } finally {
+        setIsLoading(false);
       }
-    } catch {
-      goTo("schedule");
-    } finally {
-      setIsLoading(false);
+    } else {
+      goTo("schedule", "program");
+    }
+  };
+
+  // Step 4: slot booked → done
+  const handleBookSlot = (slot: any) => {
+    const slotTime = `${slot.startTime} – ${slot.endTime}`;
+    setSelectedSlot({ day: slot.dayOfWeek, time: slot.startTime, program: slot.program });
+    setSelectedDate(getNextDate(slot.dayOfWeek));
+    goTo("done");
+    setTimeout(() => fireConfetti(), 200);
+    if (leadId) {
+      updateFunnelAnswers.mutate({
+        leadId,
+        lessonsFor: lessonsFor ?? undefined,
+        childName: childName.trim() || undefined,
+        childAge: childAge ? parseInt(childAge, 10) : undefined,
+        otherName: otherName.trim() || undefined,
+        appointmentDay: slot.dayOfWeek,
+        appointmentTime: slotTime,
+      });
     }
   };
 
@@ -257,35 +295,12 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
     return next.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
-  const handleBookSlot = (slot: any) => {
-    const slotTime = `${slot.startTime} – ${slot.endTime}`;
-    setSelectedSlot({ day: slot.dayOfWeek, time: slot.startTime, program: slot.program });
-    setSelectedDate(getNextDate(slot.dayOfWeek));
-    goTo("done");
-    setTimeout(() => fireConfetti(), 200);
-    // Save funnel answers and appointment to DB (fire-and-forget)
-    if (leadId) {
-      updateFunnelAnswers.mutate({
-        leadId,
-        lessonsFor: lessonsFor ?? undefined,
-        childName: childName.trim() || undefined,
-        childAge: childAge ? parseInt(childAge, 10) : undefined,
-        otherName: otherName.trim() || undefined,
-        appointmentDay: slot.dayOfWeek,
-        appointmentTime: slotTime,
-      });
-    }
-  };
-
   const heroImage = selectedProgram?.kids ? HERO_IMAGE_KIDS : HERO_IMAGE_ADULT;
+  const stepIdx = STEP_ORDER.indexOf(step);
 
   if (!open) return null;
 
   const variants = makeVariants(direction);
-
-  // Progress indicator: which step index are we on (0-based, max 4)
-  const stepIdx = STEP_ORDER.indexOf(step);
-  const totalSteps = STEP_ORDER.length;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4">
@@ -293,7 +308,6 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
         className="absolute inset-0 bg-black/80 backdrop-blur-md"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
         onClick={handleDismiss}
       />
 
@@ -309,36 +323,26 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
         <div
           className="hidden md:flex md:w-[42%] relative flex-col justify-end flex-shrink-0"
           style={{
-            backgroundImage: `url(${step === "program" ? HERO_IMAGE_ADULT : heroImage})`,
+            backgroundImage: `url(${step === "form" ? HERO_IMAGE_ADULT : heroImage})`,
             backgroundSize: "cover",
             backgroundPosition: "center top",
             minHeight: "520px",
           }}
         >
-          {/* Multi-layer gradient for depth */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10" />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/20" />
-
-          {/* Badge */}
           <div className="absolute top-5 left-5">
             <div className="bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-sm">
               Online Special
             </div>
           </div>
-
-          {/* Bottom content */}
           <div className="relative z-10 p-7 pb-8">
             <div className="w-8 h-0.5 bg-red-500 mb-4" />
-            <h2 className="text-[42px] font-black text-white leading-[0.95] tracking-tight mb-1">
-              2 CLASSES
-            </h2>
-            <h2 className="text-[42px] font-black leading-[0.95] tracking-tight mb-4" style={{ color: "#FF3B3B" }}>
-              FOR FREE
-            </h2>
+            <h2 className="text-[42px] font-black text-white leading-[0.95] tracking-tight mb-1">2 CLASSES</h2>
+            <h2 className="text-[42px] font-black leading-[0.95] tracking-tight mb-4" style={{ color: "#FF3B3B" }}>FOR FREE</h2>
             <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.15em] mb-6">
               Uniform Included · Limited Spots
             </p>
-
             <div className="space-y-3">
               {[
                 { icon: Shield, text: "Certified Expert Instructors" },
@@ -356,14 +360,14 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
 
         {/* ── RIGHT PANEL ── */}
         <div className="flex-1 flex flex-col bg-white overflow-hidden" style={{ maxHeight: "92vh" }}>
-          {/* Mobile hero image banner */}
+          {/* Mobile hero banner */}
           <div
             className="md:hidden relative flex flex-col justify-end flex-shrink-0"
             style={{
-              backgroundImage: `url(${step === "program" ? HERO_IMAGE_ADULT : heroImage})`,
+              backgroundImage: `url(${step === "form" ? HERO_IMAGE_ADULT : heroImage})`,
               backgroundSize: "cover",
               backgroundPosition: "center top",
-              height: "200px",
+              height: "180px",
             }}
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-black/20" />
@@ -379,16 +383,12 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
               <X className="w-4 h-4" />
             </button>
             <div className="relative z-10 px-5 pb-4">
-              <h2 className="text-3xl font-black text-white leading-tight tracking-tight">
-                FREE CLASS
-              </h2>
-              <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.15em] mt-1">
-                Uniform Included · Limited Spots
-              </p>
+              <h2 className="text-3xl font-black text-white leading-tight tracking-tight">FREE CLASS</h2>
+              <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.15em] mt-1">Uniform Included · Limited Spots</p>
             </div>
           </div>
 
-          {/* Close — desktop only (mobile uses the one in the hero banner) */}
+          {/* Close — desktop */}
           <button
             onClick={handleDismiss}
             className="hidden md:flex absolute top-4 right-4 z-20 w-8 h-8 bg-black/10 hover:bg-black/20 text-gray-600 hover:text-black rounded-full items-center justify-center transition-all"
@@ -396,7 +396,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
             <X className="w-4 h-4" />
           </button>
 
-          {/* ── Progress bar ── */}
+          {/* Progress bar */}
           {step !== "done" && (
             <div className="flex-shrink-0 px-6 pt-4 pb-0">
               <div className="flex gap-1.5">
@@ -413,8 +413,8 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
             </div>
           )}
 
-          {/* ── Animated step content ── */}
-          <div className="flex-1 overflow-y-auto relative">
+          {/* Animated step content */}
+          <div className="flex-1 overflow-y-auto">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={step}
@@ -426,97 +426,18 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                 className="w-full"
               >
 
-                {/* ── STEP: Program Selection ── */}
-                {step === "program" && (
+                {/* ── STEP 1: Contact Form ── */}
+                {step === "form" && (
                   <div className="p-6 sm:p-7 flex flex-col">
                     <div className="mb-5">
-                      <h3 className="text-2xl font-black text-black tracking-tight mb-1">Choose Your Program</h3>
-                      <p className="text-gray-400 text-sm">Select the program that's right for you or your child.</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      {PROGRAMS.map((prog, i) => {
-                        const Icon = prog.icon;
-                        return (
-                          <motion.button
-                            key={prog.label}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.04, duration: 0.22 }}
-                            onClick={() => { setSelectedProgram(prog); goTo("form"); }}
-                            className="group w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-all text-left"
-                          >
-                            {/* Icon block */}
-                            <div
-                              className={`w-11 h-11 rounded-lg bg-gradient-to-br ${prog.gradient} flex items-center justify-center flex-shrink-0`}
-                            >
-                              <Icon className="w-5 h-5 text-white" />
-                            </div>
-
-                            {/* Text */}
-                            <div className="flex-1 min-w-0">
-                              <p className="font-bold text-sm text-black">{prog.label}</p>
-                              <p className="text-xs text-gray-400 truncate">{prog.sub}</p>
-                            </div>
-
-                            {/* Price badge */}
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <div className="text-right hidden sm:block">
-                                <p className="text-xs text-gray-400 font-medium">{prog.offer}</p>
-                                {prog.price && (
-                                  <p className="text-sm font-black" style={{ color: prog.color }}>
-                                    {prog.price}
-                                  </p>
-                                )}
-                              </div>
-                              <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-600 transition-colors" />
-                            </div>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-
-                    <p className="text-xs text-gray-300 text-center mt-5 flex items-center justify-center gap-1.5">
-                      <Shield className="w-3 h-3" />
-                      Secure checkout powered by Stripe · No commitment required
-                    </p>
-                  </div>
-                )}
-
-                {/* ── STEP: Contact Form ── */}
-                {step === "form" && selectedProgram && (
-                  <div className="p-6 sm:p-7 flex flex-col">
-                    {/* Program indicator */}
-                    <div className="flex items-center gap-3 mb-6">
-                      <button onClick={() => goTo("program")} className="text-xs text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
-                        ← Back
-                      </button>
-                      <div
-                        className={`flex-1 flex items-center gap-2.5 bg-gradient-to-r ${selectedProgram.gradient} rounded-lg px-3 py-2`}
-                      >
-                        <selectedProgram.icon className="w-4 h-4 text-white flex-shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-white text-xs font-black uppercase tracking-wider truncate">{selectedProgram.label}</p>
-                          <p className="text-white/60 text-[10px] truncate">
-                            {selectedProgram.offer}{selectedProgram.price ? ` — ${selectedProgram.price}` : ""}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mb-5">
-                      <h3 className="text-2xl font-black text-black tracking-tight mb-1">Claim Your Spot</h3>
+                      <h3 className="text-2xl font-black text-black tracking-tight mb-1">Claim Your Free Class</h3>
                       {hasPrefilledData ? (
                         <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2 mt-2">
                           <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                          <p className="text-green-700 text-xs font-medium">Your info is pre-filled from your form — just confirm and claim your offer!</p>
+                          <p className="text-green-700 text-xs font-medium">Your info is pre-filled — just confirm and claim your offer!</p>
                         </div>
                       ) : (
-                        <p className="text-gray-400 text-sm">
-                          {selectedProgram.free
-                            ? "Fill out your info and we'll get you scheduled."
-                            : "Fill out your info and we'll contact you to confirm your free class."}
-                        </p>
+                        <p className="text-gray-400 text-sm">Fill out your info and we'll get you scheduled.</p>
                       )}
                     </div>
 
@@ -560,12 +481,8 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                         {errors.email && <p className="text-red-500 text-xs mt-1 pl-1">{errors.email}</p>}
                       </div>
 
-                      {/* Benefits */}
                       <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-                        {(selectedProgram.free
-                          ? ["First class completely free", "No credit card needed today", "Expert certified instructors"]
-                          : ["2 classes included", "Uniform included ($60 value)", "No long-term commitment"]
-                        ).map((benefit) => (
+                        {["First class completely free", "No credit card needed today", "Expert certified instructors"].map((benefit) => (
                           <div key={benefit} className="flex items-center gap-2.5">
                             <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                             <span className="text-sm text-gray-600 font-medium">{benefit}</span>
@@ -574,36 +491,29 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                       </div>
 
                       <button
-                        onClick={handleSubmit}
+                        onClick={handleSubmitContact}
                         disabled={isLoading}
-                        className={cn(
-                          "w-full h-13 py-3.5 rounded-xl text-white font-black text-sm uppercase tracking-wider transition-all",
-                          `bg-gradient-to-r ${selectedProgram.gradient}`,
-                          "hover:opacity-90 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed",
-                          "shadow-lg"
-                        )}
+                        className="w-full py-3.5 rounded-xl text-white font-black text-sm uppercase tracking-wider bg-gradient-to-r from-red-600 to-red-800 hover:opacity-90 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed shadow-lg transition-all"
                       >
                         {isLoading ? (
                           <span className="flex items-center justify-center gap-2">
                             <Loader2 className="w-4 h-4 animate-spin" />
                             Processing...
                           </span>
-                        ) : selectedProgram.free ? (
-                          "Claim My Free Class"
                         ) : (
-                          "Book My Free Class"
+                          "Get My Free Class →"
                         )}
                       </button>
 
                       <p className="text-xs text-gray-300 text-center flex items-center justify-center gap-1.5">
                         <Shield className="w-3 h-3" />
-                        Secure checkout · No commitment · Cancel anytime
+                        No commitment · Cancel anytime
                       </p>
                     </div>
                   </div>
                 )}
 
-                {/* ── STEP: Who are lessons for ── */}
+                {/* ── STEP 2: Who are lessons for ── */}
                 {step === "who" && (
                   <div className="p-6 sm:p-7 flex flex-col">
                     <div className="flex items-center gap-3 mb-6">
@@ -611,7 +521,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                     </div>
                     <div className="mb-5">
                       <h3 className="text-2xl font-black text-black tracking-tight mb-1">Who are the lessons for?</h3>
-                      <p className="text-gray-400 text-sm">This helps us personalize your experience.</p>
+                      <p className="text-gray-400 text-sm">This helps us match you with the right program.</p>
                     </div>
 
                     <div className="space-y-3">
@@ -620,7 +530,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.05 }}
-                        onClick={() => { setLessonsFor("myself"); goTo("schedule"); }}
+                        onClick={() => { setLessonsFor("myself"); goTo("program"); }}
                         className="group w-full flex items-center gap-4 p-4 rounded-xl border-2 border-gray-100 hover:border-red-400 hover:bg-red-50 transition-all text-left"
                       >
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center flex-shrink-0">
@@ -679,7 +589,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                                   className="w-full h-11 px-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 placeholder:text-gray-300"
                                 />
                                 <button
-                                  onClick={() => { if (childName.trim()) goTo("schedule"); }}
+                                  onClick={() => { if (childName.trim()) goTo("program"); }}
                                   disabled={!childName.trim()}
                                   className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-800 text-white font-black text-sm rounded-xl uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-all"
                                 >
@@ -728,7 +638,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                                   className="w-full h-11 px-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 placeholder:text-gray-300"
                                 />
                                 <button
-                                  onClick={() => { if (otherName.trim()) goTo("schedule"); }}
+                                  onClick={() => { if (otherName.trim()) goTo("program"); }}
                                   disabled={!otherName.trim()}
                                   className="w-full h-11 bg-gradient-to-r from-purple-600 to-purple-800 text-white font-black text-sm rounded-xl uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-all"
                                 >
@@ -741,15 +651,74 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                       </motion.div>
                     </div>
 
-                    <button onClick={() => goTo("schedule")} className="text-xs text-gray-300 hover:text-gray-500 transition-colors w-full text-center mt-4">
+                    <button onClick={() => goTo("program")} className="text-xs text-gray-300 hover:text-gray-500 transition-colors w-full text-center mt-4">
                       Skip this step
                     </button>
                   </div>
                 )}
 
-                {/* ── STEP: Schedule ── */}
+                {/* ── STEP 3: Program Selection ── */}
+                {step === "program" && (
+                  <div className="p-6 sm:p-7 flex flex-col">
+                    <div className="flex items-center gap-3 mb-5">
+                      <button onClick={() => goTo("who")} className="text-xs text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">← Back</button>
+                    </div>
+                    <div className="mb-5">
+                      <h3 className="text-2xl font-black text-black tracking-tight mb-1">Choose Your Program</h3>
+                      <p className="text-gray-400 text-sm">Select the program that's right for you{lessonsFor === "child" ? ` or ${childName || "your child"}` : ""}.</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      {PROGRAMS.map((prog, i) => {
+                        const Icon = prog.icon;
+                        return (
+                          <motion.button
+                            key={prog.label}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.04, duration: 0.22 }}
+                            onClick={() => handleProgramSelect(prog)}
+                            disabled={isLoading}
+                            className="group w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-all text-left disabled:opacity-60"
+                          >
+                            <div className={`w-11 h-11 rounded-lg bg-gradient-to-br ${prog.gradient} flex items-center justify-center flex-shrink-0`}>
+                              <Icon className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-sm text-black">{prog.label}</p>
+                              <p className="text-xs text-gray-400 truncate">{prog.sub}</p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <div className="text-right hidden sm:block">
+                                <p className="text-xs text-gray-400 font-medium">{prog.offer}</p>
+                                {prog.price && (
+                                  <p className="text-sm font-black" style={{ color: prog.color }}>{prog.price}</p>
+                                )}
+                              </div>
+                              {isLoading ? (
+                                <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-600 transition-colors" />
+                              )}
+                            </div>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+
+                    <p className="text-xs text-gray-300 text-center mt-5 flex items-center justify-center gap-1.5">
+                      <Shield className="w-3 h-3" />
+                      Secure checkout powered by Stripe · No commitment required
+                    </p>
+                  </div>
+                )}
+
+                {/* ── STEP 4: Schedule ── */}
                 {step === "schedule" && (
                   <div className="p-6 sm:p-7 flex flex-col">
+                    <div className="flex items-center gap-3 mb-5">
+                      <button onClick={() => goTo("program")} className="text-xs text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">← Back</button>
+                    </div>
                     <div className="mb-5">
                       <h3 className="text-2xl font-black text-black tracking-tight mb-1">Pick Your First Class</h3>
                       <p className="text-gray-400 text-sm">
@@ -802,9 +771,9 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                   </div>
                 )}
 
-                {/* ── STEP: Done ── */}
+                {/* ── STEP 5: Done ── */}
                 {step === "done" && (
-                  <div className="p-6 sm:p-7 flex flex-col items-center justify-center text-center">
+                  <div className="p-6 sm:p-7 flex flex-col items-center text-center">
                     <motion.div
                       initial={{ scale: 0.5, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
@@ -813,17 +782,19 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                     >
                       <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                     </motion.div>
+
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.2 }}
+                      className="w-full"
                     >
-                      <h3 className="text-2xl font-black text-black tracking-tight mb-2">You're All Set</h3>
+                      <h3 className="text-2xl font-black text-black tracking-tight mb-2">You're All Set!</h3>
 
                       {selectedSlot ? (
                         <>
-                          <p className="text-gray-400 text-sm mb-5">Your class is confirmed. See you on the mat.</p>
-                          <div className="w-full bg-gray-50 rounded-xl p-4 text-left space-y-3 mb-5">
+                          <p className="text-gray-400 text-sm mb-5">Your class is confirmed. See you on the mat!</p>
+                          <div className="w-full bg-gray-50 rounded-xl p-4 text-left space-y-3 mb-6">
                             {[
                               { label: "Program", value: selectedSlot.program },
                               { label: "Day", value: `${selectedSlot.day}, ${selectedDate}` },
@@ -839,15 +810,44 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                         </>
                       ) : (
                         <p className="text-gray-400 text-sm mb-6">
-                          Check your email for your receipt and next steps. We'll be in touch soon.
+                          We'll be in touch soon. Check your email for next steps.
                         </p>
                       )}
+
+                      {/* Contact options */}
+                      <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Have questions? Reach us now</p>
+                      <div className="grid grid-cols-3 gap-2 mb-5">
+                        <a
+                          href="tel:+18774693656"
+                          className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gray-50 hover:bg-red-50 hover:border-red-200 border border-gray-100 transition-all group"
+                        >
+                          <Phone className="w-5 h-5 text-gray-400 group-hover:text-red-500 transition-colors" />
+                          <span className="text-xs font-bold text-gray-600 group-hover:text-red-600">Call Us</span>
+                        </a>
+                        <a
+                          href="sms:+18774693656"
+                          className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gray-50 hover:bg-blue-50 hover:border-blue-200 border border-gray-100 transition-all group"
+                        >
+                          <MessageCircle className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                          <span className="text-xs font-bold text-gray-600 group-hover:text-blue-600">Text Us</span>
+                        </a>
+                        <button
+                          onClick={() => {
+                            handleDismiss();
+                            setTimeout(() => openIntakeChatbot({ name, phone, email }), 300);
+                          }}
+                          className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gray-50 hover:bg-purple-50 hover:border-purple-200 border border-gray-100 transition-all group"
+                        >
+                          <Bot className="w-5 h-5 text-gray-400 group-hover:text-purple-500 transition-colors" />
+                          <span className="text-xs font-bold text-gray-600 group-hover:text-purple-600">Chat Kai</span>
+                        </button>
+                      </div>
 
                       <Button
                         onClick={handleDismiss}
                         className="w-full h-12 bg-black hover:bg-zinc-800 text-white font-black rounded-xl tracking-wide"
                       >
-                        See You There
+                        See You There 🥋
                       </Button>
                     </motion.div>
                   </div>
