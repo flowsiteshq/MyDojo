@@ -1653,41 +1653,51 @@ function buildLeadConfirmationHtml(p: LeadConfirmationEmailParams): string {
   const programDisplay = p.program || "Martial Arts";
   const SITE_URL = "https://mydojoma.com";
   const BOOK_TRIAL_URL = `${SITE_URL}/locations/hq`;
+  const WHITE_LOGO_URL = "https://mydojoma.com/images/FULLLOGOWHITE.png";
   const DAY_ORDER = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
-  // Build schedule table rows grouped by day
+  // Build schedule sections — one per program, or just the matching program if provided
   let scheduleSection = "";
   if (p.scheduleRows && p.scheduleRows.length > 0) {
-    const byDay: Record<string, typeof p.scheduleRows> = {};
+    // Group by program first, then by day
+    const byProgram: Record<string, typeof p.scheduleRows> = {};
     for (const row of p.scheduleRows) {
-      if (!byDay[row.dayOfWeek]) byDay[row.dayOfWeek] = [];
-      byDay[row.dayOfWeek].push(row);
+      const prog = (row as any).program || programDisplay;
+      if (!byProgram[prog]) byProgram[prog] = [];
+      byProgram[prog].push(row);
     }
-    const sortedDays = DAY_ORDER.filter(d => byDay[d]);
-    const rows = sortedDays.map(day => {
-      const times = byDay[day].map(r => `${r.startTime} – ${r.endTime}`).join(" &amp; ");
-      return `<tr style="border-bottom:1px solid #f3f4f6;">
-        <td style="padding:10px 16px;font-size:14px;font-weight:700;color:#1f2937;width:110px;">${day}</td>
-        <td style="padding:10px 16px;font-size:14px;color:#374151;">${times}</td>
-      </tr>`;
-    }).join("");
-    scheduleSection = `
-    <!-- Class Schedule -->
-    <tr><td style="padding:0 0 28px;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8f0;border-radius:10px;border:2px solid #dc2626;overflow:hidden;">
-        <tr><td style="background:#dc2626;padding:14px 20px;">
-          <p style="margin:0;font-size:14px;font-weight:800;color:#ffffff;text-transform:uppercase;letter-spacing:1px;">📅 ${programDisplay} Class Schedule</p>
+    const programNames = Object.keys(byProgram);
+    const programBlocks = programNames.map(prog => {
+      const progRows = byProgram[prog];
+      const byDay: Record<string, typeof progRows> = {};
+      for (const row of progRows) {
+        if (!byDay[row.dayOfWeek]) byDay[row.dayOfWeek] = [];
+        byDay[row.dayOfWeek].push(row);
+      }
+      const sortedDays = DAY_ORDER.filter(d => byDay[d]);
+      const rows = sortedDays.map(day => {
+        const times = byDay[day].map(r => `${r.startTime} &ndash; ${r.endTime}`).join(" &amp; ");
+        return `<tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:10px 16px;font-size:14px;font-weight:700;color:#1f2937;width:120px;">${day}</td><td style="padding:10px 16px;font-size:14px;color:#374151;">${times}</td></tr>`;
+      }).join("");
+      return `<tr><td style="padding:0 0 20px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:10px;border:2px solid #dc2626;overflow:hidden;">
+        <tr><td style="background:#dc2626;padding:12px 18px;">
+          <p style="margin:0;font-size:13px;font-weight:800;color:#ffffff;text-transform:uppercase;letter-spacing:1px;">${prog}</p>
         </td></tr>
         <tr><td style="padding:0;">
           <table width="100%" cellpadding="0" cellspacing="0">
-            <tr style="background:#f9fafb;">
-              <td style="padding:8px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.8px;">Day</td>
-              <td style="padding:8px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.8px;">Time</td>
-            </tr>
+            <tr style="background:#f9fafb;"><td style="padding:7px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;">Day</td><td style="padding:7px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;">Time</td></tr>
             ${rows}
           </table>
         </td></tr>
       </table>
+    </td></tr>`;
+    }).join("");
+    scheduleSection = `
+    <!-- Class Schedules -->
+    <tr><td style="padding:0 0 8px;">
+      <h3 style="margin:0 0 16px;font-size:15px;font-weight:800;color:#1f2937;text-transform:uppercase;letter-spacing:1px;">&#128197; Class Schedules</h3>
+      <table width="100%" cellpadding="0" cellspacing="0">${programBlocks}</table>
     </td></tr>`;
   }
 
@@ -1701,7 +1711,7 @@ function buildLeadConfirmationHtml(p: LeadConfirmationEmailParams): string {
 
         <!-- LOGO HEADER -->
         <tr><td style="background:#000000;padding:24px 40px;text-align:center;">
-          <img src="${LOGO_URL}" alt="MyDojo Martial Arts &amp; Fitness" width="200" style="display:block;margin:0 auto;height:auto;max-width:200px;"/>
+          <img src="${WHITE_LOGO_URL}" alt="MyDojo Martial Arts &amp; Fitness" width="200" style="display:block;margin:0 auto;height:auto;max-width:200px;"/>
         </td></tr>
 
         <!-- RED HERO BANNER -->
@@ -1769,7 +1779,7 @@ function buildLeadConfirmationHtml(p: LeadConfirmationEmailParams): string {
                       <td style="padding:0 0 8px;vertical-align:top;width:20px;font-size:16px;">📍</td>
                       <td style="padding:0 0 8px 10px;font-size:14px;color:#e5e7eb;line-height:1.5;">
                         <strong style="color:#ffffff;">MyDojo Martial Arts &amp; Fitness</strong><br/>
-                        14027 FM 2920, Tomball, TX 77377
+                        11721 Spring Cypress Rd, Tomball, TX 77377
                       </td>
                     </tr>
                     <tr>
@@ -1849,12 +1859,24 @@ export async function sendLeadConfirmationEmail(params: LeadConfirmationEmailPar
     return false;
   }
   try {
-    // Fetch class schedule for the program from the database
+    // Fetch ALL active class schedules from the database (all programs)
     let scheduleRows = params.scheduleRows;
     if (!scheduleRows) {
       try {
-        const { getScheduleForProgram } = await import('./db');
-        scheduleRows = await getScheduleForProgram(params.program);
+        const { getDb } = await import('./db');
+        const { classSchedule } = await import('../drizzle/schema');
+        const { sql } = await import('drizzle-orm');
+        const dbInst = await getDb();
+        if (!dbInst) throw new Error('DB not available');
+        const rows = await dbInst.select().from(classSchedule).where(sql`${classSchedule.isActive} = 1`);
+        // Sort by program name, then by day order
+        const DAY_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+        const sorted = [...rows].sort((a: any, b: any) => {
+          if (a.program < b.program) return -1;
+          if (a.program > b.program) return 1;
+          return DAY_ORDER.indexOf(a.dayOfWeek) - DAY_ORDER.indexOf(b.dayOfWeek);
+        });
+        scheduleRows = sorted as any;
       } catch (schedErr) {
         console.warn('[Email] Could not fetch schedule for lead email:', schedErr);
         scheduleRows = [];
