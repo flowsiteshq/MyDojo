@@ -80,6 +80,13 @@ const PROGRAMS = [
 
 const HERO_IMAGE_ADULT = "/manus-storage/popup-hero-martial-arts_f910ca46.jpg";
 const HERO_IMAGE_KIDS = "/manus-storage/popup-hero-kids_0029eb40.jpg";
+const HERO_IMAGE_FAMILY = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/popup-hero-family-reviews-crxaxDmdvSeoPEn2cY5hSu.png";
+
+const FIVE_STAR_REVIEWS = [
+  { name: "Sarah M.", text: "Best decision for our kids!", stars: 5 },
+  { name: "James T.", text: "Incredible instructors & community.", stars: 5 },
+  { name: "Maria L.", text: "My son's confidence transformed!", stars: 5 },
+];
 const DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 // Step order: form → who → program → schedule → done
@@ -295,7 +302,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
     return next.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
-  const heroImage = selectedProgram?.kids ? HERO_IMAGE_KIDS : HERO_IMAGE_ADULT;
+  const heroImage = step === "who" ? HERO_IMAGE_FAMILY : (selectedProgram?.kids ? HERO_IMAGE_KIDS : HERO_IMAGE_ADULT);
   const stepIdx = STEP_ORDER.indexOf(step);
 
   if (!open) return null;
@@ -337,24 +344,57 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
             </div>
           </div>
           <div className="relative z-10 p-7 pb-8">
-            <div className="w-8 h-0.5 bg-red-500 mb-4" />
-            <h2 className="text-[42px] font-black text-white leading-[0.95] tracking-tight mb-1">2 CLASSES</h2>
-            <h2 className="text-[42px] font-black leading-[0.95] tracking-tight mb-4" style={{ color: "#FF3B3B" }}>FOR FREE</h2>
-            <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.15em] mb-6">
-              Uniform Included · Limited Spots
-            </p>
-            <div className="space-y-3">
-              {[
-                { icon: Shield, text: "Certified Expert Instructors" },
-                { icon: Zap, text: "Real Results, First Class" },
-                { icon: Users, text: "Safe, Positive Community" },
-              ].map(({ icon: Icon, text }) => (
-                <div key={text} className="flex items-center gap-3">
-                  <Icon className="w-4 h-4 text-red-400 flex-shrink-0" />
-                  <span className="text-white/80 text-sm font-medium">{text}</span>
+            {step === "who" ? (
+              // Family/reviews panel for the "who" step
+              <div>
+                <div className="flex items-center gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                  <span className="text-white font-black text-sm ml-1">5.0</span>
                 </div>
-              ))}
-            </div>
+                <p className="text-white/70 text-xs font-semibold uppercase tracking-[0.15em] mb-5">500+ Five-Star Reviews</p>
+                <div className="space-y-3">
+                  {FIVE_STAR_REVIEWS.map((review) => (
+                    <div key={review.name} className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+                      <div className="flex items-center gap-1 mb-1">
+                        {[...Array(5)].map((_, i) => (
+                          <svg key={i} className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <p className="text-white/90 text-xs font-medium leading-snug">"{review.text}"</p>
+                      <p className="text-white/40 text-[10px] mt-1 font-semibold">— {review.name}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              // Default panel for other steps
+              <div>
+                <div className="w-8 h-0.5 bg-red-500 mb-4" />
+                <h2 className="text-[42px] font-black text-white leading-[0.95] tracking-tight mb-1">2 CLASSES</h2>
+                <h2 className="text-[42px] font-black leading-[0.95] tracking-tight mb-4" style={{ color: "#FF3B3B" }}>FOR FREE</h2>
+                <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.15em] mb-6">
+                  Uniform Included · Limited Spots
+                </p>
+                <div className="space-y-3">
+                  {[
+                    { icon: Shield, text: "Certified Expert Instructors" },
+                    { icon: Zap, text: "Real Results, First Class" },
+                    { icon: Users, text: "Safe, Positive Community" },
+                  ].map(({ icon: Icon, text }) => (
+                    <div key={text} className="flex items-center gap-3">
+                      <Icon className="w-4 h-4 text-red-400 flex-shrink-0" />
+                      <span className="text-white/80 text-sm font-medium">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
