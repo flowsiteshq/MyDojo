@@ -1638,3 +1638,138 @@ export async function sendProgramConfirmationEmail(params: ProgramConfirmationEm
     return false;
   }
 }
+
+// ─── Lead Form Confirmation Email ───────────────────────────────────────────
+
+export interface LeadConfirmationEmailParams {
+  toEmail: string;
+  toName: string;
+  program: string;
+  phone?: string;
+}
+
+function buildLeadConfirmationHtml(p: LeadConfirmationEmailParams): string {
+  const programDisplay = p.program || "Martial Arts";
+  const SITE_URL = "https://mydojoma.com";
+  const BOOK_TRIAL_URL = `${SITE_URL}/locations/hq`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Thanks for reaching out!</title></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <tr><td style="background:#000000;padding:28px 40px;text-align:center;">
+          <h1 style="margin:0;font-size:28px;font-weight:900;color:#dc2626;letter-spacing:2px;">MYDOJO</h1>
+          <p style="margin:6px 0 0;font-size:13px;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;">Martial Arts &amp; Fitness</p>
+        </td></tr>
+        <tr><td style="padding:40px 40px 0;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr><td style="padding:0 0 24px;">
+              <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#1f2937;">Thanks, ${p.toName}! 🥋</h2>
+              <p style="margin:0;font-size:16px;color:#6b7280;line-height:1.6;">
+                We received your interest in <strong style="color:#dc2626;">${programDisplay}</strong> and we're excited to connect with you!
+              </p>
+            </td></tr>
+            <tr><td style="padding:0 0 28px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;">
+                <tr><td style="padding:24px;">
+                  <h3 style="margin:0 0 16px;font-size:16px;font-weight:800;color:#1f2937;text-transform:uppercase;letter-spacing:0.5px;">What Happens Next</h3>
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="padding:8px 0;vertical-align:top;width:32px;">
+                        <div style="width:24px;height:24px;background:#dc2626;border-radius:50%;text-align:center;line-height:24px;color:#fff;font-size:12px;font-weight:700;">1</div>
+                      </td>
+                      <td style="padding:8px 0 8px 12px;font-size:14px;color:#374151;line-height:1.5;">
+                        A MyDojo team member will <strong>call or text you shortly</strong> to answer any questions.
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:8px 0;vertical-align:top;width:32px;">
+                        <div style="width:24px;height:24px;background:#dc2626;border-radius:50%;text-align:center;line-height:24px;color:#fff;font-size:12px;font-weight:700;">2</div>
+                      </td>
+                      <td style="padding:8px 0 8px 12px;font-size:14px;color:#374151;line-height:1.5;">
+                        We'll schedule your <strong>FREE trial class</strong> — no commitment required.
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:8px 0;vertical-align:top;width:32px;">
+                        <div style="width:24px;height:24px;background:#dc2626;border-radius:50%;text-align:center;line-height:24px;color:#fff;font-size:12px;font-weight:700;">3</div>
+                      </td>
+                      <td style="padding:8px 0 8px 12px;font-size:14px;color:#374151;line-height:1.5;">
+                        Come in, meet the team, and experience <strong>${programDisplay}</strong> for yourself!
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+            </td></tr>
+            <tr><td style="padding:0 0 28px;text-align:center;">
+              <p style="margin:0 0 16px;font-size:15px;color:#6b7280;">Can't wait? Book your free trial online right now:</p>
+              <a href="${BOOK_TRIAL_URL}" style="display:inline-block;background:#dc2626;color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:8px;letter-spacing:0.5px;">
+                Book My Free Trial &rarr;
+              </a>
+            </td></tr>
+            <tr><td style="padding:0 0 28px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+                <tr><td style="padding:16px 20px;">
+                  <p style="margin:0 0 4px;font-size:14px;color:#374151;font-weight:700;">MyDojo Martial Arts &amp; Fitness</p>
+                  <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">14027 FM 2920, Tomball, TX 77377</p>
+                  <p style="margin:0;font-size:13px;color:#6b7280;">Phone: (281) 818-9288</p>
+                </td></tr>
+              </table>
+            </td></tr>
+            <tr><td style="padding:0 0 32px;">
+              <p style="margin:0;font-size:16px;color:#374151;line-height:1.6;">
+                We look forward to meeting you,<br/>
+                <strong>The MyDojo Team</strong>
+              </p>
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+          <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
+            MyDojo Martial Arts &amp; Fitness &middot; 14027 FM 2920, Tomball, TX 77377<br/>
+            Questions? Call us at (281) 818-9288 or visit <a href="${SITE_URL}" style="color:#dc2626;text-decoration:none;">mydojoma.com</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+/**
+ * Send a confirmation email to a customer who just submitted a lead/interest form.
+ * Call this after createTrialSignup succeeds and the customer has an email address.
+ */
+export async function sendLeadConfirmationEmail(params: LeadConfirmationEmailParams): Promise<boolean> {
+  if (!ENV.RESEND_API_KEY) {
+    console.warn("[Email] RESEND_API_KEY not configured — skipping lead confirmation email");
+    return false;
+  }
+  if (!params.toEmail) {
+    console.warn("[Email] No email address provided — skipping lead confirmation email");
+    return false;
+  }
+  try {
+    const resend = getResend();
+    const { error } = await resend.emails.send({
+      from: `MyDojo <${ENV.EMAIL_FROM}>`,
+      to: params.toEmail,
+      subject: `We got your request, ${params.toName}! 🥋 — MyDojo`,
+      html: buildLeadConfirmationHtml(params),
+    });
+    if (error) {
+      console.error("[Email] Resend error sending lead confirmation email:", error);
+      return false;
+    }
+    console.log(`[Email] Lead confirmation email sent to ${params.toEmail} (program: ${params.program})`);
+    return true;
+  } catch (err) {
+    console.error("[Email] Failed to send lead confirmation email:", err);
+    return false;
+  }
+}

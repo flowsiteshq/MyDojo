@@ -1075,6 +1075,17 @@ export const appRouter = router({
         const { notifyStaffNewLead } = await import('./notifyStaffNewLead');
         notifyStaffNewLead({ name: input.name, phone: input.phone, program: input.program, source }).catch(() => {});
 
+        // Send confirmation email to customer (fire-and-forget)
+        if (input.email) {
+          const { sendLeadConfirmationEmail } = await import('./emailService');
+          sendLeadConfirmationEmail({
+            toEmail: input.email,
+            toName: input.name,
+            program: input.program,
+            phone: input.phone,
+          }).catch(() => {});
+        }
+
         return { success: true, id: lead.id };
       }),
 
