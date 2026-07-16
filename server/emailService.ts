@@ -1461,3 +1461,180 @@ export async function sendIntroOfferWelcomeEmail(params: IntroOfferWelcomeEmailP
     return false;
   }
 }
+
+
+// ─── Program/Payment Confirmation Email with QR Code ─────────────────────────
+
+export interface ProgramConfirmationEmailParams {
+  toEmail: string;
+  customerName: string;
+  program: string;
+  amountPaid?: number;
+  /** Pre-generated QR code as a base64 data URL (png) */
+  qrCodeDataUrl: string;
+  /** Class schedule rows for this program */
+  scheduleRows: Array<{
+    dayOfWeek: string;
+    startTime: string;
+    endTime: string;
+    location: string;
+    instructor?: string | null;
+  }>;
+  /** Optional: membership/enrollment ID for reference */
+  referenceId?: string | number;
+  /** Optional: special/promo name */
+  specialName?: string;
+}
+
+function buildProgramConfirmationHtml(p: ProgramConfirmationEmailParams): string {
+  const BOOK_CLASS_URL = "https://mydojoma.com/locations/hq";
+  const greeting = p.specialName
+    ? `You've successfully signed up for the <strong>${p.specialName}</strong> special!`
+    : `You're now enrolled in <strong>${p.program}</strong> at MyDojo!`;
+
+  const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const byDay: Record<string, typeof p.scheduleRows> = {};
+  for (const row of p.scheduleRows) {
+    if (!byDay[row.dayOfWeek]) byDay[row.dayOfWeek] = [];
+    byDay[row.dayOfWeek].push(row);
+  }
+  const sortedDays = dayOrder.filter((d) => byDay[d]);
+
+  const scheduleRows = sortedDays.length > 0
+    ? sortedDays.map((day) => {
+        const classes = byDay[day];
+        const times = classes.map((c) =>
+          `<div style="font-size:13px;color:#374151;">${c.startTime} – ${c.endTime}${c.instructor ? ` · ${c.instructor}` : ""}</div>`
+        ).join("");
+        return `<tr><td style="padding:8px 0;border-bottom:1px solid #f3f4f6;"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:14px;font-weight:700;color:#1f2937;width:110px;">${day}</td><td>${times}</td></tr></table></td></tr>`;
+      }).join("")
+    : `<tr><td style="font-size:13px;color:#6b7280;padding:8px 0;">Our team will contact you within 24 hours to confirm your class times.</td></tr>`;
+
+  const amountSection = p.amountPaid != null
+    ? `<p style="margin:4px 0 0;font-size:13px;color:#166534;">Amount paid: <strong>$${p.amountPaid}</strong></p>`
+    : "";
+
+  const refSection = p.referenceId
+    ? `<p style="margin:4px 0 0;font-size:12px;color:#9ca3af;">Reference #: ${p.referenceId}</p>`
+    : "";
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Welcome to MyDojo!</title></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
+        <!-- Header -->
+        <tr><td style="background:#dc2626;padding:32px 40px;text-align:center;">
+          <h1 style="margin:0;font-size:28px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">MyDojo</h1>
+          <p style="margin:8px 0 0;font-size:14px;color:#fecaca;letter-spacing:2px;text-transform:uppercase;">Martial Arts &amp; Fitness</p>
+        </td></tr>
+        <!-- Body -->
+        <tr><td style="padding:40px 40px 0;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <!-- Greeting -->
+            <tr><td style="padding:0 0 24px;">
+              <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#1f2937;">Welcome, ${p.customerName.split(" ")[0]}! 🥋</h2>
+              <p style="margin:0;font-size:16px;color:#374151;line-height:1.6;">${greeting}</p>
+            </td></tr>
+            <!-- Confirmation badge -->
+            <tr><td style="padding:0 0 28px;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border-radius:8px;border:1px solid #86efac;">
+                <tr><td style="padding:16px 20px;">
+                  <p style="margin:0 0 4px;font-size:12px;color:#166534;font-weight:700;text-transform:uppercase;letter-spacing:1px;">✅ Confirmed</p>
+                  <p style="margin:0;font-size:15px;color:#15803d;font-weight:700;">${p.program}</p>
+                  ${amountSection}
+                  ${refSection}
+                </td></tr>
+              </table>
+            </td></tr>
+            <!-- QR Code -->
+            <tr><td style="padding:0 0 28px;text-align:center;">
+              <h2 style="margin:0 0 12px;font-size:18px;font-weight:800;color:#1f2937;">Your Check-In QR Code</h2>
+              <p style="margin:0 0 16px;font-size:13px;color:#6b7280;">Show this at the front desk when you arrive for class.</p>
+              <img src="${p.qrCodeDataUrl}" alt="Check-In QR Code" width="200" height="200"
+                style="display:block;margin:0 auto;border:4px solid #e5e7eb;border-radius:8px;" />
+            </td></tr>
+            <!-- Class Schedule -->
+            <tr><td style="padding:0 0 28px;">
+              <h2 style="margin:0 0 12px;font-size:18px;font-weight:800;color:#1f2937;">Class Schedule — ${p.program}</h2>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+                <tr><td style="padding:16px 20px;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    ${scheduleRows}
+                  </table>
+                </td></tr>
+              </table>
+            </td></tr>
+            <!-- Location -->
+            <tr><td style="padding:0 0 28px;">
+              <h2 style="margin:0 0 12px;font-size:18px;font-weight:800;color:#1f2937;">Our Location</h2>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+                <tr><td style="padding:16px 20px;">
+                  <p style="margin:0 0 4px;font-size:14px;color:#374151;font-weight:700;">MyDojo Martial Arts &amp; Fitness</p>
+                  <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">14027 FM 2920, Tomball, TX 77377</p>
+                  <p style="margin:0;font-size:13px;color:#6b7280;">Phone: (281) 818-9288</p>
+                </td></tr>
+              </table>
+            </td></tr>
+            <!-- CTA -->
+            <tr><td style="padding:0 0 28px;text-align:center;">
+              <a href="${BOOK_CLASS_URL}" style="display:inline-block;background:#dc2626;color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:8px;letter-spacing:0.5px;">
+                View Full Schedule &rarr;
+              </a>
+            </td></tr>
+            <!-- Sign off -->
+            <tr><td style="padding:0 0 32px;">
+              <p style="margin:0;font-size:16px;color:#374151;line-height:1.6;">
+                See you on the mat,<br/>
+                <strong>The MyDojo Team</strong>
+              </p>
+            </td></tr>
+          </table>
+        </td></tr>
+        <!-- Footer -->
+        <tr><td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+          <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
+            MyDojo Martial Arts &amp; Fitness &middot; 14027 FM 2920, Tomball, TX 77377<br/>
+            Questions? Call us at (281) 818-9288 or reply to this email.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+/**
+ * Send a program/payment confirmation email with QR code and live class schedule.
+ * Call this after any successful payment or enrollment.
+ */
+export async function sendProgramConfirmationEmail(params: ProgramConfirmationEmailParams): Promise<boolean> {
+  if (!ENV.RESEND_API_KEY) {
+    console.warn("[Email] RESEND_API_KEY not configured — skipping program confirmation email");
+    return false;
+  }
+  const subject = params.specialName
+    ? `You're confirmed for ${params.specialName} at MyDojo!`
+    : `Welcome to MyDojo — ${params.program} enrollment confirmed!`;
+  try {
+    const resend = getResend();
+    const { error } = await resend.emails.send({
+      from: `MyDojo <${ENV.EMAIL_FROM}>`,
+      to: params.toEmail,
+      subject,
+      html: buildProgramConfirmationHtml(params),
+    });
+    if (error) {
+      console.error("[Email] Resend error sending program confirmation email:", error);
+      return false;
+    }
+    console.log(`[Email] Program confirmation email sent to ${params.toEmail} (program: ${params.program})`);
+    return true;
+  } catch (err) {
+    console.error("[Email] Failed to send program confirmation email:", err);
+    return false;
+  }
+}

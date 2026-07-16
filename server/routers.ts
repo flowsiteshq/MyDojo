@@ -20,7 +20,8 @@ import {
   getAllTrialSignups,
   updateTrialSignupStatus,
   getAvailableClassSchedules,
-  createWaiverSignature
+  createWaiverSignature,
+  getScheduleForProgram
 } from "./db";
 import { submitLeadToDojoFlow } from "./dojoFlowClient";
 import { getAvailableClassTimes } from "./services/dojoFlowSchedule";
@@ -56,7 +57,7 @@ import { chatbotConversations, trialSignups, conversationStates } from "../drizz
 import { eq, and, or, desc, asc, isNull, isNotNull, ne, sql, inArray, like, not, between, gte, count } from "drizzle-orm";
 import { getMemberEnrollment, getMemberClassSchedules, getMemberPaymentHistory, getMemberSubscription } from "./memberDashboard";
 import { createChangeRequest, getUserChangeRequests, getPendingChangeRequests, approveChangeRequest, denyChangeRequest } from "./membershipChangeRequests";
-import { sendStreakMilestoneEmail, checkStreakMilestone, sendEnrollmentConfirmationEmail } from "./emailService";
+import { sendStreakMilestoneEmail, checkStreakMilestone, sendEnrollmentConfirmationEmail, sendProgramConfirmationEmail } from "./emailService";
 import { ENV } from "./_core/env";
 import { getWeatherForSlot } from "./weather";
 import { mealPlanRouter } from './mealPlanRouter';
@@ -3452,6 +3453,31 @@ Please enter your card details below to complete your registration securely. Tot
           transactionId: fpTransactionId ?? null,
           waiverReason: input.waiveEnrollmentFee ? (input.waiverReason || 'Enrollment fee waived') : undefined,
         }).catch(err => console.error('[Email] Enrollment confirmation fire-and-forget error:', err));
+        // Step 5b: Send program confirmation email with QR code and live schedule (fire-and-forget)
+        (() => {
+          const programName = pkg?.name ?? (input.isSummerCamp ? 'Summer Camp' : 'Martial Arts');
+          const qrPayload = JSON.stringify({ type: 'member', email: input.customerEmail, program: programName, enrollmentId, ts: Date.now() });
+          Promise.all([
+            QRCode.toDataURL(qrPayload, { width: 200, margin: 1 }),
+            getScheduleForProgram(programName),
+          ]).then(([qrCodeDataUrl, scheduleRows]) => {
+            return sendProgramConfirmationEmail({
+              toEmail: input.customerEmail,
+              customerName: input.customerName,
+              program: programName,
+              amountPaid: amountCharged,
+              qrCodeDataUrl,
+              scheduleRows: scheduleRows.map((r: any) => ({
+                dayOfWeek: r.dayOfWeek,
+                startTime: r.startTime,
+                endTime: r.endTime,
+                location: r.location,
+                instructor: r.instructor,
+              })),
+              referenceId: enrollmentId ?? undefined,
+            });
+          }).catch(err => console.error('[Email] Program confirmation with QR fire-and-forget error:', err));
+        })();
         // Step 6: Notify staff via SMS (fire-and-forget)
         import('./notifyStaffNewEnrollment').then(({ notifyStaffNewEnrollment }) => {
           notifyStaffNewEnrollment({

@@ -854,3 +854,24 @@ export async function checkPnoRsvpExists(phone: string, eventId?: string) {
   const allRows = await db.select().from(pnoRsvps).where(eq(pnoRsvps.eventId, id));
   return allRows.some((r: any) => r.phone.replace(/\D/g, "").slice(-10) === normalized);
 }
+
+
+/**
+ * Get active class schedule rows for a given program name.
+ * Used to populate confirmation emails with real schedule data.
+ */
+export async function getScheduleForProgram(program: string) {
+  const db = await getDb();
+  if (!db) return [];
+  const { classSchedule } = await import("../drizzle/schema");
+  const { eq, and } = await import("drizzle-orm");
+  const exact = await db
+    .select()
+    .from(classSchedule)
+    .where(and(eq(classSchedule.program, program as any), eq(classSchedule.isActive, 1)));
+  if (exact.length > 0) return exact;
+  // Partial match fallback
+  const all = await db.select().from(classSchedule).where(eq(classSchedule.isActive, 1));
+  const lower = program.toLowerCase();
+  return all.filter((row: any) => row.program.toLowerCase().includes(lower) || lower.includes(row.program.toLowerCase()));
+}
