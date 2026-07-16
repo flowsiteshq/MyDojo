@@ -1374,8 +1374,8 @@ function buildIntroOfferWelcomeHtml(p: IntroOfferWelcomeEmailParams): string {
                       <tr>
                         <td style="padding:16px 20px;">
                           <p style="margin:0 0 4px;font-size:14px;color:#374151;font-weight:700;">MyDojo Martial Arts &amp; Fitness</p>
-                          <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">14027 FM 2920, Tomball, TX 77377</p>
-                          <p style="margin:0;font-size:13px;color:#6b7280;">Phone: (281) 818-9288</p>
+                          <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">11721 Spring Cypress Rd, Tomball, TX 77377</p>
+                          <p style="margin:0;font-size:13px;color:#6b7280;">Call or Text: (877) 469-3656</p>
                         </td>
                       </tr>
                     </table>
@@ -1410,8 +1410,8 @@ function buildIntroOfferWelcomeHtml(p: IntroOfferWelcomeEmailParams): string {
           <tr>
             <td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
               <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
-                MyDojo Martial Arts &amp; Fitness &middot; 14027 FM 2920, Tomball, TX 77377<br/>
-                Questions? Call us at (281) 818-9288 or reply to this email.
+                MyDojo Martial Arts &amp; Fitness &middot; 11721 Spring Cypress Rd, Tomball, TX 77377<br/>
+                Questions? Call or text us at (877) 469-3656 or reply to this email.
               </p>
             </td>
           </tr>
@@ -1573,8 +1573,8 @@ function buildProgramConfirmationHtml(p: ProgramConfirmationEmailParams): string
               <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
                 <tr><td style="padding:16px 20px;">
                   <p style="margin:0 0 4px;font-size:14px;color:#374151;font-weight:700;">MyDojo Martial Arts &amp; Fitness</p>
-                  <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">14027 FM 2920, Tomball, TX 77377</p>
-                  <p style="margin:0;font-size:13px;color:#6b7280;">Phone: (281) 818-9288</p>
+                  <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">11721 Spring Cypress Rd, Tomball, TX 77377</p>
+                  <p style="margin:0;font-size:13px;color:#6b7280;">Call or Text: (877) 469-3656</p>
                 </td></tr>
               </table>
             </td></tr>
@@ -1596,8 +1596,8 @@ function buildProgramConfirmationHtml(p: ProgramConfirmationEmailParams): string
         <!-- Footer -->
         <tr><td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
           <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
-            MyDojo Martial Arts &amp; Fitness &middot; 14027 FM 2920, Tomball, TX 77377<br/>
-            Questions? Call us at (281) 818-9288 or reply to this email.
+            MyDojo Martial Arts &amp; Fitness &middot; 11721 Spring Cypress Rd, Tomball, TX 77377<br/>
+            Questions? Call or text us at (877) 469-3656 or reply to this email.
           </p>
         </td></tr>
       </table>
@@ -1785,7 +1785,7 @@ function buildLeadConfirmationHtml(p: LeadConfirmationEmailParams): string {
                     <tr>
                       <td style="padding:0 0 8px;vertical-align:top;font-size:16px;">📞</td>
                       <td style="padding:0 0 8px 10px;font-size:14px;color:#e5e7eb;">
-                        <a href="tel:+12818189288" style="color:#dc2626;text-decoration:none;font-weight:700;">(281) 818-9288</a>
+                        <a href="tel:+18774693656" style="color:#dc2626;text-decoration:none;font-weight:700;">(877) 469-3656</a>
                       </td>
                     </tr>
                     <tr>
@@ -1833,7 +1833,7 @@ function buildLeadConfirmationHtml(p: LeadConfirmationEmailParams): string {
             </tr>
           </table>
           <p style="margin:0;font-size:12px;color:#6b7280;line-height:1.8;">
-            MyDojo Martial Arts &amp; Fitness &middot; 14027 FM 2920, Tomball, TX 77377<br/>
+            MyDojo Martial Arts &amp; Fitness &middot; 11721 Spring Cypress Rd, Tomball, TX 77377<br/>
             &copy; ${new Date().getFullYear()} MyDojo. All rights reserved.
           </p>
         </td></tr>

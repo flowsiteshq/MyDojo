@@ -7598,7 +7598,7 @@ Please enter your card details below to complete your registration securely. Tot
 
         const emailLower = input.email.toLowerCase();
 
-        // Dedup: same email + same campaign
+        // Dedup: same email + same campaign — skip DB insert but still send email
         const existing = await db
           .select()
           .from(schema.popupLeads)
@@ -7610,19 +7610,18 @@ Please enter your card details below to complete your registration securely. Tot
           )
           .limit(1);
 
-        if (existing.length > 0) {
-          return { success: true, alreadySubmitted: true };
+        const alreadyExists = existing.length > 0;
+        // Only insert if new lead
+        if (!alreadyExists) {
+          await db.insert(schema.popupLeads).values({
+            campaign: input.campaign,
+            name: input.name ?? null,
+            email: emailLower,
+            phone: input.phone ?? null,
+            source: input.source ?? 'popup',
+            emailSent: false,
+          });
         }
-
-        // Insert lead
-        await db.insert(schema.popupLeads).values({
-          campaign: input.campaign,
-          name: input.name ?? null,
-          email: emailLower,
-          phone: input.phone ?? null,
-          source: input.source ?? 'popup',
-          emailSent: false,
-        });
 
         // Send welcome SMS to the prospect (fire-and-forget)
         if (input.phone) {
