@@ -131,6 +131,8 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
   const [childName, setChildName] = useState("");
   const [childAge, setChildAge] = useState("");
   const [otherName, setOtherName] = useState("");
+  const [otherAge, setOtherAge] = useState("");
+  const [myselfAge, setMyselfAge] = useState("");
 
   // Step 3: program
   const [selectedProgram, setSelectedProgram] = useState<typeof PROGRAMS[0] | null>(null);
@@ -228,6 +230,56 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Age → program auto-routing helper
+  const getProgramForAge = (age: number): typeof PROGRAMS[0] | null => {
+    if (age <= 5) return PROGRAMS.find((p) => p.label === "Little Ninjas") ?? null;
+    if (age <= 12) return PROGRAMS.find((p) => p.label === "Kids Martial Arts") ?? null;
+    if (age <= 17) return PROGRAMS.find((p) => p.label === "Teens & Adults") ?? null;
+    return PROGRAMS.find((p) => p.label === "Adult Karate") ?? null;
+  };
+
+  // Who step continue → auto-route based on age, skip program screen
+  const handleWhoChildContinue = () => {
+    if (!childName.trim()) return;
+    const age = parseInt(childAge, 10);
+    if (!isNaN(age) && age > 0) {
+      const prog = getProgramForAge(age);
+      if (prog) {
+        setSelectedProgram(prog);
+        goTo("schedule", "who");
+        return;
+      }
+    }
+    goTo("program", "who");
+  };
+
+  const handleWhoMyselfContinue = () => {
+    const age = parseInt(myselfAge, 10);
+    if (!isNaN(age) && age > 0) {
+      const prog = getProgramForAge(age);
+      if (prog) {
+        setSelectedProgram(prog);
+        goTo("schedule", "who");
+        return;
+      }
+    }
+    goTo("program", "who");
+  };
+
+  const handleWhoSomeoneContinue = () => {
+    if (!otherName.trim()) return;
+    const age = parseInt(otherAge, 10);
+    if (!isNaN(age) && age > 0) {
+      const prog = getProgramForAge(age);
+      if (prog) {
+        setSelectedProgram(prog);
+        goTo("schedule", "who");
+        return;
+      }
+    }
+    goTo("program", "who");
   };
 
   // Step 3: program selected → go to schedule (or checkout for paid programs)
@@ -488,7 +540,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                           className={cn(
-                            "h-12 text-sm border-gray-200 rounded-xl focus:ring-2 focus:ring-offset-0 placeholder:text-gray-300",
+                            "h-12 text-sm border-gray-300 rounded-xl focus:ring-2 focus:ring-offset-0 placeholder:text-gray-500 text-gray-900 bg-white",
                             errors.name && "border-red-400 focus:ring-red-200"
                           )}
                         />
@@ -501,7 +553,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           className={cn(
-                            "h-12 text-sm border-gray-200 rounded-xl focus:ring-2 focus:ring-offset-0 placeholder:text-gray-300",
+                            "h-12 text-sm border-gray-300 rounded-xl focus:ring-2 focus:ring-offset-0 placeholder:text-gray-500 text-gray-900 bg-white",
                             errors.phone && "border-red-400 focus:ring-red-200"
                           )}
                         />
@@ -514,7 +566,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           className={cn(
-                            "h-12 text-sm border-gray-200 rounded-xl focus:ring-2 focus:ring-offset-0 placeholder:text-gray-300",
+                            "h-12 text-sm border-gray-300 rounded-xl focus:ring-2 focus:ring-offset-0 placeholder:text-gray-500 text-gray-900 bg-white",
                             errors.email && "border-red-400 focus:ring-red-200"
                           )}
                         />
@@ -570,7 +622,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.05 }}
-                        onClick={() => { setLessonsFor("myself"); goTo("program"); }}
+                        onClick={() => setLessonsFor(lessonsFor === "myself" ? null : "myself")}
                         className="group w-full flex items-center gap-4 p-4 rounded-xl border-2 border-gray-100 hover:border-red-400 hover:bg-red-50 transition-all text-left"
                       >
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center flex-shrink-0">
@@ -580,8 +632,37 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                           <p className="font-black text-base text-black">Myself</p>
                           <p className="text-xs text-gray-400">I want to train</p>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-red-500 transition-colors" />
+                        <ChevronRight className={`w-5 h-5 transition-all duration-200 ${lessonsFor === "myself" ? "rotate-90 text-red-500" : "text-gray-300 group-hover:text-red-500"}`} />
                       </motion.button>
+                      <AnimatePresence initial={false}>
+                        {lessonsFor === "myself" && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.22, ease: "easeInOut" }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-4 pb-4 space-y-2 border-t border-gray-100 pt-3">
+                              <input
+                                placeholder="Your Age (optional)"
+                                type="number"
+                                min="10"
+                                max="99"
+                                value={myselfAge}
+                                onChange={(e) => setMyselfAge(e.target.value)}
+                                className="w-full h-11 px-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-300 placeholder:text-gray-500 text-gray-900 bg-white"
+                              />
+                              <button
+                                onClick={handleWhoMyselfContinue}
+                                className="w-full h-11 bg-gradient-to-r from-red-600 to-red-800 text-white font-black text-sm rounded-xl uppercase tracking-wider hover:opacity-90 transition-all"
+                              >
+                                Continue →
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
                       {/* My Child */}
                       <motion.div
@@ -617,7 +698,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                                   placeholder="Child's Name"
                                   value={childName}
                                   onChange={(e) => setChildName(e.target.value)}
-                                  className="w-full h-11 px-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 placeholder:text-gray-300"
+                                  className="w-full h-11 px-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 placeholder:text-gray-500 text-gray-900 bg-white"
                                 />
                                 <input
                                   placeholder="Child's Age"
@@ -626,10 +707,10 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                                   max="18"
                                   value={childAge}
                                   onChange={(e) => setChildAge(e.target.value)}
-                                  className="w-full h-11 px-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 placeholder:text-gray-300"
+                                  className="w-full h-11 px-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 placeholder:text-gray-500 text-gray-900 bg-white"
                                 />
                                 <button
-                                  onClick={() => { if (childName.trim()) goTo("program"); }}
+                                  onClick={handleWhoChildContinue}
                                   disabled={!childName.trim()}
                                   className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-800 text-white font-black text-sm rounded-xl uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-all"
                                 >
@@ -675,10 +756,19 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                                   placeholder="Their Name"
                                   value={otherName}
                                   onChange={(e) => setOtherName(e.target.value)}
-                                  className="w-full h-11 px-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 placeholder:text-gray-300"
+                                  className="w-full h-11 px-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 placeholder:text-gray-500 text-gray-900 bg-white"
+                                />
+                                <input
+                                  placeholder="Their Age (optional)"
+                                  type="number"
+                                  min="2"
+                                  max="99"
+                                  value={otherAge}
+                                  onChange={(e) => setOtherAge(e.target.value)}
+                                  className="w-full h-11 px-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-300 placeholder:text-gray-500 text-gray-900 bg-white"
                                 />
                                 <button
-                                  onClick={() => { if (otherName.trim()) goTo("program"); }}
+                                  onClick={handleWhoSomeoneContinue}
                                   disabled={!otherName.trim()}
                                   className="w-full h-11 bg-gradient-to-r from-purple-600 to-purple-800 text-white font-black text-sm rounded-xl uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-all"
                                 >
