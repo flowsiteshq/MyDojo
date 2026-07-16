@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { ChatGPTChatbot } from "@/components/ChatGPTChatbot";
 import { IntakeChatbot } from "@/components/IntakeChatbot";
 import { LeadCaptureModal, LeadData } from "@/components/LeadCaptureModal";
+import OnlineSpecialPopup from "@/components/OnlineSpecialPopup";
 
 interface ChatbotContextType {
   isOpen: boolean;
@@ -17,14 +18,16 @@ export function ChatbotProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isIntakeOpen, setIsIntakeOpen] = useState(false);
   const [isGateOpen, setIsGateOpen] = useState(false);
+  const [isFunnelOpen, setIsFunnelOpen] = useState(false);
   const [leadData, setLeadData] = useState<LeadData | null>(null);
 
   const openChatbot = () => setIsOpen(true);
   const closeChatbot = () => setIsOpen(false);
   const openIntake = () => setIsIntakeOpen(true);
-  const openBookFreeClassGate = () => setIsGateOpen(true);
+  // "Book Free Class" now opens the OnlineSpecialPopup funnel
+  const openBookFreeClassGate = () => setIsFunnelOpen(true);
 
-  /** Called when the lead-capture form is submitted successfully */
+  /** Called when the lead-capture form is submitted successfully (legacy path) */
   function handleLeadCaptured(lead: LeadData) {
     setIsGateOpen(false);
     setLeadData(lead);
@@ -59,10 +62,10 @@ export function ChatbotProvider({ children }: { children: ReactNode }) {
       setIsIntakeOpen(true);
     };
 
-    // Book-a-free-class gate
+    // Book-a-free-class gate → now opens the funnel popup
     const handleOpenGate = () => {
-      console.log('[KAI BOT] Opening lead-capture gate via event');
-      setIsGateOpen(true);
+      console.log('[KAI BOT] Opening funnel popup via event');
+      setIsFunnelOpen(true);
     };
 
     window.addEventListener('openTrialChatbot', handleOpenChatbot);
@@ -83,7 +86,16 @@ export function ChatbotProvider({ children }: { children: ReactNode }) {
     >
       {children}
 
-      {/* ── Lead-capture gate ── */}
+      {/* ── NEW: Multi-step funnel popup (program → form → who → schedule → done) ── */}
+      {isFunnelOpen && (
+        <OnlineSpecialPopup
+          forceOpen={true}
+          defaultProgram={null}
+          onClose={() => setIsFunnelOpen(false)}
+        />
+      )}
+
+      {/* ── Legacy lead-capture gate (kept for backward compat, not triggered by buttons anymore) ── */}
       {isGateOpen && (
         <LeadCaptureModal
           onSuccess={handleLeadCaptured}

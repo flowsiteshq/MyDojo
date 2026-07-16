@@ -88,6 +88,7 @@ type Step = typeof STEP_ORDER[number];
 interface OnlineSpecialPopupProps {
   forceOpen?: boolean;
   defaultProgram?: "kids" | "adults" | null;
+  onClose?: () => void;
 }
 
 // Slide variants: forward = slide left-to-right, backward = slide right-to-left
@@ -99,7 +100,7 @@ const makeVariants = (direction: 1 | -1) => ({
 
 const TRANSITION = { duration: 0.28, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] };
 
-export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: OnlineSpecialPopupProps = {}) {
+export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose }: OnlineSpecialPopupProps = {}) {
   const { t } = useTranslation();
   // Read pre-fill data from URL params (e.g. from Facebook Lead Ad redirect)
   const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
@@ -185,6 +186,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram }: Online
   const handleDismiss = () => {
     setOpen(false);
     sessionStorage.setItem("onlineSpecialDismissed", "1");
+    onClose?.();
   };
 
   const validate = () => {
