@@ -1646,94 +1646,188 @@ export interface LeadConfirmationEmailParams {
   toName: string;
   program: string;
   phone?: string;
+  scheduleRows?: Array<{ dayOfWeek: string; startTime: string; endTime: string; instructor?: string | null }>;
 }
 
 function buildLeadConfirmationHtml(p: LeadConfirmationEmailParams): string {
   const programDisplay = p.program || "Martial Arts";
   const SITE_URL = "https://mydojoma.com";
   const BOOK_TRIAL_URL = `${SITE_URL}/locations/hq`;
+  const DAY_ORDER = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+
+  // Build schedule table rows grouped by day
+  let scheduleSection = "";
+  if (p.scheduleRows && p.scheduleRows.length > 0) {
+    const byDay: Record<string, typeof p.scheduleRows> = {};
+    for (const row of p.scheduleRows) {
+      if (!byDay[row.dayOfWeek]) byDay[row.dayOfWeek] = [];
+      byDay[row.dayOfWeek].push(row);
+    }
+    const sortedDays = DAY_ORDER.filter(d => byDay[d]);
+    const rows = sortedDays.map(day => {
+      const times = byDay[day].map(r => `${r.startTime} – ${r.endTime}`).join(" &amp; ");
+      return `<tr style="border-bottom:1px solid #f3f4f6;">
+        <td style="padding:10px 16px;font-size:14px;font-weight:700;color:#1f2937;width:110px;">${day}</td>
+        <td style="padding:10px 16px;font-size:14px;color:#374151;">${times}</td>
+      </tr>`;
+    }).join("");
+    scheduleSection = `
+    <!-- Class Schedule -->
+    <tr><td style="padding:0 0 28px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8f0;border-radius:10px;border:2px solid #dc2626;overflow:hidden;">
+        <tr><td style="background:#dc2626;padding:14px 20px;">
+          <p style="margin:0;font-size:14px;font-weight:800;color:#ffffff;text-transform:uppercase;letter-spacing:1px;">📅 ${programDisplay} Class Schedule</p>
+        </td></tr>
+        <tr><td style="padding:0;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr style="background:#f9fafb;">
+              <td style="padding:8px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.8px;">Day</td>
+              <td style="padding:8px 16px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.8px;">Time</td>
+            </tr>
+            ${rows}
+          </table>
+        </td></tr>
+      </table>
+    </td></tr>`;
+  }
 
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Thanks for reaching out!</title></head>
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Thanks for reaching out — MyDojo!</title></head>
 <body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 16px;">
     <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-        <tr><td style="background:#000000;padding:28px 40px;text-align:center;">
-          <h1 style="margin:0;font-size:28px;font-weight:900;color:#dc2626;letter-spacing:2px;">MYDOJO</h1>
-          <p style="margin:6px 0 0;font-size:13px;color:#9ca3af;letter-spacing:1px;text-transform:uppercase;">Martial Arts &amp; Fitness</p>
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
+
+        <!-- LOGO HEADER -->
+        <tr><td style="background:#000000;padding:24px 40px;text-align:center;">
+          <img src="${LOGO_URL}" alt="MyDojo Martial Arts &amp; Fitness" width="200" style="display:block;margin:0 auto;height:auto;max-width:200px;"/>
         </td></tr>
-        <tr><td style="padding:40px 40px 0;">
+
+        <!-- RED HERO BANNER -->
+        <tr><td style="background:#dc2626;padding:32px 40px;text-align:center;">
+          <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:2px;">Request Received</p>
+          <h1 style="margin:0 0 8px;font-size:30px;font-weight:900;color:#ffffff;line-height:1.2;">Thanks, ${p.toName}! 🥋</h1>
+          <p style="margin:0;font-size:16px;color:rgba(255,255,255,0.9);line-height:1.5;">We received your interest in <strong>${programDisplay}</strong> and we can't wait to meet you!</p>
+        </td></tr>
+
+        <!-- BODY -->
+        <tr><td style="padding:36px 40px 0;">
           <table width="100%" cellpadding="0" cellspacing="0">
-            <tr><td style="padding:0 0 24px;">
-              <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#1f2937;">Thanks, ${p.toName}! 🥋</h2>
-              <p style="margin:0;font-size:16px;color:#6b7280;line-height:1.6;">
-                We received your interest in <strong style="color:#dc2626;">${programDisplay}</strong> and we're excited to connect with you!
-              </p>
-            </td></tr>
+
+            <!-- What Happens Next -->
             <tr><td style="padding:0 0 28px;">
               <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;">
                 <tr><td style="padding:24px;">
-                  <h3 style="margin:0 0 16px;font-size:16px;font-weight:800;color:#1f2937;text-transform:uppercase;letter-spacing:0.5px;">What Happens Next</h3>
+                  <h3 style="margin:0 0 20px;font-size:15px;font-weight:800;color:#1f2937;text-transform:uppercase;letter-spacing:1px;">What Happens Next</h3>
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
-                      <td style="padding:8px 0;vertical-align:top;width:32px;">
-                        <div style="width:24px;height:24px;background:#dc2626;border-radius:50%;text-align:center;line-height:24px;color:#fff;font-size:12px;font-weight:700;">1</div>
+                      <td style="padding:0 0 16px;vertical-align:top;width:40px;">
+                        <div style="width:28px;height:28px;background:#dc2626;border-radius:50%;text-align:center;line-height:28px;color:#fff;font-size:13px;font-weight:800;">1</div>
                       </td>
-                      <td style="padding:8px 0 8px 12px;font-size:14px;color:#374151;line-height:1.5;">
-                        A MyDojo team member will <strong>call or text you shortly</strong> to answer any questions.
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding:8px 0;vertical-align:top;width:32px;">
-                        <div style="width:24px;height:24px;background:#dc2626;border-radius:50%;text-align:center;line-height:24px;color:#fff;font-size:12px;font-weight:700;">2</div>
-                      </td>
-                      <td style="padding:8px 0 8px 12px;font-size:14px;color:#374151;line-height:1.5;">
-                        We'll schedule your <strong>FREE trial class</strong> — no commitment required.
+                      <td style="padding:0 0 16px 12px;font-size:14px;color:#374151;line-height:1.6;vertical-align:top;">
+                        <strong style="color:#111827;">We'll reach out soon</strong><br/>A MyDojo team member will call or text you shortly to answer any questions.
                       </td>
                     </tr>
                     <tr>
-                      <td style="padding:8px 0;vertical-align:top;width:32px;">
-                        <div style="width:24px;height:24px;background:#dc2626;border-radius:50%;text-align:center;line-height:24px;color:#fff;font-size:12px;font-weight:700;">3</div>
+                      <td style="padding:0 0 16px;vertical-align:top;width:40px;">
+                        <div style="width:28px;height:28px;background:#dc2626;border-radius:50%;text-align:center;line-height:28px;color:#fff;font-size:13px;font-weight:800;">2</div>
                       </td>
-                      <td style="padding:8px 0 8px 12px;font-size:14px;color:#374151;line-height:1.5;">
-                        Come in, meet the team, and experience <strong>${programDisplay}</strong> for yourself!
+                      <td style="padding:0 0 16px 12px;font-size:14px;color:#374151;line-height:1.6;vertical-align:top;">
+                        <strong style="color:#111827;">Book your FREE trial class</strong><br/>No commitment required — come try a class on us!
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:0;vertical-align:top;width:40px;">
+                        <div style="width:28px;height:28px;background:#dc2626;border-radius:50%;text-align:center;line-height:28px;color:#fff;font-size:13px;font-weight:800;">3</div>
+                      </td>
+                      <td style="padding:0 0 0 12px;font-size:14px;color:#374151;line-height:1.6;vertical-align:top;">
+                        <strong style="color:#111827;">Join the MyDojo family</strong><br/>Meet our world-class instructors and start your martial arts journey!
                       </td>
                     </tr>
                   </table>
                 </td></tr>
               </table>
             </td></tr>
+
+            <!-- CTA Button -->
             <tr><td style="padding:0 0 28px;text-align:center;">
-              <p style="margin:0 0 16px;font-size:15px;color:#6b7280;">Can't wait? Book your free trial online right now:</p>
-              <a href="${BOOK_TRIAL_URL}" style="display:inline-block;background:#dc2626;color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:8px;letter-spacing:0.5px;">
-                Book My Free Trial &rarr;
+              <a href="${BOOK_TRIAL_URL}" style="display:inline-block;background:#dc2626;color:#ffffff;font-size:16px;font-weight:800;text-decoration:none;padding:18px 48px;border-radius:8px;letter-spacing:0.5px;text-transform:uppercase;">
+                Book My Free Trial Class &rarr;
               </a>
             </td></tr>
+
+            ${scheduleSection}
+
+            <!-- Contact & Location -->
             <tr><td style="padding:0 0 28px;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
-                <tr><td style="padding:16px 20px;">
-                  <p style="margin:0 0 4px;font-size:14px;color:#374151;font-weight:700;">MyDojo Martial Arts &amp; Fitness</p>
-                  <p style="margin:0 0 4px;font-size:13px;color:#6b7280;">14027 FM 2920, Tomball, TX 77377</p>
-                  <p style="margin:0;font-size:13px;color:#6b7280;">Phone: (281) 818-9288</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#000000;border-radius:10px;overflow:hidden;">
+                <tr><td style="padding:20px 24px;">
+                  <p style="margin:0 0 12px;font-size:13px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:1px;">Find Us</p>
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="padding:0 0 8px;vertical-align:top;width:20px;font-size:16px;">📍</td>
+                      <td style="padding:0 0 8px 10px;font-size:14px;color:#e5e7eb;line-height:1.5;">
+                        <strong style="color:#ffffff;">MyDojo Martial Arts &amp; Fitness</strong><br/>
+                        14027 FM 2920, Tomball, TX 77377
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:0 0 8px;vertical-align:top;font-size:16px;">📞</td>
+                      <td style="padding:0 0 8px 10px;font-size:14px;color:#e5e7eb;">
+                        <a href="tel:+12818189288" style="color:#dc2626;text-decoration:none;font-weight:700;">(281) 818-9288</a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:0 0 8px;vertical-align:top;font-size:16px;">🌐</td>
+                      <td style="padding:0 0 8px 10px;font-size:14px;">
+                        <a href="${SITE_URL}" style="color:#dc2626;text-decoration:none;font-weight:700;">mydojoma.com</a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:0;vertical-align:top;font-size:16px;">🕐</td>
+                      <td style="padding:0 0 0 10px;font-size:14px;color:#e5e7eb;line-height:1.6;">
+                        <strong style="color:#ffffff;">Office Hours:</strong><br/>
+                        Mon–Fri: 4:00 PM – 8:00 PM<br/>
+                        Saturday: 9:00 AM – 1:00 PM
+                      </td>
+                    </tr>
+                  </table>
                 </td></tr>
               </table>
             </td></tr>
-            <tr><td style="padding:0 0 32px;">
-              <p style="margin:0;font-size:16px;color:#374151;line-height:1.6;">
-                We look forward to meeting you,<br/>
-                <strong>The MyDojo Team</strong>
-              </p>
+
+            <!-- Sign off -->
+            <tr><td style="padding:0 0 36px;">
+              <p style="margin:0 0 4px;font-size:16px;color:#374151;line-height:1.6;">We look forward to meeting you on the mat,</p>
+              <p style="margin:0;font-size:16px;font-weight:800;color:#111827;">The MyDojo Team</p>
             </td></tr>
+
           </table>
         </td></tr>
-        <tr><td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
-          <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.6;">
+
+        <!-- FOOTER -->
+        <tr><td style="background:#111827;padding:24px 40px;text-align:center;">
+          <!-- Social Links -->
+          <table cellpadding="0" cellspacing="0" style="margin:0 auto 16px;">
+            <tr>
+              <td style="padding:0 8px;">
+                <a href="https://www.facebook.com/MyDojoMartialArts" style="display:inline-block;background:#1877f2;color:#fff;font-size:12px;font-weight:700;text-decoration:none;padding:8px 14px;border-radius:4px;">Facebook</a>
+              </td>
+              <td style="padding:0 8px;">
+                <a href="https://www.instagram.com/mydojomartialarts" style="display:inline-block;background:#e1306c;color:#fff;font-size:12px;font-weight:700;text-decoration:none;padding:8px 14px;border-radius:4px;">Instagram</a>
+              </td>
+              <td style="padding:0 8px;">
+                <a href="${SITE_URL}" style="display:inline-block;background:#dc2626;color:#fff;font-size:12px;font-weight:700;text-decoration:none;padding:8px 14px;border-radius:4px;">Website</a>
+              </td>
+            </tr>
+          </table>
+          <p style="margin:0;font-size:12px;color:#6b7280;line-height:1.8;">
             MyDojo Martial Arts &amp; Fitness &middot; 14027 FM 2920, Tomball, TX 77377<br/>
-            Questions? Call us at (281) 818-9288 or visit <a href="${SITE_URL}" style="color:#dc2626;text-decoration:none;">mydojoma.com</a>
+            &copy; ${new Date().getFullYear()} MyDojo. All rights reserved.
           </p>
         </td></tr>
+
       </table>
     </td></tr>
   </table>
@@ -1755,12 +1849,23 @@ export async function sendLeadConfirmationEmail(params: LeadConfirmationEmailPar
     return false;
   }
   try {
+    // Fetch class schedule for the program from the database
+    let scheduleRows = params.scheduleRows;
+    if (!scheduleRows) {
+      try {
+        const { getScheduleForProgram } = await import('./db');
+        scheduleRows = await getScheduleForProgram(params.program);
+      } catch (schedErr) {
+        console.warn('[Email] Could not fetch schedule for lead email:', schedErr);
+        scheduleRows = [];
+      }
+    }
     const resend = getResend();
     const { error } = await resend.emails.send({
       from: `MyDojo <${ENV.EMAIL_FROM}>`,
       to: params.toEmail,
       subject: `We got your request, ${params.toName}! 🥋 — MyDojo`,
-      html: buildLeadConfirmationHtml(params),
+      html: buildLeadConfirmationHtml({ ...params, scheduleRows }),
     });
     if (error) {
       console.error("[Email] Resend error sending lead confirmation email:", error);
