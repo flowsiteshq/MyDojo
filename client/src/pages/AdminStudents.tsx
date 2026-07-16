@@ -37,7 +37,8 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Search, MoreVertical, Users, UserCheck, UserX, Clock, Pencil, Camera, X, Upload, Award, ChevronRight, History, Mail, CheckCircle, CalendarPlus, CalendarCheck } from "lucide-react";
+import { Search, MoreVertical, Users, UserCheck, UserX, Clock, Pencil, Camera, X, Upload, Award, ChevronRight, History, Mail, CheckCircle, CalendarPlus, CalendarCheck, CreditCard } from "lucide-react";
+import { UpdatePaymentMethodModal } from "@/components/UpdatePaymentMethodModal";
 import { toast } from "sonner";
 import { BELT_RANKS as BELT_RANKS_CONST, nextBeltRank, requiresBeltExam } from "@shared/const";
 
@@ -173,6 +174,12 @@ export default function AdminStudents() {
 
   // Book Appointment dialog state
   const [bookAptStudent, setBookAptStudent] = useState<Student | null>(null);
+  const [updateCardStudent, setUpdateCardStudent] = useState<{
+    id: number;
+    customerName: string;
+    fluidpayCustomerId?: string | null;
+    stripeCustomerId?: string | null;
+  } | null>(null);
   const [aptDate, setAptDate] = useState("");
   const [aptTime, setAptTime] = useState("12:00");
   const [aptInstructor, setAptInstructor] = useState("");
@@ -555,6 +562,22 @@ export default function AdminStudents() {
                                   </DropdownMenuItem>
                                 )}
                               </>
+                            )}
+                            <DropdownMenuSeparator />
+                            {/* Update Card — only shown if there's a payment processor linked */}
+                            {((student as any).fluidpayCustomerId || (student as any).stripeCustomerId) && (
+                              <DropdownMenuItem
+                                onClick={() => setUpdateCardStudent({
+                                  id: student.id,
+                                  customerName: student.name,
+                                  fluidpayCustomerId: (student as any).fluidpayCustomerId,
+                                  stripeCustomerId: (student as any).stripeCustomerId,
+                                })}
+                                className="text-red-700 focus:text-red-800 focus:bg-red-50"
+                              >
+                                <CreditCard className="h-4 w-4 mr-2 text-red-600" />
+                                Update Card
+                              </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
                             {(["active", "pending", "inactive", "cancelled"] as const).filter(s => s !== student.status).map(s => (
@@ -1039,6 +1062,13 @@ export default function AdminStudents() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Update Payment Method Modal ──────────────────────────────────────── */}
+      <UpdatePaymentMethodModal
+        enrollment={updateCardStudent}
+        open={!!updateCardStudent}
+        onClose={() => setUpdateCardStudent(null)}
+      />
     </AdminLayout>
   );
 }
