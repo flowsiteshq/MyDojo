@@ -99,6 +99,8 @@ const AdminMyDojoBucks = lazy(() => import("./pages/admin/AdminMyDojoBucks"));
 const Founder = lazy(() => import("./pages/Founder"));
 const KidsMartialArts = lazy(() => import("./pages/KidsMartialArts"));
 const AdultKickboxing = lazy(() => import("./pages/AdultKickboxing"));
+const GiftCertRedeem = lazy(() => import("./pages/GiftCertRedeem"));
+const AdminGiftCerts = lazy(() => import("./pages/AdminGiftCerts"));
 
 // Loading component — subtle fade-in bar at the top, no jarring red circle
 const PageLoader = () => (
@@ -190,6 +192,8 @@ function Router() {
         <Route path="/admin/scheduled-payments" component={AdminScheduledPayments} />
         <Route path="/admin/sms" component={SmsConversations} />
         <Route path="/admin/mydojo-bucks" component={AdminMyDojoBucks} />
+        <Route path="/admin/gift-certs" component={AdminGiftCerts} />
+        <Route path="/redeem" component={GiftCertRedeem} />
         <Route path="/mydojo-bucks" component={MyDojoBucks} />
         <Route path="/pay/:token" component={CustomPaymentCheckout} />
         <Route path="/classes" component={ClassSignup} />

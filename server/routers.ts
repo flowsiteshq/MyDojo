@@ -10407,6 +10407,135 @@ Please enter your card details below to complete your registration securely. Tot
         return { checkoutUrl: session.url };
       }),
   }),
+
+  // ─── Gift Certificate (Chick-fil-A Promotion) ───────────────────────────────
+  giftCert: router({
+    /** Admin: generate a batch of unique gift certificate codes */
+    generateCodes: protectedProcedure
+      .input(z.object({
+        count: z.number().min(1).max(500).default(10),
+        campaign: z.string().default('Chick-fil-A Promotion'),
+        expiresAt: z.string().optional(), // ISO date string
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
+          throw new Error('Unauthorized');
+        }
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const codes: string[] = [];
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        for (let i = 0; i < input.count; i++) {
+          let code = 'CFA-';
+          for (let j = 0; j < 4; j++) code += chars[Math.floor(Math.random() * chars.length)];
+          code += '-';
+          for (let j = 0; j < 4; j++) code += chars[Math.floor(Math.random() * chars.length)];
+          codes.push(code);
+        }
+        const rows = codes.map(code => ({
+          code,
+          campaign: input.campaign,
+          expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+          createdByUserId: ctx.user.id,
+        }));
+        await db.insert(schema.giftCertificates).values(rows);
+        return { codes, count: codes.length };
+      }),
+
+    /** Public: validate a code and get its details */
+    validateCode: publicProcedure
+      .input(z.object({ code: z.string() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const [cert] = await db.select().from(schema.giftCertificates)
+          .where(eq(schema.giftCertificates.code, input.code.toUpperCase().trim()));
+        if (!cert) return { valid: false, reason: 'Code not found' };
+        if (cert.redeemed) return { valid: false, reason: 'This code has already been redeemed' };
+        if (cert.expiresAt && new Date() > cert.expiresAt) return { valid: false, reason: 'This code has expired' };
+        return { valid: true, cert };
+      }),
+
+    /** Public: redeem a code (fill out form) */
+    redeemCode: publicProcedure
+      .input(z.object({
+        code: z.string(),
+        recipientName: z.string(),
+        recipientPhone: z.string(),
+        recipientEmail: z.string().email(),
+        lessonsFor: z.string().optional(),
+        childName: z.string().optional(),
+        childAge: z.string().optional(),
+        mailRequested: z.boolean().default(false),
+        mailingAddress: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const [cert] = await db.select().from(schema.giftCertificates)
+          .where(eq(schema.giftCertificates.code, input.code.toUpperCase().trim()));
+        if (!cert) throw new Error('Code not found');
+        if (cert.redeemed) throw new Error('This code has already been redeemed');
+        if (cert.expiresAt && new Date() > cert.expiresAt) throw new Error('This code has expired');
+        await db.update(schema.giftCertificates)
+          .set({
+            redeemed: 1,
+            redeemedAt: new Date(),
+            recipientName: input.recipientName,
+            recipientPhone: input.recipientPhone,
+            recipientEmail: input.recipientEmail,
+            lessonsFor: input.lessonsFor,
+            childName: input.childName,
+            childAge: input.childAge,
+            mailRequested: input.mailRequested ? 1 : 0,
+            mailingAddress: input.mailingAddress,
+          })
+          .where(eq(schema.giftCertificates.id, cert.id));
+        // Send confirmation SMS to recipient
+        try {
+          const { sendSms, normalizePhone } = await import('./sms800');
+          const msg = `🎉 Hi ${input.recipientName}! Your MyDojo 2-Week FREE Trial is confirmed! 🥋\n\nYour code: ${input.code}\nShow this text when you arrive.\n\nCall/text us: (877) 4-MYDOJO\nmydojoma.com`;
+          await sendSms({ to: normalizePhone(input.recipientPhone), message: msg });
+        } catch (e) { console.error('SMS send failed', e); }
+        return { success: true, code: input.code };
+      }),
+
+    /** Admin: list all gift certificates */
+    listCodes: protectedProcedure
+      .input(z.object({
+        campaign: z.string().optional(),
+        redeemed: z.boolean().optional(),
+      }).optional())
+      .query(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') throw new Error('Unauthorized');
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        let query = db.select().from(schema.giftCertificates).$dynamic();
+        if (input?.redeemed !== undefined) {
+          query = query.where(eq(schema.giftCertificates.redeemed, input.redeemed ? 1 : 0));
+        }
+        const certs = await query.orderBy(desc(schema.giftCertificates.createdAt));
+        return certs;
+      }),
+
+    /** Admin: send follow-up SMS to a redeemed certificate recipient */
+    sendFollowUpSms: protectedProcedure
+      .input(z.object({ certId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') throw new Error('Unauthorized');
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const [cert] = await db.select().from(schema.giftCertificates)
+          .where(eq(schema.giftCertificates.id, input.certId));
+        if (!cert || !cert.recipientPhone) throw new Error('Certificate or phone not found');
+        const { sendSms, normalizePhone } = await import('./sms800');
+        const name = cert.recipientName || 'there';
+        const msg = `Hey ${name}! 👋 This is MyDojo Martial Arts. Just following up on your FREE 2-week trial (Code: ${cert.code}).\n\nReady to get started? Book your first class now:\nmydojoma.com\n\nOr call/text us: (877) 4-MYDOJO\n\nWe can't wait to see you on the mat! 🥋`;
+        await sendSms({ to: normalizePhone(cert.recipientPhone), message: msg });
+        await db.update(schema.giftCertificates).set({ smsSent: 1 }).where(eq(schema.giftCertificates.id, cert.id));
+        return { success: true };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;
 

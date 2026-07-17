@@ -1,0 +1,22 @@
+CREATE TABLE `giftCertificates` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`code` varchar(20) NOT NULL,
+	`campaign` varchar(100) NOT NULL DEFAULT 'Chick-fil-A Promotion',
+	`expiresAt` timestamp,
+	`redeemed` int NOT NULL DEFAULT 0,
+	`redeemedAt` timestamp,
+	`recipientName` varchar(200),
+	`recipientPhone` varchar(20),
+	`recipientEmail` varchar(320),
+	`lessonsFor` varchar(20),
+	`childName` varchar(200),
+	`childAge` varchar(10),
+	`mailRequested` int NOT NULL DEFAULT 0,
+	`mailingAddress` text,
+	`smsSent` int NOT NULL DEFAULT 0,
+	`createdByUserId` int,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `giftCertificates_id` PRIMARY KEY(`id`),
+	CONSTRAINT `giftCertificates_code_unique` UNIQUE(`code`)
+);
