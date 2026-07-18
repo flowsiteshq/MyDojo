@@ -78,7 +78,7 @@ const PROGRAMS = [
   },
 ];
 
-const HERO_IMAGE_ADULT = "/manus-storage/popup-hero-martial-arts_f910ca46.jpg";
+const HERO_IMAGE_ADULT = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/popup-hero-family-new-fFcZNdk9ufrGaokGSwM5fA.png";
 const HERO_IMAGE_KIDS = "/manus-storage/popup-hero-kids_0029eb40.jpg";
 const HERO_IMAGE_FAMILY = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/popup-hero-family-reviews-crxaxDmdvSeoPEn2cY5hSu.png";
 
@@ -396,19 +396,25 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
             </div>
           </div>
           <div className="relative z-10 p-7 pb-8">
-            {step === "who" ? (
-              // Family/reviews panel for the "who" step
+            {/* Reviews panel — shown on form and who steps */}
+            {(step === "form" || step === "who") ? (
               <div>
-                <div className="flex items-center gap-1 mb-3">
+                <div className="w-8 h-0.5 bg-red-500 mb-4" />
+                <h2 className="text-[38px] font-black text-white leading-[0.95] tracking-tight mb-1">2 CLASSES</h2>
+                <h2 className="text-[38px] font-black leading-[0.95] tracking-tight mb-3" style={{ color: "#FF3B3B" }}>FOR FREE</h2>
+                <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.15em] mb-4">
+                  For All Ages · Limited Spots
+                </p>
+                <div className="flex items-center gap-1 mb-2">
                   {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <svg key={i} className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   ))}
                   <span className="text-white font-black text-sm ml-1">5.0</span>
+                  <span className="text-white/60 text-xs ml-1">· 500+ Reviews</span>
                 </div>
-                <p className="text-white/70 text-xs font-semibold uppercase tracking-[0.15em] mb-5">500+ Five-Star Reviews</p>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {FIVE_STAR_REVIEWS.map((review) => (
                     <div key={review.name} className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
                       <div className="flex items-center gap-1 mb-1">
@@ -425,13 +431,13 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
                 </div>
               </div>
             ) : (
-              // Default panel for other steps
+              // Default panel for program/schedule steps
               <div>
                 <div className="w-8 h-0.5 bg-red-500 mb-4" />
                 <h2 className="text-[42px] font-black text-white leading-[0.95] tracking-tight mb-1">2 CLASSES</h2>
                 <h2 className="text-[42px] font-black leading-[0.95] tracking-tight mb-4" style={{ color: "#FF3B3B" }}>FOR FREE</h2>
                 <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.15em] mb-6">
-                  Uniform Included · Limited Spots
+                  For All Ages · Limited Spots
                 </p>
                 <div className="space-y-3">
                   {[
