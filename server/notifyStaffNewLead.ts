@@ -49,6 +49,15 @@ export async function notifyStaffNewLead(lead: NewLeadInfo): Promise<void> {
       return;
     }
 
+    // Deduplicate by phone number — only send one SMS per unique phone
+    const seenPhones = new Set<string>();
+    const uniqueStaff = staffList.filter((s) => {
+      if (!s.phone || seenPhones.has(s.phone)) return false;
+      seenPhones.add(s.phone);
+      return true;
+    });
+    console.log(`[LeadNotify] Sending to ${uniqueStaff.length} unique phone(s) (${staffList.length} staff records total)`);
+
     const programLine = lead.program && lead.program !== "Not Sure" ? ` | Program: ${lead.program}` : "";
     const sourceLine = lead.source ? ` | Source: ${lead.source}` : "";
     const phoneLine = lead.phone ? ` | Phone: ${lead.phone}` : "";
@@ -58,7 +67,7 @@ export async function notifyStaffNewLead(lead: NewLeadInfo): Promise<void> {
       `Log in to MyDojo admin to follow up.`;
 
     const results = await Promise.allSettled(
-      staffList.map((staff) =>
+      uniqueStaff.map((staff) =>
         sendSms({ to: staff.phone!, message }).then((res) => {
           if (res.success) {
             console.log(`[LeadNotify] SMS sent to ${staff.name} (${staff.phone})`);
@@ -71,7 +80,7 @@ export async function notifyStaffNewLead(lead: NewLeadInfo): Promise<void> {
     );
 
     const sent = results.filter((r) => r.status === "fulfilled" && (r.value as any).success).length;
-    console.log(`[LeadNotify] Notified ${sent}/${staffList.length} staff members about new lead: ${lead.name}`);
+    console.log(`[LeadNotify] Notified ${sent}/${uniqueStaff.length} unique phone(s) about new lead: ${lead.name}`);
   } catch (err) {
     console.error("[LeadNotify] Unexpected error in notifyStaffNewLead:", err);
   }

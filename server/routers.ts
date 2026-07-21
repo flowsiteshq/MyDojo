@@ -8008,8 +8008,12 @@ Please enter your card details below to complete your registration securely. Tot
             phone: input.phone,
             program: input.program ?? campaignLabel,
             source: `popup_${input.campaign}`,
-          }).catch(() => {});
-        } catch (_) {}
+          }).catch((err) => {
+            console.error('[Popup Lead] notifyStaffNewLead failed:', err);
+          });
+        } catch (notifyErr) {
+          console.error('[Popup Lead] Failed to import/call notifyStaffNewLead:', notifyErr);
+        }
 
         // Notify owner
         try {
