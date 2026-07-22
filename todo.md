@@ -1815,3 +1815,14 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 - [ ] Build admin SMS Campaigns management page (/admin/sms-campaigns)
 - [ ] Wire up navigation to SMS pages in admin sidebar
 - [ ] Register inbound webhook URL with 800.com API
+
+## Library Reading Promotion (Completed)
+- [x] Research kid-appropriate martial arts books (Karate Kids by Holly Sterling, Three Ninja Pigs by Corey Rosen Schwartz)
+- [x] Create readingPromoLeads database table
+- [x] Build /read-to-earn web page with multi-step flow (landing, parent info form, 5-question quiz, congrats/fail screen)
+- [x] Add readingPromo tRPC router (submit + listLeads procedures)
+- [x] Staff SMS notification on quiz pass
+- [x] Parent confirmation SMS with promo code on quiz pass
+- [x] Class scheduling CTA linked to location page filtered by child's age/program
+- [x] Add /read-to-earn route to App.tsx
+- [x] Generate printable 2"x7" bookmark PNG + PDF with QR code pointing to /read-to-earn

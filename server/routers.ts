@@ -10540,6 +10540,64 @@ Please enter your card details below to complete your registration securely. Tot
         return { success: true };
       }),
   }),
+
+  // ─── Library Reading Promotion ─────────────────────────────────────────────
+  readingPromo: router({
+    submit: publicProcedure
+      .input(z.object({
+        parentName: z.string().min(1),
+        parentPhone: z.string().min(10),
+        parentEmail: z.string().email(),
+        childName: z.string().min(1),
+        childAge: z.number().min(3).max(17),
+        quizScore: z.number().min(0).max(5),
+        promoCode: z.string().min(1),
+        recommendedProgram: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const passed = input.quizScore >= 4 ? 1 : 0;
+        await db.insert(schema.readingPromoLeads).values({
+          parentName: input.parentName,
+          parentPhone: input.parentPhone,
+          parentEmail: input.parentEmail,
+          childName: input.childName,
+          childAge: input.childAge,
+          quizScore: input.quizScore,
+          quizPassed: passed,
+          promoCode: passed ? input.promoCode : null,
+          recommendedProgram: input.recommendedProgram,
+          source: 'library_reading_promo',
+        });
+        if (passed) {
+          try {
+            const { notifyStaffNewLead } = await import('./notifyStaffNewLead');
+            await notifyStaffNewLead({
+              name: `${input.parentName} (child: ${input.childName}, age ${input.childAge})`,
+              phone: input.parentPhone,
+              program: input.recommendedProgram || 'Not Sure',
+              source: 'library_reading_promo',
+            });
+          } catch (e) { console.error('[ReadingPromo] Staff notify failed:', e); }
+          try {
+            const { sendSms, normalizePhone } = await import('./sms800');
+            const msg = `🎉 Congratulations ${input.childName}! You passed the MyDojo Reading Quiz!\n\nYour FREE 2-Week Trial Code: ${input.promoCode}\n\nSchedule your first class at mydojomartialarts.com or call (877) 469-3656.\n\nSee you on the mat! 🥋`;
+            await sendSms({ to: normalizePhone(input.parentPhone), message: msg });
+          } catch (e) { console.error('[ReadingPromo] SMS send failed:', e); }
+        }
+        return { success: true, passed: passed === 1 };
+      }),
+
+    listLeads: protectedProcedure
+      .query(async () => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const leads = await db.select().from(schema.readingPromoLeads)
+          .orderBy(desc(schema.readingPromoLeads.createdAt));
+        return leads;
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;
 

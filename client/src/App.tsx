@@ -101,6 +101,7 @@ const KidsMartialArts = lazy(() => import("./pages/KidsMartialArts"));
 const AdultKickboxing = lazy(() => import("./pages/AdultKickboxing"));
 const GiftCertRedeem = lazy(() => import("./pages/GiftCertRedeem"));
 const AdminGiftCerts = lazy(() => import("./pages/AdminGiftCerts"));
+const ReadToEarn = lazy(() => import("./pages/ReadToEarn"));
 
 // Loading component — subtle fade-in bar at the top, no jarring red circle
 const PageLoader = () => (
@@ -194,6 +195,7 @@ function Router() {
         <Route path="/admin/mydojo-bucks" component={AdminMyDojoBucks} />
         <Route path="/admin/gift-certs" component={AdminGiftCerts} />
         <Route path="/redeem" component={GiftCertRedeem} />
+        <Route path="/read-to-earn" component={ReadToEarn} />
         <Route path="/mydojo-bucks" component={MyDojoBucks} />
         <Route path="/pay/:token" component={CustomPaymentCheckout} />
         <Route path="/classes" component={ClassSignup} />

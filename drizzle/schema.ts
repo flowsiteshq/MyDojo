@@ -2292,3 +2292,28 @@ export const giftCertificates = mysqlTable("giftCertificates", {
 });
 export type GiftCertificate = typeof giftCertificates.$inferSelect;
 export type InsertGiftCertificate = typeof giftCertificates.$inferInsert;
+
+/**
+ * Library Reading Promotion leads table.
+ * Tracks parents/kids who completed the reading quiz and earned 2 free weeks.
+ */
+export const readingPromoLeads = mysqlTable("readingPromoLeads", {
+  id: int("id").autoincrement().primaryKey(),
+  parentName: varchar("parentName", { length: 200 }).notNull(),
+  parentPhone: varchar("parentPhone", { length: 20 }).notNull(),
+  parentEmail: varchar("parentEmail", { length: 320 }).notNull(),
+  childName: varchar("childName", { length: 200 }).notNull(),
+  childAge: int("childAge").notNull(),
+  quizScore: int("quizScore").notNull().default(0),
+  quizPassed: int("quizPassed").notNull().default(0),
+  promoCode: varchar("promoCode", { length: 30 }),
+  redeemed: int("redeemed").notNull().default(0),
+  redeemedAt: timestamp("redeemedAt"),
+  recommendedProgram: varchar("recommendedProgram", { length: 100 }),
+  source: varchar("source", { length: 100 }).default("library_reading_promo").notNull(),
+  staffNotified: int("staffNotified").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ReadingPromoLead = typeof readingPromoLeads.$inferSelect;
+export type InsertReadingPromoLead = typeof readingPromoLeads.$inferInsert;
