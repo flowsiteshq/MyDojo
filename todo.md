@@ -1826,3 +1826,17 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 - [x] Class scheduling CTA linked to location page filtered by child's age/program
 - [x] Add /read-to-earn route to App.tsx
 - [x] Generate printable 2"x7" bookmark PNG + PDF with QR code pointing to /read-to-earn
+
+## Stripe Migration (replacing FluidPay for all new payments)
+- [ ] Create server/stripe.ts helper (customer, subscription, payment intent)
+- [ ] Build StripePaymentForm component using Stripe Payment Elements (replaces FluidPayEnrollmentForm)
+- [ ] Migrate CustomPaymentCheckout to Stripe (one-time + recurring subscriptions)
+- [ ] Migrate AdminManualEnrollment to Stripe (recurring subscriptions)
+- [ ] Migrate SummerCampEnroll to Stripe (one-time)
+- [ ] Migrate IntroOfferCheckout to Stripe (one-time)
+- [ ] Migrate FamilyEnrollment to Stripe (recurring)
+- [ ] Migrate BuyDayPass to Stripe (one-time)
+- [ ] Migrate ShopCheckoutModal to Stripe (one-time)
+- [ ] Migrate UpdatePaymentMethodModal to Stripe
+- [ ] Update routers.ts payment procedures to use Stripe
+- [ ] Keep existing FluidPay subscriptions running (do not cancel)

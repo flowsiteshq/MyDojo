@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -6,21 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   DollarSign, Repeat, ShoppingBag, CheckCircle2, XCircle, Loader2,
-  ShieldCheck, AlertTriangle,
+  ShieldCheck, AlertTriangle, ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
-
-// Extend window for FluidPay tokenizer
-declare global {
-  interface Window {
-    TokenizerCustomPayment?: {
-      submit: (amount?: string) => void;
-    };
-  }
-}
+import { StripePaymentForm } from "@/components/StripePaymentForm";
 
 type PaymentType = "one_time" | "recurring" | "merchandise";
 
@@ -105,7 +96,7 @@ function ErrorScreen({ message }: { message: string }) {
 
 export default function CustomPaymentCheckout() {
   const { token } = useParams<{ token: string }>();
-  const [step, setStep] = useState<"info" | "payment" | "processing" | "success" | "error">("info");
+  const [step, setStep] = useState<"info" | "payment" | "confirming" | "success" | "error">("info");
   const [successData, setSuccessData] = useState<{ amount: number; isRecurring: boolean; interval?: string | null } | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -118,18 +109,35 @@ export default function CustomPaymentCheckout() {
   // Merchandise quantities
   const [quantities, setQuantities] = useState<Record<number, number>>({});
 
-  // FluidPay tokenizer
-  const tokenizerContainerRef = useRef<HTMLDivElement>(null);
-  const tokenizerReadyRef = useRef(false);
-  const tokenizerInitRef = useRef(false);
-  const [tokenizerLoaded, setTokenizerLoaded] = useState(false);
+  // Stripe intent data (returned from createStripeIntent)
+  const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null);
+  const [stripeMode, setStripeMode] = useState<"payment" | "setup">("payment");
+  const [stripeCustomerId, setStripeCustomerId] = useState<string | null>(null);
+  const [stripeIntentId, setStripeIntentId] = useState<string | null>(null);
+  const [intentAmountDollars, setIntentAmountDollars] = useState(0);
 
   const { data: link, isLoading, error } = trpc.customPayments.getByToken.useQuery(
     { token: token || "" },
     { enabled: !!token, retry: false }
   );
 
-  const checkoutMutation = trpc.customPayments.processCheckout.useMutation({
+  // Step 1: Create Stripe intent when user moves to payment step
+  const createIntentMutation = trpc.customPayments.createStripeIntent.useMutation({
+    onSuccess: (data) => {
+      setStripeClientSecret(data.clientSecret);
+      setStripeMode(data.mode);
+      setStripeCustomerId(data.stripeCustomerId);
+      setStripeIntentId(data.mode === "setup" ? (data.setupIntentId ?? null) : (data.paymentIntentId ?? null));
+      setIntentAmountDollars(data.amountDollars);
+      setStep("payment");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Could not initialize payment. Please try again.");
+    },
+  });
+
+  // Step 2: Confirm payment after Stripe processes it
+  const confirmMutation = trpc.customPayments.confirmStripeCheckout.useMutation({
     onSuccess: (data) => {
       setSuccessData({
         amount: data.amountCharged,
@@ -139,7 +147,7 @@ export default function CustomPaymentCheckout() {
       setStep("success");
     },
     onError: (err) => {
-      toast.error(err.message || "Payment failed. Please try again.");
+      toast.error(err.message || "Payment confirmation failed. Please contact us.");
       setStep("payment");
     },
   });
@@ -149,59 +157,10 @@ export default function CustomPaymentCheckout() {
     if (link?.type === "merchandise" && link.merchandiseItems) {
       const items = link.merchandiseItems as MerchandiseItem[];
       const initial: Record<number, number> = {};
-      items.forEach((_, i) => { initial[i] = items[i].quantity; });
+      items.forEach((item, i) => { initial[i] = item.quantity; });
       setQuantities(initial);
     }
   }, [link]);
-
-  // Load FluidPay tokenizer script
-  useEffect(() => {
-    if (step !== "payment") return;
-    if (document.querySelector('script[src*="fluidpay.com/tokenizer"]')) {
-      setTokenizerLoaded(true);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://app.fluidpay.com/tokenizer/tokenizer.js";
-    script.async = true;
-    script.onload = () => setTokenizerLoaded(true);
-    document.head.appendChild(script);
-  }, [step]);
-
-  // Initialize tokenizer when loaded
-  useEffect(() => {
-    if (!tokenizerLoaded || tokenizerInitRef.current || step !== "payment") return;
-    if (!tokenizerContainerRef.current) return;
-    tokenizerInitRef.current = true;
-
-    const amount = calculateTotal().toFixed(2);
-
-    const instance = new (window as any).Tokenizer({
-      apikey: import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "",
-      container: "#custom-payment-tokenizer",
-      submission: (resp: any) => {
-        if (resp?.token) {
-          handleTokenReceived(resp.token);
-        } else {
-          toast.error("Card capture failed. Please try again.");
-          setStep("payment");
-        }
-      },
-      settings: {
-        payment: {
-          types: ["card"],
-          card: { cvv: true },
-        },
-        amount,
-        currency: "USD",
-        title: link?.title || "MyDojo Payment",
-        button_label: `Pay $${amount}`,
-        show_billing_address: false,
-      },
-    });
-
-    window.TokenizerCustomPayment = instance;
-  }, [tokenizerLoaded, step]);
 
   const calculateTotal = () => {
     if (!link) return 0;
@@ -212,27 +171,6 @@ export default function CustomPaymentCheckout() {
     return parseFloat(link.amount as string || "0");
   };
 
-  const handleTokenReceived = (fpToken: string) => {
-    setStep("processing");
-    const selectedItems = link?.type === "merchandise" && link.merchandiseItems
-      ? (link.merchandiseItems as MerchandiseItem[]).map((item, i) => ({
-          name: item.name,
-          price: item.price,
-          quantity: quantities[i] ?? item.quantity,
-        }))
-      : undefined;
-
-    checkoutMutation.mutate({
-      token: token || "",
-      fpToken,
-      customerName,
-      customerEmail: customerEmail || undefined,
-      customerPhone: customerPhone || undefined,
-      selectedItems,
-      shippingAddress: shippingAddress || undefined,
-    });
-  };
-
   const handleInfoSubmit = () => {
     if (!customerName.trim()) { toast.error("Please enter your name"); return; }
     if (customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
@@ -241,13 +179,48 @@ export default function CustomPaymentCheckout() {
     if (link?.requiresShipping && !shippingAddress.trim()) {
       toast.error("Shipping address is required"); return;
     }
-    setStep("payment");
+
+    // Create Stripe intent
+    const selectedItems = link?.type === "merchandise" && link.merchandiseItems
+      ? (link.merchandiseItems as MerchandiseItem[]).map((item, i) => ({
+          name: item.name,
+          price: item.price,
+          quantity: quantities[i] ?? item.quantity,
+        }))
+      : undefined;
+
+    createIntentMutation.mutate({
+      token: token || "",
+      customerName,
+      customerEmail: customerEmail || undefined,
+      customerPhone: customerPhone || undefined,
+      selectedItems,
+    });
   };
 
-  const handlePaymentSubmit = () => {
-    if (window.TokenizerCustomPayment) {
-      window.TokenizerCustomPayment.submit();
-    }
+  // Called by StripePaymentForm on success
+  const handleStripeSuccess = (result: { paymentIntentId?: string; setupIntentId?: string; paymentMethodId?: string }) => {
+    setStep("confirming");
+    const selectedItems = link?.type === "merchandise" && link.merchandiseItems
+      ? (link.merchandiseItems as MerchandiseItem[]).map((item, i) => ({
+          name: item.name,
+          price: item.price,
+          quantity: quantities[i] ?? item.quantity,
+        }))
+      : undefined;
+
+    confirmMutation.mutate({
+      token: token || "",
+      stripeCustomerId: stripeCustomerId || "",
+      paymentIntentId: result.paymentIntentId,
+      setupIntentId: result.setupIntentId,
+      paymentMethodId: result.paymentMethodId,
+      customerName,
+      customerEmail: customerEmail || undefined,
+      customerPhone: customerPhone || undefined,
+      selectedItems,
+      shippingAddress: shippingAddress || undefined,
+    });
   };
 
   // ─── Render states ──────────────────────────────────────────────────────────
@@ -275,13 +248,13 @@ export default function CustomPaymentCheckout() {
     );
   }
 
-  if (step === "processing") {
+  if (step === "confirming") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full text-center">
           <CardContent className="pt-10 pb-10">
             <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-            <h2 className="text-xl font-semibold">Processing Payment...</h2>
+            <h2 className="text-xl font-semibold">Confirming Payment...</h2>
             <p className="text-muted-foreground mt-2">Please don't close this page.</p>
           </CardContent>
         </Card>
@@ -368,7 +341,7 @@ export default function CustomPaymentCheckout() {
                       <span>
                         <strong>Recurring charge:</strong> ${total.toFixed(2)}/{link.billingInterval} starting{" "}
                         {firstRecurringDate ? `on ${firstRecurringDate}` : `next ${link.billingInterval}`}
-                        {link.billingCycles ? ` for ${link.billingCycles} billing cycles` : " until cancelled"}.
+                        {link.billingCycles ? ` for ${link.billingCycles} billing cycles` : ""}
                       </span>
                     </div>
                   </div>
@@ -432,15 +405,23 @@ export default function CustomPaymentCheckout() {
                   />
                 </div>
               )}
-              <Button className="w-full" onClick={handleInfoSubmit}>
-                Continue to Payment
+              <Button
+                className="w-full"
+                onClick={handleInfoSubmit}
+                disabled={createIntentMutation.isPending}
+              >
+                {createIntentMutation.isPending ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Setting up payment…</>
+                ) : (
+                  "Continue to Payment"
+                )}
               </Button>
             </CardContent>
           </Card>
         )}
 
-        {/* Step: Payment */}
-        {step === "payment" && (
+        {/* Step: Payment (Stripe Payment Elements) */}
+        {step === "payment" && stripeClientSecret && (
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
@@ -454,27 +435,26 @@ export default function CustomPaymentCheckout() {
                 {customerEmail && <> · {customerEmail}</>}
               </div>
 
-              {/* FluidPay tokenizer container */}
-              <div id="custom-payment-tokenizer" ref={tokenizerContainerRef} className="min-h-[200px]">
-                {!tokenizerLoaded && (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  </div>
-                )}
-              </div>
+              <StripePaymentForm
+                clientSecret={stripeClientSecret}
+                mode={stripeMode}
+                submitLabel={
+                  stripeMode === "setup"
+                    ? `Save Card & Start $${intentAmountDollars.toFixed(2)}/${link.billingInterval} Membership`
+                    : `Pay $${intentAmountDollars.toFixed(2)}`
+                }
+                onSuccess={handleStripeSuccess}
+                onError={(msg) => toast.error(msg)}
+              />
 
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={() => { setStep("info"); tokenizerInitRef.current = false; }}>
-                  Back
-                </Button>
-                <Button className="flex-1" onClick={handlePaymentSubmit}>
-                  Pay ${total.toFixed(2)}
-                </Button>
-              </div>
-
-              <p className="text-xs text-center text-muted-foreground">
-                🔒 Payments are securely processed by FluidPay. Your card information is never stored on our servers.
-              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-muted-foreground"
+                onClick={() => setStep("info")}
+              >
+                <ArrowLeft className="mr-1 h-3 w-3" /> Back to info
+              </Button>
             </CardContent>
           </Card>
         )}

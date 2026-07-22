@@ -1892,12 +1892,22 @@ export const manualEnrollments = mysqlTable("manualEnrollments", {
   preAuthEnabled: int("preAuthEnabled").default(0).notNull(),
   /** FluidPay pre-auth transaction ID (if pre-auth was run) */
   preAuthTransactionId: varchar("preAuthTransactionId", { length: 64 }),
-  /** FluidPay customer vault ID (card on file) */
+  /** FluidPay customer vault ID (card on file) — legacy */
   fluidpayCustomerId: varchar("fluidpayCustomerId", { length: 64 }),
-  /** FluidPay subscription/plan ID for recurring billing */
+  /** FluidPay subscription/plan ID for recurring billing — legacy */
   fluidpaySubscriptionId: varchar("fluidpaySubscriptionId", { length: 64 }),
-  /** FluidPay transaction ID for the initial charge (if charged immediately) */
+  /** FluidPay transaction ID for the initial charge — legacy */
   initialTransactionId: varchar("initialTransactionId", { length: 64 }),
+  /** Stripe customer ID (new enrollments) */
+  stripeCustomerId: varchar("stripeCustomerId", { length: 64 }),
+  /** Stripe subscription ID for recurring billing (new enrollments) */
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 64 }),
+  /** Stripe payment intent ID for the initial charge (new enrollments) */
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 64 }),
+  /** Stripe payment method ID (card on file) */
+  stripePaymentMethodId: varchar("stripePaymentMethodId", { length: 64 }),
+  /** Payment processor used: fluidpay or stripe */
+  processor: varchar("processor", { length: 16 }).default("fluidpay"),
   /** Card last 4 digits (for display) */
   cardLast4: varchar("cardLast4", { length: 4 }),
   /** Card type (Visa, Mastercard, etc.) */

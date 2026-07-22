@@ -27,9 +27,10 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Plus, RefreshCw, DollarSign, Calendar, User, CreditCard, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, RefreshCw, DollarSign, Calendar, User, CreditCard, CheckCircle2, AlertCircle, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
+import { StripePaymentForm } from "@/components/StripePaymentForm";
 
 
 
@@ -87,33 +88,45 @@ const defaultForm: EnrollmentFormData = {
 export default function AdminManualEnrollment() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<EnrollmentFormData>(defaultForm);
-  const [step, setStep] = useState<"info" | "payment" | "success">("info");
-  const [tokenizerReady, setTokenizerReady] = useState(false);
+  const [step, setStep] = useState<"info" | "payment" | "confirming" | "success">("info");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<any>(null);
-  const tokenizerInstanceRef = useRef<any>(null);
-  const tokenizerInitializedRef = useRef(false);
+  // Stripe intent state
+  const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null);
+  const [stripeMode, setStripeMode] = useState<"payment" | "setup">("payment");
+  const [stripeCustomerId, setStripeCustomerId] = useState<string | null>(null);
+  const [intentAmountDollars, setIntentAmountDollars] = useState(0);
 
   // List enrollments
   const { data: enrollments, refetch } = trpc.manualEnrollments.list.useQuery(undefined, {
     enabled: !showForm,
   });
 
-  // Create mutation
-  const createMutation = trpc.manualEnrollments.create.useMutation({
+  // Stripe intent mutation
+  const createIntentMutation = trpc.manualEnrollments.createStripeIntent.useMutation({
+    onSuccess: (data) => {
+      setStripeClientSecret(data.clientSecret);
+      setStripeMode(data.mode);
+      setStripeCustomerId(data.stripeCustomerId);
+      setIntentAmountDollars(data.amountDollars);
+      setStep("payment");
+    },
+    onError: (err) => {
+      setErrorMessage(err.message);
+    },
+  });
+
+  // Confirm mutation
+  const confirmMutation = trpc.manualEnrollments.confirmStripeEnrollment.useMutation({
     onSuccess: (data) => {
       setSuccessData(data);
       setStep("success");
-      setIsSubmitting(false);
       refetch();
     },
     onError: (err) => {
       setErrorMessage(err.message);
-      setIsSubmitting(false);
-      // Reset tokenizer so staff can retry
-      tokenizerInitializedRef.current = false;
-      tokenizerInstanceRef.current = null;
+      setStep("payment");
     },
   });
 
@@ -128,72 +141,7 @@ export default function AdminManualEnrollment() {
     },
   });
 
-  // Load FluidPay tokenizer script
-  useEffect(() => {
-    if (window.Tokenizer) { setTokenizerReady(true); return; }
-    const script = document.createElement("script");
-    script.src = "https://app.fluidpay.com/tokenizer/tokenizer.js";
-    script.async = true;
-    script.onload = () => setTokenizerReady(true);
-    script.onerror = () => setErrorMessage("Failed to load payment form. Please refresh.");
-    document.head.appendChild(script);
-  }, []);
 
-  // Initialize tokenizer when payment step is shown
-  useEffect(() => {
-    if (step !== "payment") return;
-    if (!tokenizerReady || tokenizerInitializedRef.current) return;
-    if (!window.Tokenizer) return;
-    tokenizerInitializedRef.current = true;
-    try {
-      const instance = new window.Tokenizer({
-        apikey: import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "",
-        container: "#manual-enroll-tokenizer",
-        submission: (resp: any) => {
-          if (!resp.token || resp.status === "error") {
-            setErrorMessage(resp.error || "Card tokenization failed. Please check card details and try again.");
-            setIsSubmitting(false);
-            return;
-          }
-          createMutation.mutate({
-            studentName: form.studentName,
-            parentName: form.parentName || undefined,
-            phone: form.phone,
-            email: form.email || undefined,
-            program: form.program,
-            customPrice: parseFloat(form.customPrice),
-            nextChargeDate: form.nextChargeDate,
-            token: resp.token,
-            preAuthOnly: form.preAuthOnly,
-            notes: form.notes || undefined,
-          });
-        },
-        onLoad: () => {},
-        settings: {
-          payment: { types: ["card"] },
-          styles: {
-            body: { "font-family": "inherit", "background-color": "transparent" },
-            inputs: {
-              "border-radius": "8px",
-              "border": "2px solid #e2e8f0",
-              "padding": "12px 14px",
-              "font-size": "16px",
-              "height": "48px",
-            },
-            labels: {
-              "font-size": "14px",
-              "font-weight": "600",
-              "color": "#374151",
-              "margin-bottom": "4px",
-            },
-          },
-        },
-      });
-      tokenizerInstanceRef.current = instance;
-    } catch (err: any) {
-      setErrorMessage(`Payment form error: ${err?.message || "Unknown error"}. Please refresh.`);
-    }
-  }, [step, tokenizerReady]);
 
   const handleProgramChange = (program: Program) => {
     const freq = getFrequency(program);
@@ -217,18 +165,37 @@ export default function AdminManualEnrollment() {
       return;
     }
     setErrorMessage(null);
-    setStep("payment");
+    // Create Stripe intent
+    createIntentMutation.mutate({
+      studentName: form.studentName,
+      parentName: form.parentName || undefined,
+      phone: form.phone,
+      email: form.email || undefined,
+      program: form.program,
+      customPrice: price,
+      nextChargeDate: form.nextChargeDate,
+      preAuthOnly: form.preAuthOnly,
+      notes: form.notes || undefined,
+    });
   };
 
-  const handlePaymentSubmit = () => {
-    setErrorMessage(null);
-    setIsSubmitting(true);
-    if (tokenizerInstanceRef.current) {
-      tokenizerInstanceRef.current.submit(parseFloat(form.customPrice).toFixed(2));
-    } else {
-      setErrorMessage("Payment form not ready. Please refresh.");
-      setIsSubmitting(false);
-    }
+  const handleStripeSuccess = (result: { paymentIntentId?: string; setupIntentId?: string; paymentMethodId?: string }) => {
+    setStep("confirming");
+    confirmMutation.mutate({
+      stripeCustomerId: stripeCustomerId || "",
+      paymentIntentId: result.paymentIntentId,
+      setupIntentId: result.setupIntentId,
+      paymentMethodId: result.paymentMethodId,
+      studentName: form.studentName,
+      parentName: form.parentName || undefined,
+      phone: form.phone,
+      email: form.email || undefined,
+      program: form.program,
+      customPrice: parseFloat(form.customPrice),
+      nextChargeDate: form.nextChargeDate,
+      preAuthOnly: form.preAuthOnly,
+      notes: form.notes || undefined,
+    });
   };
 
   const handleReset = () => {
@@ -237,13 +204,26 @@ export default function AdminManualEnrollment() {
     setSuccessData(null);
     setErrorMessage(null);
     setIsSubmitting(false);
-    tokenizerInitializedRef.current = false;
-    tokenizerInstanceRef.current = null;
+    setStripeClientSecret(null);
+    setStripeCustomerId(null);
     setShowForm(false);
   };
 
   const frequency = getFrequency(form.program);
   const programOption = PROGRAM_OPTIONS.find(p => p.value === form.program);
+
+  // Confirming screen
+  if (step === "confirming") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center max-w-sm w-full">
+          <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+          <h2 className="text-xl font-semibold">Confirming Enrollment...</h2>
+          <p className="text-gray-500 mt-2 text-sm">Setting up recurring billing. Please don't close this page.</p>
+        </div>
+      </div>
+    );
+  }
 
   // ── Success Screen ──────────────────────────────────────────────────────────
   if (step === "success" && successData) {
@@ -282,10 +262,10 @@ export default function AdminManualEnrollment() {
                   <span className="font-medium text-green-600">${parseFloat(form.customPrice).toFixed(2)}</span>
                 </div>
               )}
-              {successData.fpSubscriptionId && (
+              {successData.stripeSubscriptionId && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Subscription ID</span>
-                  <span className="font-mono text-xs text-gray-600">{successData.fpSubscriptionId}</span>
+                  <span className="text-gray-500">Stripe Sub ID</span>
+                  <span className="font-mono text-xs text-gray-600">{successData.stripeSubscriptionId}</span>
                 </div>
               )}
             </div>
@@ -530,20 +510,26 @@ export default function AdminManualEnrollment() {
                   </div>
                 </div>
 
-                {/* FluidPay tokenizer */}
-                <div>
-                  <Label className="text-sm font-semibold text-gray-700 mb-2 block">
-                    <CreditCard className="w-4 h-4 inline mr-1.5" />
-                    Card Details
-                  </Label>
-                  {!tokenizerReady && (
-                    <div className="flex items-center gap-2 text-gray-500 text-sm py-6 justify-center">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Loading payment form...
-                    </div>
-                  )}
-                  <div id="manual-enroll-tokenizer" className={tokenizerReady ? "block" : "hidden"} />
-                </div>
+                {/* Stripe Payment Elements */}
+                {stripeClientSecret && (
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-700 mb-2 block">
+                      <ShieldCheck className="w-4 h-4 inline mr-1.5 text-green-600" />
+                      Secure Card Payment
+                    </Label>
+                    <StripePaymentForm
+                      clientSecret={stripeClientSecret}
+                      mode={stripeMode}
+                      submitLabel={
+                        form.preAuthOnly
+                          ? "Save Card (Pre-Auth)"
+                          : `Charge $${parseFloat(form.customPrice).toFixed(2)} & Enroll`
+                      }
+                      onSuccess={handleStripeSuccess}
+                      onError={(msg) => setErrorMessage(msg)}
+                    />
+                  </div>
+                )}
 
                 {errorMessage && (
                   <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
@@ -552,34 +538,18 @@ export default function AdminManualEnrollment() {
                   </div>
                 )}
 
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setStep("info");
-                      setErrorMessage(null);
-                      tokenizerInitializedRef.current = false;
-                      tokenizerInstanceRef.current = null;
-                    }}
-                    className="flex-1"
-                    disabled={isSubmitting}
-                  >
-                    Back
-                  </Button>
-                  <Button
-                    onClick={handlePaymentSubmit}
-                    disabled={isSubmitting || !tokenizerReady}
-                    className="flex-1 bg-black hover:bg-gray-800 text-white h-12 font-semibold"
-                  >
-                    {isSubmitting ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
-                    ) : form.preAuthOnly ? (
-                      "Run Pre-Authorization"
-                    ) : (
-                      `Charge $${parseFloat(form.customPrice).toFixed(2)} & Enroll`
-                    )}
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setStep("info");
+                    setErrorMessage(null);
+                    setStripeClientSecret(null);
+                    setStripeCustomerId(null);
+                  }}
+                  className="w-full mt-2"
+                >
+                  Back to Info
+                </Button>
               </div>
             )}
           </div>

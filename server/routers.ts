@@ -376,6 +376,195 @@ export const appRouter = router({
 
         return { success: true, transactionId, amountCharged: amountCents / 100 };
       }),
+
+    /** Create a Stripe SetupIntent for a new manual enrollment (card-on-file + first charge) */
+    createStripeIntent: protectedProcedure
+      .input(z.object({
+        studentName: z.string().min(1),
+        parentName: z.string().optional(),
+        phone: z.string().min(1),
+        email: z.string().email().optional(),
+        program: z.enum(['kickboxing', 'martial_arts', 'summer_camp', 'after_school']),
+        customPrice: z.number().positive(),
+        nextChargeDate: z.string(),
+        preAuthOnly: z.boolean().default(false),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const stripe = (await import('stripe')).default;
+        const stripeClient = new stripe(process.env.STRIPE_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || '');
+
+        // Create or retrieve Stripe customer
+        const customer = await stripeClient.customers.create({
+          name: input.parentName || input.studentName,
+          email: input.email,
+          phone: input.phone,
+          metadata: { studentName: input.studentName, program: input.program },
+        });
+
+        if (input.preAuthOnly) {
+          // SetupIntent — just save the card, charge later
+          const setupIntent = await stripeClient.setupIntents.create({
+            customer: customer.id,
+            usage: 'off_session',
+            metadata: {
+              studentName: input.studentName,
+              program: input.program,
+              customPrice: String(input.customPrice),
+              nextChargeDate: input.nextChargeDate,
+              preAuthOnly: 'true',
+            },
+          });
+          return {
+            mode: 'setup' as const,
+            clientSecret: setupIntent.client_secret!,
+            stripeCustomerId: customer.id,
+            setupIntentId: setupIntent.id,
+            amountDollars: 0,
+          };
+        } else {
+          // PaymentIntent — charge first month/week now
+          const amountCents = Math.round(input.customPrice * 100);
+          const paymentIntent = await stripeClient.paymentIntents.create({
+            amount: amountCents,
+            currency: 'usd',
+            customer: customer.id,
+            setup_future_usage: 'off_session',
+            description: `${input.program} enrollment — ${input.studentName}`,
+            metadata: {
+              studentName: input.studentName,
+              program: input.program,
+              nextChargeDate: input.nextChargeDate,
+            },
+          });
+          return {
+            mode: 'payment' as const,
+            clientSecret: paymentIntent.client_secret!,
+            stripeCustomerId: customer.id,
+            paymentIntentId: paymentIntent.id,
+            amountDollars: input.customPrice,
+          };
+        }
+      }),
+
+    /** Confirm Stripe manual enrollment after frontend payment succeeds */
+    confirmStripeEnrollment: protectedProcedure
+      .input(z.object({
+        stripeCustomerId: z.string(),
+        paymentIntentId: z.string().optional(),
+        setupIntentId: z.string().optional(),
+        paymentMethodId: z.string().optional(),
+        studentName: z.string().min(1),
+        parentName: z.string().optional(),
+        phone: z.string().min(1),
+        email: z.string().email().optional(),
+        program: z.enum(['kickboxing', 'martial_arts', 'summer_camp', 'after_school']),
+        customPrice: z.number().positive(),
+        nextChargeDate: z.string(),
+        preAuthOnly: z.boolean().default(false),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+
+        const stripe = (await import('stripe')).default;
+        const stripeClient = new stripe(process.env.STRIPE_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || '');
+
+        // Retrieve payment method details for card info
+        let cardLast4: string | undefined;
+        let cardType: string | undefined;
+        let resolvedPaymentMethodId = input.paymentMethodId;
+
+        if (input.paymentIntentId) {
+          const pi = await stripeClient.paymentIntents.retrieve(input.paymentIntentId);
+          if (typeof pi.payment_method === 'string') resolvedPaymentMethodId = pi.payment_method;
+        } else if (input.setupIntentId) {
+          const si = await stripeClient.setupIntents.retrieve(input.setupIntentId);
+          if (typeof si.payment_method === 'string') resolvedPaymentMethodId = si.payment_method;
+        }
+
+        if (resolvedPaymentMethodId) {
+          try {
+            const pm = await stripeClient.paymentMethods.retrieve(resolvedPaymentMethodId);
+            cardLast4 = pm.card?.last4;
+            cardType = pm.card?.brand;
+            // Attach to customer if not already
+            if (!pm.customer) {
+              await stripeClient.paymentMethods.attach(resolvedPaymentMethodId, { customer: input.stripeCustomerId });
+            }
+            // Set as default
+            await stripeClient.customers.update(input.stripeCustomerId, {
+              invoice_settings: { default_payment_method: resolvedPaymentMethodId },
+            });
+          } catch (_) {}
+        }
+
+        // Create Stripe subscription starting on nextChargeDate
+        const billingFrequency = (input.program === 'kickboxing' || input.program === 'martial_arts') ? 'monthly' : 'weekly';
+        const intervalMap: Record<string, 'month' | 'week'> = { monthly: 'month', weekly: 'week' };
+        const interval = intervalMap[billingFrequency];
+        const nextChargeDateTs = Math.floor(new Date(input.nextChargeDate + 'T00:00:00').getTime() / 1000);
+
+        let stripeSubscriptionId: string | undefined;
+        try {
+          // Create a product first, then a price, then the subscription
+          const product = await stripeClient.products.create({
+            name: `${input.program.replace('_', ' ')} — ${input.studentName}`,
+          });
+          const price = await stripeClient.prices.create({
+            product: product.id,
+            currency: 'usd',
+            unit_amount: Math.round(input.customPrice * 100),
+            recurring: { interval },
+          });
+          const subscription = await stripeClient.subscriptions.create({
+            customer: input.stripeCustomerId,
+            items: [{ price: price.id }],
+            billing_cycle_anchor: nextChargeDateTs,
+            proration_behavior: 'none',
+            default_payment_method: resolvedPaymentMethodId,
+          });
+          stripeSubscriptionId = subscription.id;
+        } catch (err: any) {
+          console.error('[ManualEnrollment] Stripe subscription creation failed:', err?.message);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: `Recurring billing setup failed: ${err?.message}` });
+        }
+
+        // Persist enrollment record
+        const insertResult = await db.insert(schema.manualEnrollments).values({
+          studentName: input.studentName,
+          parentName: input.parentName,
+          phone: input.phone,
+          email: input.email,
+          program: input.program,
+          customPrice: String(input.customPrice),
+          billingFrequency,
+          nextChargeDate: input.nextChargeDate,
+          preAuthEnabled: input.preAuthOnly ? 1 : 0,
+          stripeCustomerId: input.stripeCustomerId,
+          stripeSubscriptionId,
+          stripePaymentIntentId: input.paymentIntentId,
+          stripePaymentMethodId: resolvedPaymentMethodId,
+          processor: 'stripe',
+          cardLast4,
+          cardType,
+          status: 'active',
+          notes: input.notes,
+          createdByStaffId: ctx.user.id,
+          createdByStaffName: ctx.user.name,
+        });
+
+        return {
+          success: true,
+          enrollmentId: (insertResult as any).insertId,
+          stripeSubscriptionId,
+          cardLast4,
+          cardType,
+          billingFrequency,
+          amountCharged: input.preAuthOnly ? 0 : input.customPrice,
+        };
+      }),
   }),
 
   customPayments: router({
@@ -871,6 +1060,235 @@ export const appRouter = router({
           cardType,
           isRecurring: link.type === 'recurring',
           fpSubscriptionId,
+        };
+      }),
+
+    /**
+     * Step 1 of Stripe checkout: create a PaymentIntent (one-time/merchandise)
+     * or SetupIntent (recurring) and return the clientSecret to the frontend.
+     */
+    createStripeIntent: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        customerName: z.string().min(1),
+        customerEmail: z.string().email().optional().or(z.literal('')),
+        customerPhone: z.string().optional(),
+        selectedItems: z.array(z.object({
+          name: z.string(),
+          price: z.number(),
+          quantity: z.number().int().positive(),
+        })).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+
+        const [link] = await db.select().from(schema.customPaymentLinks)
+          .where(eq(schema.customPaymentLinks.token, input.token));
+        if (!link) throw new TRPCError({ code: 'NOT_FOUND', message: 'Payment link not found' });
+        if (!link.isActive) throw new TRPCError({ code: 'FORBIDDEN', message: 'This payment link is no longer active' });
+        if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'This payment link has expired' });
+        }
+
+        const { getOrCreateStripeCustomer, createPaymentIntent, createSetupIntent } = await import('./stripeHelper');
+
+        // Calculate amount
+        let amountDollars = 0;
+        if (link.type === 'merchandise' && input.selectedItems && input.selectedItems.length > 0) {
+          amountDollars = input.selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        } else {
+          amountDollars = parseFloat(link.amount as string);
+        }
+        const amountCents = Math.round(amountDollars * 100);
+
+        // Create or retrieve Stripe customer
+        const customer = await getOrCreateStripeCustomer({
+          name: input.customerName,
+          email: input.customerEmail || undefined,
+          phone: input.customerPhone || undefined,
+          metadata: { source: 'custom_payment_link', linkToken: input.token },
+        });
+
+        if (link.type === 'recurring') {
+          // For recurring: use SetupIntent to save card, then create subscription on confirm
+          const { clientSecret, setupIntentId } = await createSetupIntent({
+            customerId: customer.id,
+            metadata: {
+              linkToken: input.token,
+              customerName: input.customerName,
+              customerEmail: input.customerEmail || '',
+              customerPhone: input.customerPhone || '',
+              amountDollars: amountDollars.toString(),
+              billingInterval: link.billingInterval || 'monthly',
+              linkTitle: link.title,
+            },
+          });
+          return { clientSecret, mode: 'setup' as const, stripeCustomerId: customer.id, setupIntentId, amountDollars };
+        } else {
+          // For one-time / merchandise: use PaymentIntent
+          const downPayment = link.downPayment ? parseFloat(link.downPayment as string) : 0;
+          const chargeAmount = downPayment > 0 ? Math.round(downPayment * 100) : amountCents;
+          const { clientSecret, paymentIntentId } = await createPaymentIntent({
+            amountCents: chargeAmount,
+            customerId: customer.id,
+            description: link.title,
+            metadata: {
+              linkToken: input.token,
+              customerName: input.customerName,
+              customerEmail: input.customerEmail || '',
+              linkTitle: link.title,
+            },
+          });
+          return { clientSecret, mode: 'payment' as const, stripeCustomerId: customer.id, paymentIntentId, amountDollars };
+        }
+      }),
+
+    /**
+     * Step 2 of Stripe checkout: after frontend confirms the intent,
+     * create subscription (if recurring) and record the payment.
+     */
+    confirmStripeCheckout: publicProcedure
+      .input(z.object({
+        token: z.string(),
+        stripeCustomerId: z.string(),
+        // For one-time: paymentIntentId
+        paymentIntentId: z.string().optional(),
+        // For recurring: setupIntentId + paymentMethodId
+        setupIntentId: z.string().optional(),
+        paymentMethodId: z.string().optional(),
+        customerName: z.string().min(1),
+        customerEmail: z.string().email().optional().or(z.literal('')),
+        customerPhone: z.string().optional(),
+        selectedItems: z.array(z.object({
+          name: z.string(),
+          price: z.number(),
+          quantity: z.number().int().positive(),
+        })).optional(),
+        shippingAddress: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+
+        const [link] = await db.select().from(schema.customPaymentLinks)
+          .where(eq(schema.customPaymentLinks.token, input.token));
+        if (!link) throw new TRPCError({ code: 'NOT_FOUND', message: 'Payment link not found' });
+
+        const { createStripeSubscription, retrievePaymentIntent } = await import('./stripeHelper');
+
+        // Calculate amount
+        let amountDollars = 0;
+        let merchandiseSnapshot: any[] | null = null;
+        if (link.type === 'merchandise' && input.selectedItems && input.selectedItems.length > 0) {
+          amountDollars = input.selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+          merchandiseSnapshot = input.selectedItems;
+        } else {
+          amountDollars = parseFloat(link.amount as string);
+        }
+
+        let stripeSubscriptionId: string | null = null;
+        let stripePaymentIntentId: string | null = null;
+        let cardLast4 = '';
+        let cardBrand = '';
+
+        if (link.type === 'recurring') {
+          // Create the recurring subscription now that card is saved
+          if (!input.paymentMethodId) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Payment method required for recurring subscription' });
+          }
+          const intervalMap: Record<string, 'month' | 'week' | 'year'> = {
+            monthly: 'month', weekly: 'week', yearly: 'year',
+          };
+          const interval = intervalMap[link.billingInterval || 'monthly'] || 'month';
+          const firstRecurringDate = link.firstRecurringDate
+            ? new Date(link.firstRecurringDate as unknown as string)
+            : undefined;
+
+          const sub = await createStripeSubscription({
+            customerId: input.stripeCustomerId,
+            paymentMethodId: input.paymentMethodId,
+            amountCents: Math.round(amountDollars * 100),
+            interval,
+            description: link.title,
+            metadata: { linkToken: input.token, customerName: input.customerName },
+            trialEndDate: firstRecurringDate,
+          });
+          stripeSubscriptionId = sub.subscriptionId;
+        } else {
+          // Verify the PaymentIntent succeeded
+          if (!input.paymentIntentId) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Payment intent ID required' });
+          }
+          const pi = await retrievePaymentIntent(input.paymentIntentId);
+          if (pi.status !== 'succeeded' && pi.status !== 'processing') {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Payment was not successful' });
+          }
+          stripePaymentIntentId = pi.id;
+          // Extract card details from payment method
+          if (pi.payment_method && typeof pi.payment_method !== 'string') {
+            const pm = pi.payment_method as any;
+            cardLast4 = pm.card?.last4 || '';
+            cardBrand = pm.card?.brand || '';
+          }
+        }
+
+        // Save payment record (reuse existing table, store Stripe IDs in fluidpay columns for now)
+        await db.insert(schema.customPaymentLinkPayments).values({
+          linkId: link.id,
+          customerName: input.customerName,
+          customerEmail: input.customerEmail || null,
+          customerPhone: input.customerPhone || null,
+          amountCharged: amountDollars.toFixed(2),
+          fluidpayTransactionId: stripePaymentIntentId,
+          fluidpayCustomerId: input.stripeCustomerId,
+          fluidpaySubscriptionId: stripeSubscriptionId,
+          cardLast4: cardLast4 || null,
+          cardType: cardBrand || null,
+          status: 'approved',
+          merchandiseItems: merchandiseSnapshot,
+          shippingAddress: input.shippingAddress || null,
+        });
+
+        // Increment use count
+        await db.update(schema.customPaymentLinks)
+          .set({ useCount: sql`${schema.customPaymentLinks.useCount} + 1` })
+          .where(eq(schema.customPaymentLinks.id, link.id));
+
+        // Notify owner
+        try {
+          const { notifyOwner } = await import('./_core/notification');
+          await notifyOwner({
+            title: `Payment Received: ${link.title}`,
+            content: `${input.customerName} paid $${amountDollars.toFixed(2)} via custom payment link "${link.title}". ${link.type === 'recurring' ? `Recurring ${link.billingInterval}. Stripe Sub: ${stripeSubscriptionId}` : `Stripe PI: ${stripePaymentIntentId}`}`,
+          });
+        } catch {}
+
+        // Alert staff via SMS
+        try {
+          const { sendSms } = await import('./sms800');
+          const STAFF_PHONES = [
+            { name: 'Vincent', phone: '+12818189288' },
+            { name: 'Debbie', phone: '+12812369283' },
+            { name: 'Hector', phone: '+18187454612' },
+            { name: 'Dominique', phone: '+12406011818' },
+            { name: 'Clover', phone: '+17034997761' },
+            { name: 'Brenda', phone: '+18326655442' },
+          ];
+          const typeLabel = link.type === 'recurring' ? `recurring ${link.billingInterval} membership` : link.type === 'merchandise' ? 'merchandise order' : 'one-time payment';
+          const staffMsg = `🎉 New Payment! ${input.customerName} paid $${amountDollars.toFixed(2)} for "${link.title}" (${typeLabel}).${input.customerPhone ? ` Phone: ${input.customerPhone}` : ''}${input.customerEmail ? ` Email: ${input.customerEmail}` : ''} — MyDojo`;
+          await Promise.allSettled(
+            STAFF_PHONES.map(s => sendSms({ to: s.phone, message: staffMsg }))
+          );
+        } catch (e) {
+          console.error('[CustomPayment] Staff SMS alert failed:', e);
+        }
+
+        return {
+          success: true,
+          amountCharged: amountDollars,
+          isRecurring: link.type === 'recurring',
+          stripeSubscriptionId,
         };
       }),
   }),
