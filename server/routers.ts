@@ -760,12 +760,17 @@ export const appRouter = router({
             nextBillDateStr = nextBillDate.toISOString().slice(0, 10);
           }
 
+          // billing_days is required by FluidPay when billing_frequency is set
+          // For monthly: day of month (e.g. '5' = 5th of each month)
+          // For weekly: day of week (e.g. '1' = Monday)
+          const billingDaysMap: Record<string, string> = { weekly: String(new Date().getDay() || 1), monthly: String(new Date().getDate()), yearly: String(new Date().getDate()) };
           const subBody: any = {
             description: `${link.title} - ${input.customerName}`,
             customer: { id: fpCustomerId },
             amount: amountCents,
             billing_cycle_interval: cycleIntervalMap[link.billingInterval || 'monthly'],
             billing_frequency: intervalMap[link.billingInterval || 'monthly'],
+            billing_days: billingDaysMap[link.billingInterval || 'monthly'],
             next_bill_date: nextBillDateStr,
           };
           if (link.billingCycles) subBody.billing_cycles = link.billingCycles;
@@ -773,7 +778,13 @@ export const appRouter = router({
             method: 'POST', headers: fpHeaders, body: JSON.stringify(subBody),
           });
           const subData = await subRes.json() as any;
-          if (subData.status === 'success') fpSubscriptionId = subData.data?.id || null;
+          if (subData.status === 'success') {
+            fpSubscriptionId = subData.data?.id || null;
+          } else {
+            // Log the error but don't block the payment — subscription can be created manually
+            console.error('[RecurringPayment] Subscription creation failed for', input.customerName, ':', subData.msg || JSON.stringify(subData));
+            // Still mark payment as approved since the charge succeeded
+          }
 
         } else {
           // One-time or merchandise: direct charge with tokenizer token
