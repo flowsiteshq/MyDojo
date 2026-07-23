@@ -1,12 +1,12 @@
 /**
  * Birthday Party Reminder Handler
- * Abraham Palacio's 10th Birthday — Sunday July 27, 4:00–6:00 PM CST
+ * Abraham Palacio's 10th Birthday — Sunday July 26, 4:00–6:00 PM CST
  * Location: MyDojo Martial Arts, 11721 Spring Cypress Rd, Tomball TX 77377
  *
  * Fires 3 times via Heartbeat cron:
- *  1. Friday July 25, 2:00 PM CST (19:00 UTC)  — "Party is this Sunday!"
- *  2. Saturday July 26, 2:00 PM CST (19:00 UTC) — "Party is TOMORROW!"
- *  3. Sunday July 27, 2:00 PM CST (19:00 UTC)   — "Party starts in 2 hours!"
+ *  1. Friday July 24, 2:00 PM CST (19:00 UTC)  — "Party is this Sunday!"
+ *  2. Saturday July 25, 2:00 PM CST (19:00 UTC) — "Party is TOMORROW!"
+ *  3. Sunday July 26, 2:00 PM CST (19:00 UTC)   — "Party starts in 2 hours!"
  */
 
 import type { Request, Response } from "express";
@@ -46,12 +46,12 @@ function getReminderType(): "friday" | "saturday" | "sunday" | null {
   const utcDate = now.getUTCDate();
   const utcMonth = now.getUTCMonth(); // 0-indexed, July = 6
 
-  // July 25 (Friday) at 19:00 UTC = 2:00 PM CST
-  if (utcMonth === 6 && utcDate === 25 && utcHour >= 19 && utcHour < 20) return "friday";
-  // July 26 (Saturday) at 19:00 UTC = 2:00 PM CST
-  if (utcMonth === 6 && utcDate === 26 && utcHour >= 19 && utcHour < 20) return "saturday";
-  // July 27 (Sunday) at 19:00 UTC = 2:00 PM CST (2 hours before 4 PM party)
-  if (utcMonth === 6 && utcDate === 27 && utcHour >= 19 && utcHour < 20) return "sunday";
+  // July 24 (Friday) at 19:00 UTC = 2:00 PM CST
+  if (utcMonth === 6 && utcDate === 24 && utcHour >= 19 && utcHour < 20) return "friday";
+  // July 25 (Saturday) at 19:00 UTC = 2:00 PM CST
+  if (utcMonth === 6 && utcDate === 25 && utcHour >= 19 && utcHour < 20) return "saturday";
+  // July 26 (Sunday) at 19:00 UTC = 2:00 PM CST (2 hours before 4 PM party)
+  if (utcMonth === 6 && utcDate === 26 && utcHour >= 19 && utcHour < 20) return "sunday";
 
   return null;
 }
@@ -62,13 +62,13 @@ function buildSmsMessage(family: Family, reminderType: "friday" | "saturday" | "
 
   if (family.isOwner) {
     const dayText = reminderType === "friday" ? "this Sunday" : reminderType === "saturday" ? "TOMORROW" : "TODAY in 2 hours";
-    return `🎉 Reminder: Abraham Palacio's 10th Birthday Party is ${dayText} — July 27, 4–6 PM at MyDojo Tomball (11721 Spring Cypress Rd). 🥋🎂`;
+    return `🎉 Reminder: Abraham Palacio's 10th Birthday Party is ${dayText} — July 26, 4–6 PM at MyDojo Tomball (11721 Spring Cypress Rd). 🥋🎂`;
   }
 
   if (reminderType === "friday") {
-    return `🎉 Hi ${firstName}! Reminder: Abraham's 10th Birthday Karate Bash is THIS SUNDAY July 27, 4–6 PM at MyDojo Tomball (11721 Spring Cypress Rd).${childLine}\nRSVP: (877) 4-MYDOJO`;
+    return `🎉 Hi ${firstName}! Reminder: Abraham's 10th Birthday Karate Bash is THIS SUNDAY July 26, 4–6 PM at MyDojo Tomball (11721 Spring Cypress Rd).${childLine}\nRSVP: (877) 4-MYDOJO`;
   } else if (reminderType === "saturday") {
-    return `🎉 Hi ${firstName}! Don't forget — Abraham's 10th Birthday Karate Bash is TOMORROW Sunday July 27, 4–6 PM at MyDojo Tomball (11721 Spring Cypress Rd).${childLine}\nSee you there! 🥋`;
+    return `🎉 Hi ${firstName}! Don't forget — Abraham's 10th Birthday Karate Bash is TOMORROW Sunday July 26, 4–6 PM at MyDojo Tomball (11721 Spring Cypress Rd).${childLine}\nSee you there! 🥋`;
   } else {
     return `🎉 Hi ${firstName}! Abraham's 10th Birthday Karate Bash starts in 2 HOURS — TODAY 4–6 PM at MyDojo Tomball (11721 Spring Cypress Rd).${childLine}\nWe can't wait to celebrate! 🥋🎂`;
   }
@@ -105,7 +105,7 @@ function buildEmailHtml(family: Family, reminderType: "friday" | "saturday" | "s
       <p style="color:#333;font-size:16px;line-height:1.6;margin:0 0 8px;">${bodyLine}</p>
       ${childLine}
       <div style="background:#1a1a1a;color:#fff;border-radius:10px;padding:20px;margin:20px 0;text-align:left;">
-        <p style="margin:8px 0;font-size:15px;">📅 <strong>Sunday, July 27th</strong></p>
+        <p style="margin:8px 0;font-size:15px;">📅 <strong>Sunday, July 26th</strong></p>
         <p style="margin:8px 0;font-size:15px;">⏰ <strong>4:00 PM – 6:00 PM</strong></p>
         <p style="margin:8px 0;font-size:15px;">📍 <strong>MyDojo Martial Arts</strong><br>&nbsp;&nbsp;&nbsp;&nbsp;11721 Spring Cypress Rd<br>&nbsp;&nbsp;&nbsp;&nbsp;Tomball, TX 77377</p>
       </div>
