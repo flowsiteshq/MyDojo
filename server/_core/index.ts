@@ -27,6 +27,7 @@ import { handleSyncExport } from "../syncExport";
 import { handleSummerCampReminder } from "../summerCampReminderJob";
 import { handleKaiCampHourly, handleKaiCampSummary } from "../kaiCampOps";
 import { handleSummerCampTrialActivation } from "../summerCampTrialActivation";
+import { handleBirthdayReminder } from "../birthdayReminderHandler";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -133,6 +134,8 @@ async function startServer() {
   app.post("/api/scheduled/kai-camp-summary", handleKaiCampSummary);
   // Summer Camp 3-day trial auto-activation — fires daily at 8 AM CDT (13:00 UTC)
   app.post("/api/scheduled/summer-camp-trial-activation", handleSummerCampTrialActivation);
+  // Abraham Palacio 10th Birthday Party reminders — fires Fri/Sat/Sun July 25-27 at 2 PM CST (19:00 UTC)
+  app.post("/api/scheduled/birthday-reminder", handleBirthdayReminder);
   // Staff alert endpoint — send a custom SMS to all staff
   app.post("/api/admin/staff-alert", express.json(), async (req: any, res: any) => {
     const { message } = req.body || {};
