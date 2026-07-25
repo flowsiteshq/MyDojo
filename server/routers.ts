@@ -10979,31 +10979,47 @@ Please enter your card details below to complete your registration securely. Tot
         parentEmail: z.string().email(),
         childName: z.string().min(1),
         childAge: z.number().min(3).max(17),
-        quizScore: z.number().min(0).max(5),
+        // Per-book scoring: 5 questions each, pass = 3+ correct per book
+        book1Id: z.string().min(1),
+        book1Title: z.string().min(1),
+        book1Score: z.number().min(0).max(5),
+        book2Id: z.string().min(1),
+        book2Title: z.string().min(1),
+        book2Score: z.number().min(0).max(5),
         promoCode: z.string().min(1),
         recommendedProgram: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const db = await getDb();
         if (!db) throw new Error('Database not available');
-        const passed = input.quizScore >= 4 ? 1 : 0;
+        // Both books must pass (3+ out of 5 each)
+        const book1Passed = input.book1Score >= 3;
+        const book2Passed = input.book2Score >= 3;
+        const passed = (book1Passed && book2Passed) ? 1 : 0;
+        const totalScore = input.book1Score + input.book2Score;
         await db.insert(schema.readingPromoLeads).values({
           parentName: input.parentName,
           parentPhone: input.parentPhone,
           parentEmail: input.parentEmail,
           childName: input.childName,
           childAge: input.childAge,
-          quizScore: input.quizScore,
+          quizScore: totalScore,
           quizPassed: passed,
           promoCode: passed ? input.promoCode : null,
           recommendedProgram: input.recommendedProgram,
           source: 'library_reading_promo',
+          book1Id: input.book1Id,
+          book1Title: input.book1Title,
+          book1Score: input.book1Score,
+          book2Id: input.book2Id,
+          book2Title: input.book2Title,
+          book2Score: input.book2Score,
         });
         if (passed) {
           try {
             const { notifyStaffNewLead } = await import('./notifyStaffNewLead');
             await notifyStaffNewLead({
-              name: `${input.parentName} (child: ${input.childName}, age ${input.childAge})`,
+              name: `${input.parentName} (child: ${input.childName}, age ${input.childAge}) — READ TO EARN`,
               phone: input.parentPhone,
               program: input.recommendedProgram || 'Not Sure',
               source: 'library_reading_promo',
@@ -11011,11 +11027,11 @@ Please enter your card details below to complete your registration securely. Tot
           } catch (e) { console.error('[ReadingPromo] Staff notify failed:', e); }
           try {
             const { sendSms, normalizePhone } = await import('./sms800');
-            const msg = `🎉 Congratulations ${input.childName}! You passed the MyDojo Reading Quiz!\n\nYour FREE 2-Week Trial Code: ${input.promoCode}\n\nSchedule your first class at mydojomartialarts.com or call (877) 469-3656.\n\nSee you on the mat! 🥋`;
+            const msg = `🎉 Congratulations ${input.childName}! You passed the MyDojo Read to Earn Quiz!\n\nYour FREE 2-Week Trial Code: ${input.promoCode}\n\nSchedule your first class at mydojoma.com or call (832) 791-8378.\n\nSee you on the mat! 🥋\n\n— MyDojo Martial Arts & Fitness\n11721 Spring Cypress Rd, Tomball TX 77377`;
             await sendSms({ to: normalizePhone(input.parentPhone), message: msg });
           } catch (e) { console.error('[ReadingPromo] SMS send failed:', e); }
         }
-        return { success: true, passed: passed === 1 };
+        return { success: true, passed: passed === 1, book1Passed, book2Passed, totalScore };
       }),
 
     listLeads: protectedProcedure

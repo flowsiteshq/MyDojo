@@ -456,6 +456,20 @@
       "when": 1784749190903,
       "tag": "0064_damp_wolverine",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "5",
+      "when": 1784996964512,
+      "tag": "0065_silent_true_believers",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "5",
+      "when": 1784997097436,
+      "tag": "0066_same_shocker",
+      "breakpoints": true
     }
   ]
 }

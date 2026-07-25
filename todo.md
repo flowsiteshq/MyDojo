@@ -1840,3 +1840,11 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 - [ ] Migrate UpdatePaymentMethodModal to Stripe
 - [ ] Update routers.ts payment procedures to use Stripe
 - [ ] Keep existing FluidPay subscriptions running (do not cancel)
+
+## Read to Earn Feature (Jul 25 2026)
+- [x] Add book1Id, book1Title, book1Score, book2Id, book2Title, book2Score columns to readingPromoLeads table
+- [x] Update readingPromo.submit tRPC procedure to accept per-book scoring (5 questions each, 3+ to pass per book)
+- [x] Rewrite /read-to-earn page with 12-book catalog, 5 questions per book, per-book pass/fail results
+- [x] SMS confirmation sent to parent on pass with promo code
+- [x] Staff notification on pass
+- [x] Write vitest tests for quiz scoring logic (9 tests, all passing)

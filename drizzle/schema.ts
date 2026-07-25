@@ -2322,6 +2322,14 @@ export const readingPromoLeads = mysqlTable("readingPromoLeads", {
   recommendedProgram: varchar("recommendedProgram", { length: 100 }),
   source: varchar("source", { length: 100 }).default("library_reading_promo").notNull(),
   staffNotified: int("staffNotified").notNull().default(0),
+  /** First book selected */
+  book1Id: varchar("book1Id", { length: 100 }),
+  book1Title: varchar("book1Title", { length: 255 }),
+  book1Score: int("book1Score"),
+  /** Second book selected */
+  book2Id: varchar("book2Id", { length: 100 }),
+  book2Title: varchar("book2Title", { length: 255 }),
+  book2Score: int("book2Score"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

@@ -1,0 +1,22 @@
+CREATE TABLE `readToEarnSubmissions` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`childName` varchar(255) NOT NULL,
+	`parentName` varchar(255) NOT NULL,
+	`email` varchar(320) NOT NULL,
+	`phone` varchar(20) NOT NULL,
+	`age` int,
+	`book1Id` varchar(100) NOT NULL,
+	`book1Title` varchar(255) NOT NULL,
+	`book1Score` int NOT NULL,
+	`book2Id` varchar(100) NOT NULL,
+	`book2Title` varchar(255) NOT NULL,
+	`book2Score` int NOT NULL,
+	`passed` int NOT NULL DEFAULT 0,
+	`rewardCode` varchar(20),
+	`redeemed` int NOT NULL DEFAULT 0,
+	`redeemedAt` timestamp,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `readToEarnSubmissions_id` PRIMARY KEY(`id`),
+	CONSTRAINT `readToEarnSubmissions_rewardCode_unique` UNIQUE(`rewardCode`)
+);
