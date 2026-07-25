@@ -102,6 +102,8 @@ const AdultKickboxing = lazy(() => import("./pages/AdultKickboxing"));
 const GiftCertRedeem = lazy(() => import("./pages/GiftCertRedeem"));
 const AdminGiftCerts = lazy(() => import("./pages/AdminGiftCerts"));
 const ReadToEarn = lazy(() => import("./pages/ReadToEarn"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 // Loading component — subtle fade-in bar at the top, no jarring red circle
 const PageLoader = () => (
@@ -234,6 +236,8 @@ function Router() {
               <Route path="/terms-of-service" component={TermsOfService} />
               <Route path="/login" component={Login} />
               <Route path="/register" component={Register} />
+              <Route path="/forgot-password" component={ForgotPassword} />
+              <Route path="/reset-password" component={ResetPassword} />
               <Route path="/settings/notifications" component={NotificationSettings} />
               <Route path="/notifications" component={NotificationHistory} />
               <Route path="/admin/membership-requests" component={AdminMembershipRequests} />

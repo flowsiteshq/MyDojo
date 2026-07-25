@@ -1900,3 +1900,76 @@ export async function sendLeadConfirmationEmail(params: LeadConfirmationEmailPar
     return false;
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Password Reset Email
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface PasswordResetEmailParams {
+  toEmail: string;
+  toName: string;
+  resetLink: string;
+}
+
+function buildPasswordResetHtml(params: PasswordResetEmailParams): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Reset Your Password</title></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;width:100%;">
+        <!-- Header -->
+        <tr><td style="background:#000000;padding:32px 40px;text-align:center;">
+          <img src="https://mydojoma.com/images/logo-white.png" alt="MyDojo" style="height:48px;" onerror="this.style.display='none'"/>
+          <h1 style="color:#ffffff;font-size:24px;font-weight:800;margin:12px 0 0;letter-spacing:1px;">MYDOJO MARTIAL ARTS</h1>
+        </td></tr>
+        <!-- Body -->
+        <tr><td style="padding:40px;">
+          <h2 style="color:#111827;font-size:22px;font-weight:700;margin:0 0 16px;">Password Reset Request</h2>
+          <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 16px;">Hi ${params.toName},</p>
+          <p style="color:#374151;font-size:16px;line-height:1.6;margin:0 0 24px;">We received a request to reset your MyDojo account password. Click the button below to choose a new password. This link expires in <strong>1 hour</strong>.</p>
+          <div style="text-align:center;margin:32px 0;">
+            <a href="${params.resetLink}" style="display:inline-block;background:#dc2626;color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:8px;letter-spacing:0.5px;">Reset My Password &rarr;</a>
+          </div>
+          <p style="color:#6b7280;font-size:14px;line-height:1.6;margin:0 0 8px;">If the button doesn't work, copy and paste this link into your browser:</p>
+          <p style="color:#dc2626;font-size:13px;word-break:break-all;margin:0 0 24px;">${params.resetLink}</p>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;"/>
+          <p style="color:#9ca3af;font-size:13px;line-height:1.6;margin:0;">If you didn't request a password reset, you can safely ignore this email. Your password will not change.</p>
+        </td></tr>
+        <!-- Footer -->
+        <tr><td style="background:#f9fafb;padding:24px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+          <p style="margin:0;font-size:12px;color:#9ca3af;">MyDojo Martial Arts &amp; Fitness &bull; 11721 Spring Cypress Rd, Tomball TX 77377</p>
+          <p style="margin:4px 0 0;font-size:12px;color:#9ca3af;">(877) 4-MYDOJO &bull; <a href="https://www.mydojoma.com" style="color:#dc2626;text-decoration:none;">mydojoma.com</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export async function sendPasswordResetEmail(params: PasswordResetEmailParams): Promise<boolean> {
+  if (!ENV.RESEND_API_KEY) {
+    console.warn("[Email] RESEND_API_KEY not configured — skipping password reset email");
+    return false;
+  }
+  try {
+    const resend = getResend();
+    const { error } = await resend.emails.send({
+      from: `MyDojo <${ENV.EMAIL_FROM}>`,
+      to: params.toEmail,
+      subject: "Reset your MyDojo password",
+      html: buildPasswordResetHtml(params),
+    });
+    if (error) {
+      console.error("[Email] Resend error sending password reset email:", error);
+      return false;
+    }
+    console.log(`[Email] Password reset email sent to ${params.toEmail}`);
+    return true;
+  } catch (err) {
+    console.error("[Email] Failed to send password reset email:", err);
+    return false;
+  }
+}

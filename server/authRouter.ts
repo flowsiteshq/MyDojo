@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { publicProcedure, router } from "./_core/trpc";
+import { sendPasswordResetEmail } from "./emailService";
 import {
   createUser,
   findUserByEmail,
@@ -171,10 +172,16 @@ export const authRouter = router({
 
       await setResetToken(input.email, token, expiry);
 
-      // TODO: Send email with reset link
-      // For now, just log it (in production, use an email service)
-      console.log(`Password reset token for ${input.email}: ${token}`);
-      console.log(`Reset link: ${process.env.VITE_APP_URL || 'http://localhost:3000'}/reset-password?token=${token}`);
+      const appUrl = process.env.VITE_APP_URL || 'https://mydojoma.com';
+      const resetLink = `${appUrl}/reset-password?token=${token}`;
+      console.log(`[Auth] Password reset link for ${input.email}: ${resetLink}`);
+
+      // Send reset email via Resend
+      await sendPasswordResetEmail({
+        toEmail: input.email,
+        toName: user.name || 'MyDojo Member',
+        resetLink,
+      });
 
       return { success: true };
     }),
