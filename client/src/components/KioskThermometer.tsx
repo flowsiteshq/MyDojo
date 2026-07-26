@@ -6,14 +6,25 @@ interface KioskThermometerProps {
 }
 
 /**
- * Full-screen thermometer overlay shown on the kiosk idle screen after 20 seconds
- * of inactivity. Displays live progress toward the 100-new-member drive goal.
+ * Full-screen screensaver overlay shown on the kiosk idle screen after 20 seconds
+ * of inactivity. TODAY (Jul 26 2026) shows a special Happy Birthday message for Abraham.
  * Tapping anywhere dismisses it and returns to the normal idle screen.
  */
 export function KioskThermometer({ onDismiss }: KioskThermometerProps) {
+  // ── Birthday override ─────────────────────────────────────────────────────
+  // Check if today is Abraham's birthday (Jul 26 2026). After today, the
+  // thermometer automatically returns to the normal member-drive display.
+  const today = new Date();
+  const isBirthdayToday =
+    today.getFullYear() === 2026 &&
+    today.getMonth() === 6 && // 0-indexed: 6 = July
+    today.getDate() === 26;
+
+  // ── Normal thermometer data (still fetched so it's ready after today) ─────
   const { data, isLoading } = trpc.kiosk.getMemberDriveProgress.useQuery(undefined, {
-    refetchInterval: 30_000, // refresh every 30s while visible
+    refetchInterval: 30_000,
     staleTime: 0,
+    enabled: !isBirthdayToday, // skip fetch on birthday day
   });
 
   const current = data?.current ?? 0;
@@ -23,14 +34,17 @@ export function KioskThermometer({ onDismiss }: KioskThermometerProps) {
 
   const pct = Math.min(100, Math.round((current / goal) * 100));
 
-  // Animate the mercury fill from 0 → pct on mount
   const [displayPct, setDisplayPct] = useState(0);
   const [displayCount, setDisplayCount] = useState(0);
   const animRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Floating emoji animation state for birthday mode
+  const [emojiList] = useState(() =>
+    ["🎂","🎉","🎈","🥋","⭐","🎁","🎊","🏆","🎈","🎉","🎂","⭐","🥋","🎁","🎊","🎈","🏆","🎉"]
+  );
+
   useEffect(() => {
-    if (isLoading) return;
-    // Animate fill over 1.8 seconds
+    if (isBirthdayToday || isLoading) return;
     const steps = 60;
     const duration = 1800;
     const stepMs = duration / steps;
@@ -38,7 +52,6 @@ export function KioskThermometer({ onDismiss }: KioskThermometerProps) {
     const tick = () => {
       step++;
       const progress = step / steps;
-      // Ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       setDisplayPct(Math.round(eased * pct));
       setDisplayCount(Math.round(eased * current));
@@ -49,17 +62,123 @@ export function KioskThermometer({ onDismiss }: KioskThermometerProps) {
         setDisplayCount(current);
       }
     };
-    animRef.current = setTimeout(tick, 200); // small initial delay
+    animRef.current = setTimeout(tick, 200);
     return () => { if (animRef.current) clearTimeout(animRef.current); };
-  }, [isLoading, pct, current]);
+  }, [isBirthdayToday, isLoading, pct, current]);
 
-  // Format deadline as "July 25" style
   const deadlineLabel = deadline
     ? new Date(deadline + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric" })
     : null;
 
   const isNearGoal = pct >= 80;
   const isComplete = pct >= 100;
+
+  // ── BIRTHDAY SCREENSAVER ──────────────────────────────────────────────────
+  if (isBirthdayToday) {
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center cursor-pointer overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, #0a0a0a 0%, #1a0010 30%, #0d0000 70%, #0a0a0a 100%)",
+        }}
+        onClick={onDismiss}
+      >
+        {/* Radial glow */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(225,6,0,0.22) 0%, transparent 70%)",
+          }}
+        />
+
+        {/* Floating birthday emojis */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {emojiList.map((emoji, i) => (
+            <div
+              key={i}
+              className="absolute text-4xl"
+              style={{
+                left: `${4 + (i * 5.4) % 92}%`,
+                top: `${5 + (i * 7.1) % 88}%`,
+                opacity: 0.55 + (i % 4) * 0.1,
+                animation: `float ${4 + (i % 5)}s ease-in-out infinite`,
+                animationDelay: `${(i * 0.35) % 3}s`,
+              }}
+            >
+              {emoji}
+            </div>
+          ))}
+        </div>
+
+        {/* Main card */}
+        <div
+          className="relative z-10 flex flex-col items-center gap-6 px-12 py-10 select-none text-center"
+          style={{
+            background: "rgba(0,0,0,0.55)",
+            border: "2px solid rgba(225,6,0,0.5)",
+            borderRadius: "24px",
+            boxShadow: "0 0 80px rgba(225,6,0,0.35), 0 0 160px rgba(225,6,0,0.15)",
+            maxWidth: "680px",
+          }}
+        >
+          {/* Cake emoji */}
+          <div className="text-8xl" style={{ filter: "drop-shadow(0 0 24px rgba(255,215,0,0.8))" }}>
+            🎂
+          </div>
+
+          {/* HAPPY BIRTHDAY */}
+          <div>
+            <p
+              className="text-3xl font-black uppercase tracking-[0.25em] mb-1"
+              style={{ color: "#FFD700", textShadow: "0 0 30px rgba(255,215,0,0.8)" }}
+            >
+              Happy 10th Birthday
+            </p>
+            <h1
+              className="font-black uppercase leading-none"
+              style={{
+                fontSize: "clamp(4rem, 12vw, 8rem)",
+                background: "linear-gradient(135deg, #ffffff 0%, #E10600 50%, #FFD700 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                filter: "drop-shadow(0 0 30px rgba(225,6,0,0.7))",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              ABRAHAM!
+            </h1>
+          </div>
+
+          {/* Subtitle */}
+          <p
+            className="text-xl font-semibold uppercase tracking-widest"
+            style={{ color: "rgba(255,255,255,0.65)" }}
+          >
+            🥋 From your MyDojo Family 🥋
+          </p>
+
+          {/* Decorative divider */}
+          <div
+            className="w-48 h-px"
+            style={{ background: "linear-gradient(90deg, transparent, #E10600, transparent)" }}
+          />
+
+          {/* Tap to dismiss */}
+          <p className="text-white/30 text-sm uppercase tracking-widest">
+            Tap anywhere to check in
+          </p>
+        </div>
+
+        <style>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-14px) rotate(5deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+  // ── END BIRTHDAY SCREENSAVER ──────────────────────────────────────────────
 
   return (
     <div
