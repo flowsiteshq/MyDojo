@@ -1,18 +1,37 @@
 import { eq, desc, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import mysql2 from "mysql2/promise";
 import { InsertUser, users, notificationPreferences, InsertNotificationPreference, pushSubscriptions, InsertPushSubscription, notificationHistory, InsertNotificationHistory, testimonials, InsertTestimonial, trialSignups, InsertTrialSignup } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _pool: mysql2.Pool | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
+/**
+ * Lazily create the drizzle instance using a connection pool.
+ *
+ * WHY A POOL: A single mysql2 connection is dropped by the server after
+ * ~8 hours of inactivity (MySQL default wait_timeout). A pool automatically
+ * acquires a fresh connection on the next query, so notifications keep
+ * working around the clock without a server restart.
+ */
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      _pool = mysql2.createPool({
+        uri: process.env.DATABASE_URL,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+        enableKeepAlive: true,
+        keepAliveInitialDelay: 30000, // send keepalive ping every 30s
+      });
+      _db = drizzle(_pool as any);
+      console.log("[Database] Connection pool initialised.");
     } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
+      console.warn("[Database] Failed to create connection pool:", error);
       _db = null;
+      _pool = null;
     }
   }
   return _db;

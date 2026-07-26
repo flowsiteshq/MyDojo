@@ -1848,3 +1848,8 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 - [x] SMS confirmation sent to parent on pass with promo code
 - [x] Staff notification on pass
 - [x] Write vitest tests for quiz scoring logic (9 tests, all passing)
+
+## Lead Notification Fix (Jul 26, 2026)
+- [x] Fix database connection stale after 8h - switched from single connection to mysql2 connection pool with keepalive
+- [x] Fix silent error swallowing on notifyStaffNewLead calls - now logs errors to Railway console
+- [ ] GHL API key expired (401 Invalid Private Integration token) - needs new key from GHL dashboard

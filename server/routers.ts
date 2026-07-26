@@ -1502,7 +1502,9 @@ export const appRouter = router({
 
         // Notify staff via SMS (fire-and-forget)
         const { notifyStaffNewLead } = await import('./notifyStaffNewLead');
-        notifyStaffNewLead({ name: input.name, phone: input.phone, program: input.program, source }).catch(() => {});
+        notifyStaffNewLead({ name: input.name, phone: input.phone, program: input.program, source }).catch((err) => {
+          console.error('[LeadNotify] Failed to notify staff for new lead:', err);
+        });
 
         // Send confirmation email to customer (fire-and-forget)
         if (input.email) {
@@ -5499,7 +5501,9 @@ Please enter your card details below to complete your registration securely. Tot
 
         // Notify staff via SMS (fire-and-forget)
         const { notifyStaffNewLead } = await import('./notifyStaffNewLead');
-        notifyStaffNewLead({ name: input.name, phone: input.phone, program: input.program, source: 'Manual' }).catch(() => {});
+        notifyStaffNewLead({ name: input.name, phone: input.phone, program: input.program, source: 'Manual' }).catch((err) => {
+          console.error('[LeadNotify] Failed to notify staff for manual lead:', err);
+        });
 
         return { success: true };
       }),
