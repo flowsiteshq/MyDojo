@@ -1901,3 +1901,14 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 - [x] Confirmation step: success screen with offer/program summary + enrollment link sent message
 - [x] Wired into KioskCheckIn: phone not-found and name not-found both trigger offer flow
 - [x] Apple Pay / Google Pay via Stripe ExpressCheckoutElement in StripePaymentForm
+
+## 1st/15th Billing Cycle Rule (Permanent Policy)
+- [x] Created shared/billingUtils.ts with getBillingAnchorDay, getNextBillingDate, getNextBillingDateStr, getBillingAnchorDayStr, getNextBillingTimestamp, getBillingCycleDescription
+- [x] Applied 1st/15th rule to manualEnrollments.create FluidPay subscription
+- [x] Applied 1st/15th rule to manualEnrollments.confirmStripeEnrollment Stripe subscription
+- [x] Applied 1st/15th rule to main enrollment (enrollments.checkout) FluidPay subscription
+- [x] Applied 1st/15th rule to camp/link enrollment billingDaysMap
+- [x] Applied 1st/15th rule to admin createMissingSubscription procedure
+- [x] Applied 1st/15th rule to camp kickboxing family add-on subscription
+- [x] Updated AdminManualEnrollment UI getDefaultNextChargeDate to use 1st/15th rule
+- [x] Updated CustomPaymentCheckout recurring billing display to show 1st/15th anchor date

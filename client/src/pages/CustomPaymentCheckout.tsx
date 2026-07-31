@@ -347,12 +347,19 @@ export default function CustomPaymentCheckout() {
                   </div>
                 );
               }
+              // 1st/15th billing cycle rule: compute next bill date for display
+              const _today = new Date();
+              const _anchor = _today.getDate() <= 14 ? 1 : 15;
+              const _nextBill = new Date(_today);
+              _nextBill.setMonth(_nextBill.getMonth() + 1);
+              _nextBill.setDate(_anchor);
+              const _nextBillStr = _nextBill.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+              const _suffix = _anchor === 1 ? 'st' : 'th';
               return (
                 <div className="flex items-start gap-2 p-2 bg-purple-50 rounded text-xs text-purple-700">
                   <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                   <span>
-                    Your card will be charged <strong>${total.toFixed(2)}</strong> today and then automatically every{" "}
-                    {link.billingInterval}{link.billingCycles ? ` for ${link.billingCycles} billing cycles` : " until cancelled"}.
+                    Your card will be charged <strong>${total.toFixed(2)}</strong> today, then <strong>${total.toFixed(2)}</strong> on the <strong>{_anchor}{_suffix} of each month</strong> starting {_nextBillStr}{link.billingCycles ? ` for ${link.billingCycles} billing cycles` : " until cancelled"}.
                   </span>
                 </div>
               );

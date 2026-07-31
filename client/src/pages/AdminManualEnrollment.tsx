@@ -47,18 +47,27 @@ function getFrequency(program: Program): "monthly" | "weekly" {
   return program === "kickboxing" || program === "martial_arts" ? "monthly" : "weekly";
 }
 
+/**
+ * 1st/15th billing cycle rule (permanent MyDojo policy):
+ * - Enrollment day 1–14  → next bill on the 1st of next month
+ * - Enrollment day 15–31 → next bill on the 15th of next month
+ */
 function getDefaultNextChargeDate(frequency: "monthly" | "weekly"): string {
-  const d = new Date();
+  const today = new Date();
   if (frequency === "monthly") {
-    d.setMonth(d.getMonth() + 1);
-    d.setDate(1);
+    const anchor = today.getDate() <= 14 ? 1 : 15;
+    const next = new Date(today);
+    next.setMonth(next.getMonth() + 1);
+    next.setDate(anchor);
+    return next.toISOString().slice(0, 10);
   } else {
-    // Next Monday
-    const day = d.getDay();
+    // Weekly programs: next Monday
+    const day = today.getDay();
     const daysUntilMonday = (8 - day) % 7 || 7;
-    d.setDate(d.getDate() + daysUntilMonday);
+    const next = new Date(today);
+    next.setDate(next.getDate() + daysUntilMonday);
+    return next.toISOString().slice(0, 10);
   }
-  return d.toISOString().slice(0, 10);
 }
 
 interface EnrollmentFormData {

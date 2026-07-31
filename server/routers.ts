@@ -199,17 +199,22 @@ export const appRouter = router({
           initialTransactionId = chargeData.data?.id || null;
         }
 
-        // Step 3: Create recurring subscription starting on nextChargeDate
+        // Step 3: Create recurring subscription using the 1st/15th billing cycle rule:
+        // Enrollment day 1–14 → bill on the 1st of next month
+        // Enrollment day 15–31 → bill on the 15th of next month
+        const { getNextBillingDateStr, getBillingAnchorDayStr } = await import('@shared/billingUtils');
+        const computedNextChargeDate = getNextBillingDateStr(new Date());
+        const computedBillingDay = getBillingAnchorDayStr(new Date());
         const subscriptionBody: any = {
           description: `MyDojo ${programLabel} - ${input.studentName}`,
           customer: { id: fpCustomerId },
           amount: amountCents,
           billing_cycle_interval: 1,
           billing_frequency: billingFrequency,
-          next_bill_date: input.nextChargeDate,
+          next_bill_date: computedNextChargeDate,
         };
         if (billingFrequency === 'monthly') {
-          subscriptionBody.billing_days = new Date(input.nextChargeDate).getDate().toString();
+          subscriptionBody.billing_days = computedBillingDay;
         }
         const subscriptionRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
           method: 'POST',
@@ -235,7 +240,7 @@ export const appRouter = router({
           program: input.program,
           customPrice: input.customPrice.toFixed(2),
           billingFrequency,
-          nextChargeDate: input.nextChargeDate,
+          nextChargeDate: computedNextChargeDate,
           preAuthEnabled: input.preAuthOnly ? 1 : 0,
           preAuthTransactionId,
           fluidpayCustomerId: fpCustomerId,
@@ -509,7 +514,11 @@ export const appRouter = router({
         const billingFrequency = (input.program === 'kickboxing' || input.program === 'martial_arts') ? 'monthly' : 'weekly';
         const intervalMap: Record<string, 'month' | 'week'> = { monthly: 'month', weekly: 'week' };
         const interval = intervalMap[billingFrequency];
-        const nextChargeDateTs = Math.floor(new Date(input.nextChargeDate + 'T00:00:00').getTime() / 1000);
+        // 1st/15th billing cycle rule: compute anchor date
+        const { getNextBillingDateStr: _getBillingStr, getBillingAnchorDayStr: _getAnchorStr, getNextBillingTimestamp } = await import('@shared/billingUtils');
+        const computedNextChargeDate = _getBillingStr(new Date());
+        const computedBillingDay = _getAnchorStr(new Date());
+        const nextChargeDateTs = getNextBillingTimestamp(new Date());
 
         let stripeSubscriptionId: string | undefined;
         try {
@@ -545,7 +554,7 @@ export const appRouter = router({
           program: input.program,
           customPrice: String(input.customPrice),
           billingFrequency,
-          nextChargeDate: input.nextChargeDate,
+          nextChargeDate: computedNextChargeDate,
           preAuthEnabled: input.preAuthOnly ? 1 : 0,
           stripeCustomerId: input.stripeCustomerId,
           stripeSubscriptionId,
@@ -957,7 +966,9 @@ export const appRouter = router({
           // billing_days is required by FluidPay when billing_frequency is set
           // For monthly: day of month (e.g. '5' = 5th of each month)
           // For weekly: day of week (e.g. '1' = Monday)
-          const billingDaysMap: Record<string, string> = { weekly: String(new Date().getDay() || 1), monthly: String(new Date().getDate()), yearly: String(new Date().getDate()) };
+          // 1st/15th billing cycle rule for monthly; weekly/yearly keep day-of-week/day-of-year
+          const { getBillingAnchorDayStr: _anchorStr, getNextBillingDateStr: _nextStr } = await import('@shared/billingUtils');
+          const billingDaysMap: Record<string, string> = { weekly: String(new Date().getDay() || 1), monthly: _anchorStr(new Date()), yearly: _anchorStr(new Date()) };
           const subBody: any = {
             description: `${link.title} - ${input.customerName}`,
             customer: { id: fpCustomerId },
@@ -3718,9 +3729,10 @@ Please enter your card details below to complete your registration securely. Tot
         let subscriptionCreationFailed = false;
         if (!isPromoFree && !input.isSummerCamp && pkg && fpCustomerId) {
           // Start subscription next month — first month is always charged upfront (whether via down payment or waiveDownPayment)
-          const subStartDate = (() => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d; })();
-          const startDate = subStartDate.toISOString().slice(0, 10);
-          const billingDay = subStartDate.getDate().toString();
+          // 1st/15th billing cycle rule
+          const { getNextBillingDateStr, getBillingAnchorDayStr } = await import('@shared/billingUtils');
+          const startDate = getNextBillingDateStr(new Date());
+          const billingDay = getBillingAnchorDayStr(new Date());
           const subscriptionRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
             method: 'POST',
             headers: fpHeaders,
@@ -7664,7 +7676,10 @@ Please enter your card details below to complete your registration securely. Tot
 
         const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
         const FLUIDPAY_KEY = process.env.FLUIDPAY_SECRET_KEY || '';
-        const billingDay = new Date(input.nextChargeDate).getDate().toString();
+        // 1st/15th billing cycle rule
+        const { getNextBillingDateStr: _cmsNextStr, getBillingAnchorDayStr: _cmsAnchorStr } = await import('@shared/billingUtils');
+        const computedNextChargeDateCMS = _cmsNextStr(new Date());
+        const billingDay = _cmsAnchorStr(new Date());
 
         const subscriptionRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
           method: 'POST',
@@ -7673,7 +7688,7 @@ Please enter your card details below to complete your registration securely. Tot
             plan_id: pkg.fluidpayPlanId,
             customer_id: enrollment.fluidpayCustomerId,
             description: `MyDojo ${pkg.name} Monthly Membership`,
-            start: input.nextChargeDate,
+            start: computedNextChargeDateCMS,
             billing_days: billingDay,
           }),
         });
@@ -10527,9 +10542,8 @@ Please enter your card details below to complete your registration securely. Tot
         }
         const fpTransactionId = txn.id;
         // Step 3: Create recurring subscription for monthly billing ($49/month)
-        const nextMonthDate = new Date();
-        nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
-        const startDate = nextMonthDate.toISOString().slice(0, 10);
+        const { getNextBillingDateStr: _campNextStr2, getBillingAnchorDayStr: _campAnchorStr2 } = await import('@shared/billingUtils');
+        const startDate = _campNextStr2(new Date());
         const subscriptionRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
           method: 'POST',
           headers: fpHeaders,
@@ -10539,7 +10553,7 @@ Please enter your card details below to complete your registration securely. Tot
             amount: 4900,
             billing_cycle_interval: 1,
             billing_frequency: 'monthly',
-            billing_days: '1',
+            billing_days: _campAnchorStr2(new Date()),
             next_bill_date: startDate,
           }),
         });
