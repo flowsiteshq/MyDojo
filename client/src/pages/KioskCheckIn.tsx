@@ -10,6 +10,7 @@ import { KioskAdminLock } from "@/components/KioskAdminLock";
 import { KioskDayPass } from "@/components/KioskDayPass";
 import { KioskEnrollQR } from "@/components/KioskEnrollQR";
 import { KioskThermometer } from "@/components/KioskThermometer";
+import KioskOfferFlow from "@/components/KioskOfferFlow";
 
 type KioskScreen = "idle" | "identification" | "confirmation" | "success" | "dayPass" | "enroll";
 type IdentificationMethod = "qr" | "phone" | "name";
@@ -77,6 +78,9 @@ export default function KioskCheckIn() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [showThermometer, setShowThermometer] = useState(false);
+  const [showOfferFlow, setShowOfferFlow] = useState(false);
+  const [offerFlowPrefillPhone, setOfferFlowPrefillPhone] = useState("");
+  const [offerFlowPrefillName, setOfferFlowPrefillName] = useState("");
 
   // Idle timer — show thermometer after 20s of inactivity on the idle screen
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -167,7 +171,10 @@ export default function KioskCheckIn() {
         setScreen('confirmation');
       }
     } catch (err: any) {
-      setSearchError(err?.message || 'No account found for this phone number. Please see staff.');
+      // Not found — show offer flow instead of a plain error
+      setOfferFlowPrefillPhone(phoneNumber.trim());
+      setOfferFlowPrefillName("");
+      setShowOfferFlow(true);
     } finally {
       setIsSearching(false);
     }
@@ -188,7 +195,10 @@ export default function KioskCheckIn() {
           photoUrl: e.photoUrl,
         })));
       } else {
-        setSearchError('No students found with that name. Please try again or see staff.');
+        // Not found — show offer flow instead of a plain error
+        setOfferFlowPrefillName(searchName.trim());
+        setOfferFlowPrefillPhone("");
+        setShowOfferFlow(true);
       }
     } catch (err: any) {
       setSearchError(err?.message || 'Search failed. Please try again.');
@@ -258,6 +268,24 @@ export default function KioskCheckIn() {
       // Error handling is done in onError callback
     }
   };
+
+  // OFFER FLOW — shown when a visitor is not found in the system
+  if (showOfferFlow) {
+    return (
+      <KioskOfferFlow
+        onClose={() => {
+          setShowOfferFlow(false);
+          setSearchError(null);
+          setPhoneNumber("");
+          setSearchName("");
+          setOfferFlowPrefillPhone("");
+          setOfferFlowPrefillName("");
+        }}
+        prefillPhone={offerFlowPrefillPhone}
+        prefillName={offerFlowPrefillName}
+      />
+    );
+  }
 
   // ENROLL SCREEN
   if (screen === "enroll") {

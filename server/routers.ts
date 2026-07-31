@@ -5429,6 +5429,69 @@ Please enter your card details below to complete your registration securely. Tot
           expiresAt,
         };
       }),
+    // ── Kiosk Walk-In Lead Capture ─────────────────────────────────────────────
+    captureWalkInLead: publicProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        phone: z.string().min(7),
+        email: z.string().email(),
+        program: z.enum(["Little Ninjas", "Dragon Kids", "Teens", "Adult Karate", "Kickboxing", "After School", "Summer Camp", "Not Sure"]),
+        offerType: z.enum(["trial_2weeks_1dollar", "foundation_149", "blackbelt_199"]),
+        waiverAccepted: z.boolean(),
+        signatureDataUrl: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        const offerLabels: Record<string, string> = {
+          trial_2weeks_1dollar: '2 Weeks for $1 Trial',
+          foundation_149: '$149/mo Foundation Program',
+          blackbelt_199: '$199/mo Black Belt Program',
+        };
+        const offerLabel = offerLabels[input.offerType] || input.offerType;
+        let leadId: number | null = null;
+        try {
+          const insertResult = await db.insert(schema.trialSignups).values({
+            name: input.name, phone: input.phone, email: input.email,
+            program: input.program, location: 'Tomball HQ',
+            source: `kiosk_walkin_${input.offerType}`, status: 'new', pipelineStage: 'new_lead',
+            message: `Walk-in kiosk lead — selected offer: ${offerLabel}. Waiver signed: ${input.waiverAccepted ? 'Yes' : 'No'}.`,
+          } as any);
+          leadId = (insertResult as any).insertId ?? null;
+        } catch (e) { console.error('[captureWalkInLead] insert lead failed:', e); }
+        if (input.waiverAccepted) {
+          try {
+            const { createWaiverSignature } = await import('./db');
+            await createWaiverSignature({ name: input.name, phone: input.phone, email: input.email,
+              ipAddress: 'kiosk', waiverVersion: '2026-02', acceptedLiability: 1, acceptedPhotoConsent: 1 });
+          } catch (e) { console.error('[captureWalkInLead] waiver failed:', e); }
+        }
+        const enrollmentLinks: Record<string, string> = {
+          trial_2weeks_1dollar: 'https://mydojoma.com/enroll?offer=trial',
+          foundation_149: 'https://mydojoma.com/enroll?offer=foundation',
+          blackbelt_199: 'https://mydojoma.com/enroll?offer=blackbelt',
+        };
+        const enrollLink = enrollmentLinks[input.offerType] || 'https://mydojoma.com/enroll';
+        try {
+          const { sendSms, normalizePhone } = await import('./sms800');
+          await sendSms({ to: normalizePhone(input.phone), message: `Hi ${input.name.split(' ')[0]}! Welcome to MyDojo! You selected the ${offerLabel}. Complete your enrollment: ${enrollLink} — Questions? (281) 351-6500` });
+        } catch (e) { console.error('[captureWalkInLead] SMS failed:', e); }
+        try {
+          const { Resend } = await import('resend');
+          const resend = new Resend(process.env.RESEND_API_KEY);
+          await resend.emails.send({
+            from: process.env.VITE_EMAIL_FROM ?? 'noreply@mydojoma.com', to: input.email,
+            subject: `Your MyDojo Enrollment Link — ${offerLabel}`,
+            html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#000;color:#fff;padding:32px;border-radius:12px;"><h2 style="color:#E10600;">Welcome to MyDojo, ${input.name.split(' ')[0]}!</h2><p style="color:#ccc;">You selected the <strong style="color:#fff;">${offerLabel}</strong> for <strong style="color:#fff;">${input.program}</strong>.</p><a href="${enrollLink}" style="display:inline-block;background:#E10600;color:#fff;font-weight:bold;font-size:18px;padding:16px 32px;border-radius:8px;text-decoration:none;">Complete My Enrollment</a><p style="color:#666;font-size:13px;margin-top:24px;">MyDojo Martial Arts &amp; Fitness | mydojoma.com | (281) 351-6500</p></div>`,
+          });
+        } catch (e) { console.error('[captureWalkInLead] email failed:', e); }
+        try {
+          const { notifyOwner } = await import('./_core/notification');
+          await notifyOwner({ title: `New Kiosk Walk-In Lead — ${offerLabel}`, content: `${input.name} (${input.phone} / ${input.email}) selected ${offerLabel} for ${input.program}. Waiver: ${input.waiverAccepted ? 'Signed' : 'Not signed'}. Enrollment link sent.` });
+        } catch (e) { console.error('[captureWalkInLead] notify failed:', e); }
+        return { success: true, leadId, offerLabel, enrollLink };
+      }),
+
 
     // ── Member Drive Progress (Thermometer) ─────────────────────────────────────
     // Returns live count of new members enrolled since the drive start date,

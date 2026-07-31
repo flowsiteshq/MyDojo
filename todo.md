@@ -1891,3 +1891,13 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 - [x] Register both billing cron jobs via Heartbeat SDK (taskUids: X9hjx4rW55d86Lre8FCipv, oETPrwEFjckehTo6qJ9Nzv)
 - [x] Enhance AdminBillingSchedule: add `pending` status, billing health alert banners, "Create Sub" + "SMS" action buttons per row
 - [x] Add Apple Pay / Google Pay via Stripe ExpressCheckoutElement to StripePaymentForm (auto-detects device support)
+
+## Kiosk Walk-In Offer Flow (Jul 31 2026)
+- [x] Backend: kiosk.captureWalkInLead tRPC procedure (save lead, send SMS + email, notify owner, sign waiver)
+- [x] KioskOfferFlow component: 3 offer cards (2 Weeks $1 / $149 Foundation / $199 Black Belt) with benefits comparison
+- [x] Contact form step: collect name, phone, email with prefill from search input
+- [x] Program picker step: Little Ninjas, Dragon Kids, Teens, Adult Karate, Kickboxing, Not Sure
+- [x] Digital waiver step: scrollable waiver text + signature pad + checkbox agreement
+- [x] Confirmation step: success screen with offer/program summary + enrollment link sent message
+- [x] Wired into KioskCheckIn: phone not-found and name not-found both trigger offer flow
+- [x] Apple Pay / Google Pay via Stripe ExpressCheckoutElement in StripePaymentForm
