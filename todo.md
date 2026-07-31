@@ -1853,3 +1853,41 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 - [x] Fix database connection stale after 8h - switched from single connection to mysql2 connection pool with keepalive
 - [x] Fix silent error swallowing on notifyStaffNewLead calls - now logs errors to Railway console
 - [ ] GHL API key expired (401 Invalid Private Integration token) - needs new key from GHL dashboard
+
+## Foolproof Billing System + Apple Pay (Session Jul 30 2026)
+
+- [ ] Phase 1: Fix enrollment flow — flag missing subscription as pending + notify owner
+  - [ ] In createEnrollmentCheckout: if FluidPay subscription creation fails, save enrollment as status='pending' (not 'active') and call notifyOwner
+  - [ ] In manualEnrollment.create: same fix — subscription failure → status='pending' + notifyOwner
+  - [ ] Add Apple Pay / Google Pay via Stripe Payment Request Button to CustomPaymentCheckout
+  - [ ] Add Apple Pay / Google Pay via Stripe Payment Request Button to enrollment checkout page
+
+- [ ] Phase 2: Daily billing health check job
+  - [ ] Create server/billingHealthCheckJob.ts — scan all active enrollments, find missing subscriptions, send owner notification
+  - [ ] Register /api/scheduled/billingHealthCheck in server/_core/index.ts
+  - [ ] Register heartbeat cron (daily 9 AM CDT) AFTER deploy
+
+- [ ] Phase 3: Enhance admin billing dashboard
+  - [ ] Add "Missing Subscription" alert section to AdminBillingSchedule.tsx
+  - [ ] Add "Create Subscription" action button for enrollments missing fluidpaySubscriptionId
+  - [ ] Add "Send SMS Reminder" button per student row
+  - [ ] Add "Charge Now" button per student row
+  - [ ] Add tRPC procedures: createMissingSubscription, sendPaymentReminderSms
+
+- [ ] Phase 4: Auto-retry logic for declined cards + SMS alerts
+  - [ ] In fluidpayWebhook.ts: after marking payment failed, send SMS to parent via 800.com
+  - [ ] Create server/billingRetryJob.ts — find open paymentFailures older than 3 days, retry charge, notify owner on second failure
+  - [ ] Register /api/scheduled/billingRetry in server/_core/index.ts
+  - [ ] Register heartbeat cron (daily 10 AM CDT) AFTER deploy
+
+## Foolproof Billing System + Apple Pay (Session Jul 31)
+
+- [x] Fix enrollment flow: flag missing subscription as `pending` status (not silently `active`) for all 4 enrollment paths
+- [x] Fix manual enrollment: flag subscription failure as `pending`, send urgent owner notification with warning
+- [x] Add `createMissingSubscription` admin procedure: creates FluidPay subscription for pending/missing-sub enrollments
+- [x] Add `sendPaymentReminderSms` admin procedure: sends SMS reminder to parent about payment issue
+- [x] Billing health check job (`/api/scheduled/billingHealthCheck`): daily at 9 AM CDT, scans for missing/broken subs + open failures
+- [x] Billing retry job (`/api/scheduled/billingRetry`): daily at 10 AM CDT, retries declined cards, SMS parents on 2nd failure
+- [x] Register both billing cron jobs via Heartbeat SDK (taskUids: X9hjx4rW55d86Lre8FCipv, oETPrwEFjckehTo6qJ9Nzv)
+- [x] Enhance AdminBillingSchedule: add `pending` status, billing health alert banners, "Create Sub" + "SMS" action buttons per row
+- [x] Add Apple Pay / Google Pay via Stripe ExpressCheckoutElement to StripePaymentForm (auto-detects device support)

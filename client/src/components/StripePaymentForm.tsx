@@ -1,7 +1,8 @@
 /**
  * StripePaymentForm.tsx
  * Reusable Stripe Payment Elements form component.
- * Replaces FluidPayEnrollmentForm for all new payment flows.
+ * Supports Apple Pay, Google Pay, and Link via ExpressCheckoutElement,
+ * plus the standard card / bank form via PaymentElement.
  *
  * Usage:
  *   <StripePaymentForm
@@ -14,9 +15,20 @@
  *   />
  */
 
-import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
-import { loadStripe, type Stripe as StripeInstance, type StripePaymentElementOptions } from "@stripe/stripe-js";
-import { useRef, useState } from "react";
+import {
+  Elements,
+  ExpressCheckoutElement,
+  PaymentElement,
+  useElements,
+  useStripe,
+} from "@stripe/react-stripe-js";
+import {
+  loadStripe,
+  type Stripe as StripeInstance,
+  type StripeExpressCheckoutElementConfirmEvent,
+  type StripePaymentElementOptions,
+} from "@stripe/stripe-js";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Lock } from "lucide-react";
 
@@ -45,7 +57,57 @@ function InnerForm({ mode, submitLabel, loading, onSuccess, onError }: InnerForm
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [expressAvailable, setExpressAvailable] = useState(false);
 
+  // ── Express checkout (Apple Pay / Google Pay / Link) ──────────────────────
+  const handleExpressConfirm = async (event: StripeExpressCheckoutElementConfirmEvent) => {
+    if (!stripe || !elements) return;
+    setSubmitting(true);
+    setErrorMsg(null);
+
+    if (mode === "payment") {
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {},
+        redirect: "if_required",
+      });
+      if (error) {
+        const msg = error.message || "Payment failed. Please try again.";
+        setErrorMsg(msg);
+        onError(msg);
+      } else if (paymentIntent?.status === "succeeded" || paymentIntent?.status === "processing") {
+        onSuccess({ paymentIntentId: paymentIntent.id });
+      } else {
+        const msg = "Payment did not complete. Please try again.";
+        setErrorMsg(msg);
+        onError(msg);
+      }
+    } else {
+      const { error, setupIntent } = await stripe.confirmSetup({
+        elements,
+        confirmParams: {},
+        redirect: "if_required",
+      });
+      if (error) {
+        const msg = error.message || "Could not save card. Please try again.";
+        setErrorMsg(msg);
+        onError(msg);
+      } else if (setupIntent?.status === "succeeded") {
+        const pmId =
+          typeof setupIntent.payment_method === "string"
+            ? setupIntent.payment_method
+            : setupIntent.payment_method?.id;
+        onSuccess({ setupIntentId: setupIntent.id, paymentMethodId: pmId });
+      } else {
+        const msg = "Card setup did not complete. Please try again.";
+        setErrorMsg(msg);
+        onError(msg);
+      }
+    }
+    setSubmitting(false);
+  };
+
+  // ── Standard card form submit ─────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
@@ -53,7 +115,6 @@ function InnerForm({ mode, submitLabel, loading, onSuccess, onError }: InnerForm
     setSubmitting(true);
     setErrorMsg(null);
 
-    // Trigger form validation and wallet collection
     const { error: submitError } = await elements.submit();
     if (submitError) {
       const msg = submitError.message || "Please check your card details.";
@@ -64,7 +125,6 @@ function InnerForm({ mode, submitLabel, loading, onSuccess, onError }: InnerForm
     }
 
     if (mode === "payment") {
-      // Confirm a PaymentIntent
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         redirect: "if_required",
@@ -81,7 +141,6 @@ function InnerForm({ mode, submitLabel, loading, onSuccess, onError }: InnerForm
         onError(msg);
       }
     } else {
-      // Confirm a SetupIntent (save card for future recurring charges)
       const { error, setupIntent } = await stripe.confirmSetup({
         elements,
         redirect: "if_required",
@@ -91,9 +150,10 @@ function InnerForm({ mode, submitLabel, loading, onSuccess, onError }: InnerForm
         setErrorMsg(msg);
         onError(msg);
       } else if (setupIntent?.status === "succeeded") {
-        const pmId = typeof setupIntent.payment_method === "string"
-          ? setupIntent.payment_method
-          : setupIntent.payment_method?.id;
+        const pmId =
+          typeof setupIntent.payment_method === "string"
+            ? setupIntent.payment_method
+            : setupIntent.payment_method?.id;
         onSuccess({ setupIntentId: setupIntent.id, paymentMethodId: pmId });
       } else {
         const msg = "Card setup did not complete. Please try again.";
@@ -112,38 +172,72 @@ function InnerForm({ mode, submitLabel, loading, onSuccess, onError }: InnerForm
   const isDisabled = submitting || loading || !stripe || !elements;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <PaymentElement options={paymentElementOptions} />
+    <div className="space-y-4">
+      {/* ── Express Checkout (Apple Pay / Google Pay / Link) ── */}
+      <ExpressCheckoutElement
+        onConfirm={handleExpressConfirm}
+        onReady={(event) => {
+          // Show divider only if at least one express method is available
+          setExpressAvailable((event.availablePaymentMethods?.applePay ?? false) ||
+            (event.availablePaymentMethods?.googlePay ?? false) ||
+            (event.availablePaymentMethods?.link ?? false));
+        }}
+        options={{
+          buttonType: {
+            applePay: mode === "setup" ? "plain" : "buy",
+            googlePay: mode === "setup" ? "plain" : "buy",
+          },
+          buttonTheme: {
+            applePay: "black",
+            googlePay: "black",
+          },
+          layout: { maxColumns: 1, maxRows: 3, overflow: "never" },
+        }}
+      />
 
-      {errorMsg && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-          {errorMsg}
-        </p>
+      {/* Divider shown only when express methods are available */}
+      {expressAvailable && (
+        <div className="flex items-center gap-3">
+          <div className="flex-1 border-t border-gray-200" />
+          <span className="text-xs text-gray-400 font-medium">or pay with card</span>
+          <div className="flex-1 border-t border-gray-200" />
+        </div>
       )}
 
-      <Button
-        type="submit"
-        disabled={isDisabled}
-        className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 text-base"
-      >
-        {(submitting || loading) ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing…
-          </>
-        ) : (
-          <>
-            <Lock className="mr-2 h-4 w-4" />
-            {submitLabel}
-          </>
-        )}
-      </Button>
+      {/* ── Standard card / bank form ── */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <PaymentElement options={paymentElementOptions} />
 
-      <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1">
-        <Lock className="h-3 w-3" />
-        Secured by Stripe · Your card info is never stored on our servers
-      </p>
-    </form>
+        {errorMsg && (
+          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+            {errorMsg}
+          </p>
+        )}
+
+        <Button
+          type="submit"
+          disabled={isDisabled}
+          className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 text-base"
+        >
+          {(submitting || loading) ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing…
+            </>
+          ) : (
+            <>
+              <Lock className="mr-2 h-4 w-4" />
+              {submitLabel}
+            </>
+          )}
+        </Button>
+
+        <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1">
+          <Lock className="h-3 w-3" />
+          Secured by Stripe · Apple Pay &amp; Google Pay supported
+        </p>
+      </form>
+    </div>
   );
 }
 

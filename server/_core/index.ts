@@ -28,6 +28,8 @@ import { handleSummerCampReminder } from "../summerCampReminderJob";
 import { handleKaiCampHourly, handleKaiCampSummary } from "../kaiCampOps";
 import { handleSummerCampTrialActivation } from "../summerCampTrialActivation";
 import { handleBirthdayReminder } from "../birthdayReminderHandler";
+import { handleBillingHealthCheck } from "../billingHealthCheckJob";
+import { handleBillingRetry } from "../billingRetryJob";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -136,6 +138,10 @@ async function startServer() {
   app.post("/api/scheduled/summer-camp-trial-activation", handleSummerCampTrialActivation);
   // Abraham Palacio 10th Birthday Party reminders — fires Fri/Sat/Sun July 25-27 at 2 PM CST (19:00 UTC)
   app.post("/api/scheduled/birthday-reminder", handleBirthdayReminder);
+  // Daily billing health check — fires at 9 AM CDT (14:00 UTC) to find missing/broken subscriptions
+  app.post("/api/scheduled/billingHealthCheck", handleBillingHealthCheck);
+  // Daily billing retry — fires at 10 AM CDT (15:00 UTC) to retry declined cards
+  app.post("/api/scheduled/billingRetry", handleBillingRetry);
   // Staff alert endpoint — send a custom SMS to all staff
   app.post("/api/admin/staff-alert", express.json(), async (req: any, res: any) => {
     const { message } = req.body || {};

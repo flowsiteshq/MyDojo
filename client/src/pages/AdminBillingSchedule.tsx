@@ -23,8 +23,12 @@ import {
   Users,
   TrendingUp,
   ChevronRight,
+  MessageSquare,
+  Zap,
+  Plus,
 } from "lucide-react";
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type PaymentTx = {
@@ -66,9 +70,10 @@ type BillingRow = {
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function getPaymentStatus(row: BillingRow): "paid" | "overdue" | "due-soon" | "unpaid" | "cancelled" | "no-billing" {
+function getPaymentStatus(row: BillingRow): "paid" | "overdue" | "due-soon" | "unpaid" | "cancelled" | "no-billing" | "pending" {
   if (row.enrollmentStatus === "cancelled" || row.enrollmentStatus === "inactive") return "cancelled";
-  if (row.isFrozen) return "unpaid"; // frozen = paused, show as unpaid
+  if (row.enrollmentStatus === "pending") return "pending";
+  if (row.isFrozen) return "unpaid";
   if (row.paidThisMonth) return "paid";
   if (row.subStatus === "failed") return "overdue";
   if (!row.nextBillDate && row.paymentMethod === "manual") return "no-billing";
@@ -81,12 +86,13 @@ function getPaymentStatus(row: BillingRow): "paid" | "overdue" | "due-soon" | "u
 }
 
 const STATUS_CONFIG = {
-  paid:        { label: "Paid",         color: "bg-green-100 text-green-700",  rowBg: "",              dot: "bg-green-500" },
-  overdue:     { label: "Overdue",      color: "bg-red-100 text-red-700",      rowBg: "bg-red-50/40",  dot: "bg-red-500" },
-  "due-soon":  { label: "Due Soon",     color: "bg-amber-100 text-amber-700",  rowBg: "bg-amber-50/40",dot: "bg-amber-500" },
-  unpaid:      { label: "Unpaid",       color: "bg-yellow-100 text-yellow-700",rowBg: "",              dot: "bg-yellow-400" },
-  cancelled:   { label: "Cancelled",    color: "bg-gray-100 text-gray-500",    rowBg: "opacity-60",    dot: "bg-gray-400" },
-  "no-billing":{ label: "No Billing",   color: "bg-orange-100 text-orange-700",rowBg: "bg-orange-50/30",dot: "bg-orange-400" },
+  paid:        { label: "Paid",         color: "bg-green-100 text-green-700",  rowBg: "",                    dot: "bg-green-500" },
+  overdue:     { label: "Overdue",      color: "bg-red-100 text-red-700",      rowBg: "bg-red-50/40",        dot: "bg-red-500" },
+  "due-soon":  { label: "Due Soon",     color: "bg-amber-100 text-amber-700",  rowBg: "bg-amber-50/40",      dot: "bg-amber-500" },
+  unpaid:      { label: "Unpaid",       color: "bg-yellow-100 text-yellow-700",rowBg: "",                    dot: "bg-yellow-400" },
+  cancelled:   { label: "Cancelled",    color: "bg-gray-100 text-gray-500",    rowBg: "opacity-60",          dot: "bg-gray-400" },
+  "no-billing":{ label: "No Billing",   color: "bg-orange-100 text-orange-700",rowBg: "bg-orange-50/30",     dot: "bg-orange-400" },
+  pending:     { label: "Pending",      color: "bg-purple-100 text-purple-700",rowBg: "bg-purple-50/30",     dot: "bg-purple-500" },
 };
 
 function fmt(amount: number | null | undefined): string {
@@ -106,6 +112,7 @@ function fmtMonth(d: string | Date | null | undefined): string {
 
 const FILTER_TABS = [
   { key: "all",         label: "All" },
+  { key: "pending",     label: "⚠️ Pending" },
   { key: "paid",        label: "Paid This Month" },
   { key: "unpaid",      label: "Unpaid" },
   { key: "overdue",     label: "Overdue" },
@@ -114,14 +121,97 @@ const FILTER_TABS = [
   { key: "no-billing",  label: "No Billing" },
 ];
 
+// ── Create Subscription Dialog ────────────────────────────────────────────────
+function CreateSubscriptionDialog({
+  enrollment,
+  open,
+  onClose,
+  onSuccess,
+}: {
+  enrollment: BillingRow | null;
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const today = new Date();
+  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
+  const defaultDate = nextMonth.toISOString().slice(0, 10);
+  const [nextChargeDate, setNextChargeDate] = useState(defaultDate);
+
+  const createSub = trpc.admin.createMissingSubscription.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Subscription created! ID: ${data.fpSubscriptionId}`);
+      onSuccess();
+      onClose();
+    },
+    onError: (err) => toast.error(err.message || "Failed to create subscription"),
+  });
+
+  if (!enrollment) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Plus className="w-5 h-5 text-purple-600" />
+            Create Missing Subscription
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+            <AlertTriangle className="inline w-4 h-4 mr-1" />
+            This enrollment was charged but the recurring subscription was never created. Set the first charge date below to activate billing.
+          </div>
+          <div>
+            <p className="text-sm font-medium mb-1">Student</p>
+            <p className="text-sm text-muted-foreground">{enrollment.studentName || enrollment.parentName}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium mb-1">Program</p>
+            <p className="text-sm text-muted-foreground">{enrollment.programName}</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium block mb-1">First Charge Date</label>
+            <input
+              type="date"
+              value={nextChargeDate}
+              onChange={(e) => setNextChargeDate(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 text-sm"
+              min={new Date().toISOString().slice(0, 10)}
+            />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
+            <Button
+              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+              disabled={createSub.isPending || !nextChargeDate}
+              onClick={() => createSub.mutate({ enrollmentId: enrollment.id, nextChargeDate })}
+            >
+              {createSub.isPending ? <RefreshCw className="w-4 h-4 animate-spin mr-1" /> : <Plus className="w-4 h-4 mr-1" />}
+              Create Subscription
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function AdminBillingSchedule() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selected, setSelected] = useState<BillingRow | null>(null);
+  const [createSubFor, setCreateSubFor] = useState<BillingRow | null>(null);
 
   const { data, isLoading, refetch, isFetching } = trpc.admin.getBillingSchedule.useQuery(undefined, {
     staleTime: 2 * 60_000,
+  });
+
+  const sendSms = trpc.admin.sendPaymentReminderSms.useMutation({
+    onSuccess: () => toast.success("SMS reminder sent successfully!"),
+    onError: (err) => toast.error(err.message || "Failed to send SMS"),
   });
 
   const enriched = useMemo(() => {
@@ -150,7 +240,13 @@ export default function AdminBillingSchedule() {
     const overdue = active.filter(r => r._status === "overdue");
     const unpaid = active.filter(r => !r.paidThisMonth);
     const revenue = paid.reduce((s, r) => s + (r.lastPaymentAmount || r.subAmount || 0), 0);
-    return { total: enriched.length, active: active.length, paid: paid.length, overdue: overdue.length, unpaid: unpaid.length, revenue };
+    const missingSub = enriched.filter(r =>
+      r.enrollmentStatus === "active" &&
+      !r.fluidpaySubscriptionId &&
+      !r.stripeSubscriptionId
+    );
+    const pendingCount = enriched.filter(r => r.enrollmentStatus === "pending");
+    return { total: enriched.length, active: active.length, paid: paid.length, overdue: overdue.length, unpaid: unpaid.length, revenue, missingSub: missingSub.length, pendingCount: pendingCount.length };
   }, [enriched]);
 
   const exportCSV = () => {
@@ -195,6 +291,54 @@ export default function AdminBillingSchedule() {
             </Button>
           </div>
         </div>
+
+        {/* ── Billing Health Alerts ── */}
+        {(stats.missingSub > 0 || stats.pendingCount > 0) && (
+          <div className="space-y-2">
+            {stats.pendingCount > 0 && (
+              <div className="flex items-start gap-3 bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <AlertTriangle className="h-5 w-5 text-purple-600 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-purple-900">
+                    {stats.pendingCount} enrollment{stats.pendingCount > 1 ? "s" : ""} in PENDING status
+                  </p>
+                  <p className="text-sm text-purple-700 mt-0.5">
+                    These students were charged but their recurring subscription failed to create. Use the "Create Sub" button on each row to fix them.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-purple-300 text-purple-700 hover:bg-purple-100 shrink-0"
+                  onClick={() => setFilterStatus("pending")}
+                >
+                  View {stats.pendingCount} pending
+                </Button>
+              </div>
+            )}
+            {stats.missingSub > 0 && (
+              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-amber-900">
+                    {stats.missingSub} active member{stats.missingSub > 1 ? "s" : ""} with NO recurring subscription
+                  </p>
+                  <p className="text-sm text-amber-700 mt-0.5">
+                    These enrollments are active but have no FluidPay or Stripe subscription ID. They will not be billed automatically.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-amber-300 text-amber-700 hover:bg-amber-100 shrink-0"
+                  onClick={() => { setSearch(""); setFilterStatus("all"); }}
+                >
+                  View all
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -289,56 +433,104 @@ export default function AdminBillingSchedule() {
                       <th className="text-left p-3 font-semibold text-gray-700">Monthly Rate</th>
                       <th className="text-left p-3 font-semibold text-gray-700">Next Due</th>
                       <th className="text-left p-3 font-semibold text-gray-700">Pmts Made</th>
-                      <th className="text-left p-3 font-semibold text-gray-700"></th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.map(row => {
                       const cfg = STATUS_CONFIG[row._status as keyof typeof STATUS_CONFIG];
+                      const isMissingSub = row.enrollmentStatus === "active" && !row.fluidpaySubscriptionId && !row.stripeSubscriptionId;
+                      const isPending = row.enrollmentStatus === "pending";
                       return (
-                        <tr key={row.id} className={`border-b hover:bg-muted/20 cursor-pointer ${cfg.rowBg}`} onClick={() => setSelected(row)}>
-                          <td className="p-3">
-                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                              {cfg.label}
-                            </span>
+                        <tr key={row.id} className={`border-b hover:bg-muted/20 ${cfg.rowBg}`}>
+                          <td className="p-3 cursor-pointer" onClick={() => setSelected(row)}>
+                            <div className="space-y-1">
+                              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                                {cfg.label}
+                              </span>
+                              {(isMissingSub || isPending) && (
+                                <div className="flex items-center gap-1 text-xs text-amber-700">
+                                  <AlertTriangle className="w-3 h-3" />
+                                  No subscription
+                                </div>
+                              )}
+                            </div>
                           </td>
-                          <td className="p-3">
+                          <td className="p-3 cursor-pointer" onClick={() => setSelected(row)}>
                             <div className="font-medium text-gray-900">{row.studentName || row.parentName || "—"}</div>
                             {row.parentName && row.parentName !== row.studentName && (
                               <div className="text-xs text-gray-400">{row.parentName}</div>
                             )}
                             {row.phone && <div className="text-xs text-gray-400">{row.phone}</div>}
                           </td>
-                          <td className="p-3">
+                          <td className="p-3 cursor-pointer" onClick={() => setSelected(row)}>
                             <span className="text-gray-700">{row.programName || "—"}</span>
                           </td>
-                          <td className="p-3">
+                          <td className="p-3 cursor-pointer" onClick={() => setSelected(row)}>
                             <span className="text-gray-700">{fmtDate(row.lastPaymentDate)}</span>
                           </td>
-                          <td className="p-3">
+                          <td className="p-3 cursor-pointer" onClick={() => setSelected(row)}>
                             <span className="text-gray-700">{fmtMonth(row.lastPaymentDate)}</span>
                           </td>
-                          <td className="p-3">
+                          <td className="p-3 cursor-pointer" onClick={() => setSelected(row)}>
                             <span className={`font-semibold ${row.lastPaymentAmount ? "text-green-700" : "text-gray-400"}`}>
                               {fmt(row.lastPaymentAmount)}
                             </span>
                           </td>
-                          <td className="p-3">
+                          <td className="p-3 cursor-pointer" onClick={() => setSelected(row)}>
                             <span className="text-gray-700">{fmt(row.subAmount)}/mo</span>
                           </td>
-                          <td className="p-3">
+                          <td className="p-3 cursor-pointer" onClick={() => setSelected(row)}>
                             <span className={`text-gray-700 ${row.nextBillDate && new Date(row.nextBillDate) < new Date() ? "text-red-600 font-medium" : ""}`}>
                               {fmtDate(row.nextBillDate)}
                             </span>
                           </td>
-                          <td className="p-3 text-center">
+                          <td className="p-3 text-center cursor-pointer" onClick={() => setSelected(row)}>
                             <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                               {row.totalSuccessfulPayments}
                             </span>
                           </td>
+                          {/* Action buttons */}
                           <td className="p-3">
-                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                            <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                              {/* Create Subscription button — shown for pending or active-but-missing-sub */}
+                              {(isPending || isMissingSub) && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-xs border-purple-300 text-purple-700 hover:bg-purple-50"
+                                  title="Create missing FluidPay subscription"
+                                  onClick={() => setCreateSubFor(row)}
+                                >
+                                  <Plus className="w-3 h-3 mr-1" />
+                                  Create Sub
+                                </Button>
+                              )}
+                              {/* Send SMS Reminder */}
+                              {row.phone && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
+                                  title="Send SMS payment reminder"
+                                  disabled={sendSms.isPending}
+                                  onClick={() => sendSms.mutate({ enrollmentId: row.id })}
+                                >
+                                  <MessageSquare className="w-3 h-3 mr-1" />
+                                  SMS
+                                </Button>
+                              )}
+                              {/* View details */}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => setSelected(row)}
+                              >
+                                <ChevronRight className="w-4 h-4 text-gray-400" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -362,6 +554,25 @@ export default function AdminBillingSchedule() {
           </DialogHeader>
           {selected && (
             <div className="space-y-5">
+              {/* Billing health warning */}
+              {(selected.enrollmentStatus === "pending" || (!selected.fluidpaySubscriptionId && !selected.stripeSubscriptionId && selected.enrollmentStatus === "active")) && (
+                <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold">No recurring subscription found</p>
+                    <p className="mt-0.5">This enrollment has no FluidPay or Stripe subscription. The member will not be billed automatically. Use the "Create Sub" button to fix this.</p>
+                    <Button
+                      size="sm"
+                      className="mt-2 bg-purple-600 hover:bg-purple-700 text-white h-7 text-xs"
+                      onClick={() => { setSelected(null); setCreateSubFor(selected); }}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Create Subscription
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Member summary */}
               <div className="grid grid-cols-2 gap-3 bg-gray-50 rounded-lg p-4 text-sm">
                 <div><span className="text-gray-500">Program:</span> <span className="font-medium ml-1">{selected.programName}</span></div>
@@ -370,6 +581,8 @@ export default function AdminBillingSchedule() {
                 <div><span className="text-gray-500">Remaining Balance:</span> <span className="font-medium ml-1">{fmt(parseFloat(String(selected.remainingBalance || 0)))}</span></div>
                 <div><span className="text-gray-500">Payments Made:</span> <span className="font-medium text-green-700 ml-1">{selected.totalSuccessfulPayments}</span></div>
                 <div><span className="text-gray-500">Payments Left:</span> <span className="font-medium ml-1">{selected.monthlyPaymentsRemaining ?? "—"}</span></div>
+                <div><span className="text-gray-500">Sub ID:</span> <span className="font-mono text-xs ml-1 text-gray-600">{selected.fluidpaySubscriptionId || selected.stripeSubscriptionId || "None"}</span></div>
+                <div><span className="text-gray-500">Sub Status:</span> <span className={`font-medium ml-1 ${selected.subStatus === "active" ? "text-green-700" : selected.subStatus === "failed" ? "text-red-600" : "text-gray-600"}`}>{selected.subStatus || "—"}</span></div>
                 {selected.totalFailedPayments > 0 && (
                   <div className="col-span-2 text-red-600">
                     <AlertTriangle className="inline w-3.5 h-3.5 mr-1" />
@@ -377,6 +590,30 @@ export default function AdminBillingSchedule() {
                   </div>
                 )}
               </div>
+
+              {/* Quick actions */}
+              {selected.phone && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2 text-sm">Quick Actions</h3>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-blue-700 border-blue-300 hover:bg-blue-50"
+                      disabled={sendSms.isPending}
+                      onClick={() => sendSms.mutate({ enrollmentId: selected.id })}
+                    >
+                      <MessageSquare className="w-4 h-4 mr-1" />
+                      Send SMS Reminder
+                    </Button>
+                    <a href={`tel:${selected.phone}`}>
+                      <Button size="sm" variant="outline">
+                        Call {selected.phone}
+                      </Button>
+                    </a>
+                  </div>
+                </div>
+              )}
 
               {/* Transaction history */}
               <div>
@@ -413,6 +650,14 @@ export default function AdminBillingSchedule() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Create Subscription Dialog */}
+      <CreateSubscriptionDialog
+        enrollment={createSubFor}
+        open={!!createSubFor}
+        onClose={() => setCreateSubFor(null)}
+        onSuccess={() => refetch()}
+      />
     </AdminLayout>
   );
 }

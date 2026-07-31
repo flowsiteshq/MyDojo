@@ -218,11 +218,12 @@ export const appRouter = router({
         });
         const subscriptionData = await subscriptionRes.json() as any;
         let fpSubscriptionId: string | null = null;
+        let manualSubFailed = false;
         if (subscriptionData.status === 'success') {
           fpSubscriptionId = subscriptionData.data?.id || null;
         } else {
-          console.error('[ManualEnroll] Subscription creation failed:', subscriptionData);
-          // Non-fatal: enrollment still saved, staff can set up subscription manually
+          console.error('[ManualEnroll] Subscription creation failed:', JSON.stringify(subscriptionData));
+          manualSubFailed = true;
         }
 
         // Step 4: Save enrollment record
@@ -242,7 +243,8 @@ export const appRouter = router({
           initialTransactionId,
           cardLast4: cardLast4 || null,
           cardType: cardType || null,
-          status: 'active',
+          // If subscription creation failed, mark as pending so admin can fix it
+          status: manualSubFailed ? 'pending' : 'active',
           notes: input.notes || null,
           createdByStaffId: ctx.user.id,
           createdByStaffName: ctx.user.name || ctx.user.email,
@@ -252,9 +254,12 @@ export const appRouter = router({
         // Notify owner
         try {
           const { notifyOwner } = await import('./_core/notification');
+          const subNote = manualSubFailed
+            ? ' \u26a0\ufe0f SUBSCRIPTION CREATION FAILED — enrollment is PENDING. Please create the subscription manually in FluidPay.'
+            : '';
           await notifyOwner({
-            title: 'Manual Enrollment Created',
-            content: `${ctx.user.name || ctx.user.email} enrolled ${input.studentName} in ${programLabel} at $${input.customPrice}/${billingFrequency}. Next charge: ${input.nextChargeDate}. ${input.preAuthOnly ? 'Pre-auth only.' : `Charged $${input.customPrice} today.`}`,
+            title: manualSubFailed ? '\ud83d\udea8 Manual Enrollment PENDING (Subscription Failed)' : 'Manual Enrollment Created',
+            content: `${ctx.user.name || ctx.user.email} enrolled ${input.studentName} in ${programLabel} at $${input.customPrice}/${billingFrequency}. Next charge: ${input.nextChargeDate}. ${input.preAuthOnly ? 'Pre-auth only.' : `Charged $${input.customPrice} today.`}${subNote}`,
           });
         } catch {}
 
@@ -3710,10 +3715,12 @@ Please enter your card details below to complete your registration securely. Tot
 
         // Step 3: Create recurring subscription for monthly billing (membership only, skip for promo-free)
         let fpSubscriptionId: string | null = null;
+        let subscriptionCreationFailed = false;
         if (!isPromoFree && !input.isSummerCamp && pkg && fpCustomerId) {
           // Start subscription next month — first month is always charged upfront (whether via down payment or waiveDownPayment)
           const subStartDate = (() => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d; })();
           const startDate = subStartDate.toISOString().slice(0, 10);
+          const billingDay = subStartDate.getDate().toString();
           const subscriptionRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
             method: 'POST',
             headers: fpHeaders,
@@ -3722,13 +3729,24 @@ Please enter your card details below to complete your registration securely. Tot
               customer_id: fpCustomerId,
               description: `MyDojo ${pkg.name} Monthly Membership`,
               start: startDate,
+              billing_days: billingDay,
             }),
           });
           const subscriptionData = await subscriptionRes.json();
           if (subscriptionData.status !== 'success') {
-            console.error('[FluidPay] Subscription creation failed:', subscriptionData);
+            console.error('[FluidPay] Subscription creation failed:', JSON.stringify(subscriptionData));
+            subscriptionCreationFailed = true;
+            // Notify owner immediately — enrollment will be saved as 'pending' until fixed
+            try {
+              const { notifyOwner } = await import('./_core/notification');
+              await notifyOwner({
+                title: '🚨 Subscription Setup Failed',
+                content: `Enrollment for ${input.studentName || input.customerName} (${input.customerEmail}) was charged successfully but the recurring subscription could NOT be created. Enrollment saved as PENDING. Please create the subscription manually in FluidPay and update the enrollment. FluidPay error: ${JSON.stringify(subscriptionData?.msg || subscriptionData?.status || 'unknown')}`,
+              });
+            } catch {}
+          } else {
+            fpSubscriptionId = subscriptionData.data?.id || null;
           }
-          fpSubscriptionId = subscriptionData.data?.id || null;
         }
 
         // Step 4: Create enrollment record in database
@@ -3753,7 +3771,7 @@ Please enter your card details below to complete your registration securely. Tot
             paidFirstMonth: 1,
             remainingBalance: '0.00',
             monthlyPaymentsRemaining: 0,
-            status: 'active',
+            status: 'active', // summer camp has no subscription
             discountApplied: input.discountCode || null,
             agreementSignature: input.agreementSignature || null,
             agreementSignedAt: input.agreementSignedAt ? new Date(input.agreementSignedAt) : null,
@@ -3788,7 +3806,8 @@ Please enter your card details below to complete your registration securely. Tot
             deferredTuitionCharged: 0, // pending
             remainingBalance: remainingBalance.toFixed(2),
             monthlyPaymentsRemaining: pkg!.durationMonths,
-            status: 'active',
+            // If subscription creation failed, mark as pending so admin can fix it
+            status: subscriptionCreationFailed ? 'pending' : 'active',
             discountApplied: input.discountCode || null,
             agreementSignature: input.agreementSignature || null,
             agreementSignedAt: input.agreementSignedAt ? new Date(input.agreementSignedAt) : null,
@@ -3816,7 +3835,8 @@ Please enter your card details below to complete your registration securely. Tot
             paidFirstMonth: 1,
             remainingBalance: remainingBalance.toFixed(2),
             monthlyPaymentsRemaining: pkg!.durationMonths - 1,
-            status: 'active',
+            // If subscription creation failed, mark as pending so admin can fix it
+            status: subscriptionCreationFailed ? 'pending' : 'active',
             discountApplied: 'enrollment_fee_waived',
             agreementSignature: input.agreementSignature || null,
             agreementSignedAt: input.agreementSignedAt ? new Date(input.agreementSignedAt) : null,
@@ -3850,7 +3870,8 @@ Please enter your card details below to complete your registration securely. Tot
             paidFirstMonth: 1,
             remainingBalance: remainingBalance.toFixed(2),
             monthlyPaymentsRemaining: pkg!.durationMonths - 1,
-            status: 'active',
+            // If subscription creation failed, mark as pending so admin can fix it
+            status: subscriptionCreationFailed ? 'pending' : 'active',
             discountApplied: discountNote,
             agreementSignature: input.agreementSignature || null,
             agreementSignedAt: input.agreementSignedAt ? new Date(input.agreementSignedAt) : null,
@@ -7537,6 +7558,139 @@ Please enter your card details below to complete your registration securely. Tot
           .set({ status: 'active' })
           .where(eq(schema.enrollments.id, failure.enrollmentId));
         return { success: true };
+      }),
+
+    // ─── Create Missing FluidPay Subscription ────────────────────────────────
+    // Admin: create a FluidPay recurring subscription for an enrollment that
+    // was saved without one (subscription creation failed at checkout time).
+    createMissingSubscription: protectedProcedure
+      .input(z.object({
+        enrollmentId: z.number().int(),
+        nextChargeDate: z.string(), // YYYY-MM-DD
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin/staff only' });
+        }
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+
+        const [enrollment] = await db
+          .select()
+          .from(schema.enrollments)
+          .where(eq(schema.enrollments.id, input.enrollmentId))
+          .limit(1);
+        if (!enrollment) throw new TRPCError({ code: 'NOT_FOUND', message: 'Enrollment not found' });
+        if (!enrollment.fluidpayCustomerId) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No FluidPay customer ID on this enrollment — cannot create subscription automatically.' });
+        }
+        if (enrollment.fluidpaySubscriptionId) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Enrollment already has a FluidPay subscription ID.' });
+        }
+
+        // Look up the membership package to get the plan ID
+        const [pkg] = await db
+          .select()
+          .from(schema.membershipPackages)
+          .where(eq(schema.membershipPackages.id, enrollment.membershipPackageId))
+          .limit(1);
+        if (!pkg) throw new TRPCError({ code: 'NOT_FOUND', message: 'Membership package not found' });
+        if (!pkg.fluidpayPlanId) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Membership package has no FluidPay plan ID configured.' });
+        }
+
+        const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
+        const FLUIDPAY_KEY = process.env.FLUIDPAY_SECRET_KEY || '';
+        const billingDay = new Date(input.nextChargeDate).getDate().toString();
+
+        const subscriptionRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
+          method: 'POST',
+          headers: { 'Authorization': FLUIDPAY_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            plan_id: pkg.fluidpayPlanId,
+            customer_id: enrollment.fluidpayCustomerId,
+            description: `MyDojo ${pkg.name} Monthly Membership`,
+            start: input.nextChargeDate,
+            billing_days: billingDay,
+          }),
+        });
+        const subscriptionData = await subscriptionRes.json() as any;
+        if (subscriptionData.status !== 'success') {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `FluidPay subscription creation failed: ${subscriptionData?.msg || JSON.stringify(subscriptionData)}`,
+          });
+        }
+        const fpSubscriptionId = subscriptionData.data?.id;
+        if (!fpSubscriptionId) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'FluidPay returned no subscription ID' });
+        }
+
+        // Update enrollment with new subscription ID and set status to active
+        await db
+          .update(schema.enrollments)
+          .set({ fluidpaySubscriptionId: fpSubscriptionId, status: 'active' })
+          .where(eq(schema.enrollments.id, input.enrollmentId));
+
+        // Notify owner
+        try {
+          const { notifyOwner } = await import('./_core/notification');
+          await notifyOwner({
+            title: '\u2705 Missing Subscription Created',
+            content: `${ctx.user.name || ctx.user.email} manually created a FluidPay subscription for ${enrollment.studentName || enrollment.customerName}. Sub ID: ${fpSubscriptionId}. First charge: ${input.nextChargeDate}. Enrollment re-activated.`,
+          });
+        } catch {}
+
+        return { success: true, fpSubscriptionId };
+      }),
+
+    // ─── Send Payment Reminder SMS ────────────────────────────────────────────
+    // Admin: send a custom SMS reminder to a member about their payment.
+    sendPaymentReminderSms: protectedProcedure
+      .input(z.object({
+        enrollmentId: z.number().int(),
+        message: z.string().min(1).max(500).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin/staff only' });
+        }
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+
+        const [enrollment] = await db
+          .select()
+          .from(schema.enrollments)
+          .where(eq(schema.enrollments.id, input.enrollmentId))
+          .limit(1);
+        if (!enrollment) throw new TRPCError({ code: 'NOT_FOUND', message: 'Enrollment not found' });
+        if (!enrollment.customerPhone) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No phone number on file for this enrollment.' });
+        }
+
+        const { sendSms, normalizePhone } = await import('./sms800');
+        const firstName = enrollment.customerName.split(' ')[0];
+        const studentName = enrollment.studentName || enrollment.customerName;
+        const defaultMsg =
+          `Hi ${firstName}, this is MyDojo. ` +
+          `We noticed there may be an issue with ${studentName}'s membership payment. ` +
+          `Please call us at (832) 791-8378 or visit mydojoma.com to update your payment info. ` +
+          `Thank you! Reply STOP to unsubscribe.`;
+        const smsBody = input.message || defaultMsg;
+
+        const result = await sendSms({
+          to: normalizePhone(enrollment.customerPhone),
+          message: smsBody,
+        });
+
+        if (!result.success) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `SMS failed to send: ${result.error || 'Unknown error'}`,
+          });
+        }
+
+        return { success: true, messageId: result.messageId };
       }),
 
     // ─── Update Enrollment Payment Method ────────────────────────────────────
