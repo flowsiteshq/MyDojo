@@ -167,6 +167,10 @@ function InnerForm({ mode, submitLabel, loading, onSuccess, onError }: InnerForm
 
   const paymentElementOptions: StripePaymentElementOptions = {
     layout: "tabs",
+    // Always show card as default — prevents blank render on iOS Safari
+    defaultValues: {
+      billingDetails: {},
+    },
   };
 
   const isDisabled = submitting || loading || !stripe || !elements;
@@ -287,6 +291,9 @@ export function StripePaymentForm({
       options={{
         clientSecret,
         appearance: (appearance as any) || defaultAppearance,
+        // Explicitly declare mode so PaymentElement renders correctly on iOS Safari
+        // without this, card fields can appear blank on mobile
+        loader: "always",
       }}
     >
       <InnerForm
