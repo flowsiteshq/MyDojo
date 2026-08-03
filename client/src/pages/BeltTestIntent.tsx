@@ -21,10 +21,10 @@ const BELTS = [
 ];
 
 const INSTRUCTORS = [
-  "Master Yaeger",
-  "Sensei Johnson",
-  "Sensei Williams",
-  "Sensei Davis",
+  "Master Vincent Holmes",
+  "Sensei Kamil Ahmed",
+  "Sensei Hector Diosdado",
+  "Sensei Dominique Griggs",
   "Other",
 ];
 
