@@ -2340,6 +2340,8 @@ export type InsertReadingPromoLead = typeof readingPromoLeads.$inferInsert;
 export const beltTestIntents = mysqlTable("beltTestIntents", {
   id: int("id").autoincrement().primaryKey(),
   eventId: varchar("eventId", { length: 64 }).notNull().default("aug-2026-belt-test"),
+  groupId: varchar("groupId", { length: 64 }),  // links multiple children from same parent submission
+  childIndex: int("childIndex").notNull().default(0),  // 0-based index within the group
   studentName: varchar("studentName", { length: 255 }).notNull(),
   parentName: varchar("parentName", { length: 255 }).notNull(),
   phone: varchar("phone", { length: 20 }).notNull(),

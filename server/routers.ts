@@ -11281,6 +11281,96 @@ Please enter your card details below to complete your registration securely. Tot
 
   // ─── Belt Test Intent to Promote ───────────────────────────────────────────────
   beltTestIntent: router({
+    // Multi-child submission: accepts an array of children with shared parent info
+    submitMulti: publicProcedure
+      .input(z.object({
+        parentName: z.string().min(1),
+        phone: z.string().min(10),
+        email: z.string().email(),
+        testingFor: z.string().default('my_child'),
+        parentRatings: z.string().optional(),
+        parentAnswers: z.string().optional(),
+        parentRecommendation: z.string().optional(),
+        parentComments: z.string().optional(),
+        parentCommitmentAgreed: z.boolean().optional(),
+        eventId: z.string().default('aug-2026-belt-test'),
+        children: z.array(z.object({
+          studentName: z.string().min(1),
+          currentBelt: z.string().min(1),
+          beltSeeking: z.string().optional(),
+          instructor: z.string().optional(),
+          selfReflectionRatings: z.string().optional(),
+          writtenAnswers: z.string().optional(),
+          blackBeltQuestion: z.string().optional(),
+          studentPledgeAgreed: z.boolean().optional(),
+        })).min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const groupId = `grp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const insertedIds: number[] = [];
+        for (let i = 0; i < input.children.length; i++) {
+          const child = input.children[i];
+          const [result] = await db.insert(schema.beltTestIntents).values({
+            eventId: input.eventId,
+            groupId,
+            childIndex: i,
+            studentName: child.studentName,
+            parentName: input.parentName,
+            phone: input.phone,
+            email: input.email,
+            currentBelt: child.currentBelt,
+            beltSeeking: child.beltSeeking || null,
+            instructor: child.instructor || null,
+            testingFor: input.testingFor,
+            selfReflectionRatings: child.selfReflectionRatings || null,
+            writtenAnswers: child.writtenAnswers || null,
+            parentRatings: input.parentRatings || null,
+            parentAnswers: input.parentAnswers || null,
+            parentRecommendation: input.parentRecommendation || null,
+            parentComments: input.parentComments || null,
+            blackBeltQuestion: child.blackBeltQuestion || null,
+            studentPledgeAgreed: child.studentPledgeAgreed ? 1 : 0,
+            parentCommitmentAgreed: input.parentCommitmentAgreed ? 1 : 0,
+            paymentStatus: 'pending',
+          });
+          insertedIds.push((result as any).insertId);
+        }
+        const Stripe = (await import('stripe')).default;
+        const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2026-01-28.clover' as any });
+        const origin = (ctx.req.headers.origin as string) || 'https://mydojoma.com';
+        const studentNames = input.children.map(c => c.studentName).join(', ');
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          mode: 'payment',
+          line_items: input.children.map(child => ({
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `Belt Test Fee — ${child.studentName}`,
+                description: `Intent to Promote — Belt Test August 15th, 2026. Current Belt: ${child.currentBelt}`,
+              },
+              unit_amount: 4900,
+            },
+            quantity: 1,
+          })),
+          metadata: {
+            type: 'belt_test_intent_multi',
+            group_id: groupId,
+            intent_ids: insertedIds.join(','),
+            student_names: studentNames.slice(0, 500),
+            parent_name: input.parentName,
+            phone: input.phone,
+            child_count: String(input.children.length),
+          },
+          customer_email: input.email,
+          success_url: `${origin}/belt-test-intent/success?name=${encodeURIComponent(studentNames)}&count=${input.children.length}`,
+          cancel_url: `${origin}/belt-test-intent`,
+        });
+        return { checkoutUrl: session.url, groupId, intentIds: insertedIds };
+      }),
+    // Legacy single-child submit (kept for backwards compat)
     submit: publicProcedure
       .input(z.object({
         studentName: z.string().min(1),
