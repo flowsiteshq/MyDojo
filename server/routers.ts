@@ -11281,6 +11281,43 @@ Please enter your card details below to complete your registration securely. Tot
 
   // ─── Belt Test Intent to Promote ───────────────────────────────────────────────
   beltTestIntent: router({
+    // Lookup students by phone number or name from trialSignups
+    lookupStudent: publicProcedure
+      .input(z.object({
+        query: z.string().min(2),
+      }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return [];
+        const { query } = input;
+        const isPhone = /^[\d\s\-\(\)\+]+$/.test(query.trim());
+        const cleanPhone = query.replace(/\D/g, '');
+        if (isPhone && cleanPhone.length >= 7) {
+          return db
+            .select({
+              id: schema.trialSignups.id,
+              name: schema.trialSignups.name,
+              phone: schema.trialSignups.phone,
+              email: schema.trialSignups.email,
+              program: schema.trialSignups.program,
+            })
+            .from(schema.trialSignups)
+            .where(sql`REPLACE(REPLACE(REPLACE(REPLACE(${schema.trialSignups.phone}, '-', ''), ' ', ''), '(', ''), ')', '') LIKE ${'%' + cleanPhone + '%'}`)
+            .limit(10);
+        } else {
+          return db
+            .select({
+              id: schema.trialSignups.id,
+              name: schema.trialSignups.name,
+              phone: schema.trialSignups.phone,
+              email: schema.trialSignups.email,
+              program: schema.trialSignups.program,
+            })
+            .from(schema.trialSignups)
+            .where(sql`LOWER(${schema.trialSignups.name}) LIKE ${'%' + query.toLowerCase() + '%'}`)
+            .limit(10);
+        }
+      }),
     // Multi-child submission: accepts an array of children with shared parent info
     submitMulti: publicProcedure
       .input(z.object({

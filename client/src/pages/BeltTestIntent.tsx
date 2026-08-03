@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronRight, ChevronLeft, Shield, Calendar, DollarSign, Star, User, Users, UserCheck, Award, Plus, Trash2 } from "lucide-react";
+import { ChevronRight, ChevronLeft, Shield, Calendar, DollarSign, Star, User, Users, UserCheck, Award, Plus, Trash2, Search, CheckCircle } from "lucide-react";
 
 const INSTRUCTORS = [
   "Master Vincent Holmes",
@@ -156,6 +156,23 @@ export default function BeltTestIntent() {
 
   const submitMultiMutation = trpc.beltTestIntent.submitMulti.useMutation();
   const submitMutation = trpc.beltTestIntent.submit.useMutation();
+  // Student lookup
+  const [lookupQuery, setLookupQuery] = useState("");
+  const [lookupEnabled, setLookupEnabled] = useState(false);
+  const lookupResults = trpc.beltTestIntent.lookupStudent.useQuery(
+    { query: lookupQuery },
+    { enabled: lookupEnabled && lookupQuery.length >= 2 }
+  );
+  function applyLookup(student: { name: string; phone: string; email: string | null; program: string | null }) {
+    // Pre-fill parent/contact info
+    setParentName(student.name);
+    setPhone(student.phone);
+    setEmail(student.email || "");
+    // Pre-fill first child with student name
+    setChildren(prev => prev.map((c, i) => i === 0 ? { ...c, studentName: student.name } : c));
+    setLookupQuery("");
+    setLookupEnabled(false);
+  }
 
   function updateChild(idx: number, patch: Partial<ChildData>) {
     setChildren(prev => prev.map((c, i) => i === idx ? { ...c, ...patch } : c));
@@ -459,6 +476,36 @@ export default function BeltTestIntent() {
           <div>
             <h2 className="text-2xl font-black uppercase mb-2">{isMyselfAndChild ? "Your Information" : "Parent / Guardian Information"}</h2>
             <p className="text-gray-400 text-sm mb-6">{isMyselfAndChild ? "Your contact info — you will be added as a student along with your children" : "Your contact information (shared for all children)"}</p>
+            {/* Smart lookup */}
+            <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 mb-6">
+              <Label className="text-gray-300 mb-2 block text-sm font-semibold flex items-center gap-2"><Search className="h-4 w-4 text-red-400" /> Quick Lookup (Optional)</Label>
+              <p className="text-xs text-gray-500 mb-3">Type your phone number or student name to auto-fill the form.</p>
+              <div className="flex gap-2">
+                <Input
+                  value={lookupQuery}
+                  onChange={e => { setLookupQuery(e.target.value); setLookupEnabled(true); }}
+                  placeholder="Phone number or student name..."
+                  className="bg-zinc-800 border-zinc-700 text-white flex-1"
+                />
+              </div>
+              {lookupResults.data && lookupResults.data.length > 0 && lookupQuery.length >= 2 && (
+                <div className="mt-2 bg-zinc-800 border border-zinc-700 rounded-lg overflow-hidden">
+                  {lookupResults.data.map((s) => (
+                    <button key={s.id} type="button" onClick={() => applyLookup(s)}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-zinc-700 transition-colors text-left border-b border-zinc-700 last:border-0">
+                      <div>
+                        <p className="text-white font-semibold text-sm">{s.name}</p>
+                        <p className="text-gray-400 text-xs">{s.phone} {s.program ? `· ${s.program}` : ""}</p>
+                      </div>
+                      <CheckCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              )}
+              {lookupResults.data && lookupResults.data.length === 0 && lookupQuery.length >= 3 && !lookupResults.isLoading && (
+                <p className="text-xs text-gray-500 mt-2">No matching students found — fill in manually below.</p>
+              )}
+            </div>
             <div className="grid gap-4">
               <div>
                 <Label className="text-gray-300 mb-1 block">Parent / Guardian Name *</Label>
