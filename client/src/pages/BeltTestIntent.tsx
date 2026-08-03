@@ -66,7 +66,7 @@ const PARENT_QUESTIONS = [
   "Is there anything our instructors should know that would help us better coach your child?",
 ];
 
-type TestingFor = "myself" | "my_child" | "someone_else";
+type TestingFor = "myself" | "my_child" | "myself_and_child" | "someone_else";
 
 interface ChildData {
   studentName: string;
@@ -148,7 +148,8 @@ export default function BeltTestIntent() {
   const [loading, setLoading] = useState(false);
 
   const isAdult = testingFor === "myself";
-  const isChild = testingFor === "my_child" || testingFor === "someone_else";
+  const isMyselfAndChild = testingFor === "myself_and_child";
+  const isChild = testingFor === "my_child" || testingFor === "someone_else" || isMyselfAndChild;
 
   // For adult: 6 steps (0-5). For child: 8 steps (0-7)
   const TOTAL_STEPS = isAdult ? 6 : 8;
@@ -386,6 +387,7 @@ export default function BeltTestIntent() {
               {([
                 { value: "myself" as TestingFor, icon: User, label: "Myself", sub: "I am an adult student registering for myself" },
                 { value: "my_child" as TestingFor, icon: Users, label: "My Child / Children", sub: "I am a parent registering one or more children" },
+                { value: "myself_and_child" as TestingFor, icon: Users, label: "Myself AND My Child / Children", sub: "I train too — register both myself and my children" },
                 { value: "someone_else" as TestingFor, icon: UserCheck, label: "Someone Else", sub: "I am registering on behalf of another student" },
               ] as const).map(({ value, icon: Icon, label, sub }) => (
                 <button key={value} type="button" onClick={() => setTestingFor(value)}
@@ -430,14 +432,14 @@ export default function BeltTestIntent() {
                   <Label className="text-gray-300 mb-1 block">Current Belt *</Label>
                   <Select value={children[0].currentBelt} onValueChange={v => updateChild(0, { currentBelt: v })}>
                     <SelectTrigger className="bg-zinc-900 border-zinc-700 text-white"><SelectValue placeholder="Select current belt" /></SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-zinc-700">{BELT_RANKS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                    <SelectContent className="bg-zinc-900 border-zinc-700 text-white">{BELT_RANKS.map(b => <SelectItem key={b} value={b} className="text-white hover:bg-zinc-700 focus:bg-zinc-700">{b}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div>
                   <Label className="text-gray-300 mb-1 block">Belt Seeking *</Label>
                   <Select value={children[0].beltSeeking} onValueChange={v => updateChild(0, { beltSeeking: v })}>
                     <SelectTrigger className="bg-zinc-900 border-zinc-700 text-white"><SelectValue placeholder="Select belt seeking" /></SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-zinc-700">{BELT_RANKS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                    <SelectContent className="bg-zinc-900 border-zinc-700 text-white">{BELT_RANKS.map(b => <SelectItem key={b} value={b} className="text-white hover:bg-zinc-700 focus:bg-zinc-700">{b}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
@@ -445,7 +447,7 @@ export default function BeltTestIntent() {
                 <Label className="text-gray-300 mb-1 block">Instructor</Label>
                 <Select value={children[0].instructor} onValueChange={v => updateChild(0, { instructor: v })}>
                   <SelectTrigger className="bg-zinc-900 border-zinc-700 text-white"><SelectValue placeholder="Select instructor" /></SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-zinc-700">{INSTRUCTORS.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
+                  <SelectContent className="bg-zinc-900 border-zinc-700 text-white">{INSTRUCTORS.map(i => <SelectItem key={i} value={i} className="text-white hover:bg-zinc-700 focus:bg-zinc-700">{i}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
@@ -455,8 +457,8 @@ export default function BeltTestIntent() {
         {/* Step 1 Child: Parent Info */}
         {step === 1 && !isAdult && (
           <div>
-            <h2 className="text-2xl font-black uppercase mb-2">Parent / Guardian Information</h2>
-            <p className="text-gray-400 text-sm mb-6">Your contact information (shared for all children)</p>
+            <h2 className="text-2xl font-black uppercase mb-2">{isMyselfAndChild ? "Your Information" : "Parent / Guardian Information"}</h2>
+            <p className="text-gray-400 text-sm mb-6">{isMyselfAndChild ? "Your contact info — you will be added as a student along with your children" : "Your contact information (shared for all children)"}</p>
             <div className="grid gap-4">
               <div>
                 <Label className="text-gray-300 mb-1 block">Parent / Guardian Name *</Label>
@@ -480,13 +482,13 @@ export default function BeltTestIntent() {
         {step === 2 && !isAdult && (
           <div>
             <h2 className="text-2xl font-black uppercase mb-2">Student(s) Information</h2>
-            <p className="text-gray-400 text-sm mb-6">Add each child testing. You can register multiple children at once.</p>
+            <p className="text-gray-400 text-sm mb-6">{isMyselfAndChild ? "Add yourself and each child testing. You can register multiple students at once." : "Add each child testing. You can register multiple children at once."}</p>
             <div className="grid gap-4">
               {children.map((child, idx) => (
                 <div key={idx} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-red-400 uppercase tracking-wider text-sm">
-                      {children.length > 1 ? `Child ${idx + 1}` : "Student"}
+                      {isMyselfAndChild && idx === 0 ? "Myself (Parent/Adult)" : children.length > 1 ? `Child ${idx + 1}` : "Student"}
                     </h3>
                     {children.length > 1 && (
                       <button type="button" onClick={() => removeChild(idx)} className="text-gray-500 hover:text-red-400 transition-colors">
@@ -504,14 +506,14 @@ export default function BeltTestIntent() {
                         <Label className="text-gray-300 mb-1 block text-sm">Current Belt *</Label>
                         <Select value={child.currentBelt} onValueChange={v => updateChild(idx, { currentBelt: v })}>
                           <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white"><SelectValue placeholder="Current belt" /></SelectTrigger>
-                          <SelectContent className="bg-zinc-900 border-zinc-700">{BELT_RANKS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                          <SelectContent className="bg-zinc-900 border-zinc-700 text-white">{BELT_RANKS.map(b => <SelectItem key={b} value={b} className="text-white hover:bg-zinc-700 focus:bg-zinc-700">{b}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
                       <div>
                         <Label className="text-gray-300 mb-1 block text-sm">Belt Seeking *</Label>
                         <Select value={child.beltSeeking} onValueChange={v => updateChild(idx, { beltSeeking: v })}>
                           <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white"><SelectValue placeholder="Belt seeking" /></SelectTrigger>
-                          <SelectContent className="bg-zinc-900 border-zinc-700">{BELT_RANKS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                          <SelectContent className="bg-zinc-900 border-zinc-700 text-white">{BELT_RANKS.map(b => <SelectItem key={b} value={b} className="text-white hover:bg-zinc-700 focus:bg-zinc-700">{b}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
                     </div>
@@ -519,7 +521,7 @@ export default function BeltTestIntent() {
                       <Label className="text-gray-300 mb-1 block text-sm">Instructor</Label>
                       <Select value={child.instructor} onValueChange={v => updateChild(idx, { instructor: v })}>
                         <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white"><SelectValue placeholder="Select instructor" /></SelectTrigger>
-                        <SelectContent className="bg-zinc-900 border-zinc-700">{INSTRUCTORS.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
+                        <SelectContent className="bg-zinc-900 border-zinc-700 text-white">{INSTRUCTORS.map(i => <SelectItem key={i} value={i} className="text-white hover:bg-zinc-700 focus:bg-zinc-700">{i}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </div>
@@ -527,12 +529,12 @@ export default function BeltTestIntent() {
               ))}
               <button type="button" onClick={addChild}
                 className="flex items-center justify-center gap-2 border-2 border-dashed border-zinc-700 hover:border-red-500 text-gray-400 hover:text-red-400 rounded-xl py-4 transition-all">
-                <Plus className="h-5 w-5" /> Add Another Child
+                <Plus className="h-5 w-5" /> {isMyselfAndChild ? "Add Another Student" : "Add Another Child"}
               </button>
             </div>
             {children.length > 1 && (
               <div className="mt-4 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-sm text-gray-300">
-                <span className="text-white font-bold">{children.length} students</span> — Total: <span className="text-red-400 font-bold">${children.length * 49}.00</span> ($49 each)
+                <span className="text-white font-bold">{children.length} student{children.length > 1 ? "s" : ""}</span> — Total: <span className="text-red-400 font-bold">${children.length * 49}.00</span> ($49 each)
               </div>
             )}
           </div>
