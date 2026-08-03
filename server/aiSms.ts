@@ -9,6 +9,10 @@ import { eq, desc, and } from "drizzle-orm";
 import { sendSms } from "./sms800";
 import { invokeLLM } from "./_core/llm";
 import { handleBookingFlow } from "./smsTrialBooking";
+import { isAppointmentAlert, parseAndSaveAppointmentLead } from "./appointmentAlertParser";
+
+// Phone number that sends 800.com appointment alert notifications
+const APPOINTMENT_ALERT_SENDER = "+18326102103";
 
 const MYDOJO_AI_NAME = "MyDojo Assistant";
 const DOJO_PHONE = process.env.EIGHT_HUNDRED_FROM_NUMBER ?? "+18774693656";
@@ -335,6 +339,15 @@ export async function handleInboundSms(payload: InboundSmsPayload): Promise<void
   if (!body && (!payload.media || payload.media.length === 0)) return;
 
   console.log(`[AI SMS] Inbound from ${sender}: "${body}"`);
+
+  // ── Appointment Alert Detection ──────────────────────────────────────────────
+  // Messages from the 800.com appointment notification number are auto-parsed
+  // and saved as leads — no AI reply needed.
+  if (sender === APPOINTMENT_ALERT_SENDER || isAppointmentAlert(body)) {
+    console.log(`[AI SMS] Detected appointment alert from ${sender} — routing to lead parser`);
+    await parseAndSaveAppointmentLead(body, sender);
+    return; // Do not process as a regular AI conversation
+  }
 
   // Get or create conversation
   const conv = await getOrCreateConversation(sender);
