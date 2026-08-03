@@ -74,16 +74,16 @@ export async function sendSms(opts: SmsSendOptions): Promise<SmsSendResult> {
       form.append('message', opts.message);
 
       if (opts.mediaBuffer) {
-        const blob = new Blob([opts.mediaBuffer.data], { type: opts.mediaBuffer.contentType });
+        const blob = new Blob([new Uint8Array(opts.mediaBuffer.data)], { type: opts.mediaBuffer.contentType });
         form.append('media[]', blob, opts.mediaBuffer.filename);
       } else if (opts.mediaUrl) {
         // Fetch the image and upload as binary
         const imgRes = await fetch(opts.mediaUrl);
         if (imgRes.ok) {
-          const imgBuffer = Buffer.from(await imgRes.arrayBuffer());
+          const imgArrayBuffer = await imgRes.arrayBuffer();
           const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
           const ext = contentType.split('/')[1]?.split(';')[0] || 'jpg';
-          const blob = new Blob([imgBuffer], { type: contentType });
+          const blob = new Blob([imgArrayBuffer], { type: contentType });
           form.append('media[]', blob, `image.${ext}`);
         }
       }
