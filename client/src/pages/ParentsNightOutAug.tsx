@@ -112,7 +112,7 @@ export default function ParentsNightOutAug() {
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col items-center gap-2">
               <Calendar className="h-6 w-6 text-purple-400" />
               <div className="text-sm font-bold">Date</div>
-              <div className="text-xs text-gray-400">Thursday, August 21st</div>
+              <div className="text-xs text-gray-400">Friday, August 21st</div>
             </div>
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col items-center gap-2">
               <Clock className="h-6 w-6 text-purple-400" />

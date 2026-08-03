@@ -352,17 +352,17 @@ export default function BeltTestIntent() {
         <div className="absolute inset-0 bg-[url('/images/hero-main.jpg')] bg-cover bg-center opacity-10" />
         <div className="relative container mx-auto px-4 py-12 text-center">
           <div className="inline-flex items-center gap-2 bg-red-600/20 border border-red-600/40 text-red-400 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
-            <Award className="h-3 w-3" /> August 15th, 2026
+            <Award className="h-3 w-3" /> Saturday, August 15th, 2026
           </div>
           <h1 className="text-4xl md:text-6xl font-black uppercase mb-3">
             Belt Test<br /><span className="text-red-500">Intent to Promote</span>
           </h1>
           <p className="text-gray-400 max-w-xl mx-auto mb-8">
-            Complete this form to declare your intent to test on <strong className="text-white">August 15th, 2026</strong>. The belt test fee of <span className="text-red-400 font-bold">$49.00 per student</span> is due at registration.
+            Complete this form to declare your intent to test on <strong className="text-white">Saturday, August 15th, 2026</strong>. The belt test fee of <span className="text-red-400 font-bold">$49.00 per student</span> is due at registration.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             {[
-              { icon: Calendar, label: "Belt Test Date", sub: "August 15th, 2026" },
+              { icon: Calendar, label: "Belt Test Date", sub: "Saturday, August 15th, 2026" },
               { icon: Shield, label: "Spotlight Week", sub: "Aug 10\u201314 Prep" },
               { icon: DollarSign, label: "Test Fee", sub: "$49.00 per student" },
             ].map(({ icon: Icon, label, sub }) => (

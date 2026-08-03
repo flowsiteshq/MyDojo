@@ -23,7 +23,7 @@ const EVENTS = [
   },
   {
     date: "Aug 15",
-    day: "Friday",
+    day: "Saturday",
     title: "Belt Test",
     subtitle: "$49 Test Fee",
     color: "bg-[#E10600]",
@@ -41,7 +41,7 @@ const EVENTS = [
   },
   {
     date: "Aug 21",
-    day: "Thursday",
+    day: "Friday",
     title: "Parents Night Out",
     subtitle: "6PM – 9:30PM",
     color: "bg-purple-500",
