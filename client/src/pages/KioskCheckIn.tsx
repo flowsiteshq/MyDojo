@@ -9,7 +9,7 @@ import { soundManager } from "@/lib/soundManager";
 import { KioskAdminLock } from "@/components/KioskAdminLock";
 import { KioskDayPass } from "@/components/KioskDayPass";
 import { KioskEnrollQR } from "@/components/KioskEnrollQR";
-import { KioskThermometer } from "@/components/KioskThermometer";
+import { KioskEventScreensaver } from "@/components/KioskEventScreensaver";
 import KioskOfferFlow from "@/components/KioskOfferFlow";
 
 type KioskScreen = "idle" | "identification" | "confirmation" | "success" | "dayPass" | "enroll";
@@ -307,9 +307,9 @@ export default function KioskCheckIn() {
     return (
       <>
         <KioskAdminLock onVolumeChange={handleVolumeChange} onReset={handleReset} />
-        {/* Member Drive Thermometer — shown after 20s of inactivity */}
+        {/* Event Screensaver — shown after 20s of inactivity */}
         {showThermometer && (
-          <KioskThermometer
+          <KioskEventScreensaver
             onDismiss={() => {
               setShowThermometer(false);
               // Restart idle timer after dismissal

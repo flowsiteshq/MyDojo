@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Ticket, KeyRound, CheckCircle2, AlertCircle, Loader2, DollarSign, Flame } from "lucide-react";
+import { Ticket, KeyRound, CheckCircle2, AlertCircle, Loader2, DollarSign, Flame, CalendarDays, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 // ─── Day Pass Price Section ───────────────────────────────────────────────────
@@ -357,6 +357,174 @@ function MemberDriveSection() {
   );
 }
 
+// ─── Screensaver Events Section ─────────────────────────────────────────────
+interface DojoEvent {
+  id: string;
+  title: string;
+  subtitle?: string;
+  date: string;
+  time?: string;
+  location?: string;
+  tag?: string;
+  tagColor?: string;
+}
+
+const TAG_COLORS = [
+  { value: "red",    label: "Red" },
+  { value: "gold",   label: "Gold" },
+  { value: "blue",   label: "Blue" },
+  { value: "green",  label: "Green" },
+  { value: "purple", label: "Purple" },
+];
+
+function ScreensaverEventsSection() {
+  const { data, isLoading, refetch } = trpc.admin.getScreensaverEvents.useQuery();
+  const setEvents = trpc.admin.setScreensaverEvents.useMutation({
+    onSuccess: () => { toast.success("Screensaver events saved!"); refetch(); setEditing(false); },
+    onError: (err) => toast.error(err.message || "Failed to save events"),
+  });
+  const [editing, setEditing] = useState(false);
+  const [localEvents, setLocalEvents] = useState<DojoEvent[]>([]);
+
+  const handleStartEdit = () => {
+    setLocalEvents((data?.events as DojoEvent[]) ?? []);
+    setEditing(true);
+  };
+
+  const handleAddEvent = () => {
+    setLocalEvents(prev => [...prev, {
+      id: Date.now().toString(),
+      title: "",
+      date: "",
+      tag: "SPECIAL EVENT",
+      tagColor: "red",
+    }]);
+  };
+
+  const handleRemoveEvent = (id: string) => {
+    setLocalEvents(prev => prev.filter(e => e.id !== id));
+  };
+
+  const handleFieldChange = (id: string, field: keyof DojoEvent, value: string) => {
+    setLocalEvents(prev => prev.map(e => e.id === id ? { ...e, [field]: value } : e));
+  };
+
+  const handleSave = () => {
+    for (const e of localEvents) {
+      if (!e.title.trim()) { toast.error("Each event needs a title."); return; }
+      if (!e.date.trim())  { toast.error("Each event needs a date.");  return; }
+    }
+    setEvents.mutate({ events: localEvents });
+  };
+
+  const currentEvents = (data?.events as DojoEvent[]) ?? [];
+
+  return (
+    <Card>
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+            <CalendarDays className="w-5 h-5 text-red-600" />
+          </div>
+          <div>
+            <CardTitle className="text-lg">Kiosk Screensaver Events</CardTitle>
+            <CardDescription>
+              These events rotate on the kiosk idle screen after 20 seconds. Update weekly.
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-gray-500">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">Loading events…</span>
+          </div>
+        ) : !editing ? (
+          <div className="space-y-3">
+            {currentEvents.length === 0 ? (
+              <p className="text-sm text-gray-400 italic">No events configured. Click Edit to add upcoming events.</p>
+            ) : (
+              <div className="space-y-2">
+                {currentEvents.map((ev) => (
+                  <div key={ev.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-sm text-gray-900">{ev.title}</span>
+                        {ev.tag && <Badge variant="outline" className="text-xs">{ev.tag}</Badge>}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">{ev.date}{ev.time ? ` · ${ev.time}` : ""}{ev.location ? ` · ${ev.location}` : ""}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Button onClick={handleStartEdit} variant="outline" className="mt-2">Edit Events</Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {localEvents.map((ev, idx) => (
+              <div key={ev.id} className="p-4 border border-gray-200 rounded-lg space-y-3 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-gray-700">Event {idx + 1}</span>
+                  <Button variant="ghost" size="sm" onClick={() => handleRemoveEvent(ev.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50 h-7 px-2">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs font-medium mb-1 block">Title *</Label>
+                    <Input value={ev.title} onChange={e => handleFieldChange(ev.id, "title", e.target.value)} placeholder="e.g. BELT TEST" />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium mb-1 block">Subtitle</Label>
+                    <Input value={ev.subtitle ?? ""} onChange={e => handleFieldChange(ev.id, "subtitle", e.target.value)} placeholder="e.g. All Levels Welcome" />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium mb-1 block">Date *</Label>
+                    <Input value={ev.date} onChange={e => handleFieldChange(ev.id, "date", e.target.value)} placeholder="e.g. August 9, 2026" />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium mb-1 block">Time</Label>
+                    <Input value={ev.time ?? ""} onChange={e => handleFieldChange(ev.id, "time", e.target.value)} placeholder="e.g. 10:00 AM – 12:00 PM" />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium mb-1 block">Location</Label>
+                    <Input value={ev.location ?? ""} onChange={e => handleFieldChange(ev.id, "location", e.target.value)} placeholder="e.g. Main Dojo Floor" />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium mb-1 block">Tag Label</Label>
+                    <Input value={ev.tag ?? ""} onChange={e => handleFieldChange(ev.id, "tag", e.target.value)} placeholder="e.g. BELT TEST" />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium mb-1 block">Tag Color</Label>
+                    <select
+                      value={ev.tagColor ?? "red"}
+                      onChange={e => handleFieldChange(ev.id, "tagColor", e.target.value)}
+                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                    >
+                      {TAG_COLORS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <Button variant="outline" onClick={handleAddEvent} className="w-full border-dashed">
+              <Plus className="w-4 h-4 mr-2" /> Add Event
+            </Button>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={handleSave} disabled={setEvents.isPending} className="bg-[#E10600] hover:bg-[#C10500] text-white">
+                {setEvents.isPending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving…</> : "Save Events"}
+              </Button>
+              <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AdminSettings() {
   return (
@@ -383,6 +551,14 @@ export default function AdminSettings() {
               Member Drive
             </h2>
             <MemberDriveSection />
+          </div>
+          <Separator />
+          {/* Screensaver Events section */}
+          <div>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              Kiosk Screensaver
+            </h2>
+            <ScreensaverEventsSection />
           </div>
           <Separator />
 

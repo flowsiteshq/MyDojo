@@ -5505,6 +5505,22 @@ Please enter your card details below to complete your registration securely. Tot
       }),
 
 
+    // ── Screensaver Events ──────────────────────────────────────────────────────
+    // Returns the weekly upcoming events configured by admin for the kiosk screensaver.
+    getScreensaverEvents: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return { events: [] };
+      const rows = await db.select().from(schema.adminConfig).where(eq(schema.adminConfig.key, 'kioskScreensaverEvents'));
+      const raw = rows[0]?.value;
+      if (!raw) return { events: [] };
+      try {
+        const events = JSON.parse(raw);
+        return { events: Array.isArray(events) ? events : [] };
+      } catch {
+        return { events: [] };
+      }
+    }),
+
     // ── Member Drive Progress (Thermometer) ─────────────────────────────────────
     // Returns live count of new members enrolled since the drive start date,
     // plus the goal and deadline from adminConfig.
@@ -7648,6 +7664,46 @@ Please enter your card details below to complete your registration securely. Tot
         for (const u of upserts) {
           await db.insert(schema.adminConfig).values(u).onDuplicateKeyUpdate({ set: { value: u.value } });
         }
+        return { success: true };
+      }),
+
+    /** Get screensaver events config (admin only) */
+    getScreensaverEvents: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin only' });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+      const rows = await db.select().from(schema.adminConfig).where(eq(schema.adminConfig.key, 'kioskScreensaverEvents'));
+      const raw = rows[0]?.value;
+      if (!raw) return { events: [] };
+      try {
+        const events = JSON.parse(raw);
+        return { events: Array.isArray(events) ? events : [] };
+      } catch {
+        return { events: [] };
+      }
+    }),
+
+    /** Set screensaver events config (admin only) */
+    setScreensaverEvents: protectedProcedure
+      .input(z.object({
+        events: z.array(z.object({
+          id: z.string(),
+          title: z.string(),
+          subtitle: z.string().optional(),
+          date: z.string(),
+          time: z.string().optional(),
+          location: z.string().optional(),
+          tag: z.string().optional(),
+          tagColor: z.string().optional(),
+        }))
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin only' });
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        await db.insert(schema.adminConfig)
+          .values({ key: 'kioskScreensaverEvents', value: JSON.stringify(input.events) })
+          .onDuplicateKeyUpdate({ set: { value: JSON.stringify(input.events) } });
         return { success: true };
       }),
 
