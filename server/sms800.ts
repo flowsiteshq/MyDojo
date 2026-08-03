@@ -4,7 +4,7 @@
  *
  * Endpoint: POST https://api.800.com/message
  * Auth: Bearer token in Authorization header
- * Body: { sender, recipient, message, media? }
+ * Body: { sender, recipient, message, url? }
  */
 
 const API_BASE = "https://api.800.com";
@@ -64,7 +64,10 @@ export async function sendSms(opts: SmsSendOptions): Promise<SmsSendResult> {
   };
 
   if (opts.mediaUrl) {
-    body.media = [opts.mediaUrl];
+    // 800.com API: 'media' array is for binary file uploads.
+    // For image URLs, use the separate top-level 'url' field.
+    // See: https://api.800.com/docs#/operations/4e961d642a18fd06833905d239832891
+    body.url = opts.mediaUrl;
   }
 
   try {
