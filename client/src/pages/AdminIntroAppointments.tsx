@@ -301,8 +301,8 @@ export default function AdminIntroAppointments() {
       sourceFilter === "facebook" ? aptSource.startsWith("facebook") :
       sourceFilter === "ghl" ? (aptSource.startsWith("ghl") || aptSource === "gohighlevel") :
       sourceFilter === "website" ? ["chatbot", "landing_page", "trial_form", "website"].includes(aptSource) :
-      sourceFilter === "kiosk" ? aptSource === "kiosk" :
-      sourceFilter === "sms_ai" ? aptSource === "sms_ai" :
+      sourceFilter === "kiosk" ? (aptSource === "kiosk" || aptSource.startsWith("kiosk_")) :
+      sourceFilter === "sms_ai" ? (aptSource === "sms_ai" || aptSource.startsWith("800com")) :
       aptSource === sourceFilter
     );
     const matchesFollowUp = !needsFollowUp || (() => {
@@ -712,8 +712,8 @@ export default function AdminIntroAppointments() {
             if (s.startsWith("facebook")) return "Facebook";
             if (s.startsWith("ghl") || s === "gohighlevel") return "GoHighLevel";
             if (["chatbot", "landing_page", "trial_form", "website"].includes(s)) return "Website";
-            if (s === "kiosk") return "Kiosk";
-            if (s === "sms_ai") return "SMS AI";
+            if (s === "kiosk" || s.startsWith("kiosk_")) return "Kiosk";
+            if (s === "sms_ai" || s.startsWith("800com")) return "SMS / 800.com";
             if (s === "") return "Manual";
             return raw; // keep unknown sources as-is
           };
@@ -722,24 +722,24 @@ export default function AdminIntroAppointments() {
             "Facebook":    "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200",
             "GoHighLevel": "bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200",
             "Website":     "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-200",
-            "Kiosk":       "bg-violet-100 text-violet-800 border-violet-200 hover:bg-violet-200",
-            "SMS AI":      "bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-200",
+            "Kiosk":        "bg-violet-100 text-violet-800 border-violet-200 hover:bg-violet-200",
+            "SMS / 800.com": "bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-200",
             "Manual":      "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200",
           };
           const sourceActiveColors: Record<string, string> = {
             "Facebook":    "bg-blue-600 text-white border-blue-600",
             "GoHighLevel": "bg-orange-500 text-white border-orange-500",
             "Website":     "bg-emerald-600 text-white border-emerald-600",
-            "Kiosk":       "bg-violet-600 text-white border-violet-600",
-            "SMS AI":      "bg-teal-600 text-white border-teal-600",
+            "Kiosk":        "bg-violet-600 text-white border-violet-600",
+            "SMS / 800.com": "bg-teal-600 text-white border-teal-600",
             "Manual":      "bg-gray-500 text-white border-gray-500",
           };
           const filterKeys: Record<string, string> = {
             "Facebook":    "facebook",
             "GoHighLevel": "ghl",
             "Website":     "website",
-            "Kiosk":       "kiosk",
-            "SMS AI":      "sms_ai",
+            "Kiosk":        "kiosk",
+            "SMS / 800.com": "sms_ai",
             "Manual":      "",
           };
 
@@ -1023,6 +1023,14 @@ export default function AdminIntroAppointments() {
                               <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800 border border-orange-200">
                                 <ExternalLink className="w-3 h-3" />
                                 GHL{apt.source !== "ghl" ? ` · ${apt.source.replace("ghl:", "")}` : ""}
+                              </span>
+                            ) : apt.source?.startsWith("kiosk_") ? (
+                              <span className="px-2 py-1 text-xs font-medium rounded-full bg-violet-100 text-violet-800">
+                                Kiosk Walk-In
+                              </span>
+                            ) : apt.source?.startsWith("800com") ? (
+                              <span className="px-2 py-1 text-xs font-medium rounded-full bg-teal-100 text-teal-800">
+                                800.com Appt
                               </span>
                             ) : apt.source === "chatbot" || !apt.source ? (
                               <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
