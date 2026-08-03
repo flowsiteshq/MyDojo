@@ -5999,6 +5999,91 @@ Please enter your card details below to complete your registration securely. Tot
       }),
 
     // Send a promotional SMS blast to all leads and/or staff
+    sendNewsletter: protectedProcedure
+      .input(z.object({
+        month: z.string().default('august_2026'),
+        sendEmail: z.boolean().default(true),
+        sendSms: z.boolean().default(true),
+        testOnly: z.boolean().default(false), // if true, only send to owner phone/email
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        const { getAugust2026NewsletterHtml, getAugust2026SmsBlast } = await import('./newsletterTemplates');
+        const { sendSms: sendSmsMsg } = await import('./sms800');
+        const { Resend } = await import('resend');
+        const resend = new Resend(ENV.RESEND_API_KEY);
+        const baseUrl = 'https://mydojoma.com';
+        let emailSuccess = 0, emailFail = 0, smsSuccess = 0, smsFail = 0;
+        const errors: string[] = [];
+
+        // Get all leads with email or phone
+        const leads = await db
+          .select({
+            name: schema.trialSignups.name,
+            email: schema.trialSignups.email,
+            phone: schema.trialSignups.phone,
+            smsOptOut: schema.trialSignups.smsOptOut,
+          })
+          .from(schema.trialSignups)
+          .where(
+            or(
+              and(isNotNull(schema.trialSignups.email), sql`${schema.trialSignups.email} != ''`),
+              and(isNotNull(schema.trialSignups.phone), sql`${schema.trialSignups.phone} != ''`)
+            )
+          );
+
+        // Deduplicate by email and phone
+        const seenEmails = new Set<string>();
+        const seenPhones = new Set<string>();
+
+        const targets = input.testOnly
+          ? [{ name: 'Owner', email: 'info@mydojoma.com', phone: process.env.OWNER_PHONE || '', smsOptOut: false }]
+          : leads;
+
+        for (const lead of targets) {
+          // Send email
+          if (input.sendEmail && lead.email && !seenEmails.has(lead.email)) {
+            seenEmails.add(lead.email);
+            try {
+              const htmlContent = getAugust2026NewsletterHtml(baseUrl);
+              await resend.emails.send({
+                from: `MyDojo <${ENV.EMAIL_FROM}>`,
+                to: lead.email,
+                subject: '🥋 MyDojo August 2026 — Belt Test, Parents Night Out & More!',
+                html: htmlContent,
+              });
+              emailSuccess++;
+            } catch (e: any) {
+              emailFail++;
+              if (errors.length < 5) errors.push(`Email ${lead.email}: ${e.message}`);
+            }
+          }
+          // Send SMS
+          if (input.sendSms && lead.phone && !lead.smsOptOut && !seenPhones.has(lead.phone)) {
+            seenPhones.add(lead.phone);
+            try {
+              const smsText = getAugust2026SmsBlast(baseUrl);
+              await sendSmsMsg({ to: lead.phone, message: smsText });
+              smsSuccess++;
+            } catch (e: any) {
+              smsFail++;
+              if (errors.length < 5) errors.push(`SMS ${lead.phone}: ${e.message}`);
+            }
+          }
+        }
+
+        // Notify owner
+        try {
+          const { notifyOwner } = await import('./_core/notification');
+          await notifyOwner({
+            title: 'August Newsletter Sent',
+            content: `Email: ${emailSuccess} sent, ${emailFail} failed. SMS: ${smsSuccess} sent, ${smsFail} failed.`,
+          });
+        } catch {}
+
+        return { emailSuccess, emailFail, smsSuccess, smsFail, errors };
+      }),
     sendPromoBlast: protectedProcedure
       .input(z.object({
         message: z.string().min(10).max(500),
