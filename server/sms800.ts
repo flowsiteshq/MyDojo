@@ -14,8 +14,10 @@ export interface SmsSendOptions {
   to: string;
   /** Message text (max 600 chars) */
   message: string;
-  /** Optional MMS media URL */
+  /** Optional MMS media URL (will be fetched and uploaded as binary) */
   mediaUrl?: string;
+  /** Optional MMS media as raw Buffer + filename (preferred over mediaUrl) */
+  mediaBuffer?: { data: Buffer; filename: string; contentType: string };
 }
 
 export interface SmsSendResult {
@@ -57,28 +59,54 @@ export async function sendSms(opts: SmsSendOptions): Promise<SmsSendResult> {
   const toNormalized = normalizePhone(opts.to);
   const fromNormalized = normalizePhone(fromNumber);
 
-  const body: Record<string, unknown> = {
-    sender: fromNormalized,
-    recipient: toNormalized,
-    message: opts.message,
-  };
-
-  if (opts.mediaUrl) {
-    // 800.com API: 'media' array is for binary file uploads.
-    // For image URLs, use the separate top-level 'url' field.
-    // See: https://api.800.com/docs#/operations/4e961d642a18fd06833905d239832891
-    body.url = opts.mediaUrl;
-  }
+  // Determine if we need multipart (MMS with image) or JSON (SMS only)
+  const hasMedia = !!(opts.mediaBuffer || opts.mediaUrl);
 
   try {
-    const response = await fetch(`${API_BASE}/message`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json;charset=UTF-8",
+    let requestBody: BodyInit;
+    let requestHeaders: Record<string, string>;
+
+    if (hasMedia) {
+      // Use multipart FormData for MMS — 800.com requires binary upload
+      const form = new FormData();
+      form.append('sender', fromNormalized);
+      form.append('recipient', toNormalized);
+      form.append('message', opts.message);
+
+      if (opts.mediaBuffer) {
+        const blob = new Blob([opts.mediaBuffer.data], { type: opts.mediaBuffer.contentType });
+        form.append('media[]', blob, opts.mediaBuffer.filename);
+      } else if (opts.mediaUrl) {
+        // Fetch the image and upload as binary
+        const imgRes = await fetch(opts.mediaUrl);
+        if (imgRes.ok) {
+          const imgBuffer = Buffer.from(await imgRes.arrayBuffer());
+          const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
+          const ext = contentType.split('/')[1]?.split(';')[0] || 'jpg';
+          const blob = new Blob([imgBuffer], { type: contentType });
+          form.append('media[]', blob, `image.${ext}`);
+        }
+      }
+
+      requestBody = form;
+      requestHeaders = {
+        Accept: 'application/json',
         Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(body),
+      };
+    } else {
+      // Plain SMS — use JSON
+      requestBody = JSON.stringify({ sender: fromNormalized, recipient: toNormalized, message: opts.message });
+      requestHeaders = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json;charset=UTF-8',
+        Authorization: `Bearer ${apiKey}`,
+      };
+    }
+
+    const response = await fetch(`${API_BASE}/message`, {
+      method: 'POST',
+      headers: requestHeaders,
+      body: requestBody,
     });
 
     const data = (await response.json()) as {
