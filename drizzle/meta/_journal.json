@@ -470,6 +470,13 @@
       "when": 1784997097436,
       "tag": "0066_same_shocker",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "5",
+      "when": 1785777923312,
+      "tag": "0067_optimal_rocket_raccoon",
+      "breakpoints": true
     }
   ]
 }

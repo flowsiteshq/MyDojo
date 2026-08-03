@@ -10,6 +10,29 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Megaphone, Send, Users, UserCheck, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
+const AUGUST_TEMPLATES = [
+  {
+    name: "🥋 Belt Test Deadline (Aug 10)",
+    leadMessage: "🥋 REMINDER: Intent to Promote forms for the August 15th Belt Test are due by August 10th! Submit yours + pay the $49 test fee at: mydojoma.com/belt-test-intent — Don't miss your chance to advance! — MyDojo (877) 4-MYDOJO",
+    staffMessage: "📋 Belt Test Intent deadline is August 10th. Remind all testing students to submit their form at mydojoma.com/belt-test-intent — MyDojo Team",
+  },
+  {
+    name: "⭐ Spotlight Week (Aug 10-14)",
+    leadMessage: "⭐ SPOTLIGHT WEEK starts Monday Aug 10th at MyDojo! Special testing preparation classes all week leading up to the August 15th Belt Test. Don't miss it! Questions? (877) 4-MYDOJO",
+    staffMessage: "⭐ Spotlight Week starts Monday! Testing prep classes Aug 10-14. Encourage all testing students to attend every class this week. — MyDojo Team",
+  },
+  {
+    name: "🌟 Parents Night Out (Aug 21)",
+    leadMessage: "🌟 PARENTS NIGHT OUT is August 21st, 6PM-9:30PM at MyDojo! NINJA WARRIOR COURSE GLOW NIGHT 🥷 Drop off the kids and enjoy a night out! Bring a friend = FREE admission, or just $15. RSVP: mydojoma.com/parents-night-out-aug — MyDojo",
+    staffMessage: "🌟 Parents Night Out is Aug 21st! Remind all families to RSVP at mydojoma.com/parents-night-out-aug — Ninja Warrior Glow Night, 6PM-9:30PM. — MyDojo Team",
+  },
+  {
+    name: "🥋 Master Yaeger Seminar (Aug 22)",
+    leadMessage: "🥋 SPECIAL EVENT: Seminar with Master Yaeger — Saturday August 22nd, 11AM-2PM! 3 hours of intensive training, all belt levels welcome. Only $29. Register now: mydojoma.com/master-yaeger-seminar — MyDojo (877) 4-MYDOJO",
+    staffMessage: "🥋 Master Yaeger Seminar is Aug 22nd! Encourage students to register at mydojoma.com/master-yaeger-seminar — $29, 11AM-2PM. — MyDojo Team",
+  },
+];
+
 const TEMPLATES = [
   {
     name: "🥊 Kickboxing Special",
@@ -84,9 +107,28 @@ export default function AdminPromoBlast() {
         </div>
       </div>
 
+      {/* August 2026 Event Reminders */}
+      <div className="mb-6 p-4 rounded-xl border-2 border-primary/30 bg-primary/5">
+        <p className="text-sm font-bold text-primary mb-1">🗓 August 2026 Event Reminders</p>
+        <p className="text-xs text-muted-foreground mb-3">One-click reminders for all August events</p>
+        <div className="flex flex-wrap gap-2">
+          {AUGUST_TEMPLATES.map((tpl) => (
+            <Button
+              key={tpl.name}
+              variant="outline"
+              size="sm"
+              onClick={() => handleTemplate(tpl)}
+              className="text-xs border-primary/40 hover:bg-primary/10"
+            >
+              {tpl.name}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       {/* Quick Templates */}
       <div className="mb-6">
-        <p className="text-sm font-medium text-muted-foreground mb-2">Quick Templates</p>
+        <p className="text-sm font-medium text-muted-foreground mb-2">General Templates</p>
         <div className="flex flex-wrap gap-2">
           {TEMPLATES.map((tpl) => (
             <Button

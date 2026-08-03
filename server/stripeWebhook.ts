@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Stripe from "stripe";
 import { getDb } from "./db";
-import { enrollments, membershipPackages, trialSignups } from "../drizzle/schema";
+import { enrollments, membershipPackages, trialSignups, beltTestIntents, eventRegistrations } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { notifyOwner } from "./_core/notification";
 
@@ -47,6 +47,10 @@ export async function handleStripeWebhook(req: Request, res: Response) {
         // Route based on metadata type
         if (session.metadata?.type === "belt_exam") {
           await handleBeltExamPayment(session);
+        } else if (session.metadata?.type === "belt_test_intent") {
+          await handleBeltTestIntentPayment(session);
+        } else if (session.metadata?.type === "event_registration") {
+          await handleEventRegistrationPayment(session);
         } else if (session.metadata?.type === "intro_offer") {
           await handleIntroOfferPayment(session);
         } else {
@@ -539,4 +543,124 @@ async function handleIntroOfferPayment(session: Stripe.Checkout.Session) {
   } catch (notifErr) {
     console.error("[Stripe Webhook] Failed to send owner notification for intro offer:", notifErr);
   }
+}
+/**
+ * Handle belt test intent payment (checkout.session.completed with metadata.type === 'belt_test_intent')
+ * Marks the beltTestIntents record as paid and sends confirmation SMS/email.
+ */
+async function handleBeltTestIntentPayment(session: Stripe.Checkout.Session) {
+  console.log("[Stripe Webhook] Processing belt test intent payment:", session.id);
+
+  const db = await getDb();
+  if (!db) {
+    console.error("[Stripe Webhook] Database not available");
+    return;
+  }
+
+  const intentId = session.metadata?.intent_id ? parseInt(session.metadata.intent_id) : null;
+  const studentName = session.metadata?.student_name || "Student";
+  const parentName = session.metadata?.parent_name || "Parent";
+  const phone = session.metadata?.phone || "";
+  const amountPaid = session.amount_total ? session.amount_total / 100 : 49;
+
+  if (intentId) {
+    // Check idempotency
+    const [existing] = await db.select().from(beltTestIntents).where(eq(beltTestIntents.id, intentId)).limit(1);
+    if (existing && existing.paymentStatus === "paid") {
+      console.log("[Stripe Webhook] Belt test intent already paid:", intentId, "— skipping");
+      return;
+    }
+
+    await db.update(beltTestIntents).set({
+      paymentStatus: "paid",
+      stripeSessionId: session.id,
+      amountPaid: Math.round(amountPaid * 100),
+    }).where(eq(beltTestIntents.id, intentId));
+  }
+
+  // Send confirmation SMS
+  if (phone) {
+    try {
+      const { sendSms } = await import("./sms800.js");
+      await sendSms({
+        to: phone,
+        message: `✅ MyDojo: Your Intent to Promote form for ${studentName} is confirmed! Belt Test is August 15th. Questions? Call (877) 4-MYDOJO.`,
+      });
+    } catch (smsErr) {
+      console.error("[Stripe Webhook] Failed to send belt test intent SMS:", smsErr);
+    }
+  }
+
+  // Notify owner
+  try {
+    await notifyOwner({
+      title: `🥋 Belt Test Intent Submitted — ${studentName}`,
+      content: `${parentName} submitted the Intent to Promote form for ${studentName} and paid $${amountPaid}. Belt Test: August 15th. Phone: ${phone}. Stripe session: ${session.id}`,
+    });
+  } catch (notifErr) {
+    console.error("[Stripe Webhook] Failed to send owner notification:", notifErr);
+  }
+
+  console.log(`[Stripe Webhook] Belt test intent confirmed for ${studentName} — $${amountPaid}`);
+}
+
+/**
+ * Handle event registration payment (checkout.session.completed with metadata.type === 'event_registration')
+ * Marks the eventRegistrations record as paid and sends confirmation SMS.
+ */
+async function handleEventRegistrationPayment(session: Stripe.Checkout.Session) {
+  console.log("[Stripe Webhook] Processing event registration payment:", session.id);
+
+  const db = await getDb();
+  if (!db) {
+    console.error("[Stripe Webhook] Database not available");
+    return;
+  }
+
+  const registrationId = session.metadata?.registration_id ? parseInt(session.metadata.registration_id) : null;
+  const eventId = session.metadata?.event_id || "unknown";
+  const name = session.metadata?.name || "Attendee";
+  const phone = session.metadata?.phone || "";
+  const amountPaid = session.amount_total ? session.amount_total / 100 : 0;
+
+  if (registrationId) {
+    const [existing] = await db.select().from(eventRegistrations).where(eq(eventRegistrations.id, registrationId)).limit(1);
+    if (existing && existing.paymentStatus === "paid") {
+      console.log("[Stripe Webhook] Event registration already paid:", registrationId, "— skipping");
+      return;
+    }
+
+    await db.update(eventRegistrations).set({
+      paymentStatus: "paid",
+      stripeSessionId: session.id,
+      amountPaid: Math.round(amountPaid * 100),
+    }).where(eq(eventRegistrations.id, registrationId));
+  }
+
+  // Send confirmation SMS
+  if (phone) {
+    try {
+      const { sendSms } = await import("./sms800.js");
+      const eventMessages: Record<string, string> = {
+        "pno-aug-2026": `🌟 MyDojo: You're registered for Parents Night Out on August 21st, 6PM-9:30PM! Ninja Warrior Course Glow Night. See you there! — (877) 4-MYDOJO`,
+        "master-yaeger-seminar-aug-2026": `🥋 MyDojo: You're registered for the Master Yaeger Seminar on August 22nd, 11AM-2PM! Get ready for an amazing training experience. — (877) 4-MYDOJO`,
+      };
+      const msg = eventMessages[eventId] || `✅ MyDojo: Your registration for ${eventId} is confirmed! See you there. — (877) 4-MYDOJO`;
+      await sendSms({ to: phone, message: msg });
+    } catch (smsErr) {
+      console.error("[Stripe Webhook] Failed to send event registration SMS:", smsErr);
+    }
+  }
+
+  // Notify owner
+  try {
+    await notifyOwner({
+      title: `🎉 Event Registration — ${name}`,
+      content: `${name} registered for ${eventId} and paid $${amountPaid}. Phone: ${phone}. Stripe session: ${session.id}`,
+    });
+  } catch (notifErr) {
+    console.error("[Stripe Webhook] Failed to send owner notification:", notifErr);
+  }
+
+  console.log(`[Stripe Webhook] Event registration confirmed for ${name} — ${eventId} — $${amountPaid}`);
 }

@@ -104,6 +104,13 @@ const AdminGiftCerts = lazy(() => import("./pages/AdminGiftCerts"));
 const ReadToEarn = lazy(() => import("./pages/ReadToEarn"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const BeltTestIntent = lazy(() => import("./pages/BeltTestIntent"));
+const BeltTestIntentSuccess = lazy(() => import("./pages/BeltTestIntentSuccess"));
+const AugustCalendar = lazy(() => import("./pages/AugustCalendar"));
+const ParentsNightOutAug = lazy(() => import("./pages/ParentsNightOutAug"));
+const MasterYaegerSeminar = lazy(() => import("./pages/MasterYaegerSeminar"));
+const AdminBeltTestIntents = lazy(() => import("./pages/AdminBeltTestIntents"));
+const AdminEventRegistrations = lazy(() => import("./pages/AdminEventRegistrations"));
 
 // Loading component — subtle fade-in bar at the top, no jarring red circle
 const PageLoader = () => (
@@ -202,6 +209,13 @@ function Router() {
         <Route path="/pay/:token" component={CustomPaymentCheckout} />
         <Route path="/classes" component={ClassSignup} />
         <Route path="/staff-clock-in" component={StaffClockIn} />
+        <Route path="/belt-test-intent" component={BeltTestIntent} />
+        <Route path="/belt-test-intent/success" component={BeltTestIntentSuccess} />
+        <Route path="/august-2026" component={AugustCalendar} />
+        <Route path="/parents-night-out-aug" component={ParentsNightOutAug} />
+        <Route path="/master-yaeger-seminar" component={MasterYaegerSeminar} />
+        <Route path="/admin/belt-test-intents" component={AdminBeltTestIntents} />
+        <Route path="/admin/event-registrations" component={AdminEventRegistrations} />
         
         {/* All other routes with Layout */}
         <Route>

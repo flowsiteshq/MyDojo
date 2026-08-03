@@ -11278,6 +11278,160 @@ Please enter your card details below to complete your registration securely. Tot
         return leads;
       }),
   }),
+
+  // ─── Belt Test Intent to Promote ───────────────────────────────────────────────
+  beltTestIntent: router({
+    submit: publicProcedure
+      .input(z.object({
+        studentName: z.string().min(1),
+        parentName: z.string().min(1),
+        phone: z.string().min(10),
+        email: z.string().email(),
+        currentBelt: z.string().min(1),
+        instructor: z.string().optional(),
+        notes: z.string().optional(),
+        eventId: z.string().default('aug-2026-belt-test'),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const [result] = await db.insert(schema.beltTestIntents).values({
+          eventId: input.eventId,
+          studentName: input.studentName,
+          parentName: input.parentName,
+          phone: input.phone,
+          email: input.email,
+          currentBelt: input.currentBelt,
+          instructor: input.instructor || null,
+          notes: input.notes || null,
+          paymentStatus: 'pending',
+        });
+        const intentId = (result as any).insertId;
+        const Stripe = (await import('stripe')).default;
+        const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2026-01-28.clover' as any });
+        const origin = (ctx.req.headers.origin as string) || 'https://mydojoma.com';
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          mode: 'payment',
+          line_items: [{
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `Belt Test Fee — ${input.studentName}`,
+                description: `Intent to Promote — Belt Test August 15th, 2026. Current Belt: ${input.currentBelt}`,
+              },
+              unit_amount: 4900,
+            },
+            quantity: 1,
+          }],
+          metadata: {
+            type: 'belt_test_intent',
+            intent_id: String(intentId),
+            student_name: input.studentName,
+            parent_name: input.parentName,
+            phone: input.phone,
+            current_belt: input.currentBelt,
+          },
+          customer_email: input.email,
+          success_url: `${origin}/belt-test-intent/success?name=${encodeURIComponent(input.studentName)}`,
+          cancel_url: `${origin}/belt-test-intent`,
+        });
+        return { checkoutUrl: session.url, intentId };
+      }),
+    list: protectedProcedure
+      .query(async ({ ctx }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') throw new Error('Unauthorized');
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        return db.select().from(schema.beltTestIntents).orderBy(desc(schema.beltTestIntents.createdAt));
+      }),
+  }),
+
+  // ─── Event Registrations ──────────────────────────────────────────────────────
+  eventReg: router({
+    register: publicProcedure
+      .input(z.object({
+        eventId: z.string(),
+        name: z.string().min(1),
+        phone: z.string().min(10),
+        email: z.string().email().optional(),
+        studentName: z.string().optional(),
+        attendeeCount: z.number().default(1),
+        bringingFriend: z.number().default(0),
+        friendName: z.string().optional(),
+        notes: z.string().optional(),
+        amountCents: z.number().default(0),
+        eventName: z.string().default('Event'),
+        eventDescription: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        const [result] = await db.insert(schema.eventRegistrations).values({
+          eventId: input.eventId,
+          name: input.name,
+          phone: input.phone,
+          email: input.email || null,
+          studentName: input.studentName || null,
+          attendeeCount: input.attendeeCount,
+          bringingFriend: input.bringingFriend,
+          friendName: input.friendName || null,
+          notes: input.notes || null,
+          paymentStatus: input.amountCents === 0 ? 'free' : 'pending',
+        });
+        const registrationId = (result as any).insertId;
+        if (input.amountCents === 0) {
+          try {
+            const { sendSms } = await import('./sms800');
+            const eventMessages: Record<string, string> = {
+              'pno-aug-2026': `🌟 MyDojo: You're registered for Parents Night Out on August 21st, 6PM-9:30PM! Ninja Warrior Course Glow Night. See you there! — (877) 4-MYDOJO`,
+            };
+            const msg = eventMessages[input.eventId] || `✅ MyDojo: You're registered for ${input.eventName}! See you there. — (877) 4-MYDOJO`;
+            await sendSms({ to: input.phone, message: msg });
+          } catch (e) { console.error('[EventReg] SMS failed:', e); }
+          return { checkoutUrl: null, registrationId, free: true };
+        }
+        const Stripe = (await import('stripe')).default;
+        const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2026-01-28.clover' as any });
+        const origin = (ctx.req.headers.origin as string) || 'https://mydojoma.com';
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          mode: 'payment',
+          line_items: [{
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: input.eventName,
+                description: input.eventDescription || undefined,
+              },
+              unit_amount: input.amountCents,
+            },
+            quantity: input.attendeeCount,
+          }],
+          metadata: {
+            type: 'event_registration',
+            registration_id: String(registrationId),
+            event_id: input.eventId,
+            name: input.name,
+            phone: input.phone,
+          },
+          customer_email: input.email || undefined,
+          success_url: `${origin}/events/${input.eventId}/success?name=${encodeURIComponent(input.name)}`,
+          cancel_url: `${origin}/events/${input.eventId}`,
+        });
+        return { checkoutUrl: session.url, registrationId, free: false };
+      }),
+    list: protectedProcedure
+      .input(z.object({ eventId: z.string() }))
+      .query(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') throw new Error('Unauthorized');
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        return db.select().from(schema.eventRegistrations)
+          .where(eq(schema.eventRegistrations.eventId, input.eventId))
+          .orderBy(desc(schema.eventRegistrations.createdAt));
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;
 

@@ -1,0 +1,41 @@
+CREATE TABLE `beltTestIntents` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`eventId` varchar(64) NOT NULL DEFAULT 'aug-2026-belt-test',
+	`studentName` varchar(255) NOT NULL,
+	`parentName` varchar(255) NOT NULL,
+	`phone` varchar(20) NOT NULL,
+	`email` varchar(320) NOT NULL,
+	`currentBelt` varchar(100) NOT NULL,
+	`instructor` varchar(255),
+	`notes` text,
+	`paymentStatus` varchar(30) NOT NULL DEFAULT 'pending',
+	`stripePaymentIntentId` varchar(255),
+	`stripeSessionId` varchar(255),
+	`amountPaid` int DEFAULT 0,
+	`smsSent` int NOT NULL DEFAULT 0,
+	`emailSent` int NOT NULL DEFAULT 0,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `beltTestIntents_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `eventRegistrations` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`eventId` varchar(64) NOT NULL,
+	`name` varchar(255) NOT NULL,
+	`phone` varchar(20) NOT NULL,
+	`email` varchar(320),
+	`studentName` varchar(255),
+	`attendeeCount` int NOT NULL DEFAULT 1,
+	`bringingFriend` int NOT NULL DEFAULT 0,
+	`friendName` varchar(255),
+	`notes` text,
+	`paymentStatus` varchar(30) NOT NULL DEFAULT 'free',
+	`stripePaymentIntentId` varchar(255),
+	`stripeSessionId` varchar(255),
+	`amountPaid` int DEFAULT 0,
+	`smsSent` int NOT NULL DEFAULT 0,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `eventRegistrations_id` PRIMARY KEY(`id`)
+);

@@ -32,6 +32,8 @@ import {
   Bot,
   Coins,
   CalendarClock,
+  Award,
+  CalendarCheck,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { trpc } from "@/lib/trpc";
@@ -170,6 +172,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/promo-blast", label: "Promo Blast", icon: Megaphone },
     { href: "/admin/pno-rsvps", label: "PNO RSVPs", icon: PartyPopper },
     { href: "/admin/camp-enrollments", label: "Camp Enrollments", icon: Tent },
+    { href: "/admin/belt-test-intents", label: "Belt Test Intents", icon: Award },
+    { href: "/admin/event-registrations", label: "Event Registrations", icon: CalendarCheck },
     { href: "/admin/facebook-ads", label: "Facebook Ads", icon: BarChart3 },
     { href: "/admin/billing-schedule", label: "Billing Schedule", icon: CalendarDays },
     { href: "/admin/class-roster", label: "Class Roster", icon: ClipboardList },

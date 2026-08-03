@@ -1912,3 +1912,32 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 - [x] Applied 1st/15th rule to camp kickboxing family add-on subscription
 - [x] Updated AdminManualEnrollment UI getDefaultNextChargeDate to use 1st/15th rule
 - [x] Updated CustomPaymentCheckout recurring billing display to show 1st/15th anchor date
+
+## August Parent Communications System
+
+### Belt Test Intent to Promote Form
+- [ ] Create /belt-test-intent page with form: student name, parent name, phone, email, current belt, instructor
+- [ ] Add $49 belt test fee payment via Stripe on form submission
+- [ ] Store submissions in DB (beltTestIntent table)
+- [ ] Send confirmation SMS + email to parent after submission
+- [ ] Add belt test intent entries to admin view
+- [ ] Deadline messaging: form must be filled out prior to August 10th
+
+### August Monthly Calendar (Parent-facing)
+- [ ] Create /august-2026 calendar landing page with all events
+- [ ] Show: Aug 10 deadline, Aug 10-14 Spotlight Week, Aug 15 Belt Test, Aug 21 Parents Night Out, Aug 22 Master Yaeger Seminar, Bo Staff training
+- [ ] Each event links to its landing page or form
+
+### Event Landing Pages
+- [ ] /parents-night-out - Ninja Warrior Course Glow Night Aug 21, 6PM-9:30PM, $15 or bring a friend
+- [ ] /master-yaeger-seminar - Seminar Aug 22, 11AM-2PM, $29 Stripe payment
+- [ ] /belt-test - Belt Test Aug 15 info page with link to intent form
+
+### Newsletter
+- [ ] Build August newsletter email template with all events
+- [ ] Admin page to compose and send newsletter to all active members
+- [ ] Newsletter preview before send
+
+### SMS Text Reminders
+- [ ] Admin page to schedule/send SMS reminders for events
+- [ ] Reminder templates: belt test intent deadline, belt test day, parents night out, seminar

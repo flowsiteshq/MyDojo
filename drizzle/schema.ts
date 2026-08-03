@@ -2335,3 +2335,49 @@ export const readingPromoLeads = mysqlTable("readingPromoLeads", {
 });
 export type ReadingPromoLead = typeof readingPromoLeads.$inferSelect;
 export type InsertReadingPromoLead = typeof readingPromoLeads.$inferInsert;
+
+// ─── Belt Test Intent to Promote ──────────────────────────────────────────────
+export const beltTestIntents = mysqlTable("beltTestIntents", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: varchar("eventId", { length: 64 }).notNull().default("aug-2026-belt-test"),
+  studentName: varchar("studentName", { length: 255 }).notNull(),
+  parentName: varchar("parentName", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  currentBelt: varchar("currentBelt", { length: 100 }).notNull(),
+  instructor: varchar("instructor", { length: 255 }),
+  notes: text("notes"),
+  paymentStatus: varchar("paymentStatus", { length: 30 }).notNull().default("pending"),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
+  stripeSessionId: varchar("stripeSessionId", { length: 255 }),
+  amountPaid: int("amountPaid").default(0),
+  smsSent: int("smsSent").notNull().default(0),
+  emailSent: int("emailSent").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type BeltTestIntent = typeof beltTestIntents.$inferSelect;
+export type InsertBeltTestIntent = typeof beltTestIntents.$inferInsert;
+
+// ─── Event Registrations ───────────────────────────────────────────────────────
+export const eventRegistrations = mysqlTable("eventRegistrations", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: varchar("eventId", { length: 64 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  studentName: varchar("studentName", { length: 255 }),
+  attendeeCount: int("attendeeCount").notNull().default(1),
+  bringingFriend: int("bringingFriend").notNull().default(0),
+  friendName: varchar("friendName", { length: 255 }),
+  notes: text("notes"),
+  paymentStatus: varchar("paymentStatus", { length: 30 }).notNull().default("free"),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
+  stripeSessionId: varchar("stripeSessionId", { length: 255 }),
+  amountPaid: int("amountPaid").default(0),
+  smsSent: int("smsSent").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EventRegistration = typeof eventRegistrations.$inferSelect;
+export type InsertEventRegistration = typeof eventRegistrations.$inferInsert;
