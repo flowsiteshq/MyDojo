@@ -2353,6 +2353,26 @@ export const beltTestIntents = mysqlTable("beltTestIntents", {
   amountPaid: int("amountPaid").default(0),
   smsSent: int("smsSent").notNull().default(0),
   emailSent: int("emailSent").notNull().default(0),
+  // Who is testing (myself / my_child / someone_else)
+  testingFor: varchar("testingFor", { length: 50 }),
+  // Belt seeking
+  beltSeeking: varchar("beltSeeking", { length: 100 }),
+  // Section 1: Self-reflection ratings (JSON stored as text)
+  selfReflectionRatings: text("selfReflectionRatings"),
+  // Section 2: Written answers (JSON stored as text)
+  writtenAnswers: text("writtenAnswers"),
+  // Section 3: Parent evaluation ratings (JSON stored as text)
+  parentRatings: text("parentRatings"),
+  // Parent written answers (JSON stored as text)
+  parentAnswers: text("parentAnswers"),
+  // Parent recommendation (yes / not_yet)
+  parentRecommendation: varchar("parentRecommendation", { length: 20 }),
+  parentComments: text("parentComments"),
+  // Black belt question
+  blackBeltQuestion: text("blackBeltQuestion"),
+  // Pledge agreement
+  studentPledgeAgreed: int("studentPledgeAgreed").notNull().default(0),
+  parentCommitmentAgreed: int("parentCommitmentAgreed").notNull().default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

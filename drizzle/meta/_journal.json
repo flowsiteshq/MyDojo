@@ -477,6 +477,13 @@
       "when": 1785777923312,
       "tag": "0067_optimal_rocket_raccoon",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "5",
+      "when": 1785779966983,
+      "tag": "0068_yielding_spencer_smythe",
+      "breakpoints": true
     }
   ]
 }
