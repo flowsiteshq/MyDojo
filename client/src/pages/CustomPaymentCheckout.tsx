@@ -130,6 +130,8 @@ export default function CustomPaymentCheckout() {
 
   // FluidPay tokenizer
   const tokenizerRef = useRef<{ submit: (amount?: string) => void } | null>(null);
+  const tokenizerInitializedRef = useRef(false);
+  const scriptLoadedRef = useRef(false);
   const [tokenizerReady, setTokenizerReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -166,91 +168,86 @@ export default function CustomPaymentCheckout() {
     }
   }, [link]);
 
-  // Load FluidPay tokenizer script and initialize when step = "payment"
+  // Pre-load FluidPay script on mount (same as working enrollment form)
+  useEffect(() => {
+    if (scriptLoadedRef.current) return;
+    scriptLoadedRef.current = true;
+    if (window.Tokenizer) { setTokenizerReady(true); return; }
+    const script = document.createElement("script");
+    script.src = "https://app.fluidpay.com/tokenizer/tokenizer.js";
+    script.async = true;
+    script.onload = () => setTokenizerReady(true);
+    script.onerror = () => toast.error("Failed to load payment form. Please check your connection and refresh.");
+    document.head.appendChild(script);
+  }, []);
+
+  // Initialize tokenizer instance when payment step is shown and script is ready
   useEffect(() => {
     if (step !== "payment") return;
+    if (!tokenizerReady || tokenizerInitializedRef.current) return;
+    if (!window.Tokenizer) return;
+    tokenizerInitializedRef.current = true;
 
-    const FLUIDPAY_PUBLIC_KEY = import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || import.meta.env.VITE_FLUIDPAY_DEMO_PUBLIC_KEY || "";
+    const FLUIDPAY_PUBLIC_KEY = import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "";
 
-    const initTokenizer = () => {
-      if (!window.Tokenizer || !FLUIDPAY_PUBLIC_KEY) return;
-      setTokenizerReady(false);
-      try {
-        const instance = new window.Tokenizer({
-          url: "https://app.fluidpay.com",
-          apikey: FLUIDPAY_PUBLIC_KEY,
-          container: "#fluidpay-tokenizer-container",
-          submission: (resp) => {
-            if (resp.token) {
-              const selectedItems = link?.type === "merchandise" && link.merchandiseItems
-                ? (link.merchandiseItems as MerchandiseItem[]).map((item, i) => ({
-                    name: item.name,
-                    price: item.price,
-                    quantity: quantities[i] ?? item.quantity,
-                  }))
-                : undefined;
+    try {
+      const instance = new window.Tokenizer({
+        url: "https://app.fluidpay.com",
+        apikey: FLUIDPAY_PUBLIC_KEY,
+        container: "#fluidpay-tokenizer-container",
+        submission: (resp) => {
+          if (resp.token) {
+            const selectedItems = link?.type === "merchandise" && link.merchandiseItems
+              ? (link.merchandiseItems as MerchandiseItem[]).map((item, i) => ({
+                  name: item.name,
+                  price: item.price,
+                  quantity: quantities[i] ?? item.quantity,
+                }))
+              : undefined;
 
-              processCheckoutMutation.mutate({
-                token: token || "",
-                fpToken: resp.token,
-                customerName,
-                customerEmail: customerEmail || undefined,
-                customerPhone: customerPhone || undefined,
-                selectedItems,
-                shippingAddress: shippingAddress || undefined,
-              });
-            } else {
-              const msg = resp.error || "Card tokenization failed. Please check your card details.";
-              toast.error(msg);
-              setSubmitting(false);
-            }
-          },
-          onLoad: () => setTokenizerReady(true),
-          settings: {
-            payment: { types: ["card"] },
-            styles: {
-              body: { "font-family": "inherit", "background-color": "transparent" },
-              inputs: {
-                "border-radius": "8px",
-                "border": "1px solid #d1d5db",
-                "padding": "12px 14px",
-                "font-size": "16px",
-                "height": "48px",
-                "color": "#111827",
-                "background-color": "#ffffff",
-                "width": "100%",
-              },
-              labels: {
-                "font-size": "14px",
-                "font-weight": "500",
-                "color": "#374151",
-                "margin-bottom": "4px",
-              },
+            processCheckoutMutation.mutate({
+              token: token || "",
+              fpToken: resp.token,
+              customerName,
+              customerEmail: customerEmail || undefined,
+              customerPhone: customerPhone || undefined,
+              selectedItems,
+              shippingAddress: shippingAddress || undefined,
+            });
+          } else {
+            const msg = resp.error || "Card tokenization failed. Please check your card details.";
+            toast.error(msg);
+            setSubmitting(false);
+          }
+        },
+        onLoad: () => {},
+        settings: {
+          payment: { types: ["card"] },
+          styles: {
+            body: { "font-family": "inherit", "background-color": "transparent" },
+            inputs: {
+              "border-radius": "8px",
+              "border": "2px solid #e2e8f0",
+              "padding": "14px 16px",
+              "font-size": "18px",
+              "height": "56px",
+              "color": "#111827",
+              "background-color": "#ffffff",
+            },
+            labels: {
+              "font-size": "15px",
+              "font-weight": "600",
+              "color": "#374151",
+              "margin-bottom": "6px",
             },
           },
-        });
-        tokenizerRef.current = instance;
-      } catch (err) {
-        console.error("Tokenizer init error:", err);
-      }
-    };
-
-    // Load script if not already loaded
-    if (window.Tokenizer) {
-      initTokenizer();
-    } else {
-      const existing = document.querySelector('script[src*="tokenizer"]');
-      if (!existing) {
-        const script = document.createElement("script");
-        script.src = "https://app.fluidpay.com/js/tokenizer.js";
-        script.async = true;
-        script.onload = initTokenizer;
-        document.head.appendChild(script);
-      } else {
-        existing.addEventListener("load", initTokenizer);
-      }
+        },
+      });
+      tokenizerRef.current = instance;
+    } catch (err: any) {
+      toast.error(`Payment form error: ${err?.message || "Unknown error"}. Please refresh and try again.`);
     }
-  }, [step]);
+  }, [step, tokenizerReady]);
 
   const calculateTotal = () => {
     if (!link) return 0;
@@ -274,12 +271,12 @@ export default function CustomPaymentCheckout() {
 
   const handlePaySubmit = () => {
     if (!tokenizerRef.current) {
-      toast.error("Payment form not ready. Please wait a moment.");
+      toast.error("Payment form not ready. Please wait a moment and try again.");
       return;
     }
     setSubmitting(true);
     setStep("confirming");
-    tokenizerRef.current.submit();
+    tokenizerRef.current.submit(total.toFixed(2));
   };
 
   // ─── Render states ──────────────────────────────────────────────────────────
@@ -503,7 +500,7 @@ export default function CustomPaymentCheckout() {
               />
 
               {!tokenizerReady && (
-                <div className="flex items-center justify-center py-4 text-muted-foreground text-sm gap-2">
+                <div className="flex items-center justify-center py-8 text-muted-foreground text-sm gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Loading secure payment form…
                 </div>
