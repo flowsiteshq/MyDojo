@@ -166,8 +166,13 @@ function InnerForm({ mode, submitLabel, loading, onSuccess, onError }: InnerForm
   };
 
   const paymentElementOptions: StripePaymentElementOptions = {
-    layout: "tabs",
-    // Always show card as default — prevents blank render on iOS Safari
+    // Use accordion layout — more reliable on iOS Safari than tabs
+    layout: {
+      type: "accordion",
+      defaultCollapsed: false,
+      radios: false,
+      spacedAccordionItems: false,
+    },
     defaultValues: {
       billingDetails: {},
     },
@@ -210,7 +215,10 @@ function InnerForm({ mode, submitLabel, loading, onSuccess, onError }: InnerForm
 
       {/* ── Standard card / bank form ── */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        <PaymentElement options={paymentElementOptions} />
+        {/* min-height prevents blank render on iOS Safari while Stripe iframes load */}
+        <div style={{ minHeight: 200 }}>
+          <PaymentElement options={paymentElementOptions} />
+        </div>
 
         {errorMsg && (
           <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
