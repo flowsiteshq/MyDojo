@@ -118,6 +118,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
   const tokenizerInstanceRef = useRef<{ submit: (amount?: string) => void } | null>(null);
   const scriptLoadedRef = useRef(false);
   const tokenizerInitializedRef = useRef(false);
+  const submissionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Promo code state
   const [promoInput, setPromoInput] = useState(initialPromo || "");
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; discountType: string; discountValue: number; description: string } | null>(null);
@@ -181,6 +182,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
 
   const createEnrollmentMutation = trpc.member.createEnrollmentCheckout.useMutation({
     onSuccess: () => {
+      if (submissionTimeoutRef.current) { clearTimeout(submissionTimeoutRef.current); submissionTimeoutRef.current = null; }
       setIsSubmitting(false);
       setSuccess(true);
       const msg = isSummerCamp
@@ -190,6 +192,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
       toast.success("Enrollment complete!", { description: "Check your email for confirmation details." });
     },
     onError: (error) => {
+      if (submissionTimeoutRef.current) { clearTimeout(submissionTimeoutRef.current); submissionTimeoutRef.current = null; }
       setIsSubmitting(false);
       const msg = error.message || "Payment failed. Please try again or contact us at (877) 4-MYDOJO.";
       setErrorMessage(msg);
@@ -281,9 +284,17 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
   const handleSubmit = () => {
     setErrorMessage(null);
     setIsSubmitting(true);
+    // Safety timeout: if payment doesn't complete in 45 seconds, show an error
+    if (submissionTimeoutRef.current) clearTimeout(submissionTimeoutRef.current);
+    submissionTimeoutRef.current = setTimeout(() => {
+      setIsSubmitting(false);
+      setErrorMessage("Payment is taking longer than expected. Please check your internet connection and try again. If you were charged, please contact us at (877) 4-MYDOJO.");
+      submissionTimeoutRef.current = null;
+    }, 45000);
     if (tokenizerInstanceRef.current) {
       tokenizerInstanceRef.current.submit(totalAmount.toFixed(2));
     } else {
+      if (submissionTimeoutRef.current) clearTimeout(submissionTimeoutRef.current);
       setErrorMessage("Payment form not ready. Please refresh and try again.");
       setIsSubmitting(false);
     }
