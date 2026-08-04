@@ -21,6 +21,7 @@ import { Check, Users, Tag, Star, Sun, Loader2, CreditCard, Lock, CheckCircle } 
 declare global {
   interface Window {
     Tokenizer?: new (config: {
+      url?: string;
       apikey: string;
       container: string;
       submission: (resp: { token?: string; status?: string; error?: string }) => void;

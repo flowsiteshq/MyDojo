@@ -43,6 +43,7 @@ interface FluidPayEnrollmentFormProps {
 declare global {
   interface Window {
     Tokenizer?: new (config: {
+      url?: string;
       apikey: string;
       container: string;
       submission: (resp: { token?: string; status?: string; error?: string }) => void;
@@ -219,6 +220,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
     tokenizerInitializedRef.current = true;
     try {
       const instance = new window.Tokenizer({
+        url: "https://app.fluidpay.com",
         apikey: import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "",
         container: "#fluidpay-tokenizer-container",
         submission: (resp) => {
@@ -256,8 +258,10 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
               "border-radius": "8px",
               "border": "2px solid #e2e8f0",
               "padding": "14px 16px",
-              "font-size": "18px",   // Larger text for mobile readability
+              "font-size": "18px",
               "height": "56px",
+              "color": "#111827",
+              "background-color": "#ffffff",
             },
             labels: {
               "font-size": "15px",
