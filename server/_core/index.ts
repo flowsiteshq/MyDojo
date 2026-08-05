@@ -50,6 +50,28 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
+// ─── Global FluidPay fetch timeout ──────────────────────────────────────────
+// Wraps the global fetch to add a 20-second timeout for all FluidPay API calls.
+// This prevents the payment spinner from hanging forever when FluidPay is slow.
+const _originalFetch = globalThis.fetch;
+globalThis.fetch = function patchedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : (input as Request).url;
+  if (url && url.includes('fluidpay.com') && !init?.signal) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20_000);
+    const patchedInit = { ...(init ?? {}), signal: controller.signal };
+    return _originalFetch(input, patchedInit).finally(() => clearTimeout(timer)).catch((err: any) => {
+      clearTimeout(timer);
+      if (err?.name === 'AbortError') {
+        throw new Error('FluidPay API timeout (20s). Please try again.');
+      }
+      throw err;
+    });
+  }
+  return _originalFetch(input, init);
+} as typeof fetch;
+// ─────────────────────────────────────────────────────────────────────────────
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
