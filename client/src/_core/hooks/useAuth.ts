@@ -1,7 +1,7 @@
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { TRPCClientError } from "@trpc/client";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -13,9 +13,18 @@ export function useAuth(options?: UseAuthOptions) {
     options ?? {};
   const utils = trpc.useUtils();
 
+  // If the auth check takes > 10 seconds, stop showing the spinner and treat
+  // as unauthenticated so the login form appears instead of hanging forever.
+  const [authTimedOut, setAuthTimedOut] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setAuthTimedOut(true), 10_000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const meQuery = trpc.auth.me.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: false,
+    staleTime: 30_000,
   });
 
   const logoutMutation = trpc.auth.logout.useMutation({
@@ -52,7 +61,8 @@ export function useAuth(options?: UseAuthOptions) {
     );
     return {
       user: meQuery.data ?? null,
-      loading: meQuery.isLoading || logoutMutation.isPending,
+      // Stop showing "loading" if auth timed out — show the login form instead
+      loading: (meQuery.isLoading && !authTimedOut) || logoutMutation.isPending,
       error: meQuery.error ?? logoutMutation.error ?? null,
       isAuthenticated: Boolean(meQuery.data),
     };
@@ -62,6 +72,7 @@ export function useAuth(options?: UseAuthOptions) {
     meQuery.isLoading,
     logoutMutation.error,
     logoutMutation.isPending,
+    authTimedOut,
   ]);
 
   // Track the previous user ID so we can detect when a different user logs in
@@ -83,7 +94,7 @@ export function useAuth(options?: UseAuthOptions) {
     if (typeof window === "undefined") return;
     if (window.location.pathname === redirectPath) return;
 
-    window.location.href = redirectPath
+    window.location.href = redirectPath;
   }, [
     redirectOnUnauthenticated,
     redirectPath,

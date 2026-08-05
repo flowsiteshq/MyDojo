@@ -25,6 +25,7 @@ export async function getDb() {
         queueLimit: 0,
         enableKeepAlive: true,
         keepAliveInitialDelay: 30000, // send keepalive ping every 30s
+        connectTimeout: 8000,         // fail fast if DB is unreachable (8s)
       });
       _db = drizzle(_pool as any);
       console.log("[Database] Connection pool initialised.");
