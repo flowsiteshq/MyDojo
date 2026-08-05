@@ -901,7 +901,13 @@ export const appRouter = router({
           });
           const vaultData = await vaultRes.json() as any;
           if (vaultData.status !== 'success') {
-            throw new TRPCError({ code: 'BAD_REQUEST', message: vaultData.msg || 'Failed to save payment method' });
+            const rawMsg = vaultData.msg || '';
+            // Detect expired/invalid token and give a clear user-friendly message
+            const isTokenError = rawMsg.toLowerCase().includes('token') || rawMsg.toLowerCase().includes('invalid');
+            const userMsg = isTokenError
+              ? 'Your card session expired. Please re-enter your card details and try again.'
+              : rawMsg || 'Failed to save payment method. Please try again.';
+            throw new TRPCError({ code: 'BAD_REQUEST', message: userMsg });
           }
           fpCustomerId = vaultData.data.id;
           cardLast4 = vaultData.data.data?.customer?.payment_methods?.card?.[0]?.card_number?.slice(-4) || '';
