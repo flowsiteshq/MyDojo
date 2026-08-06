@@ -167,6 +167,8 @@ export const trialSignups = mysqlTable("trialSignups", {
   noShowSentAt: timestamp("noShowSentAt"),
   /** Whether this contact has opted out of SMS (replied STOP) */
   smsOptOut: boolean("smsOptOut").default(false).notNull(),
+  /** When staff called and confirmed the appointment (MAB green status) */
+  confirmedAt: timestamp("confirmedAt"),
   /** For Summer Camp 3-day trial: the date the trial started (Day 1) */
   trialStartDate: timestamp("trialStartDate"),
   /** For Summer Camp 3-day trial: the date full membership auto-activates (Day 4) */
