@@ -4993,6 +4993,15 @@ Please enter your card details below to complete your registration securely. Tot
           })
           .where(eq(schema.trialSignups.id, trialSignupId));
 
+        // AUTO: Mark as "showed_up" on the MAB board (turns card yellow) when student checks in via kiosk
+        const currentStage = trialSignup[0].pipelineStage;
+        if (currentStage !== 'showed_up' && currentStage !== 'offer_presented' && currentStage !== 'enrolled') {
+          await db
+            .update(schema.trialSignups)
+            .set({ pipelineStage: 'showed_up' })
+            .where(eq(schema.trialSignups.id, trialSignupId));
+        }
+
         // Get class details
         const classDetails = await db
           .select()
@@ -6019,6 +6028,36 @@ Please enter your card details below to complete your registration securely. Tot
           pendingLeads: pending,
         };
       }),
+
+    confirmAppointment: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        await db
+          .update(schema.trialSignups)
+          .set({ confirmedAt: new Date(), pipelineStage: 'intro_scheduled' })
+          .where(eq(schema.trialSignups.id, input.id));
+        return { success: true };
+      }),
+
+    getMABAppointments: protectedProcedure
+      .query(async () => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        const appointments = await db
+          .select()
+          .from(schema.trialSignups)
+          .where(
+            sql`${schema.trialSignups.scheduledTime} IS NOT NULL
+                AND ${schema.trialSignups.scheduledTime} >= DATE_SUB(NOW(), INTERVAL 1 DAY)
+                AND ${schema.trialSignups.scheduledTime} <= DATE_ADD(NOW(), INTERVAL 14 DAY)
+                AND ${schema.trialSignups.pipelineStage} NOT IN ('enrolled', 'nurture')`
+          )
+          .orderBy(schema.trialSignups.scheduledTime);
+        return appointments;
+      }),
+
 
     // Send a promotional SMS blast to all leads and/or staff
     sendNewsletter: protectedProcedure
