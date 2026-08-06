@@ -152,8 +152,15 @@ export default function CustomPaymentCheckout() {
       setSubmitting(false);
     },
     onError: (err) => {
-      toast.error(err.message || "Payment failed. Please try again.");
-      setStep("payment");
+      const msg = err.message || 'Payment failed. Please try again.';
+      toast.error(msg);
+      // If token expired, reset the tokenizer so user can re-enter card details
+      const isTokenExpired = msg.toLowerCase().includes('expired') || msg.toLowerCase().includes('session');
+      if (isTokenExpired) {
+        tokenizerInitializedRef.current = false;
+        tokenizerRef.current = null;
+      }
+      setStep('payment');
       setSubmitting(false);
     },
   });
