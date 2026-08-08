@@ -9,6 +9,7 @@ import {
   Phone, Mail, LogOut, ExternalLink, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getLoginUrl } from "@/const";
 
 type Tab = "home" | "benefits" | "locate" | "shop" | "account";
 
@@ -594,7 +595,7 @@ export default function MemberPortal() {
         <h1 className="text-2xl font-bold text-gray-900 mb-2">MyDojo Member Portal</h1>
         <p className="text-gray-500 text-center mb-8">Sign in to access your membership, events, and more.</p>
         <a
-          href="/api/oauth/login"
+          href={getLoginUrl()}
           className="w-full max-w-xs bg-red-600 text-white font-bold text-center py-4 rounded-2xl text-lg"
         >
           Sign In
