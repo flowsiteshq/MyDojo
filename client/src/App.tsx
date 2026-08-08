@@ -110,6 +110,7 @@ const AugustCalendar = lazy(() => import("./pages/AugustCalendar"));
 const ParentsNightOutAug = lazy(() => import("./pages/ParentsNightOutAug"));
 const MasterYaegerSeminar = lazy(() => import("./pages/MasterYaegerSeminar"));
 const AdminBeltTestIntents = lazy(() => import("./pages/AdminBeltTestIntents"));
+const MemberPortal = lazy(() => import("./pages/MemberPortal"));
 const AdminNewsletter = lazy(() => import("./pages/AdminNewsletter"));
 const AdminEventRegistrations = lazy(() => import("./pages/AdminEventRegistrations"));
 
@@ -215,6 +216,7 @@ function Router() {
         <Route path="/august-2026" component={AugustCalendar} />
         <Route path="/parents-night-out-aug" component={ParentsNightOutAug} />
         <Route path="/master-yaeger-seminar" component={MasterYaegerSeminar} />
+        <Route path="/member" component={MemberPortal} />
         <Route path="/admin/belt-test-intents" component={AdminBeltTestIntents} />
             <Route path="/admin/newsletter" component={AdminNewsletter} />
         <Route path="/admin/event-registrations" component={AdminEventRegistrations} />
