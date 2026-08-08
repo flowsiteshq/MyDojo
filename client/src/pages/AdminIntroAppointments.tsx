@@ -25,10 +25,11 @@ import {
 } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { PinConfirmDialog } from "@/components/PinConfirmDialog";
-import { Plus, Edit, Trash2, Search, ExternalLink, LayoutGrid, List, Download, RefreshCw, UserX } from "lucide-react";
+import { Plus, Edit, Trash2, Search, ExternalLink, LayoutGrid, List, Download, RefreshCw, UserX, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
+import { MABCardView } from "@/components/MABCardView";
 
-type ViewMode = "table" | "board";
+type ViewMode = "table" | "board" | "mab";
 
 type PipelineStage =
   | "new_lead"
@@ -415,6 +416,17 @@ export default function AdminIntroAppointments() {
                 <LayoutGrid className="w-4 h-4" />
                 Board
               </button>
+              <button
+                onClick={() => setViewMode("mab")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === "mab"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <CalendarDays className="w-4 h-4" />
+                MAB
+              </button>
             </div>
 
             {/* GHL Sync button */}
@@ -796,6 +808,13 @@ export default function AdminIntroAppointments() {
             </div>
           );
         })()}
+
+        {/* ── MAB CARD VIEW ── */}
+        {viewMode === "mab" && (
+          <div className="mt-2">
+            <MABCardView />
+          </div>
+        )}
 
         {/* ── BOARD VIEW ── */}
         {viewMode === "board" && (
