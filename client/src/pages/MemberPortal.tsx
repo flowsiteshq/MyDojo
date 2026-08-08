@@ -560,7 +560,18 @@ export default function MemberPortal() {
     enabled: isAuthenticated,
   });
 
-  if (loading || enrollmentLoading) {
+  // Demo enrollment for admins or when no enrollment found
+  const demoEnrollment = {
+    customerName: user?.name || "Member",
+    packageName: "Foundation Monthly Membership",
+    packageMonthlyPrice: 149,
+    beltRank: "Yellow Belt",
+    status: "active",
+  };
+  const activeEnrollment = enrollment ?? (isAuthenticated ? demoEnrollment : null);
+
+  // Only block on initial auth loading — don't wait for enrollment
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-3">
@@ -568,7 +579,7 @@ export default function MemberPortal() {
             <span className="text-white text-2xl font-black">MD</span>
           </div>
           <Loader2 className="h-6 w-6 animate-spin text-red-500" />
-          <p className="text-gray-500 text-sm">Loading your portal...</p>
+          <p className="text-gray-500 text-sm">Signing you in...</p>
         </div>
       </div>
     );
@@ -607,11 +618,11 @@ export default function MemberPortal() {
     <div className="min-h-screen bg-gray-50 max-w-md mx-auto relative">
       {/* Page content */}
       <div className="overflow-y-auto">
-        {activeTab === "home"     && <HomeTab enrollment={enrollment} />}
-        {activeTab === "benefits" && <BenefitsTab enrollment={enrollment} />}
+        {activeTab === "home"     && <HomeTab enrollment={activeEnrollment} />}
+        {activeTab === "benefits" && <BenefitsTab enrollment={activeEnrollment} />}
         {activeTab === "locate"   && <LocateTab />}
         {activeTab === "shop"     && <ShopTab />}
-        {activeTab === "account"  && <AccountTab enrollment={enrollment} />}
+        {activeTab === "account"  && <AccountTab enrollment={activeEnrollment} />}
       </div>
 
       {/* Bottom tab bar — fixed */}
