@@ -68,6 +68,7 @@ import { shopRouter } from './shopRouter';
 import { aiSmsRouter } from './aiSmsRouter';
 import { mydojoBucksRouter } from './mydojoBucks';
 import { scheduledPaymentsRouter } from './scheduledPaymentsRouter';
+import { sendLeadConfirmationSms } from "./leadConfirmationSms";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -1522,11 +1523,35 @@ export const appRouter = router({
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create lead" });
         }
 
-        // Notify staff via SMS (fire-and-forget)
-        const { notifyStaffNewLead } = await import('./notifyStaffNewLead');
-        notifyStaffNewLead({ name: input.name, phone: input.phone, program: input.program, source }).catch((err) => {
-          console.error('[LeadNotify] Failed to notify staff for new lead:', err);
+        // Persist the lead before attempting the text. A provider error must
+        // never discard a website submission, and each outcome is auditable.
+        const confirmationSms = await sendLeadConfirmationSms({
+          name: input.name,
+          phone: input.phone,
+          program: input.program,
+          scheduledTime: input.scheduledTime,
         });
+        const confirmationDb = await getDb();
+        if (confirmationDb) {
+          await confirmationDb.update(schema.trialSignups).set({
+            confirmationSmsSentAt: confirmationSms.success ? new Date() : null,
+            confirmationSmsMessageId: confirmationSms.messageId ?? null,
+            confirmationSmsError: confirmationSms.success ? null : (confirmationSms.error ?? "SMS delivery failed"),
+          }).where(eq(schema.trialSignups.id, lead.id));
+        }
+
+        if (!confirmationSms.success) {
+          console.error(`[Trial Signup] Confirmation SMS failed for lead ${lead.id}: ${confirmationSms.error}`);
+        }
+
+        // Await staff notifications so serverless requests cannot finish before
+        // the outbound alert runs. The lead is already saved, so a delivery
+        // failure is logged but never changes the successful form response.
+        const { notifyStaffNewLead } = await import('./notifyStaffNewLead');
+        const staffSms = await notifyStaffNewLead({ name: input.name, phone: input.phone, program: input.program, source });
+        if (staffSms.failed > 0 || staffSms.errors.length > 0) {
+          console.error(`[LeadNotify] Staff SMS delivery issue for lead ${lead.id}: ${staffSms.errors.join("; ")}`);
+        }
 
         // Send confirmation email to customer (fire-and-forget)
         if (input.email) {
@@ -1539,7 +1564,12 @@ export const appRouter = router({
           }).catch(() => {});
         }
 
-        return { success: true, id: lead.id };
+        return {
+          success: true,
+          id: lead.id,
+          confirmationSms: { sent: confirmationSms.success, error: confirmationSms.error ?? null },
+          staffSms: { recipients: staffSms.recipients, sent: staffSms.sent, failed: staffSms.failed },
+        };
       }),
 
     getAll: protectedProcedure
@@ -8643,21 +8673,33 @@ Please enter your card details below to complete your registration securely. Tot
           leadId = existing[0].id;
         }
 
-        // Send welcome SMS to the prospect (fire-and-forget)
+        // Send welcome SMS to the prospect and retain a delivery audit record.
         if (input.phone) {
-          try {
-            const { sendSms, normalizePhone } = await import('./sms800');
-            const firstName = input.name ? input.name.split(' ')[0] : 'there';
-            const isOnlineSpecialSms = input.campaign === 'online_special';
-            const smsMessage = isOnlineSpecialSms
-              ? `Hi ${firstName}! 🎉 Welcome to MyDojo! Your 2 FREE weeks of karate classes are confirmed. We're at 11721 Spring Cypress Rd, Tomball TX. Arrive 10-15 min early for your first class & wear comfy clothes — we'll handle the rest! Questions? Call/text (877) 4-MYDOJO. See you on the mat! 🥋`
-              : `Hi ${firstName}! Thanks for your interest in MyDojo. We'll be in touch soon to schedule your free class. Questions? Call (877) 4-MYDOJO. 🥋`;
-            await sendSms({
-              to: normalizePhone(input.phone),
-              message: smsMessage,
-            });
-          } catch (smsErr) {
-            console.error('[Popup Lead] Failed to send welcome SMS to prospect:', smsErr);
+          const firstName = input.name ? input.name.split(' ')[0] : 'there';
+          const isOnlineSpecialSms = input.campaign === 'online_special';
+          const smsMessage = isOnlineSpecialSms
+            ? `Hi ${firstName}! Welcome to MyDojo! Your 2 FREE weeks of karate classes are confirmed. We're at 11721 Spring Cypress Rd, Tomball TX. Arrive 10-15 minutes early for your first class and wear comfortable clothes. Questions? Call/text (877) 4-MYDOJO. See you on the mat! Reply STOP to unsubscribe.`
+            : `Hi ${firstName}! Thanks for your interest in MyDojo. We received your request and will contact you soon to schedule your free class. Questions? Call (877) 4-MYDOJO. Reply STOP to unsubscribe.`;
+          const confirmationSms = await sendLeadConfirmationSms({
+            name: input.name ?? "there",
+            phone: input.phone,
+            program: input.program,
+            customMessage: smsMessage,
+          });
+
+          await db.update(schema.popupLeads).set({
+            confirmationSmsSentAt: confirmationSms.success ? new Date() : null,
+            confirmationSmsMessageId: confirmationSms.messageId ?? null,
+            confirmationSmsError: confirmationSms.success ? null : (confirmationSms.error ?? "SMS delivery failed"),
+          }).where(
+            and(
+              eq(schema.popupLeads.email, emailLower),
+              eq(schema.popupLeads.campaign, input.campaign)
+            )
+          );
+
+          if (!confirmationSms.success) {
+            console.error('[Popup Lead] Confirmation SMS failed:', confirmationSms.error);
           }
         }
 
@@ -8850,18 +8892,20 @@ Please enter your card details below to complete your registration securely. Tot
           // Non-fatal — popup lead is already saved in popupLeads
         }
 
-        // Notify staff via SMS (fire-and-forget)
+        // Await staff notifications so public popup submissions have the same
+        // reliable delivery behavior as the main website forms.
         try {
           const { notifyStaffNewLead } = await import('./notifyStaffNewLead');
           const campaignLabel = input.campaign === 'summer_camp' ? 'Summer Camp' : input.campaign === 'online_special' ? 'Online Special (2 Weeks Free)' : 'Kickboxing';
-          notifyStaffNewLead({
+          const staffSms = await notifyStaffNewLead({
             name: input.name ?? 'Unknown',
             phone: input.phone,
             program: input.program ?? campaignLabel,
             source: `popup_${input.campaign}`,
-          }).catch((err) => {
-            console.error('[Popup Lead] notifyStaffNewLead failed:', err);
           });
+          if (staffSms.failed > 0 || staffSms.errors.length > 0) {
+            console.error(`[Popup Lead] Staff SMS delivery issue: ${staffSms.errors.join("; ")}`);
+          }
         } catch (notifyErr) {
           console.error('[Popup Lead] Failed to import/call notifyStaffNewLead:', notifyErr);
         }

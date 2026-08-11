@@ -24,14 +24,22 @@ export interface NewLeadInfo {
   source?: string;
 }
 
+export interface StaffLeadNotificationResult {
+  recipients: number;
+  sent: number;
+  failed: number;
+  errors: string[];
+}
+
 /**
  * Notify all staff/admin members who have a phone + leadSmsNotify=1.
- * Fires-and-forgets — errors are logged but never thrown.
+ * Returns an operational summary. Callers can await it without allowing an
+ * SMS failure to discard the underlying website form submission.
  */
-export async function notifyStaffNewLead(lead: NewLeadInfo): Promise<void> {
+export async function notifyStaffNewLead(lead: NewLeadInfo): Promise<StaffLeadNotificationResult> {
   try {
     const db = await getDb();
-    if (!db) return;
+    if (!db) return { recipients: 0, sent: 0, failed: 0, errors: ["Database unavailable"] };
 
     // Fetch all staff/admin with a phone number and notifications enabled
     const staffList = await db
@@ -46,7 +54,7 @@ export async function notifyStaffNewLead(lead: NewLeadInfo): Promise<void> {
 
     if (staffList.length === 0) {
       console.log("[LeadNotify] No staff with phone numbers configured — skipping SMS");
-      return;
+      return { recipients: 0, sent: 0, failed: 0, errors: [] };
     }
 
     // Deduplicate by phone number — only send one SMS per unique phone
@@ -80,8 +88,14 @@ export async function notifyStaffNewLead(lead: NewLeadInfo): Promise<void> {
     );
 
     const sent = results.filter((r) => r.status === "fulfilled" && (r.value as any).success).length;
+    const errors = results.flatMap((result, index) => {
+      if (result.status === "rejected") return [`${uniqueStaff[index]?.name ?? "Staff"}: ${String(result.reason)}`];
+      return result.value.success ? [] : [`${uniqueStaff[index]?.name ?? "Staff"}: ${result.value.error ?? "SMS delivery failed"}`];
+    });
     console.log(`[LeadNotify] Notified ${sent}/${uniqueStaff.length} unique phone(s) about new lead: ${lead.name}`);
+    return { recipients: uniqueStaff.length, sent, failed: uniqueStaff.length - sent, errors };
   } catch (err) {
     console.error("[LeadNotify] Unexpected error in notifyStaffNewLead:", err);
+    return { recipients: 0, sent: 0, failed: 0, errors: [err instanceof Error ? err.message : String(err)] };
   }
 }

@@ -2,6 +2,12 @@
 
 ## IN PROGRESS
 
+- [x] Repair website form confirmation SMS delivery for submitters and staff
+  - [x] Inventory all public form submission workflows and intended SMS recipients
+  - [x] Identify the failed delivery point using recent submissions and server logs
+  - [x] Restore confirmation SMS sends with explicit error handling and logging
+  - [x] Add regression coverage for confirmation delivery
+
 - [x] Fix Kai chatbot TypeScript errors in TrialChatbot, CurriculumViewer, InstructorFeedbackPanel, QRScanner (0 TS errors now)
 
 

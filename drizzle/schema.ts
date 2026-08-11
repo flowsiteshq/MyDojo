@@ -167,6 +167,10 @@ export const trialSignups = mysqlTable("trialSignups", {
   noShowSentAt: timestamp("noShowSentAt"),
   /** Whether this contact has opted out of SMS (replied STOP) */
   smsOptOut: boolean("smsOptOut").default(false).notNull(),
+  /** Audit trail for the first text confirmation triggered by a website form */
+  confirmationSmsSentAt: timestamp("confirmationSmsSentAt"),
+  confirmationSmsMessageId: varchar("confirmationSmsMessageId", { length: 255 }),
+  confirmationSmsError: text("confirmationSmsError"),
   /** When staff called and confirmed the appointment (MAB green status) */
   confirmedAt: timestamp("confirmedAt"),
   /** For Summer Camp 3-day trial: the date the trial started (Day 1) */
@@ -1159,6 +1163,10 @@ export const popupLeads = mysqlTable("popupLeads", {
   source: varchar("source", { length: 100 }).default("popup").notNull(),
   /** Whether a confirmation/follow-up email was sent */
   emailSent: boolean("emailSent").default(false).notNull(),
+  /** Delivery audit for the SMS sent after a popup form submission */
+  confirmationSmsSentAt: timestamp("confirmationSmsSentAt"),
+  confirmationSmsMessageId: varchar("confirmationSmsMessageId", { length: 255 }),
+  confirmationSmsError: text("confirmationSmsError"),
   /** Who the lessons are for: 'myself' | 'child' | 'someone' */
   lessonsFor: varchar("lessonsFor", { length: 20 }),
   /** Child's name if lessonsFor === 'child' */
