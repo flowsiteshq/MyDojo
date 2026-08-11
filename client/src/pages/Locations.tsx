@@ -199,25 +199,25 @@ export default function Locations() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="public-page flex min-h-screen flex-col">
       <SEO 
         title="Our Locations"
         description="Find a MyDojo martial arts location near you in Tomball, Texas. View addresses, hours, directions, and class schedules for all our training facilities."
         keywords="MyDojo locations, martial arts Tomball locations, karate school near me, dojo locations, martial arts facility Tomball, find martial arts class, dojo directions"
       />
       {/* Hero Section */}
-      <section className="bg-black text-white py-20 relative overflow-hidden">
+      <section className="relative overflow-hidden border-b border-black/10 bg-black py-16 text-white md:py-24">
         <div className="absolute inset-0 bg-[url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/QCDmgxbjdlfUOCPT.jpg')] bg-cover bg-center opacity-30"></div>
-        <div className="container mx-auto px-4 relative z-10 text-center">
-          <h1 className="text-4xl md:text-6xl font-heading font-bold mb-4">{t("locations.find_location")}</h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+        <div className="container relative z-10 grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+          <div><p className="text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-[#e63946]">Visit MyDojo</p><h1 className="mt-5 font-heading text-[clamp(3.5rem,7vw,7rem)] font-bold uppercase leading-[0.86] tracking-[-0.04em]">{t("locations.find_location")}</h1></div>
+          <p className="max-w-2xl text-base leading-7 text-gray-300 md:text-lg">
             {t("locations.find_location_desc")}
           </p>
         </div>
       </section>
 
       {/* Mobile: Quick link to Tomball page */}
-      <div className="lg:hidden bg-primary text-white py-3 px-4 text-center">
+      <div className="bg-[#e63946] px-4 py-3 text-center text-white lg:hidden">
         <Link href="/locations/tomball">
           <span className="font-bold uppercase tracking-wider text-sm flex items-center justify-center gap-2">
             <MapPin className="w-4 h-4" />
@@ -226,12 +226,12 @@ export default function Locations() {
         </Link>
       </div>
 
-      <div className="container mx-auto px-4 py-12 flex-grow">
+      <div className="container flex-grow py-12 md:py-16">
         <div className="flex flex-col lg:flex-row gap-8 h-full">
           
           {/* Sidebar / List */}
           <div className="lg:w-1/3 flex flex-col gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <div className="border border-[var(--mydojo-line)] bg-white p-6">
               <h2 className="text-xl font-bold mb-4 flex items-center">
                 <Navigation className="w-5 h-5 mr-2 text-primary" />
                 {t("locations.find_nearest")}
@@ -246,9 +246,9 @@ export default function Locations() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                      className="bg-gray-50"
+                      className="rounded-none bg-gray-50"
                     />
-                    <Button onClick={() => handleSearch()} disabled={loading || !geocoder} className="bg-black text-white hover:bg-gray-800">
+                    <Button onClick={() => handleSearch()} disabled={loading || !geocoder} className="rounded-none bg-black text-white hover:bg-[#e63946]">
                       <Search className="w-4 h-4" />
                     </Button>
                   </div>
@@ -267,13 +267,13 @@ export default function Locations() {
                   onClick={handleFindNearest} 
                   disabled={loading}
                   variant="outline"
-                  className="w-full border-primary text-primary hover:bg-primary/5"
+                  className="w-full rounded-none border-primary text-primary hover:bg-primary/5"
                 >
                   {loading ? t("locations.locating") : t("locations.use_my_location")}
                 </Button>
               </div>
               
-              {error && <p className="text-red-500 text-sm mt-4 bg-red-50 p-3 rounded-md border border-red-100">{error}</p>}
+              {error && <p className="mt-4 border border-red-100 bg-red-50 p-3 text-sm text-red-500">{error}</p>}
             </div>
 
             <div className="space-y-4">
@@ -282,8 +282,8 @@ export default function Locations() {
                   key={location.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`bg-white p-6 rounded-xl shadow-sm border cursor-pointer transition-all hover:shadow-md ${
-                    selectedLocation?.id === location.id ? "border-primary ring-1 ring-primary" : "border-gray-200"
+                  className={`cursor-pointer border bg-white p-6 transition-colors hover:border-black ${
+                    selectedLocation?.id === location.id ? "border-primary" : "border-gray-200"
                   }`}
                   onClick={() => setSelectedLocation(location)}
                 >

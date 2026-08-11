@@ -41,33 +41,32 @@ export default function Events() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="public-page min-h-screen">
       <SEO 
         title="Events & Activities"
         description="Join MyDojo's exciting martial arts events including Fun Fridays, Belt Tests, Black Belt Banquets, and Holiday Camps. Special events for students and families throughout the year."
         keywords="martial arts events, belt testing, black belt ceremony, martial arts camp, holiday martial arts camp, fun Friday events, martial arts activities, karate events Tomball, family martial arts events"
       />
       {/* Header */}
-      <div className="bg-black text-white py-20 relative overflow-hidden">
+      <div className="relative overflow-hidden border-b border-black/10 bg-black py-16 text-white md:py-24">
         <div className="absolute inset-0 bg-[url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/SyvAbjUuGnRExiUN.jpg')] bg-cover bg-center opacity-30"></div>
-        <div className="container mx-auto px-4 relative z-10 text-center">
-          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">EVENTS</h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+        <div className="container relative z-10 grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+          <div><p className="text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-[#e63946]">The MyDojo community</p><h1 className="mt-5 font-heading text-[clamp(3.5rem,7vw,7rem)] font-bold uppercase leading-[0.86] tracking-[-0.04em]">Events that<br />bring us together.</h1></div>
+          <div><p className="max-w-2xl text-base leading-7 text-gray-300 md:text-lg">
             At MyDojo, kids and families make up an intricate part of our student base. That's why we have special events to keep our students motivated.
-          </p>
-          <div className="mt-8">
+          </p><div className="mt-8">
             <Link href="/contact">
-              <Button className="bg-primary hover:bg-primary/90 text-white px-8 py-6 h-auto font-heading uppercase tracking-wider text-lg">
+              <Button className="h-auto rounded-none bg-primary px-6 py-4 text-xs font-extrabold uppercase tracking-[0.12em] text-white hover:bg-primary/90">
                 Contact Us for Upcoming Events
               </Button>
             </Link>
-          </div>
+          </div></div>
         </div>
       </div>
 
       {/* Events Grid */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="container py-16 md:py-20">
+        <div className="grid border-l border-t border-[var(--mydojo-line)] md:grid-cols-2 lg:grid-cols-3">
           {events.map((event, index) => (
             <motion.div 
               key={index}
@@ -75,20 +74,20 @@ export default function Events() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300 border border-gray-100"
+              className="overflow-hidden border-b border-r border-[var(--mydojo-line)] bg-white transition-colors hover:bg-zinc-50"
             >
-              <div className={`${event.color} p-6 flex justify-center items-center`}>
-                <div className="bg-white/20 p-4 rounded-full backdrop-blur-sm">
+              <div className={`${event.color} flex items-center justify-center p-7`}>
+                <div className="bg-white/20 p-4 backdrop-blur-sm">
                   {event.icon}
                 </div>
               </div>
-              <div className="p-8">
+              <div className="p-7 md:p-8">
                 <h3 className="text-2xl font-heading font-bold mb-4">{event.title}</h3>
                 <p className="text-gray-600 leading-relaxed mb-6">
                   {event.description}
                 </p>
                 <Link href="/contact">
-                  <Button variant="outline" className="w-full border-black text-black hover:bg-black hover:text-white uppercase tracking-wider font-bold">
+                  <Button variant="outline" className="w-full rounded-none border-black text-black hover:bg-black hover:text-white uppercase tracking-wider font-bold">
                     Inquire Now
                   </Button>
                 </Link>
@@ -99,14 +98,14 @@ export default function Events() {
       </div>
 
       {/* Community Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
+      <section className="border-t border-[var(--mydojo-line)] bg-[var(--mydojo-paper)] py-16 md:py-24">
+        <div className="container">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
             <div className="w-full lg:w-1/2">
-              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/SyvAbjUuGnRExiUN.jpg" alt="Community" className="rounded-2xl shadow-2xl w-full" loading="lazy" />
+              <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/SyvAbjUuGnRExiUN.jpg" alt="Community" className="w-full border border-[var(--mydojo-line)]" loading="lazy" />
             </div>
             <div className="w-full lg:w-1/2">
-              <h2 className="text-4xl font-heading font-bold mb-6">JOIN OUR COMMUNITY</h2>
+              <p className="public-eyebrow">A fuller dojo life</p><h2 className="public-title mt-5">Join our community.</h2>
               <p className="text-gray-600 text-lg mb-6 leading-relaxed">
                 MyDojo is more than just a place to workout. It's a community where friendships are formed, goals are achieved, and families come together.
               </p>
@@ -114,7 +113,7 @@ export default function Events() {
                 From our annual Black Belt Banquet to our fun holiday camps, there's always something happening at MyDojo. Come be a part of our family!
               </p>
               <Link href="/contact">
-                <Button className="bg-primary hover:bg-primary/90 text-white px-8 py-6 h-auto font-heading uppercase tracking-wider text-lg">
+                <Button className="mt-2 h-auto rounded-none bg-primary px-6 py-4 text-xs font-extrabold uppercase tracking-[0.12em] text-white hover:bg-primary/90">
                   Get Event Updates
                 </Button>
               </Link>

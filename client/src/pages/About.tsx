@@ -1,135 +1,24 @@
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { ArrowRight, Check, Compass, HeartHandshake, ShieldCheck } from "lucide-react";
 import SEO from "@/components/SEO";
 import SchemaMarkup from "@/components/SchemaMarkup";
 import { openBookFreeClassGate } from "@/lib/chatbot";
-import { useTranslation } from "react-i18next";
 
 export default function About() {
-  const { t } = useTranslation();
   return (
-    <div className="min-h-screen bg-white">
-      <SEO 
-        title="About Us"
-        description="Learn about MyDojo's mission to empower lives through martial arts. Experienced instructors, proven curriculum, and a supportive community dedicated to building confidence, discipline, and strength."
-        keywords="about MyDojo, martial arts philosophy, karate school mission, experienced martial arts instructors, martial arts values, community dojo, family martial arts school Tomball"
-      />
+    <div className="public-page min-h-screen">
+      <SEO title="About MyDojo Martial Arts & Fitness" description="Learn how MyDojo creates a focused, supportive martial arts experience for children, teens, and adults in Tomball, Texas." />
       <SchemaMarkup type="LocalBusiness" />
-      <SchemaMarkup
-        type="BreadcrumbList"
-        items={[
-          { name: "Home", url: "/" },
-          { name: "About Us", url: "/about" },
-        ]}
-      />
-      {/* Header */}
-      <div className="bg-black text-white py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://files.manuscdn.com/manus-storage/master-holmes-stance_86d12feb.jpeg')] bg-cover bg-center opacity-20"></div>
-        <div className="container mx-auto px-4 relative z-10 text-center">
-          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">{t("about.title")}</h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            {t("about.subtitle")}
-          </p>
-        </div>
-      </div>
+      <SchemaMarkup type="BreadcrumbList" items={[{ name: "Home", url: "/" }, { name: "About Us", url: "/about" }]} />
 
-      {/* Mission Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-primary font-bold tracking-widest uppercase mb-4">{t("about.mission_title")}</h2>
-            <h3 className="text-4xl md:text-5xl font-heading font-bold mb-8">{t("about.mission_headline")}</h3>
-            <p className="text-xl text-gray-600 leading-relaxed mb-12">
-              {t("about.mission_desc")}
-            </p>
-          </div>
+      <section className="relative overflow-hidden bg-black py-20 text-white md:py-28"><img src="https://files.manuscdn.com/manus-storage/master-holmes-stance_86d12feb.jpeg" alt="MyDojo martial arts instruction" className="absolute inset-0 h-full w-full object-cover opacity-35" /><div className="absolute inset-0 bg-black/60" /><div className="container relative z-10 grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-end"><div><p className="text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-[#e63946]">About MyDojo</p><h1 className="mt-5 font-heading text-[clamp(4rem,8vw,8rem)] font-bold uppercase leading-[0.84] tracking-[-0.045em]">Built for<br />better days.</h1></div><p className="max-w-2xl text-lg leading-8 text-white/80">MyDojo is a place to work hard, feel supported, and keep moving forward. We use martial arts as a practical way to help students build confidence, discipline, fitness, and a stronger sense of what they can do.</p></div></section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-            <div className="text-center p-8 bg-gray-50 rounded-xl">
-              <div className="text-6xl font-heading font-bold text-gray-200 mb-4">01</div>
-              <h4 className="text-2xl font-bold mb-4">{t("about.value_fun")}</h4>
-              <p className="text-gray-600">
-                {t("about.value_fun_desc")}
-              </p>
-            </div>
-            <div className="text-center p-8 bg-gray-50 rounded-xl">
-              <div className="text-6xl font-heading font-bold text-gray-200 mb-4">02</div>
-              <h4 className="text-2xl font-bold mb-4">{t("about.value_fit")}</h4>
-              <p className="text-gray-600">
-                {t("about.value_fit_desc")}
-              </p>
-            </div>
-            <div className="text-center p-8 bg-gray-50 rounded-xl">
-              <div className="text-6xl font-heading font-bold text-gray-200 mb-4">03</div>
-              <h4 className="text-2xl font-bold mb-4">{t("about.value_strong")}</h4>
-              <p className="text-gray-600">
-                {t("about.value_strong_desc")}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <section className="public-section bg-[var(--mydojo-paper)]"><div className="container grid gap-10 lg:grid-cols-[0.75fr_1.25fr]"><div><p className="public-eyebrow">Why we teach</p><h2 className="public-title mt-5">The lesson reaches beyond the mat.</h2></div><div className="max-w-2xl"><p className="public-copy">Martial arts training gives students a clear path: show up, practice deliberately, face a challenge, and recognize progress. The physical work matters, but the habits formed in the process matter just as much.</p><div className="public-rule mt-9" /><div className="mt-7 grid gap-3 text-sm font-semibold text-zinc-700 sm:grid-cols-2">{["Focused instruction", "Supportive accountability", "Meaningful progression", "A welcoming dojo culture"].map((item) => <span key={item} className="flex items-center gap-2"><Check className="h-4 w-4 text-[#e63946]" />{item}</span>)}</div></div></div></section>
 
-      {/* Testimonials */}
-      <section className="py-20 bg-black text-white relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/BRDAWpxDTQGxESXr.jpg')] bg-cover bg-center opacity-10"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <h2 className="text-center text-4xl font-heading font-bold mb-16">{t("about.students_say")}</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="bg-zinc-900 p-8 rounded-xl border border-zinc-800 relative"
-            >
-              <div className="text-primary text-6xl font-serif absolute top-4 left-4 opacity-30">"</div>
-              <p className="text-gray-300 text-lg italic mb-6 relative z-10 pt-4">
-                Enrolling my toddler in the Mydojo Little Ninjas program has been a fantastic experience, as it promotes physical fitness, discipline, and respect while creating a fun and supportive environment. The skilled and patient instructors make learning engaging... I highly recommend MyDojo Martial Arts!
-              </p>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-700 rounded-full"></div>
-                <div>
-                  <h5 className="font-bold">J. Thompson</h5>
-                  <p className="text-sm text-gray-500">Parent</p>
-                </div>
-              </div>
-            </motion.div>
+      <section className="bg-white py-16 md:py-24"><div className="container grid border-l border-t border-[var(--mydojo-line)] md:grid-cols-3">{[{ icon: Compass, number: "01", title: "Clear direction", copy: "Students always know what they are practicing, why it matters, and what their next milestone can be." }, { icon: HeartHandshake, number: "02", title: "Real encouragement", copy: "Coaching is direct, positive, and grounded in helping each student build confidence through effort." }, { icon: ShieldCheck, number: "03", title: "A standard of respect", copy: "We lead with discipline, safety, care for others, and responsibility for ourselves." }].map(({ icon: Icon, number, title, copy }) => <article key={number} className="border-b border-r border-[var(--mydojo-line)] p-8 md:p-10"><div className="flex items-start justify-between"><Icon className="h-6 w-6 text-[#e63946]" /><span className="font-heading text-5xl font-bold text-zinc-200">{number}</span></div><h2 className="mt-12 font-heading text-4xl font-bold uppercase leading-none text-black">{title}</h2><p className="mt-5 text-sm leading-7 text-zinc-600">{copy}</p></article>)}</div></section>
 
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="bg-zinc-900 p-8 rounded-xl border border-zinc-800 relative"
-            >
-              <div className="text-primary text-6xl font-serif absolute top-4 left-4 opacity-30">"</div>
-              <p className="text-gray-300 text-lg italic mb-6 relative z-10 pt-4">
-                My mindset has changed toward fitness! MyDojo Martial Arts has shifted my way of thinking when it comes to my health and fitness journey! The classes are AMAZING!!!
-              </p>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-700 rounded-full"></div>
-                <div>
-                  <h5 className="font-bold">S. Joy</h5>
-                  <p className="text-sm text-gray-500">Adult Student</p>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+      <section className="bg-black text-white"><div className="container grid min-h-[38rem] lg:grid-cols-2"><div className="relative min-h-[21rem] overflow-hidden lg:min-h-0"><img src="https://files.manuscdn.com/manus-storage/master-holmes-headshot_cd686d71.jpg" alt="Master Vincent Holmes" className="h-full w-full object-cover object-top grayscale-[10%]" /><div className="absolute bottom-0 left-0 bg-[#e63946] px-5 py-4 text-xs font-extrabold uppercase tracking-[0.13em]">Master Vincent Holmes</div></div><div className="flex flex-col justify-center py-16 lg:px-20"><p className="text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-[#e63946]">Leadership at MyDojo</p><h2 className="mt-5 font-heading text-[clamp(3.4rem,5vw,5.5rem)] font-bold uppercase leading-[0.87] tracking-[-0.04em]">A dojo led<br />with purpose.</h2><p className="mt-7 max-w-xl text-base leading-7 text-white/75">Master Vincent Holmes and the MyDojo team bring the same standard to every student: offer clear coaching, create a strong culture, and help people recognize the progress they earn.</p><button onClick={openBookFreeClassGate} className="public-button mt-9 w-fit">Meet the team in class <ArrowRight className="h-4 w-4" /></button></div></div></section>
 
-      {/* CTA */}
-      <section className="py-20 bg-primary text-white text-center">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-heading font-bold mb-8">{t("about.join_family")}</h2>
-          <Button 
-            onClick={openBookFreeClassGate}
-            className="bg-white text-primary hover:bg-black hover:text-white text-lg px-10 py-8 h-auto font-heading uppercase tracking-wider skew-x-[-10deg] shadow-xl"
-          >
-            <span className="skew-x-[10deg]">{t("about.start_journey")}</span>
-          </Button>
-        </div>
-      </section>
+      <section className="bg-[#e63946] py-16 text-white md:py-24"><div className="container flex flex-col justify-between gap-8 md:flex-row md:items-end"><div><p className="text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-white/70">Take the first step</p><h2 className="mt-5 font-heading text-[clamp(3.4rem,6vw,6rem)] font-bold uppercase leading-[0.86] tracking-[-0.04em]">Come train<br />with us.</h2></div><button onClick={openBookFreeClassGate} className="inline-flex min-h-[3.125rem] items-center justify-center gap-2 bg-black px-5 text-xs font-extrabold uppercase tracking-[0.12em] text-white hover:bg-white hover:text-black">Book a free class <ArrowRight className="h-4 w-4" /></button></div></section>
     </div>
   );
 }

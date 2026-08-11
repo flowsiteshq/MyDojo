@@ -1,176 +1,65 @@
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import { Check, ArrowRight } from "lucide-react";
+import { ArrowRight, Check, ChevronRight, UsersRound } from "lucide-react";
 import { Link } from "wouter";
 import { programs } from "@/data/programs";
 import UniformGuide from "@/components/UniformGuide";
 import SEO from "@/components/SEO";
 import SchemaMarkup from "@/components/SchemaMarkup";
-import { useTranslation } from "react-i18next";
+import { openBookFreeClassGate } from "@/lib/chatbot";
 
 export default function Programs() {
-  const { t } = useTranslation();
   return (
-    <div className="min-h-screen bg-gray-50">
-      <SEO 
-        title="Our Programs" 
-        description="Explore our martial arts programs for all ages: Little Ninjas, Dragon Kids, Teens, and Adults. Schedule a free trial today."
-        keywords="martial arts programs, kids martial arts classes, teen karate, adult kickboxing, Little Ninjas program, Dragon Kids martial arts, after school martial arts, Tomball martial arts programs, youth martial arts, family martial arts"
+    <div className="public-page min-h-screen">
+      <SEO
+        title="Martial Arts & Kickboxing Programs | MyDojo"
+        description="Explore MyDojo's martial arts and kickboxing programs for children, teens, adults, and families in Tomball, Texas."
+        keywords="martial arts programs, kids martial arts classes, teen karate, adult kickboxing, Tomball martial arts"
       />
-      <SchemaMarkup
-        type="BreadcrumbList"
-        items={[
-          { name: "Home", url: "/" },
-          { name: "Programs", url: "/programs" },
-        ]}
-      />
-      {programs.map((program) => (
-        <SchemaMarkup
-          key={program.id}
-          type="Course"
-          name={program.title}
-          description={program.description}
-          url={`https://www.mydojoma.com/programs/${program.id}`}
-          ageRange={program.ages}
-          courseMode="onsite"
-        />
-      ))}
-      
-      {/* Header */}
-      <div className="bg-black text-white py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/cta-bg_5eebb32b.webp')] bg-cover bg-center opacity-20"></div>
-        <div className="container mx-auto px-4 relative z-10 text-center">
-          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">{t("programs.title")}</h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            {t("programs.subtitle")}
-          </p>
-        </div>
-      </div>
+      <SchemaMarkup type="BreadcrumbList" items={[{ name: "Home", url: "/" }, { name: "Programs", url: "/programs" }]} />
+      {programs.map((program) => <SchemaMarkup key={program.id} type="Course" name={program.title} description={program.description} url={`https://www.mydojoma.com/programs/${program.id}`} ageRange={program.ages} courseMode="onsite" />)}
 
-      {/* Programs List */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="space-y-24">
-          {programs.map((program, index) => (
-            <motion.div 
-              key={program.id}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.6 }}
-              className={`flex flex-col ${index % 2 === 1 ? 'lg:flex-row-reverse' : 'lg:flex-row'} gap-12 items-center`}
-            >
-              {/* Image Side */}
-              <div className="w-full lg:w-1/2">
-                <Link href={program.id === 'homeschool' ? '/homeschool' : `/programs/${program.id}`}>
-                  <div className="relative rounded-2xl overflow-hidden shadow-2xl h-[400px] group cursor-pointer">
-                    <img 
-                      src={program.image} 
-                      alt={program.title} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                      <span className="text-white font-heading text-2xl font-bold border-2 border-white px-6 py-2 rounded-full">{t("general.learn_more")}</span>
-                    </div>
-                    
-                    {/* Floating Badge */}
-                    <div className="absolute top-6 right-6 bg-primary text-white px-6 py-3 rounded-lg shadow-lg font-bold font-heading text-lg transform rotate-3 group-hover:rotate-0 transition-transform duration-300">
-                      {program.id === 'homeschool' ? t("homeschool.features") : t("general.free_trial")}
+      <section className="border-b border-[var(--mydojo-line)] bg-[var(--mydojo-paper)] py-16 md:py-24">
+        <div className="container grid gap-9 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+          <div><p className="public-eyebrow">MyDojo programs</p><h1 className="public-title mt-5">Find the right place to begin.</h1></div>
+          <p className="public-copy max-w-2xl">Every MyDojo program blends effective instruction with practical progress. We will help you choose a starting point that fits your age, goals, and experience level.</p>
+        </div>
+      </section>
+
+      <section className="public-section bg-white">
+        <div className="container">
+          <div className="border-l border-t border-[var(--mydojo-line)]">
+            {programs.map((program, index) => {
+              const detailHref = program.id === "homeschool" ? "/homeschool" : `/programs/${program.id}`;
+              return (
+                <article key={program.id} className="grid border-b border-r border-[var(--mydojo-line)] lg:grid-cols-[4.5rem_0.82fr_1.18fr]">
+                  <div className="hidden border-r border-[var(--mydojo-line)] p-5 text-xs font-extrabold tracking-[0.16em] text-[#e63946] lg:block">{String(index + 1).padStart(2, "0")}</div>
+                  <Link href={detailHref}><div className="group relative min-h-[17rem] cursor-pointer overflow-hidden lg:min-h-[27rem]"><img src={program.image} alt={program.title} className="h-full w-full object-cover grayscale-[15%] transition duration-500 group-hover:scale-[1.03] group-hover:grayscale-0" /><div className="absolute inset-0 bg-black/10" /></div></Link>
+                  <div className="flex flex-col p-7 md:p-10">
+                    <div className="flex flex-wrap items-center gap-3 text-xs font-extrabold uppercase tracking-[0.12em]"><span className="text-[#e63946]">{program.ages}</span><span className="h-1 w-1 rounded-full bg-zinc-300" /><span className="text-zinc-500">{program.duration}</span></div>
+                    <Link href={detailHref}><h2 className="mt-5 cursor-pointer font-heading text-5xl font-bold uppercase leading-[0.9] tracking-[-0.03em] text-black transition-colors hover:text-[#e63946] md:text-6xl">{program.title}</h2></Link>
+                    <p className="mt-6 max-w-xl text-base leading-7 text-zinc-600">{program.description}</p>
+                    <ul className="mt-7 grid gap-3 text-sm text-zinc-700 sm:grid-cols-2">
+                      {program.benefits.slice(0, 4).map((benefit) => <li key={benefit} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#e63946]" />{benefit}</li>)}
+                    </ul>
+                    <div className="mt-auto flex flex-col gap-3 pt-9 sm:flex-row">
+                      <Link href={detailHref}><span className="public-button-secondary w-full cursor-pointer sm:w-auto">Explore program <ChevronRight className="h-4 w-4" /></span></Link>
+                      <button onClick={openBookFreeClassGate} className="public-button w-full sm:w-auto">Book an introduction <ArrowRight className="h-4 w-4" /></button>
                     </div>
                   </div>
-                </Link>
-              </div>
-
-              {/* Content Side */}
-              <div className="w-full lg:w-1/2">
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="bg-primary/10 text-primary px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider">
-                    {program.ages}
-                  </span>
-                  <span className="text-gray-500 font-medium flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-gray-300 rounded-full"></span>
-                    {program.duration}
-                  </span>
-                </div>
-                
-                <Link href={program.id === 'homeschool' ? '/homeschool' : `/programs/${program.id}`}>
-                  <h2 className="text-4xl md:text-5xl font-heading font-bold mb-6 text-black hover:text-primary transition-colors cursor-pointer">
-                    {program.title}
-                  </h2>
-                </Link>
-                
-                <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-                  {program.description}
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                  {program.benefits.slice(0, 4).map((benefit, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="bg-black text-white p-1 rounded-full">
-                        <Check className="h-3 w-3" />
-                      </div>
-                      <span className="text-gray-700 font-medium">{benefit}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex flex-wrap gap-4">
-                  <Link href={program.id === 'homeschool' ? '/homeschool' : `/programs/${program.id}`}>
-                    <Button className="bg-black hover:bg-primary text-white px-8 py-6 h-auto font-heading uppercase tracking-wider text-lg transition-colors">
-                      {t("general.learn_more")} <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </Link>
-                  <Link href={program.id === 'homeschool' ? '/homeschool' : `/programs/${program.id}#lead-form`}>
-                    <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white px-8 py-6 h-auto font-heading uppercase tracking-wider text-lg transition-colors">
-                      {t("programs.free_trial")}
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* Family Discount Banner */}
-      <section className="py-16 bg-black text-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-red-600/20 border border-red-500/40 rounded-full px-4 py-2 mb-6">
-              <span className="text-red-300 text-sm font-bold uppercase tracking-wider">👨‍👩‍👧‍👦 {t("programs.family_savings")}</span>
-            </div>
-            <h2 className="text-3xl md:text-5xl font-black mb-4">{t("programs.train_together")}{" "}<span className="text-red-500">{t("programs.save_together")}</span></h2>
-            <p className="text-white/70 text-lg mb-8 max-w-2xl mx-auto">
-              {t("programs.family_desc")}
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-left">
-              <div className="bg-red-900/30 border border-red-500/30 rounded-xl p-6">
-                <div className="text-3xl font-black text-red-400 mb-2">50% OFF</div>
-                <div className="font-bold text-lg mb-1">{t("programs.family_50off_title")}</div>
-                <p className="text-white/60 text-sm">{t("programs.family_50off_desc")}</p>
-              </div>
-              <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-6">
-                <div className="text-3xl font-black text-yellow-400 mb-2">$99</div>
-                <div className="font-bold text-lg mb-1">{t("programs.family_reg_title")}</div>
-                <p className="text-white/60 text-sm">{t("programs.family_reg_desc")}</p>
-              </div>
-            </div>
-            <Link href="/family-enrollment">
-              <Button className="bg-red-600 hover:bg-red-700 text-white font-black text-lg px-10 py-6 h-auto uppercase tracking-wider">
-                {t("programs.family_cta")}
-              </Button>
-            </Link>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Uniform Guide */}
-      <UniformGuide />
-
-      {/* Disclaimer */}
-      <div className="bg-gray-100 py-8 text-center text-gray-500 text-sm">
-        <div className="container mx-auto px-4">
-          <p>{t("programs.disclaimer")}</p>
+      <section className="bg-black py-16 text-white md:py-24">
+        <div className="container grid gap-9 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+          <div><p className="text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-[#e63946]">Families train together</p><h2 className="mt-5 font-heading text-[clamp(3.5rem,6vw,6rem)] font-bold uppercase leading-[0.86] tracking-[-0.04em]">More progress.<br />More together.</h2></div>
+          <div className="max-w-2xl"><p className="text-base leading-7 text-white/75">Training as a family creates shared goals, healthy routines, and encouragement that does not end when class is over. Ask our team about the best starting path for your family.</p><div className="mt-8 flex flex-col gap-3 sm:flex-row"><button onClick={openBookFreeClassGate} className="public-button">Talk with our team <ArrowRight className="h-4 w-4" /></button><Link href="/family-enrollment"><span className="inline-flex min-h-[3.125rem] cursor-pointer items-center justify-center gap-2 border border-white px-5 text-xs font-extrabold uppercase tracking-[0.12em] text-white transition-colors hover:bg-white hover:text-black">Family enrollment <UsersRound className="h-4 w-4" /></span></Link></div></div>
         </div>
-      </div>
+      </section>
+
+      <UniformGuide />
     </div>
   );
 }

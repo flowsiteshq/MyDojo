@@ -7,6 +7,7 @@ import { Download } from "lucide-react";
 import SEO from "@/components/SEO";
 import SchemaMarkup from "@/components/SchemaMarkup";
 import { useTranslation } from "react-i18next";
+import { openBookFreeClassGate } from "@/lib/chatbot";
 
 export default function Schedule() {
   const { t } = useTranslation();
@@ -87,7 +88,7 @@ export default function Schedule() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="public-page min-h-screen">
       <SEO 
         title="Class Schedule"
         description="View our weekly martial arts class schedule in Tomball. Classes for Little Ninjas, Dragon Kids, Teens, Adults, and Kickboxing. Download to your calendar and never miss a class!"
@@ -107,23 +108,23 @@ export default function Schedule() {
       <SchemaMarkup type="Event" name="Teen Warriors Martial Arts (Ages 12-17)" description="Martial arts for teens ages 12-17 at MyDojo Tomball. Traditional techniques, modern self-defense, and leadership." startDate="2026-03-09T18:00:00-05:00" endDate="2026-03-09T19:00:00-05:00" isRecurring={true} url="https://www.mydojoma.com/schedule" />
       <SchemaMarkup type="Event" name="Adult Karate + Kickboxing" description="Adult martial arts combining traditional karate and kickboxing at MyDojo Tomball. For all skill levels." startDate="2026-03-10T19:00:00-05:00" endDate="2026-03-10T20:00:00-05:00" isRecurring={true} url="https://www.mydojoma.com/schedule" />
       <SchemaMarkup type="Event" name="Women's Self-Defense Class" description="Practical self-defense techniques for women at MyDojo Tomball. Build confidence and situational awareness." startDate="2026-03-12T12:00:00-05:00" endDate="2026-03-12T13:00:00-05:00" isRecurring={true} url="https://www.mydojoma.com/schedule" />     {/* Header */}
-      <div className="bg-black text-white py-20 relative overflow-hidden">
+      <div className="relative overflow-hidden border-b border-black/10 bg-black py-16 text-white md:py-24">
         <div className="absolute inset-0 bg-[url('https://files.manuscdn.com/user_upload_by_module/session_file/310419663031545745/qYVQxVSfHBmyqxTB.jpg')] bg-cover bg-center opacity-20"></div>
-        <div className="container mx-auto px-4 relative z-10 text-center">
-          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">{t("schedule.title")}</h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+        <div className="container relative z-10 grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+          <div><p className="text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-[#e63946]">Tomball Headquarters</p><h1 className="mt-5 font-heading text-[clamp(3.5rem,7vw,7rem)] font-bold uppercase leading-[0.86] tracking-[-0.04em]">{t("schedule.title")}</h1></div>
+          <p className="max-w-2xl text-base leading-7 text-gray-300 md:text-lg">
             {t("schedule.subtitle")}
           </p>
         </div>
       </div>
 
       {/* Schedule Table */}
-      <div className="container mx-auto px-4 py-16">
+      <div className="container py-16 md:py-20">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="overflow-x-auto rounded-xl shadow-2xl border border-gray-100"
+          className="overflow-x-auto border border-[var(--mydojo-line)]"
         >
           <table className="w-full min-w-[800px] border-collapse bg-white">
             <thead>
@@ -141,11 +142,11 @@ export default function Schedule() {
                 <tr 
                   key={rowIndex} 
                   className={`
-                    transition-colors hover:bg-gray-50
+                    transition-colors hover:bg-[#f7f6f3]
                     ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}
                   `}
                 >
-                  <td className="p-6 font-bold text-lg border-b border-gray-100 sticky left-0 bg-inherit z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                  <td className="sticky left-0 z-10 border-b border-gray-100 bg-inherit p-6 text-lg font-bold shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                     {row.program}
                   </td>
                   {dayKeys.map((dayKey, dayIndex) => {
@@ -179,16 +180,16 @@ export default function Schedule() {
           
           <div className="flex flex-col md:flex-row gap-4">
             <a href="/MyDojo_Schedule.pdf" download="MyDojo_Schedule.pdf">
-              <Button variant="outline" className="border-primary text-primary hover:bg-primary/5 px-8 py-6 h-auto font-heading uppercase tracking-wider text-lg skew-x-[-10deg]">
-                <span className="skew-x-[10deg] flex items-center gap-2">
+              <Button variant="outline" className="h-auto rounded-none border-primary px-8 py-5 font-heading text-lg uppercase tracking-wider text-primary hover:bg-primary/5">
+                <span className="flex items-center gap-2">
                   <Download className="w-5 h-5" />
                   {t("schedule.download_pdf")}
                 </span>
               </Button>
             </a>
 
-            <Button className="bg-primary hover:bg-primary/90 text-white px-10 py-6 h-auto font-heading uppercase tracking-wider text-lg skew-x-[-10deg]">
-              <span className="skew-x-[10deg]">{t("schedule.book_first_class")}</span>
+            <Button onClick={openBookFreeClassGate} className="h-auto rounded-none bg-primary px-10 py-5 font-heading text-lg uppercase tracking-wider text-white hover:bg-primary/90">
+              <span>{t("schedule.book_first_class")}</span>
             </Button>
           </div>
         </div>

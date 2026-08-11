@@ -2,6 +2,21 @@
 
 ## IN PROGRESS
 
+- [x] Make the public contact form submit leads and send the established SMS confirmations
+  - [x] Add client-side form state, validation, and a real submission mutation
+  - [x] Reuse the tracked lead and SMS confirmation workflow without duplicate sends
+  - [x] Add focused regression coverage for the contact-form submission path
+
+- [x] Redesign the public MyDojo website with the clean, simple TSK-inspired visual system
+  - [x] Audit the reference website and current public page architecture
+  - [x] Establish the revised visual system and shared CSS component utilities
+  - [x] Rebuild homepage, navigation, and key conversion sections
+  - [x] Apply the redesign to the core public marketing pages completed in this pass
+  - [x] Extend the redesign across the remaining major public discovery and commerce pages
+  - [x] Run and document route-level conversion checks for homepage CTA, join/enroll, program detail, and location/schedule paths
+  - [x] Add focused responsive regression coverage and capture a preview screenshot
+  - [x] Document unrelated test-suite failures before closing the redesign task
+
 - [x] Repair website form confirmation SMS delivery for submitters and staff
   - [x] Inventory all public form submission workflows and intended SMS recipients
   - [x] Identify the failed delivery point using recent submissions and server logs

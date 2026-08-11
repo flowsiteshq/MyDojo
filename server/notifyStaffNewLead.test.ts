@@ -75,15 +75,23 @@ describe("notifyStaffNewLead", () => {
     (getDb as any).mockResolvedValue(mockDb);
     (sendSms as any).mockResolvedValue({ success: false, error: "API error" });
 
-    // Should not throw
-    await expect(notifyStaffNewLead({ name: "Test Lead" })).resolves.toBeUndefined();
+    await expect(notifyStaffNewLead({ name: "Test Lead" })).resolves.toMatchObject({
+      recipients: 1,
+      sent: 0,
+      failed: 1,
+      errors: ["Alice: API error"],
+    });
   });
 
   it("does not throw when db is unavailable", async () => {
     (getDb as any).mockResolvedValue(null);
 
-    // Should not throw
-    await expect(notifyStaffNewLead({ name: "Test Lead" })).resolves.toBeUndefined();
+    await expect(notifyStaffNewLead({ name: "Test Lead" })).resolves.toMatchObject({
+      recipients: 0,
+      sent: 0,
+      failed: 0,
+      errors: ["Database unavailable"],
+    });
     expect(sendSms).not.toHaveBeenCalled();
   });
 

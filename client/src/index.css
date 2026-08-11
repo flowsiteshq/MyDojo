@@ -43,6 +43,11 @@
 }
 
 :root {
+  --mydojo-ink: #111111;
+  --mydojo-paper: #f7f6f3;
+  --mydojo-red: #e63946;
+  --mydojo-red-deep: #bf2634;
+  --mydojo-line: #deddd8;
   --primary: var(--color-blue-700);
   --primary-foreground: var(--color-blue-50);
   --sidebar-primary: var(--color-blue-600);
@@ -156,6 +161,93 @@
 }
 
 @layer components {
+  .public-page {
+    background: var(--mydojo-paper);
+    color: var(--mydojo-ink);
+  }
+
+  .public-section {
+    padding-top: clamp(4.5rem, 8vw, 8rem);
+    padding-bottom: clamp(4.5rem, 8vw, 8rem);
+  }
+
+  .public-eyebrow {
+    color: var(--mydojo-red);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .public-title {
+    color: var(--mydojo-ink);
+    font-family: "Oswald", sans-serif;
+    font-size: clamp(2.5rem, 5vw, 5rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+
+  .public-copy {
+    color: #5c5b57;
+    font-size: 1.0625rem;
+    line-height: 1.75;
+  }
+
+  .public-button {
+    align-items: center;
+    background: var(--mydojo-red);
+    border: 1px solid var(--mydojo-red);
+    color: #fff;
+    display: inline-flex;
+    font-size: 0.75rem;
+    font-weight: 800;
+    gap: 0.5rem;
+    justify-content: center;
+    letter-spacing: 0.12em;
+    min-height: 3.125rem;
+    padding: 0.85rem 1.35rem;
+    text-transform: uppercase;
+    transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+  }
+
+  .public-button:hover {
+    background: var(--mydojo-red-deep);
+    border-color: var(--mydojo-red-deep);
+    transform: translateY(-1px);
+  }
+
+  .public-button-secondary {
+    align-items: center;
+    background: transparent;
+    border: 1px solid currentColor;
+    color: inherit;
+    display: inline-flex;
+    font-size: 0.75rem;
+    font-weight: 800;
+    gap: 0.5rem;
+    justify-content: center;
+    letter-spacing: 0.12em;
+    min-height: 3.125rem;
+    padding: 0.85rem 1.35rem;
+    text-transform: uppercase;
+    transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+  }
+
+  .public-button-secondary:hover {
+    background: var(--mydojo-ink);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  .public-rule {
+    background: var(--mydojo-line);
+    height: 1px;
+    width: 100%;
+  }
+
   /**
    * Custom container utility that centers content and adds responsive padding.
    *

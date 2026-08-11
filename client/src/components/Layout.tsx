@@ -129,11 +129,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col font-sans relative">
-      {/* Top Bar */}
-      <div className={cn(
-        "py-2 px-4 text-xs md:text-sm hidden md:block z-50 transition-all duration-300",
-        isHome ? "absolute top-[var(--cookie-banner-height,0px)] w-full bg-transparent text-white" : "bg-black text-white"
-      )}>
+      {/* Compact utility strip */}
+      <div className="relative z-50 hidden bg-black px-4 py-2 text-xs text-white md:block">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-6">
             <PhoneChooser className="flex items-center gap-2 hover:text-primary transition-colors">
@@ -159,8 +156,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {/* Mobile-only top bar: always visible on home page hero so hamburger is never hidden */}
-      {isHome && !isSticky && (
+      {/* Legacy mobile hero control retained only for the old non-sticky navigation mode. */}
+      {false && isHome && !isSticky && (
         <div className="md:hidden fixed top-[var(--cookie-banner-height,0px)] left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-black/40 backdrop-blur-sm">
           <Link href="/">
             <img src="/images/logo-icon-white.99cb4daa.webp" alt="MyDojo" className="h-8 w-auto object-contain" />
@@ -175,41 +172,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Navigation */}
-      <header
-        className={cn(
-          "w-full z-50 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
-          // On mobile home page, hide the desktop nav bar (MobileHome has its own sticky bar)
-          isHome && !isSticky ? "md:block" : "",
-          isHome
-            ? (isSticky
-              ? "fixed top-[var(--cookie-banner-height,0px)] bg-white/95 backdrop-blur-md text-black shadow-lg py-2 translate-y-0"
-              : "absolute top-[100vh] -translate-y-full bg-white/10 backdrop-blur-md border-t border-white/20 text-white py-6 hidden")
-            : "fixed top-[var(--cookie-banner-height,0px)] bg-white/95 backdrop-blur-md text-black shadow-lg py-2"
-        )}
-      >
+      <header className="fixed top-[var(--cookie-banner-height,0px)] z-50 w-full border-b border-black/10 bg-white/95 py-3 text-black shadow-sm backdrop-blur-md md:top-[calc(32px+var(--cookie-banner-height,0px))]">
         <div className="container mx-auto flex justify-between items-center px-4">
           <Link href="/">
             <div className="flex items-center gap-2 cursor-pointer group">
               <div className="relative overflow-hidden">
-                <div className={cn(
-                  "relative transition-all duration-700",
-                  isSticky ? "h-10" : "h-12 md:h-14"
-                )}>
+                <div className="relative h-10">
                   <img
                     src="/images/logo-full-black.webp"
                     alt="MyDojo Logo"
-                    className={cn(
-                      "h-full w-auto object-contain transition-opacity duration-300",
-                      (isHome && !isSticky) ? "opacity-0 absolute top-0 left-0" : "opacity-100"
-                    )}
+                    className="h-full w-auto object-contain"
                   />
                   <img
                     src="/images/logo-icon-white.99cb4daa.webp"
                     alt="MyDojo Logo"
-                    className={cn(
-                      "h-full w-auto object-contain transition-opacity duration-300",
-                      (isHome && !isSticky) ? "opacity-100" : "opacity-0 absolute top-0 left-0"
-                    )}
+                    className="absolute left-0 top-0 h-full w-auto object-contain opacity-0"
                   />
                   <span className="sr-only">MyDojo</span>
                 </div>
@@ -232,8 +209,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <span
                     className={cn(
                       "text-sm font-bold uppercase tracking-wider cursor-pointer hover:text-primary transition-all duration-500 relative group inline-block",
-                      (isHome && !isSticky) ? "text-white" : "text-black",
-                      isSticky ? "translate-y-0 opacity-100" : "translate-y-0 opacity-90"
+                      "text-black translate-y-0 opacity-100"
                     )}
                     style={{ transitionDelay: `${index * 50}ms` }}
                   >
@@ -247,8 +223,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     className={cn(
                       "text-sm font-bold uppercase tracking-wider cursor-pointer hover:text-primary transition-all duration-500 relative group inline-block",
                       location === link.path ? "text-primary" : "",
-                      (isHome && !isSticky) ? "text-white" : "text-black",
-                      isSticky ? "translate-y-0 opacity-100" : "translate-y-0 opacity-90"
+                      "text-black translate-y-0 opacity-100"
                     )}
                     style={{ transitionDelay: `${index * 50}ms` }}
                   >
@@ -268,7 +243,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "text-sm font-bold uppercase tracking-wider cursor-pointer hover:text-primary transition-all duration-300 relative group inline-flex items-center gap-2",
                     location === "/dashboard" ? "text-primary" : "",
-                    (isHome && !isSticky) ? "text-white" : "text-black"
+                    "text-black"
                   )}
                 >
                   <User className="h-4 w-4" />
@@ -284,7 +259,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <PhoneChooser
               className={cn(
                 "flex items-center gap-1.5 font-bold uppercase tracking-wider text-sm transition-colors cursor-pointer hover:text-primary",
-                (isHome && !isSticky) ? "text-white" : "text-black"
+                "text-black"
               )}
             >
               <Phone className="h-4 w-4 text-primary" />
@@ -294,8 +269,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Button
               onClick={openBookFreeClassGate}
               className={cn(
-                "bg-primary hover:bg-primary/90 text-white font-heading uppercase tracking-wider text-sm skew-x-[-10deg] transition-all duration-500 shadow-lg hover:shadow-xl hover:-translate-y-0.5",
-                isSticky ? "py-2 px-6 text-xs h-10" : "py-4 px-8 h-14 text-base"
+                "h-11 bg-primary px-6 text-xs font-heading uppercase tracking-wider text-white shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90"
               )}
             >
               <span className="skew-x-[10deg]">I'm Interested</span>
@@ -306,7 +280,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <button
             className={cn(
               "md:hidden p-2",
-              (isMobileMenuOpen || isSticky) ? "text-black" : "text-white"
+              "text-black"
             )}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
@@ -323,7 +297,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       )} onClick={() => setIsMobileMenuOpen(false)} />
 
       <div
-        className="md:hidden fixed top-[calc(56px+var(--cookie-banner-height,0px))] left-0 w-full bg-white text-black shadow-lg z-[70] transition-transform duration-300 ease-out transform border-t border-gray-100"
+        className="md:hidden fixed top-[calc(64px+var(--cookie-banner-height,0px))] left-0 w-full bg-white text-black shadow-lg z-[70] transition-transform duration-300 ease-out transform border-t border-gray-100"
         style={{
           transform: isMobileMenuOpen ? "translateY(0)" : "translateY(-150%)",
           visibility: isMobileMenuOpen ? "visible" : "hidden"
@@ -527,7 +501,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Auto-popups removed per user request */}
 
       {/* Main Content */}
-      <main className="flex-grow pt-0">
+      <main className="flex-grow pt-16 md:pt-24">
         {children}
       </main>
 

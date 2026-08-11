@@ -223,18 +223,13 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="public-page min-h-screen">
       {/* Hero Banner */}
-      <section className="bg-black text-white py-20 relative overflow-hidden">
+      <section className="relative overflow-hidden border-b border-black/10 bg-black py-16 text-white md:py-24">
         <div className="absolute inset-0 bg-[url('/images/hero-main.jpg')] bg-cover bg-center opacity-20" />
-        <div className="container relative z-10 text-center">
-          <p className="text-primary font-bold tracking-widest uppercase text-sm mb-3">
-            Official MyDojo Gear
-          </p>
-          <h1 className="text-5xl md:text-7xl font-heading font-bold mb-4">
-            SHOP MYDOJO
-          </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+        <div className="container relative z-10 grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+          <div><p className="text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-[#e63946]">Official MyDojo Gear</p><h1 className="mt-5 font-heading text-[clamp(3.5rem,7vw,7rem)] font-bold uppercase leading-[0.86] tracking-[-0.04em]">Shop MyDojo</h1></div>
+          <p className="max-w-2xl text-base leading-7 text-gray-300 md:text-lg">
             Premium uniforms, apparel, and fight gear — crafted for every level
             of your martial arts journey.
           </p>
@@ -242,17 +237,17 @@ export default function Shop() {
       </section>
 
       {/* Category Filter */}
-      <section className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
-        <div className="container py-4 flex items-center gap-3 flex-wrap">
+      <section className="sticky top-16 z-30 border-b border-[var(--mydojo-line)] bg-white/95 backdrop-blur-md md:top-24">
+        <div className="container flex flex-wrap items-center gap-3 py-4">
           <Filter className="h-4 w-4 text-gray-500 shrink-0" />
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+              className={`border px-4 py-2 text-sm font-semibold transition-colors ${
                 selectedCategory === cat
-                  ? "bg-black text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "border-black bg-black text-white"
+                  : "border-[var(--mydojo-line)] bg-white text-gray-700 hover:border-black"
               }`}
             >
               {cat}
@@ -265,17 +260,17 @@ export default function Shop() {
       </section>
 
       {/* Product Grid */}
-      <section className="py-16">
+      <section className="py-16 md:py-20">
         <div className="container">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid border-l border-t border-[var(--mydojo-line)] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtered.map((product) => (
               <div
                 key={product.id}
-                className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
+                className="group cursor-pointer overflow-hidden border-b border-r border-[var(--mydojo-line)] bg-white transition-colors hover:bg-zinc-50"
                 onClick={() => openModal(product)}
               >
                 {/* Image */}
-                <div className="relative bg-gray-50 h-64 overflow-hidden">
+                  <div className="relative h-64 overflow-hidden bg-[#f7f6f3]">
                   <img
                     src={showBack[product.id] && product.imageBack ? product.imageBack : product.image}
                     alt={product.name}
@@ -283,14 +278,14 @@ export default function Shop() {
                   />
                   {product.badge && (
                     <span
-                      className={`absolute top-3 left-3 text-xs font-bold px-2 py-1 rounded-full ${badgeColors[product.badge] ?? "bg-gray-100 text-gray-700"}`}
+                        className={`absolute left-3 top-3 px-2 py-1 text-xs font-bold ${badgeColors[product.badge] ?? "bg-gray-100 text-gray-700"}`}
                     >
                       {product.badge}
                     </span>
                   )}
                   {product.imageBack && (
                     <button
-                      className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full hover:bg-black transition-colors"
+                      className="absolute bottom-2 right-2 bg-black/70 px-2 py-1 text-xs text-white transition-colors hover:bg-black"
                       onClick={(e) => { e.stopPropagation(); setShowBack(prev => ({ ...prev, [product.id]: !prev[product.id] })); }}
                     >
                       {showBack[product.id] ? "Front" : "Back"}
@@ -299,7 +294,7 @@ export default function Shop() {
                 </div>
 
                 {/* Info */}
-                <div className="p-4">
+                <div className="p-5">
                   <h3 className="font-heading font-bold text-lg leading-tight mb-1">
                     {product.name}
                   </h3>
@@ -312,7 +307,7 @@ export default function Shop() {
                     </span>
                     <Button
                       size="sm"
-                      className="bg-black hover:bg-primary text-white"
+                      className="rounded-none bg-black text-white hover:bg-primary"
                       onClick={(e) => openCheckout(product, e)}
                     >
                       <ShoppingCart className="h-4 w-4 mr-1" />
