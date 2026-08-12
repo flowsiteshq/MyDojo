@@ -52,7 +52,7 @@ const HERO_SLIDES = [
     eyebrow: "Train with purpose",
     title: "Better Skills.\nStronger Self.",
     copy: "Practical martial arts training for teens and adults who want confidence, fitness, community, and a meaningful challenge.",
-    image: "/manus-storage/mydojo-carousel-teens-adults-v2_eaf488a4.png",
+    image: "/manus-storage/mydojo-carousel-teens-adults-karate_09c25f1b.png",
     href: "/programs#teens-adults",
     cta: "Explore Teens & Adults",
   },
@@ -120,7 +120,11 @@ const FAQS = [
 ];
 
 function Hero({ onBook }: { onBook: () => void }) {
-  const [activeSlide, setActiveSlide] = useState(0);
+  const [activeSlide, setActiveSlide] = useState(() => {
+    const requestedProgram = new URLSearchParams(window.location.search).get("hero");
+    const requestedIndex = HERO_SLIDES.findIndex((candidate) => candidate.program.toLowerCase().replace(/[^a-z]+/g, "-") === requestedProgram);
+    return requestedIndex >= 0 ? requestedIndex : 0;
+  });
   const [isPaused, setIsPaused] = useState(false);
   const slide = HERO_SLIDES[activeSlide];
 

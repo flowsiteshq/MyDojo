@@ -2,6 +2,11 @@
 
 ## IN PROGRESS
 
+- [x] Replace the Teens & Adults carousel Taekwondo-style attire with the MyDojo pro shop Karate gi
+  - [x] Generate adult Karate attire using the Kihon Gi white-lapel reference
+  - [x] Integrate the corrected image and retain headline-safe composition
+  - [x] Verify the uniform style before publishing
+
 - [x] Repair broken Founder/Master Vincent page image assets
   - [x] Inventory every intended Founder photo and identify broken URL references
   - [x] Restore stable local MyDojo imagery where original Master Vincent photos are unavailable
