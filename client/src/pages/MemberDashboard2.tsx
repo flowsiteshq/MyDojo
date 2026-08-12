@@ -1834,10 +1834,11 @@ export default function MemberDashboard2() {
 
               <div className="mt-4 space-y-3">
                 {[
-                  { name: "Smoothie King", deal: "15% off all smoothies", location: "Spring-Cypress & Louetta", category: "Nutrition" },
-                  { name: "Sport Clips", deal: "10% off haircuts for members", location: "Tomball Parkway", category: "Services" },
-                  { name: "Nothing Bundt Cakes", deal: "Free bundtlet on your birthday", location: "Vintage Park", category: "Food" },
-                  { name: "Chick-fil-A Tomball", deal: "Free kids meal with adult combo", location: "Spring-Cypress", category: "Food" },
+                  { name: "Mia Bella Restaurant", deal: "10% off for MyDojo members", location: "Tomball, TX", category: "Dining" },
+                  { name: "Hatchki Cafe", deal: "15% off all orders for members", location: "Tomball, TX", category: "Cafe" },
+                  { name: "Coco Restaurant", deal: "Free appetizer with entree purchase", location: "Tomball, TX", category: "Dining" },
+                  { name: "180 Rodeo Rink", deal: "Discounted skating sessions for members", location: "Tomball, TX", category: "Entertainment" },
+                  { name: "Chick-fil-A", deal: "Free kids meal with adult combo", location: "Spring-Cypress, Tomball", category: "Food" },
                 ].map((partner, i) => (
                   <div
                     key={i}
