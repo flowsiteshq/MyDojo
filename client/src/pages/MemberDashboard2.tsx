@@ -1198,7 +1198,7 @@ function PaymentHistorySection({ isDark, payments: externalPayments, isLoading: 
 
 export default function MemberDashboard2() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<"home" | "training" | "locate" | "shop" | "account">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "benefits" | "training" | "locate" | "shop" | "account">("home");
   const [profileOpen, setProfileOpen] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showFreezeDialog, setShowFreezeDialog] = useState(false);
@@ -1754,6 +1754,112 @@ export default function MemberDashboard2() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
 
         {/* ── BENEFITS TAB ── */}
+        {activeTab === "benefits" && (
+          <div className="space-y-8">
+
+            {/* Your Plan */}
+            <div>
+              <h2 className={`text-2xl font-black ${t.textPrimary}`}>Your Plan</h2>
+              <p className={`text-sm ${t.textMuted} mt-1`}>Here's what's included with your membership</p>
+              <div className={`mt-4 rounded-2xl border p-6 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">
+                      {(enrollment as any)?.enrollment?.program || "Foundation"} Plan
+                    </p>
+                    <p className={`text-3xl font-black mt-1 ${t.textPrimary}`}>
+                      ${(enrollment as any)?.enrollment?.monthlyRate || "149"}<span className={`text-sm font-normal ${t.textMuted}`}>/month</span>
+                    </p>
+                  </div>
+                  <div className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase">Active</div>
+                </div>
+                <div className="space-y-3 mt-6">
+                  {[
+                    "Unlimited classes per week",
+                    "Access to all programs (Karate, Kickboxing, Self-Defense)",
+                    "Belt testing eligibility",
+                    "Free uniform on enrollment",
+                    "Access to member events and seminars",
+                    "Priority registration for camps and workshops",
+                    "Progress tracking and digital belt card",
+                    "Family member discounts available",
+                  ].map((benefit, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-[#E11D2A]/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <CheckCircle2 className="h-3 w-3 text-[#E11D2A]" />
+                      </div>
+                      <p className={`text-sm ${t.textSecondary}`}>{benefit}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Refer & Earn */}
+            <div>
+              <h2 className={`text-2xl font-black ${t.textPrimary}`}>Refer & Earn</h2>
+              <p className={`text-sm ${t.textMuted} mt-1`}>Share MyDojo with friends and unlock exclusive rewards</p>
+              <div className={`mt-4 rounded-2xl border p-5 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+                <p className={`text-xs font-bold uppercase tracking-widest ${t.textLabel} mb-2`}>Your Referral Link</p>
+                <div className={`flex items-center gap-2 p-3 rounded-xl ${isDark ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-gray-200"}`}>
+                  <input type="text" readOnly value={`https://mydojoma.com/refer/${user?.id ? btoa(String(user.id)).slice(0, 8) : "member"}`} className={`flex-1 text-sm bg-transparent outline-none ${t.textPrimary} font-mono`} />
+                  <button onClick={() => { navigator.clipboard.writeText(`https://mydojoma.com/refer/${user?.id ? btoa(String(user.id)).slice(0, 8) : "member"}`); alert("Referral link copied!"); }} className="px-3 py-1.5 rounded-lg bg-[#E11D2A] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#c41824] transition-colors">Copy</button>
+                </div>
+                <p className={`text-xs ${t.textMuted} mt-2`}>When your friend enrolls using this link, you earn rewards automatically.</p>
+              </div>
+              <div className="mt-4 space-y-4">
+                {[
+                  { referrals: 1, reward: "Free MyDojo T-Shirt", img: "/manus-storage/reward-tshirt_5911ff60.jpg", desc: "Refer 1 friend who enrolls and receive a premium MyDojo training t-shirt." },
+                  { referrals: 3, reward: "Free Karate Uniform (Gi)", img: "/manus-storage/reward-uniform_9d478357.jpg", desc: "Refer 3 friends who enroll and receive a brand new Kihon Gi karate uniform." },
+                  { referrals: 6, reward: "Free Sparring Gear Set", img: "/manus-storage/reward-sparring_10b760f1.jpg", desc: "Refer 6 friends who enroll and receive a complete sparring gear set." },
+                  { referrals: 8, reward: "One Month Free Tuition", img: "/manus-storage/reward-tuition_d47d2400.jpg", desc: "Refer 8 friends who enroll and your next month of tuition is on us." },
+                  { referrals: 10, reward: "$500 Cash Reward", img: "/manus-storage/reward-cash_02508018.jpg", desc: "Refer 10 friends who enroll and receive $500 cash. No strings attached." },
+                ].map((tier, i) => (
+                  <div key={i} className={`rounded-2xl border overflow-hidden ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+                    <div className="flex items-stretch">
+                      <div className="w-24 h-24 shrink-0 overflow-hidden"><img src={tier.img} alt={tier.reward} className="w-full h-full object-cover" loading="lazy" /></div>
+                      <div className="flex-1 p-4 flex items-center justify-between gap-3">
+                        <div className="min-w-0"><p className={`font-bold text-sm ${t.textPrimary}`}>{tier.reward}</p><p className={`text-xs ${t.textMuted} mt-1 leading-relaxed`}>{tier.desc}</p></div>
+                        <div className="shrink-0 w-10 h-10 rounded-full bg-[#E11D2A] flex items-center justify-center"><span className="text-white font-black text-sm">{tier.referrals}</span></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className={`mt-4 rounded-2xl border p-5 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+                <div className="flex items-center justify-between mb-3"><p className={`text-xs font-bold uppercase tracking-widest ${t.textLabel}`}>Your Referrals</p><p className={`text-2xl font-black ${t.textPrimary}`}>0</p></div>
+                <div className={`h-3 rounded-full ${isDark ? "bg-white/5" : "bg-gray-100"} overflow-hidden`}><div className="h-full rounded-full bg-[#E11D2A]" style={{ width: "0%" }} /></div>
+                <p className={`text-xs ${t.textMuted} mt-2`}>Refer 1 more friend to earn your first reward!</p>
+              </div>
+            </div>
+
+            {/* Partner Deals */}
+            <div>
+              <h2 className={`text-2xl font-black ${t.textPrimary}`}>Partner Deals</h2>
+              <p className={`text-sm ${t.textMuted} mt-1`}>Exclusive discounts from our local partners</p>
+              <div className="mt-4 space-y-3">
+                {[
+                  { name: "Mia Bella Restaurant", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Dining" },
+                  { name: "Hatchki Cafe", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Cafe" },
+                  { name: "Coco Restaurant", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Dining" },
+                  { name: "180 Rodeo Rink", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Entertainment" },
+                  { name: "Chick-fil-A", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Food" },
+                ].map((partner, i) => (
+                  <div key={i} className={`p-4 rounded-xl border ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+                    <div className="flex items-center justify-between">
+                      <div><p className={`font-bold text-sm ${t.textPrimary}`}>{partner.name}</p><p className="text-[#E11D2A] text-xs font-semibold mt-0.5">{partner.deal}</p><p className={`text-xs ${t.textMuted} mt-1`}>{partner.location}</p></div>
+                      <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isDark ? "bg-white/5 text-white/50" : "bg-gray-100 text-gray-500"}`}>{partner.category}</div>
+                    </div>
+                  </div>
+                ))}
+                <p className={`text-xs ${t.textMuted} text-center mt-2`}>Show your MyDojo member ID at checkout to redeem. More partners coming soon!</p>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* ── TRAINING TAB ── */}
         {activeTab === "training" && (
           <div className="space-y-8">
 
@@ -3077,6 +3183,7 @@ export default function MemberDashboard2() {
       >
         {([
           { id: "home", label: "Home", Icon: HomeIcon },
+          { id: "benefits", label: "Benefits", Icon: Star },
           { id: "training", label: "Training", Icon: Award },
           { id: "locate", label: "Locate", Icon: MapPin },
           { id: "shop", label: "Shop", Icon: ShoppingBag },
