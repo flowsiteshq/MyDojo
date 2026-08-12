@@ -2,6 +2,11 @@
 
 ## IN PROGRESS
 
+- [ ] Remove the visible gap between the public menu bar and homepage hero
+  - [x] Identify the header and page offset responsible for the gap
+  - [x] Make the hero start flush beneath the header
+  - [x] Verify the transition at desktop and mobile sizes
+
 - [ ] Increase the homepage hero breathing room and reduce its content density
   - [x] Increase hero height and desktop content width
   - [x] Add intentional spacing around headline, copy, calls to action, and training image

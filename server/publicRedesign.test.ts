@@ -90,4 +90,10 @@ describe("public-site redesign", () => {
     expect(home).toContain("min-h-[max(44rem,calc(100svh-4rem))]");
     expect(home).toContain("items-center py-28 md:min-h-[calc(100svh-4.75rem)] md:py-32 lg:py-36");
   });
+
+  it("begins the homepage hero flush beneath the fixed public header", () => {
+    const home = readPage("Home.tsx");
+
+    expect(home).toContain('className="public-page -mt-16 md:-mt-24"');
+  });
 });

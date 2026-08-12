@@ -321,7 +321,7 @@ export default function Home() {
   const handleBook = () => openBookFreeClassGate();
 
   return (
-    <div className="public-page">
+    <div className="public-page -mt-16 md:-mt-24">
       <SEO title="MyDojo Martial Arts & Fitness | Tomball, Texas" description="Purposeful martial arts and kickboxing programs for kids, teens, and adults in Tomball, Texas. Request your complimentary introductory class." canonical="https://www.mydojoma.com" />
       <SchemaMarkup type="LocalBusiness" />
       <Hero onBook={handleBook} />
