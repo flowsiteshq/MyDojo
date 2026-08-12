@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
 import { Link, useLocation } from "wouter";
-import { Loader2, Shield } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Login() {
@@ -46,10 +46,14 @@ export default function Login() {
       {/* Login Form */}
       <div className="relative z-10 w-full max-w-md px-6">
         <div className="bg-zinc-900/80 backdrop-blur-md p-8 rounded-2xl border border-zinc-800 shadow-2xl">
-          {/* Logo/Icon */}
+          {/* Official MyDojo brand mark */}
           <div className="flex justify-center mb-6">
-            <div className="bg-primary p-4 rounded-full">
-              <Shield className="h-8 w-8 text-white" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-black/45 p-2 shadow-lg shadow-black/30">
+              <img
+                src="/images/logo-circular.png"
+                alt="MyDojo"
+                className="h-full w-full object-contain"
+              />
             </div>
           </div>
 

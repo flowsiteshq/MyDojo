@@ -2,6 +2,11 @@
 
 ## IN PROGRESS
 
+- [x] Replace the generic shield icon on the MyDojo direct login screen with the real MyDojo logo
+  - [x] Use the official MyDojo logo asset on the dark login card
+  - [x] Preserve visual contrast, responsive sizing, and accessibility
+  - [x] Verify the new branded login screen
+
 - [ ] Replace Manus OAuth student-dashboard access with direct MyDojo email-and-password login
   - [x] Audit existing direct authentication, session, and student identity data
   - [x] Build direct sign-in, activation, and reset experiences for students

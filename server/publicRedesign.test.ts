@@ -122,4 +122,10 @@ describe("public-site redesign", () => {
     expect(layout).not.toContain("getLoginUrl()");
     expect(login).toContain('get("returnTo") || "/dashboard"');
   });
+
+  it("uses the official MyDojo logo rather than a generic shield on direct login", () => {
+    const login = readPage("Login.tsx");
+    expect(login).toContain('src="/images/logo-circular.png"');
+    expect(login).not.toContain("<Shield");
+  });
 });
