@@ -72,7 +72,11 @@
 
 - [x] Build /admin/classes page with full CRUD (create, edit, delete, toggle active) for class schedule management
 
-- [ ] Redesign student dashboard to match modern design - blue gradient header with navigation tabs, left sidebar with profile and actions, current lesson card with hero image, progress widgets (circular chart, upcoming class, achievements badges), announcements section, latest messages with avatars, training resources cards
+- [ ] Redesign student dashboard to match a modern member experience
+  - [x] Audit the active MemberDashboard2 data hooks and feature sections
+  - [x] Define and implement the simplified five-item mobile member navigation
+  - [ ] Preserve billing, account, class, progress, resource, and messaging access paths
+  - [ ] Add regression coverage and verify student routes render correctly
 
 - [x] Automatically cancel Stripe subscription when admin approves a cancellation request - integrate Stripe API to cancel subscription and update enrollment status
 

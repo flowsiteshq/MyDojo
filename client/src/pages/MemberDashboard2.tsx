@@ -2284,18 +2284,22 @@ export default function MemberDashboard2() {
       >
         {([
           { id: "dashboard", label: "Home", Icon: LayoutDashboard },
-          { id: "curriculum", label: "Curriculum", Icon: GraduationCap },
-          ...(isKickboxing ? [{ id: "meal_plan" as const, label: "Meal Plan", Icon: Flame }] : []),
-          { id: "progress", label: "Progress", Icon: BarChart2 },
-          { id: "messages", label: "Messages", Icon: Mail },
-          { id: "children", label: "Children", Icon: Baby },
-          { id: "billing", label: "Billing", Icon: CreditCard },
-        ] as const).map(({ id, label, Icon }) => {
-          const isActive = activeTab === id;
+          { id: "progress", label: "Benefits", Icon: Award },
+          { id: "locate", label: "Locate", Icon: MapPin, href: "/locations" },
+          { id: "shop", label: "Shop", Icon: Package, href: "/shop" },
+          { id: "billing", label: "Account", Icon: CreditCard },
+        ] as const).map(({ id, label, Icon, ...item }) => {
+          const isActive = id === "locate" || id === "shop" ? false : activeTab === id;
           return (
             <button
               key={id}
-              onClick={() => setActiveTab(id)}
+              onClick={() => {
+                if ("href" in item && item.href) {
+                  window.location.href = item.href;
+                  return;
+                }
+                setActiveTab(id as "dashboard" | "progress" | "billing");
+              }}
               className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-colors relative ${
                 isActive
                   ? "text-[#E11D2A]"
@@ -2309,11 +2313,6 @@ export default function MemberDashboard2() {
               )}
               <div className="relative">
                 <Icon className={`h-5 w-5 transition-transform ${isActive ? "scale-110" : ""}`} />
-                {id === "messages" && unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] bg-[#E11D2A] text-white text-[9px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
               </div>
               <span className={`text-[10px] font-semibold tracking-wide leading-none`}>{label}</span>
             </button>

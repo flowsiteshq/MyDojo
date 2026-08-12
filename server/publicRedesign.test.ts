@@ -51,4 +51,14 @@ describe("public-site redesign", () => {
     expect(source).not.toContain("David K.");
     expect(source).not.toContain("J. Thompson");
   });
+
+  it("keeps the student dashboard mobile navigation focused on five member essentials", () => {
+    const dashboard = readPage("MemberDashboard2.tsx");
+
+    for (const label of ["Home", "Benefits", "Locate", "Shop", "Account"]) {
+      expect(dashboard).toContain(`label: "${label}"`);
+    }
+    expect(dashboard).toContain('href: "/locations"');
+    expect(dashboard).toContain('href: "/shop"');
+  });
 });
