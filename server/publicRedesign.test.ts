@@ -72,8 +72,15 @@ describe("public-site redesign", () => {
   it("uses a static MyDojo training image rather than video playback in the homepage hero", () => {
     const home = readPage("Home.tsx");
 
-    expect(home).toContain("mydojo-hero-training-editorial_3c711d6f.jpg");
+    expect(home).toContain("mydojo-hero-uniforms-corrected_0496fac3.png");
     expect(home).not.toContain("hero_montage_v5_d1227c92.mp4");
     expect(home).not.toContain("<video");
+  });
+
+  it("keeps the desktop menu expanded across the screen rather than inside a narrow container", () => {
+    const layout = readFileSync(new URL("../client/src/components/Layout.tsx", import.meta.url), "utf8");
+
+    expect(layout).toContain("w-full items-center justify-between gap-5 px-5 sm:px-8 lg:px-10 xl:px-14 2xl:px-20");
+    expect(layout).toContain("flex-1 items-center justify-end gap-6 lg:gap-8 xl:gap-10");
   });
 });

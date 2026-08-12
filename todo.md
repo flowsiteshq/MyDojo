@@ -2,6 +2,12 @@
 
 ## IN PROGRESS
 
+- [ ] Correct the homepage hero attire and make the public menu fill the screen width
+  - [x] Regenerate a hero scene with unmistakable MyDojo-branded uniforms
+  - [x] Integrate the replacement image without video playback
+  - [x] Expand the public header and navigation across the full screen width
+  - [x] Verify the corrected visual treatment and regression coverage
+
 - [ ] Replace the homepage video with a clean TSK-inspired MyDojo training hero image
   - [x] Generate a text-safe editorial training scene with MyDojo attire
   - [x] Remove the video dependency and integrate the generated hero asset

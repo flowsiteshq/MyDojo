@@ -172,8 +172,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Navigation */}
-      <header className="fixed top-[var(--cookie-banner-height,0px)] z-50 w-full border-b border-black/10 bg-white/95 py-3 text-black shadow-sm backdrop-blur-md">
-        <div className="container mx-auto flex justify-between items-center px-4">
+      <header className="fixed top-[var(--cookie-banner-height,0px)] z-50 w-full border-b border-black/10 bg-white/95 text-black shadow-sm backdrop-blur-md">
+        <div className="flex min-h-[4.75rem] w-full items-center justify-between gap-5 px-5 sm:px-8 lg:px-10 xl:px-14 2xl:px-20">
           <Link href="/">
             <div className="flex items-center gap-2 cursor-pointer group">
               <div className="relative overflow-hidden">
@@ -195,7 +195,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex flex-1 items-center justify-end gap-6 lg:gap-8 xl:gap-10">
 
             {/* Nav links — TSK-style flat top-level items */}
             {navLinks.map((link, index) => (
