@@ -83,4 +83,11 @@ describe("public-site redesign", () => {
     expect(layout).toContain("w-full items-center justify-between gap-5 px-5 sm:px-8 lg:px-10 xl:px-14 2xl:px-20");
     expect(layout).toContain("flex-1 items-center justify-end gap-6 lg:gap-8 xl:gap-10");
   });
+
+  it("keeps generous vertical breathing room in the homepage hero", () => {
+    const home = readPage("Home.tsx");
+
+    expect(home).toContain("min-h-[max(44rem,calc(100svh-4rem))]");
+    expect(home).toContain("items-center py-28 md:min-h-[calc(100svh-4.75rem)] md:py-32 lg:py-36");
+  });
 });

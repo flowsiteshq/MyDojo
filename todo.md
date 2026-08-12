@@ -2,6 +2,11 @@
 
 ## IN PROGRESS
 
+- [ ] Increase the homepage hero breathing room and reduce its content density
+  - [x] Increase hero height and desktop content width
+  - [x] Add intentional spacing around headline, copy, calls to action, and training image
+  - [x] Verify desktop and mobile hero composition
+
 - [ ] Replace the inaccurate generated hero patches with the actual MyDojo logo asset
   - [x] Identify the authoritative MyDojo logo file and uniform patch placement
   - [x] Regenerate the hero with the real logo as a visual reference

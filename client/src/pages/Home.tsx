@@ -79,28 +79,28 @@ const FAQS = [
 
 function Hero({ onBook }: { onBook: () => void }) {
   return (
-    <section className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-black md:min-h-[calc(100svh-6rem)]">
+    <section className="relative min-h-[max(44rem,calc(100svh-4rem))] overflow-hidden bg-black md:min-h-[calc(100svh-4.75rem)]">
       <img
         src={HERO_IMAGE}
         alt="MyDojo students practicing martial arts"
-        className="absolute inset-0 h-full w-full object-cover object-center"
+        className="absolute inset-0 h-full w-full object-cover object-[62%_center]"
       />
       <div className="absolute inset-0 bg-black/45" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-black/10" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/42 to-black/10" />
 
-      <div className="container relative z-10 flex min-h-[calc(100svh-4rem)] items-end py-14 md:min-h-[calc(100svh-6rem)] md:py-20">
-        <div className="max-w-3xl text-white">
-          <p className="mb-5 text-[0.7rem] font-extrabold uppercase tracking-[0.22em] text-white/75">
+      <div className="container relative z-10 flex min-h-[max(44rem,calc(100svh-4rem))] items-center py-28 md:min-h-[calc(100svh-4.75rem)] md:py-32 lg:py-36">
+        <div className="max-w-2xl text-white">
+          <p className="mb-7 text-[0.7rem] font-extrabold uppercase tracking-[0.24em] text-white/75">
             MyDojo Martial Arts & Fitness · Tomball, Texas
           </p>
           <h1 className="max-w-3xl font-heading text-[clamp(4rem,10vw,9.5rem)] font-bold uppercase leading-[0.82] tracking-[-0.045em]">
             Train With
             <span className="block text-[#e63946]">Purpose.</span>
           </h1>
-          <p className="mt-7 max-w-xl text-base leading-7 text-white/85 md:text-lg">
+          <p className="mt-9 max-w-lg text-base leading-7 text-white/85 md:text-lg md:leading-8">
             Purposeful martial arts and kickboxing instruction for children, teens, and adults—built around confidence, discipline, and progress that carries beyond the mat.
           </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="mt-11 flex flex-col gap-3 sm:flex-row sm:items-center">
             <button onClick={onBook} className="public-button w-full sm:w-auto">
               Book a free class <ArrowRight className="h-4 w-4" />
             </button>
