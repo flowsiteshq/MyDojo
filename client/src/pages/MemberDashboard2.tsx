@@ -804,67 +804,110 @@ function AccountTab({
     );
   }
 
-  if (accountSection === "training") {
+  if (accountSection === "perks") {
     return (
-      <div className="space-y-5">
+      <div className="space-y-8">
         <button onClick={() => setAccountSection(null)} className={`flex items-center gap-2 text-sm font-semibold ${t.textSecondary} hover:text-[#E11D2A] transition-colors`}>
           <ChevronRight className="h-4 w-4 rotate-180" /> Back
         </button>
-        <ProgressTab isDark={isDark} />
-      </div>
-    );
-  }
 
-  if (accountSection === "schedule") {
-    return (
-      <div className="space-y-5">
-        <button onClick={() => setAccountSection(null)} className={`flex items-center gap-2 text-sm font-semibold ${t.textSecondary} hover:text-[#E11D2A] transition-colors`}>
-          <ChevronRight className="h-4 w-4 rotate-180" /> Back
-        </button>
-        <h2 className={`text-2xl font-black ${t.textPrimary}`}>My Schedule</h2>
-        {!schedules || schedules.length === 0 ? (
-          <Card isDark={isDark} className="p-8 text-center">
-            <Calendar className={`h-12 w-12 mx-auto mb-3 ${t.textMuted}`} />
-            <p className={`font-bold ${t.textPrimary}`}>No Classes Scheduled</p>
-            <p className={`text-sm ${t.textMuted} mt-1`}>Your class schedule will appear here once you're enrolled in a program.</p>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {schedules.map((cls: any) => (
-              <Card key={cls.id} isDark={isDark} className="p-4 flex items-center gap-4">
-                <div className="shrink-0 text-center min-w-[56px]">
-                  <p className="text-sm font-black text-[#E11D2A]">{cls.startTime}</p>
-                  <p className={`text-xs ${t.textMuted}`}>{cls.endTime}</p>
+        {/* Your Plan */}
+        <div>
+          <h2 className={`text-2xl font-black ${t.textPrimary}`}>Your Plan</h2>
+          <p className={`text-sm ${t.textMuted} mt-1`}>Here's what's included with your membership</p>
+          <div className={`mt-4 rounded-2xl border p-6 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">
+                  {(enrollment as any)?.enrollment?.program || "Foundation"} Plan
+                </p>
+                <p className={`text-3xl font-black mt-1 ${t.textPrimary}`}>
+                  ${(enrollment as any)?.enrollment?.monthlyRate || "149"}<span className={`text-sm font-normal ${t.textMuted}`}>/month</span>
+                </p>
+              </div>
+              <div className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase">Active</div>
+            </div>
+            <div className="space-y-3 mt-6">
+              {[
+                "Unlimited classes per week",
+                "Access to all programs (Karate, Kickboxing, Self-Defense)",
+                "Belt testing eligibility",
+                "Free uniform on enrollment",
+                "Access to member events and seminars",
+                "Priority registration for camps and workshops",
+                "Progress tracking and digital belt card",
+                "Family member discounts available",
+              ].map((benefit, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-[#E11D2A]/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <CheckCircle2 className="h-3 w-3 text-[#E11D2A]" />
+                  </div>
+                  <p className={`text-sm ${t.textSecondary}`}>{benefit}</p>
                 </div>
-                <div className={`w-px h-10 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
-                <div className="flex-1 min-w-0">
-                  <p className={`font-bold text-sm ${t.textPrimary}`}>{cls.program}</p>
-                  <p className={`text-xs ${t.textMuted}`}>{cls.dayOfWeek} · {cls.location}</p>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Refer & Earn */}
+        <div>
+          <h2 className={`text-2xl font-black ${t.textPrimary}`}>Refer & Earn</h2>
+          <p className={`text-sm ${t.textMuted} mt-1`}>Share MyDojo with friends and unlock exclusive rewards</p>
+          <div className={`mt-4 rounded-2xl border p-5 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+            <p className={`text-xs font-bold uppercase tracking-widest ${t.textLabel} mb-2`}>Your Referral Link</p>
+            <div className={`flex items-center gap-2 p-3 rounded-xl ${isDark ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-gray-200"}`}>
+              <input type="text" readOnly value={`https://mydojoma.com/refer/${user?.id ? btoa(String(user.id)).slice(0, 8) : "member"}`} className={`flex-1 text-sm bg-transparent outline-none ${t.textPrimary} font-mono`} />
+              <button onClick={() => { navigator.clipboard.writeText(`https://mydojoma.com/refer/${user?.id ? btoa(String(user.id)).slice(0, 8) : "member"}`); alert("Referral link copied!"); }} className="px-3 py-1.5 rounded-lg bg-[#E11D2A] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#c41824] transition-colors">Copy</button>
+            </div>
+            <p className={`text-xs ${t.textMuted} mt-2`}>When your friend enrolls using this link, you earn rewards automatically.</p>
+          </div>
+          <div className="mt-4 space-y-4">
+            {[
+              { referrals: 1, reward: "Free MyDojo T-Shirt", img: "/manus-storage/reward-tshirt_5911ff60.jpg", desc: "Refer 1 friend who enrolls and receive a premium MyDojo training t-shirt." },
+              { referrals: 3, reward: "Free Karate Uniform (Gi)", img: "/manus-storage/reward-uniform_9d478357.jpg", desc: "Refer 3 friends who enroll and receive a brand new Kihon Gi karate uniform." },
+              { referrals: 6, reward: "Free Sparring Gear Set", img: "/manus-storage/reward-sparring_10b760f1.jpg", desc: "Refer 6 friends who enroll and receive a complete sparring gear set." },
+              { referrals: 8, reward: "One Month Free Tuition", img: "/manus-storage/reward-tuition_d47d2400.jpg", desc: "Refer 8 friends who enroll and your next month of tuition is on us." },
+              { referrals: 10, reward: "$500 Cash Reward", img: "/manus-storage/reward-cash_02508018.jpg", desc: "Refer 10 friends who enroll and receive $500 cash. No strings attached." },
+            ].map((tier, i) => (
+              <div key={i} className={`rounded-2xl border overflow-hidden ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+                <div className="flex items-stretch">
+                  <div className="w-24 h-24 shrink-0 overflow-hidden"><img src={tier.img} alt={tier.reward} className="w-full h-full object-cover" loading="lazy" /></div>
+                  <div className="flex-1 p-4 flex items-center justify-between gap-3">
+                    <div className="min-w-0"><p className={`font-bold text-sm ${t.textPrimary}`}>{tier.reward}</p><p className={`text-xs ${t.textMuted} mt-1 leading-relaxed`}>{tier.desc}</p></div>
+                    <div className="shrink-0 w-10 h-10 rounded-full bg-[#E11D2A] flex items-center justify-center"><span className="text-white font-black text-sm">{tier.referrals}</span></div>
+                  </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
-        )}
+          <div className={`mt-4 rounded-2xl border p-5 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+            <div className="flex items-center justify-between mb-3"><p className={`text-xs font-bold uppercase tracking-widest ${t.textLabel}`}>Your Referrals</p><p className={`text-2xl font-black ${t.textPrimary}`}>0</p></div>
+            <div className={`h-3 rounded-full ${isDark ? "bg-white/5" : "bg-gray-100"} overflow-hidden`}><div className="h-full rounded-full bg-[#E11D2A]" style={{ width: "0%" }} /></div>
+            <p className={`text-xs ${t.textMuted} mt-2`}>Refer 1 more friend to earn your first reward!</p>
+          </div>
+        </div>
 
-        {/* Upcoming Events */}
-        <h3 className={`font-bold text-sm uppercase tracking-wider ${t.textMuted} mt-6`}>Upcoming Events</h3>
-        <div className="space-y-3">
-          {[
-            { title: "Belt Test", date: "Saturday, August 15", time: "10:00 AM", fee: "$49" },
-            { title: "Parents Night Out", date: "Friday, August 21", time: "6:00 – 9:30 PM", fee: "Free" },
-            { title: "Master Yaeger Seminar", date: "Saturday, August 22", time: "11:00 AM – 2:00 PM", fee: "$29" },
-          ].map((evt) => (
-            <Card key={evt.title} isDark={isDark} className="p-4 flex items-center gap-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isDark ? "bg-red-500/15" : "bg-red-50"}`}>
-                <Calendar className="h-5 w-5 text-[#E11D2A]" />
+        {/* Partner Deals */}
+        <div>
+          <h2 className={`text-2xl font-black ${t.textPrimary}`}>Partner Deals</h2>
+          <p className={`text-sm ${t.textMuted} mt-1`}>Exclusive discounts from our local partners</p>
+          <div className="mt-4 space-y-3">
+            {[
+              { name: "Mia Bella Restaurant", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Dining" },
+              { name: "Hatchki Cafe", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Cafe" },
+              { name: "Coco Restaurant", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Dining" },
+              { name: "180 Rodeo Rink", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Entertainment" },
+              { name: "Chick-fil-A", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Food" },
+            ].map((partner, i) => (
+              <div key={i} className={`p-4 rounded-xl border ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+                <div className="flex items-center justify-between">
+                  <div><p className={`font-bold text-sm ${t.textPrimary}`}>{partner.name}</p><p className="text-[#E11D2A] text-xs font-semibold mt-0.5">{partner.deal}</p><p className={`text-xs ${t.textMuted} mt-1`}>{partner.location}</p></div>
+                  <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isDark ? "bg-white/5 text-white/50" : "bg-gray-100 text-gray-500"}`}>{partner.category}</div>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className={`font-bold text-sm ${t.textPrimary}`}>{evt.title}</p>
-                <p className={`text-xs ${t.textMuted}`}>{evt.date} · {evt.time}</p>
-              </div>
-              <span className={`text-xs font-bold px-2 py-1 rounded-full ${isDark ? "bg-white/5 text-white/60" : "bg-gray-100 text-gray-600"}`}>{evt.fee}</span>
-            </Card>
-          ))}
+            ))}
+            <p className={`text-xs ${t.textMuted} text-center mt-2`}>Show your MyDojo member ID at checkout to redeem. More partners coming soon!</p>
+          </div>
         </div>
       </div>
     );
@@ -974,7 +1017,7 @@ function AccountTab({
 
           {/* View My Progress button */}
           <button
-            onClick={() => setActiveTab("benefits")}
+            onClick={() => setActiveTab("training")}
             className="w-full mt-5 py-3 rounded-xl bg-[#E11D2A] hover:bg-[#c01020] text-white text-sm font-bold uppercase tracking-wider transition-colors"
           >
             View My Progress
@@ -1009,9 +1052,8 @@ function AccountTab({
       {/* ── Quick Actions / Section Navigation ── */}
       <div className="space-y-2">
         {[
-          { id: "training", label: "My Training", sublabel: `${beltRank} · ${totalClasses} classes`, icon: <Award className="h-5 w-5 text-[#E11D2A]" /> },
-          { id: "schedule", label: "My Schedule", sublabel: `${schedules?.length ?? 0} classes available`, icon: <Calendar className="h-5 w-5 text-blue-500" /> },
           { id: "billing", label: "Membership & Billing", sublabel: monthlyPrice ? `${formatAmount(Number(monthlyPrice))}/mo · ${packageName}` : packageName, icon: <CreditCard className="h-5 w-5 text-green-500" /> },
+          { id: "perks", label: "Benefits & Perks", sublabel: "Plan details, referrals, partner deals", icon: <Star className="h-5 w-5 text-[#E11D2A]" /> },
           { id: "family", label: "My Family", sublabel: "Manage family members", icon: <Users className="h-5 w-5 text-purple-500" /> },
           { id: "documents", label: "Documents", sublabel: "Waivers, certificates, receipts", icon: <BookOpen className="h-5 w-5 text-orange-500" /> },
           { id: "notifications", label: "Notifications", sublabel: "SMS, email, push preferences", icon: <Bell className="h-5 w-5 text-yellow-500" /> },
@@ -1156,7 +1198,7 @@ function PaymentHistorySection({ isDark, payments: externalPayments, isLoading: 
 
 export default function MemberDashboard2() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<"home" | "benefits" | "locate" | "shop" | "account">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "training" | "locate" | "shop" | "account">("home");
   const [profileOpen, setProfileOpen] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showFreezeDialog, setShowFreezeDialog] = useState(false);
@@ -1712,168 +1754,213 @@ export default function MemberDashboard2() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
 
         {/* ── BENEFITS TAB ── */}
-        {activeTab === "benefits" && (
+        {activeTab === "training" && (
           <div className="space-y-8">
 
-            {/* ── Your Plan ── */}
+            {/* ── Training Dashboard Header ── */}
             <div>
-              <h2 className={`text-2xl font-black ${t.textPrimary}`}>Your Plan</h2>
-              <p className={`text-sm ${t.textMuted} mt-1`}>Here's what's included with your membership</p>
+              <p className={`text-sm font-medium ${t.textMuted}`}>Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 17 ? "afternoon" : "evening"},</p>
+              <h1 className={`text-3xl font-black ${t.textPrimary} mt-1`}>{firstName}</h1>
+              <div className="flex items-center gap-2 mt-2">
+                <span className={`text-sm font-semibold ${t.textSecondary}`}>{progressStats?.beltRank ?? "No Belt"}</span>
+                <span className={`text-xs ${t.textMuted}`}>•</span>
+                <span className={`text-sm ${t.textSecondary}`}>{(enrollment as any)?.enrollment?.program || "Foundation"} Program</span>
+              </div>
+            </div>
 
-              <div className={`mt-4 rounded-2xl border p-6 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
-                <div className="flex items-center justify-between mb-4">
+            {/* ── Belt Progress Visual ── */}
+            <div className={`rounded-2xl border p-6 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">
+                    {progressStats?.beltRank ?? "No Belt"} → {progressStats?.nextBelt ?? "White Belt"}
+                  </p>
+                  <p className={`text-2xl font-black mt-1 ${t.textPrimary}`}>
+                    {progressStats?.beltProgressPct ?? 0}% <span className={`text-sm font-normal ${t.textMuted}`}>to next rank</span>
+                  </p>
+                </div>
+                <div className="relative w-16 h-16">
+                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none" stroke={isDark ? "rgba(255,255,255,0.1)" : "#f3f4f6"} strokeWidth="3" />
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none" stroke="#E11D2A" strokeWidth="3"
+                      strokeDasharray={`${progressStats?.beltProgressPct ?? 0}, 100`} strokeLinecap="round" />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Award className="h-5 w-5 text-[#E11D2A]" />
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4 mt-4">
+                <div className="text-center">
+                  <p className={`text-xl font-black ${t.textPrimary}`}>{progressStats?.totalClasses ?? 0}</p>
+                  <p className={`text-xs ${t.textMuted}`}>Classes</p>
+                </div>
+                <div className="text-center">
+                  <p className={`text-xl font-black ${t.textPrimary}`}>{progressStats?.currentStreak ?? 0}</p>
+                  <p className={`text-xs ${t.textMuted}`}>Day Streak</p>
+                </div>
+                <div className="text-center">
+                  <p className={`text-xl font-black ${t.textPrimary}`}>{(progressStats as any)?.skillsRemaining ?? 4}</p>
+                  <p className={`text-xs ${t.textMuted}`}>Skills Left</p>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Next Class ── */}
+            {todayClasses && todayClasses.length > 0 && (() => {
+              const now = new Date();
+              const nowMins = now.getHours() * 60 + now.getMinutes();
+              const upcoming = todayClasses.find((cls) => {
+                const [rawH, rawM] = cls.startTime.replace(/(AM|PM)/i, '').trim().split(':').map(Number);
+                const isPM = /PM/i.test(cls.startTime);
+                const h24 = isPM && rawH !== 12 ? rawH + 12 : (!isPM && rawH === 12 ? 0 : rawH);
+                return (h24 * 60 + (rawM || 0)) > nowMins;
+              });
+              if (!upcoming) return null;
+              return (
+                <div className={`rounded-2xl border p-5 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A] mb-2">Next Class</p>
+                  <h3 className={`text-lg font-black ${t.textPrimary}`}>{upcoming.program}</h3>
+                  <p className={`text-sm ${t.textSecondary} mt-1`}>Today • {upcoming.startTime}</p>
+                  <p className={`text-xs ${t.textMuted} mt-0.5`}>{upcoming.location || "MyDojo Tomball"}</p>
+                  {upcoming.instructor && <p className={`text-xs ${t.textMuted}`}>Instructor: {upcoming.instructor}</p>}
+                  <div className="flex gap-3 mt-4">
+                    <button
+                      onClick={() => window.location.href = "/check-in"}
+                      className="px-4 py-2 bg-[#E11D2A] text-white text-xs font-bold rounded-lg uppercase tracking-wider hover:bg-[#c41824] transition-colors"
+                    >
+                      Check In
+                    </button>
+                    <button className={`px-4 py-2 text-xs font-bold rounded-lg uppercase tracking-wider border ${isDark ? "border-white/15 text-white/70 hover:bg-white/5" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
+                      View Class
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ── Quick Training Actions ── */}
+            <div className="flex gap-3 overflow-x-auto pb-1">
+              {[
+                { label: "Schedule", icon: <Calendar className="h-5 w-5" /> },
+                { label: "Curriculum", icon: <BookOpen className="h-5 w-5" /> },
+                { label: "Progress", icon: <BarChart2 className="h-5 w-5" /> },
+                { label: "Attendance", icon: <CheckCircle2 className="h-5 w-5" /> },
+                { label: "Testing", icon: <GraduationCap className="h-5 w-5" /> },
+              ].map((action, i) => (
+                <button
+                  key={i}
+                  className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border shrink-0 transition-colors ${
+                    isDark ? "border-white/8 hover:bg-white/5 text-white/60 hover:text-white" : "border-gray-100 bg-white hover:bg-gray-50 text-gray-500 hover:text-gray-800"
+                  }`}
+                >
+                  {action.icon}
+                  <span className="text-[10px] font-bold uppercase tracking-wider">{action.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* ── My Program ── */}
+            <div>
+              <h2 className={`text-xl font-black ${t.textPrimary}`}>My Program</h2>
+              <div className={`mt-3 rounded-2xl border p-5 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+                <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">
-                      {(enrollment as any)?.enrollment?.program || "Foundation"} Plan
+                      {(enrollment as any)?.enrollment?.program || "Foundation"} Program
                     </p>
-                    <p className={`text-3xl font-black mt-1 ${t.textPrimary}`}>
-                      ${(enrollment as any)?.enrollment?.monthlyRate || "149"}<span className={`text-sm font-normal ${t.textMuted}`}>/month</span>
+                    <p className={`text-sm ${t.textSecondary} mt-1`}>
+                      {((enrollment as any)?.enrollment?.program || "Foundation") === "Foundation" ? "White Uniform" :
+                       ((enrollment as any)?.enrollment?.program || "Foundation") === "Black Belt" ? "Black Uniform" : "Red Uniform"}
                     </p>
                   </div>
                   <div className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase">Active</div>
                 </div>
-
-                <div className="space-y-3 mt-6">
+                <div className="space-y-2 mt-4">
                   {[
                     "Unlimited classes per week",
                     "Access to all programs (Karate, Kickboxing, Self-Defense)",
                     "Belt testing eligibility",
-                    "Free uniform on enrollment",
-                    "Access to member events and seminars",
-                    "Priority registration for camps and workshops",
-                    "Progress tracking and digital belt card",
-                    "Family member discounts available",
-                  ].map((benefit, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-[#E11D2A]/10 flex items-center justify-center shrink-0 mt-0.5">
-                        <CheckCircle2 className="h-3 w-3 text-[#E11D2A]" />
-                      </div>
-                      <p className={`text-sm ${t.textSecondary}`}>{benefit}</p>
+                    "Curriculum access",
+                    "Events and seminars included",
+                    "Competition opportunities",
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                      <p className={`text-xs ${t.textSecondary}`}>{item}</p>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* ── Referral Rewards Program ── */}
+            {/* ── Belt Testing ── */}
             <div>
-              <h2 className={`text-2xl font-black ${t.textPrimary}`}>Refer & Earn</h2>
-              <p className={`text-sm ${t.textMuted} mt-1`}>Share MyDojo with friends and unlock exclusive rewards</p>
-
-              {/* Referral Link */}
-              <div className={`mt-4 rounded-2xl border p-5 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
-                <p className={`text-xs font-bold uppercase tracking-widest ${t.textLabel} mb-2`}>Your Referral Link</p>
-                <div className={`flex items-center gap-2 p-3 rounded-xl ${isDark ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-gray-200"}`}>
-                  <input
-                    type="text"
-                    readOnly
-                    value={`https://mydojoma.com/refer/${user?.id ? btoa(String(user.id)).slice(0, 8) : "member"}`}
-                    className={`flex-1 text-sm bg-transparent outline-none ${t.textPrimary} font-mono`}
-                  />
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`https://mydojoma.com/refer/${user?.id ? btoa(String(user.id)).slice(0, 8) : "member"}`);
-                      alert("Referral link copied!");
-                    }}
-                    className="px-3 py-1.5 rounded-lg bg-[#E11D2A] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#c41824] transition-colors"
-                  >
-                    Copy
-                  </button>
-                </div>
-                <p className={`text-xs ${t.textMuted} mt-2`}>When your friend enrolls using this link, you earn rewards automatically.</p>
-              </div>
-
-              {/* Reward Tiers */}
-              <div className="mt-4 space-y-4">
-                {[
-                  { referrals: 1, reward: "Free MyDojo T-Shirt", img: "/manus-storage/reward-tshirt_5911ff60.jpg", desc: "Refer 1 friend who enrolls and receive a premium MyDojo training t-shirt." },
-                  { referrals: 3, reward: "Free Karate Uniform (Gi)", img: "/manus-storage/reward-uniform_9d478357.jpg", desc: "Refer 3 friends who enroll and receive a brand new Kihon Gi karate uniform." },
-                  { referrals: 6, reward: "Free Sparring Gear Set", img: "/manus-storage/reward-sparring_10b760f1.jpg", desc: "Refer 6 friends who enroll and receive a complete sparring gear set." },
-                  { referrals: 8, reward: "One Month Free Tuition", img: "/manus-storage/reward-tuition_d47d2400.jpg", desc: "Refer 8 friends who enroll and your next month of tuition is on us." },
-                  { referrals: 10, reward: "$500 Cash Reward", img: "/manus-storage/reward-cash_02508018.jpg", desc: "Refer 10 friends who enroll and receive $500 cash. No strings attached." },
-                ].map((tier, i) => (
-                  <div
-                    key={i}
-                    className={`rounded-2xl border overflow-hidden ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}
-                  >
-                    <div className="flex items-stretch">
-                      <div className="w-24 h-24 shrink-0 overflow-hidden">
-                        <img
-                          src={tier.img}
-                          alt={tier.reward}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                      <div className="flex-1 p-4 flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className={`font-bold text-sm ${t.textPrimary}`}>{tier.reward}</p>
-                          <p className={`text-xs ${t.textMuted} mt-1 leading-relaxed`}>{tier.desc}</p>
-                        </div>
-                        <div className="shrink-0 w-10 h-10 rounded-full bg-[#E11D2A] flex items-center justify-center">
-                          <span className="text-white font-black text-sm">{tier.referrals}</span>
-                        </div>
-                      </div>
-                    </div>
+              <h2 className={`text-xl font-black ${t.textPrimary}`}>Belt Testing</h2>
+              <div className={`mt-3 rounded-2xl border p-5 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+                <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">Next Belt Test</p>
+                <p className={`text-lg font-black mt-1 ${t.textPrimary}`}>Saturday, August 15</p>
+                <p className={`text-sm ${t.textMuted} mt-1`}>$49 per student • MyDojo Tomball</p>
+                <div className="space-y-2 mt-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span className={`text-xs ${t.textSecondary}`}>Attendance requirement</span>
                   </div>
-                ))}
-              </div>
-
-              {/* Current Referral Progress */}
-              <div className={`mt-4 rounded-2xl border p-5 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
-                <div className="flex items-center justify-between mb-3">
-                  <p className={`text-xs font-bold uppercase tracking-widest ${t.textLabel}`}>Your Referrals</p>
-                  <p className={`text-2xl font-black ${t.textPrimary}`}>0</p>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span className={`text-xs ${t.textSecondary}`}>Minimum training period</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Circle className={`h-4 w-4 ${isDark ? "text-white/30" : "text-gray-300"}`} />
+                    <span className={`text-xs ${t.textSecondary}`}>Instructor evaluation</span>
+                  </div>
                 </div>
-                <div className={`h-3 rounded-full ${isDark ? "bg-white/5" : "bg-gray-100"} overflow-hidden`}>
-                  <div className="h-full rounded-full bg-[#E11D2A]" style={{ width: "0%" }} />
-                </div>
-                <p className={`text-xs ${t.textMuted} mt-2`}>Refer 1 more friend to earn your first reward!</p>
+                <button
+                  onClick={() => window.location.href = "/belt-test-intent"}
+                  className="mt-4 w-full px-4 py-3 bg-[#E11D2A] text-white text-sm font-bold rounded-xl uppercase tracking-wider hover:bg-[#c41824] transition-colors"
+                >
+                  Register for Belt Test
+                </button>
               </div>
             </div>
 
-            {/* ── Partner Deals ── */}
+            {/* ── Progress & Attendance ── */}
             <div>
-              <h2 className={`text-2xl font-black ${t.textPrimary}`}>Partner Deals</h2>
-              <p className={`text-sm ${t.textMuted} mt-1`}>Exclusive discounts from our local partners</p>
-
-              <div className="mt-4 space-y-3">
-                {[
-                  { name: "Mia Bella Restaurant", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Dining" },
-                  { name: "Hatchki Cafe", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Cafe" },
-                  { name: "Coco Restaurant", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Dining" },
-                  { name: "180 Rodeo Rink", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Entertainment" },
-                  { name: "Chick-fil-A", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Food" },
-                ].map((partner, i) => (
-                  <div
-                    key={i}
-                    className={`p-4 rounded-xl border ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className={`font-bold text-sm ${t.textPrimary}`}>{partner.name}</p>
-                        <p className="text-[#E11D2A] text-xs font-semibold mt-0.5">{partner.deal}</p>
-                        <p className={`text-xs ${t.textMuted} mt-1`}>{partner.location}</p>
-                      </div>
-                      <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        isDark ? "bg-white/5 text-white/50" : "bg-gray-100 text-gray-500"
-                      }`}>
-                        {partner.category}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <p className={`text-xs ${t.textMuted} text-center mt-2`}>Show your MyDojo member ID at checkout to redeem. More partners coming soon!</p>
-              </div>
-            </div>
-
-            {/* ── Progress & Curriculum (kept from before) ── */}
-            <div>
-              <h2 className={`text-2xl font-black ${t.textPrimary} mb-4`}>Training Progress</h2>
+              <h2 className={`text-xl font-black ${t.textPrimary} mb-3`}>Progress & Attendance</h2>
               <ProgressTab isDark={isDark} />
-              <div className={`mt-4 rounded-2xl border ${t.borderSubtle} ${isDark ? "" : "bg-white"} p-4`}
+            </div>
+
+            {/* ── Curriculum ── */}
+            <div>
+              <h2 className={`text-xl font-black ${t.textPrimary} mb-3`}>Curriculum</h2>
+              <div className={`rounded-2xl border ${t.borderSubtle} ${isDark ? "" : "bg-white"} p-4`}
                 style={isDark ? { background: "rgba(28,18,18,0.85)", backdropFilter: "blur(12px)" } : undefined}>
                 <CurriculumViewer />
+              </div>
+            </div>
+
+            {/* ── Achievements ── */}
+            <div>
+              <h2 className={`text-xl font-black ${t.textPrimary}`}>Achievements</h2>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                {[
+                  { title: "First Class", desc: "Completed your first class", earned: true },
+                  { title: "5 Class Streak", desc: "Trained 5 days in a row", earned: (progressStats?.currentStreak ?? 0) >= 5 },
+                  { title: "10 Classes", desc: "Attended 10 total classes", earned: (progressStats?.totalClasses ?? 0) >= 10 },
+                  { title: "Belt Promotion", desc: "Earned your first belt", earned: (progressStats?.beltRank ?? "No Belt") !== "No Belt" },
+                ].map((ach, i) => (
+                  <div key={i} className={`rounded-xl border p-4 text-center ${
+                    ach.earned
+                      ? isDark ? "border-[#E11D2A]/30 bg-[#E11D2A]/5" : "border-[#E11D2A]/20 bg-red-50"
+                      : isDark ? "border-white/5 bg-white/2 opacity-50" : "border-gray-100 bg-gray-50 opacity-50"
+                  }`}>
+                    <Trophy className={`h-6 w-6 mx-auto ${ach.earned ? "text-[#E11D2A]" : isDark ? "text-white/20" : "text-gray-300"}`} />
+                    <p className={`text-xs font-bold mt-2 ${ach.earned ? t.textPrimary : t.textMuted}`}>{ach.title}</p>
+                    <p className={`text-[10px] ${t.textMuted} mt-0.5`}>{ach.desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -2344,7 +2431,7 @@ export default function MemberDashboard2() {
                   </button>
                   <button
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm border transition-all ${isDark ? "text-white/80 border-white/15 bg-white/5 hover:bg-white/10" : "text-gray-700 border-gray-200 bg-white hover:bg-gray-50"}`}
-                    onClick={() => setActiveTab("benefits")}
+                    onClick={() => setActiveTab("training")}
                   >
                     View Schedule <ChevronRight className="h-4 w-4" />
                   </button>
@@ -2426,7 +2513,7 @@ export default function MemberDashboard2() {
                       ) : (
                         <button
                           className="text-xs text-[#E11D2A] hover:underline flex items-center gap-1 font-semibold"
-                          onClick={() => setActiveTab('benefits')}
+                          onClick={() => setActiveTab('training')}
                         >
                           {required - attended} more class{required - attended !== 1 ? 'es' : ''} to qualify <ChevronRight className="h-3 w-3" />
                         </button>
@@ -2455,7 +2542,7 @@ export default function MemberDashboard2() {
                 </div>
                 <button
                   className={`mt-4 w-full text-xs font-semibold border rounded-lg py-2 transition-colors flex items-center justify-center gap-1 ${isDark ? "text-white/50 border-white/10 hover:bg-white/5" : "text-gray-500 border-gray-200 hover:bg-gray-50"}`}
-                  onClick={() => setActiveTab("benefits")}
+                  onClick={() => setActiveTab("training")}
                 >
                   View Curriculum <ChevronRight className="h-3 w-3" />
                 </button>
@@ -2990,7 +3077,7 @@ export default function MemberDashboard2() {
       >
         {([
           { id: "home", label: "Home", Icon: HomeIcon },
-          { id: "benefits", label: "Benefits", Icon: Star },
+          { id: "training", label: "Training", Icon: Award },
           { id: "locate", label: "Locate", Icon: MapPin },
           { id: "shop", label: "Shop", Icon: ShoppingBag },
           { id: "account", label: "Account", Icon: UserIcon },
