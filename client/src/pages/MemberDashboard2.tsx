@@ -43,7 +43,6 @@ import {
   MapPin,
 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { getLoginUrl } from "@/const";
 import { CurriculumViewer } from "@/components/CurriculumViewer";
 import { MessagesTab } from "@/components/MessagesTab";
 import { Chart, registerables } from "chart.js";
@@ -997,7 +996,7 @@ export default function MemberDashboard2() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      window.location.href = getLoginUrl();
+      window.location.href = "/login?returnTo=/dashboard";
     }
   }, [authLoading, isAuthenticated]);
 

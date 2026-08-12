@@ -111,4 +111,15 @@ describe("public-site redesign", () => {
     expect(founder).toContain("/images/camp-weeks/black-belt.webp");
     expect(founder).toContain("MYDOJO IN ACTION");
   });
+
+  it("routes student dashboard access through direct MyDojo login rather than Manus OAuth", () => {
+    const dashboard = readPage("MemberDashboard2.tsx");
+    const layout = readFileSync(new URL("../client/src/components/Layout.tsx", import.meta.url), "utf8");
+    const login = readPage("Login.tsx");
+
+    expect(dashboard).toContain('"/login?returnTo=/dashboard"');
+    expect(layout).toContain('href="/login?returnTo=/dashboard"');
+    expect(layout).not.toContain("getLoginUrl()");
+    expect(login).toContain('get("returnTo") || "/dashboard"');
+  });
 });

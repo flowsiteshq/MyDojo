@@ -2,6 +2,18 @@
 
 ## IN PROGRESS
 
+- [ ] Replace Manus OAuth student-dashboard access with direct MyDojo email-and-password login
+  - [x] Audit existing direct authentication, session, and student identity data
+  - [x] Build direct sign-in, activation, and reset experiences for students
+  - [x] Update dashboard access to use MyDojo sessions rather than OAuth redirects
+  - [ ] Verify login persistence and direct dashboard entry for a real student account
+
+- [ ] Provide a secure owner review path into the student dashboard and audit the student experience
+  - [ ] Map current student login, student role, and dashboard access behavior
+  - [ ] Add an owner-only preview route or role-safe review method without weakening student authentication
+  - [ ] Document the exact review login path and identify first student dashboard improvements
+  - [ ] Add regression coverage for dashboard review access
+
 - [x] Replace the Teens & Adults carousel Taekwondo-style attire with the MyDojo pro shop Karate gi
   - [x] Generate adult Karate attire using the Kihon Gi white-lapel reference
   - [x] Integrate the corrected image and retain headline-safe composition

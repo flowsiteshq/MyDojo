@@ -10,7 +10,6 @@ import { useLocationContext } from "@/contexts/LocationContext";
 import { NotificationSubscribe } from "@/components/NotificationSubscribe";
 import { PhoneChooser } from "@/components/PhoneChooser";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 import { useTranslation } from "react-i18next";
 import { LanguageToggle } from "@/components/LanguageToggle";
 
@@ -442,7 +441,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </Link>
             ) : (
               <a
-                href={getLoginUrl()}
+                href="/login?returnTo=/dashboard"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <span className="flex items-center justify-center gap-2 text-lg font-bold uppercase tracking-wider py-3 border-b border-gray-100 text-center">
@@ -552,7 +551,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       if (isAuthenticated) {
                         window.location.href = "/dashboard";
                       } else {
-                        window.location.href = getLoginUrl();
+                        window.location.href = "/login?returnTo=/dashboard";
                       }
                     }}
                     className="hover:text-white cursor-pointer transition-colors font-semibold text-primary"

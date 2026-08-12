@@ -8,7 +8,8 @@ import { Loader2, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Login() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const returnTo = new URLSearchParams(location.split("?")[1] ?? "").get("returnTo") || "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,8 +17,8 @@ export default function Login() {
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: () => {
       toast.success("Welcome back! You've successfully logged in.");
-      // Redirect to home page
-      setLocation("/");
+      // Return members to the requested MyDojo area after direct sign-in.
+      setLocation(returnTo.startsWith("/") ? returnTo : "/dashboard");
       // Reload to update auth state
       window.location.reload();
     },
@@ -57,7 +58,7 @@ export default function Login() {
             WELCOME BACK
           </h1>
           <p className="text-gray-400 text-center mb-8">
-            Sign in to continue your martial arts journey
+            Sign in to your MyDojo student experience
           </p>
 
           {/* Form */}
@@ -139,6 +140,9 @@ export default function Login() {
               Create Account
             </Button>
           </Link>
+          <p className="mt-5 text-center text-xs leading-5 text-gray-400">
+            First time here? Use <Link href="/forgot-password" className="text-primary hover:text-primary/80">Forgot password</Link> to activate or reset your MyDojo login.
+          </p>
         </div>
 
         {/* Back to Home */}
