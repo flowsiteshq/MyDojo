@@ -72,7 +72,7 @@ describe("public-site redesign", () => {
   it("uses a static MyDojo training image rather than video playback in the homepage hero", () => {
     const home = readPage("Home.tsx");
 
-    expect(home).toContain("mydojo-hero-uniforms-corrected_0496fac3.png");
+    expect(home).toContain("mydojo-hero-real-logo_55937fd6.png");
     expect(home).not.toContain("hero_montage_v5_d1227c92.mp4");
     expect(home).not.toContain("<video");
   });

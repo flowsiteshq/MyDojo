@@ -24,7 +24,7 @@ import { openBookFreeClassGate } from "@/lib/chatbot";
 import { useVisitorSms } from "@/hooks/useVisitorSms";
 
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
-const HERO_IMAGE = "/manus-storage/mydojo-hero-uniforms-corrected_0496fac3.png";
+const HERO_IMAGE = "/manus-storage/mydojo-hero-real-logo_55937fd6.png";
 const TRAINING_FLOOR = `${CDN}/tomball-training-floor_9a2c684b.jpg`;
 
 const PROGRAMS = [

@@ -2,6 +2,11 @@
 
 ## IN PROGRESS
 
+- [ ] Replace the inaccurate generated hero patches with the actual MyDojo logo asset
+  - [x] Identify the authoritative MyDojo logo file and uniform patch placement
+  - [x] Regenerate the hero with the real logo as a visual reference
+  - [x] Verify the logo matches the real asset before publishing
+
 - [ ] Correct the homepage hero attire and make the public menu fill the screen width
   - [x] Regenerate a hero scene with unmistakable MyDojo-branded uniforms
   - [x] Integrate the replacement image without video playback
