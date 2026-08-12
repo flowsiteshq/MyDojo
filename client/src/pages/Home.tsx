@@ -24,7 +24,49 @@ import { openBookFreeClassGate } from "@/lib/chatbot";
 import { useVisitorSms } from "@/hooks/useVisitorSms";
 
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
-const HERO_IMAGE = "/manus-storage/mydojo-hero-real-logo_55937fd6.png";
+const CAROUSEL_INTERVAL = 5500;
+const HERO_SLIDES = [
+  {
+    program: "Little Ninjas",
+    ages: "Ages 3–5",
+    eyebrow: "A strong start for little leaders",
+    title: "Little Steps.\nBig Confidence.",
+    copy: "Playful, structured martial arts classes that build listening, coordination, respect, and a love of learning.",
+    image: "/manus-storage/mydojo-carousel-little-ninjas_8fb26ab4.png",
+    href: "/programs#little-ninjas",
+    cta: "Explore Little Ninjas",
+  },
+  {
+    program: "Kids Martial Arts",
+    ages: "Ages 5–12",
+    eyebrow: "Focus, respect, and real progress",
+    title: "Grow Strong.\nStay Focused.",
+    copy: "A positive path for kids to build confidence, discipline, self-defense awareness, and healthy habits one class at a time.",
+    image: "/manus-storage/mydojo-carousel-kids-martial-arts-v2_9d6d5650.png",
+    href: "/programs#dragon-kids",
+    cta: "Explore Kids Martial Arts",
+  },
+  {
+    program: "Teens & Adults",
+    ages: "Ages 13+",
+    eyebrow: "Train with purpose",
+    title: "Better Skills.\nStronger Self.",
+    copy: "Practical martial arts training for teens and adults who want confidence, fitness, community, and a meaningful challenge.",
+    image: "/manus-storage/mydojo-carousel-teens-adults-v2_eaf488a4.png",
+    href: "/programs#teens-adults",
+    cta: "Explore Teens & Adults",
+  },
+  {
+    program: "Kickboxing",
+    ages: "Adults · All levels",
+    eyebrow: "Train hard. Feel great.",
+    title: "Move More.\nFeel Powerful.",
+    copy: "High-energy kickboxing that blends smart coaching, stress relief, practical technique, and an encouraging community.",
+    image: "/manus-storage/mydojo-carousel-kickboxing-v2_e147d18b.png",
+    href: "/programs#kickboxing",
+    cta: "Explore Kickboxing",
+  },
+];
 const TRAINING_FLOOR = `${CDN}/tomball-training-floor_9a2c684b.jpg`;
 
 const PROGRAMS = [
@@ -78,38 +120,83 @@ const FAQS = [
 ];
 
 function Hero({ onBook }: { onBook: () => void }) {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const slide = HERO_SLIDES[activeSlide];
+
+  useEffect(() => {
+    if (isPaused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const interval = window.setInterval(() => {
+      setActiveSlide((current) => (current + 1) % HERO_SLIDES.length);
+    }, CAROUSEL_INTERVAL);
+
+    return () => window.clearInterval(interval);
+  }, [isPaused]);
+
   return (
-    <section className="relative min-h-[max(44rem,calc(100svh-4rem))] overflow-hidden bg-black md:min-h-[calc(100svh-4.75rem)]">
-      <img
-        src={HERO_IMAGE}
-        alt="MyDojo students practicing martial arts"
-        className="absolute inset-0 h-full w-full object-cover object-[62%_center]"
-      />
+    <section
+      className="relative min-h-[max(44rem,calc(100svh-4rem))] overflow-hidden bg-black md:min-h-[calc(100svh-4.75rem)]"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      {HERO_SLIDES.map((heroSlide, index) => (
+        <img
+          key={heroSlide.program}
+          src={heroSlide.image}
+          alt={`${heroSlide.program} students practicing at MyDojo`}
+          className={`absolute inset-0 h-full w-full object-cover object-[62%_center] transition-opacity duration-700 motion-reduce:transition-none ${
+            index === activeSlide ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      ))}
       <div className="absolute inset-0 bg-black/45" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/42 to-black/10" />
 
       <div className="container relative z-10 flex min-h-[max(44rem,calc(100svh-4rem))] items-center py-28 md:min-h-[calc(100svh-4.75rem)] md:py-32 lg:py-36">
         <div className="max-w-2xl text-white">
-          <p className="mb-7 text-[0.7rem] font-extrabold uppercase tracking-[0.24em] text-white/75">
-            MyDojo Martial Arts & Fitness · Tomball, Texas
+          <p className="mb-5 text-[0.7rem] font-extrabold uppercase tracking-[0.24em] text-white/75">
+            {slide.eyebrow}
           </p>
-          <h1 className="max-w-3xl font-heading text-[clamp(4rem,10vw,9.5rem)] font-bold uppercase leading-[0.82] tracking-[-0.045em]">
-            Train With
-            <span className="block text-[#e63946]">Purpose.</span>
+          <div className="mb-5 flex items-center gap-3 text-[0.68rem] font-extrabold uppercase tracking-[0.18em] text-white/85">
+            <span className="h-px w-8 bg-[#e63946]" />
+            {slide.program} <span className="text-white/50">·</span> {slide.ages}
+          </div>
+          <h1 className="max-w-3xl font-heading text-[clamp(3.7rem,9vw,8.8rem)] font-bold uppercase leading-[0.82] tracking-[-0.045em]">
+            {slide.title.split("\n")[0]}
+            <span className="block text-[#e63946]">{slide.title.split("\n")[1]}</span>
           </h1>
           <p className="mt-9 max-w-lg text-base leading-7 text-white/85 md:text-lg md:leading-8">
-            Purposeful martial arts and kickboxing instruction for children, teens, and adults—built around confidence, discipline, and progress that carries beyond the mat.
+            {slide.copy}
           </p>
           <div className="mt-11 flex flex-col gap-3 sm:flex-row sm:items-center">
             <button onClick={onBook} className="public-button w-full sm:w-auto">
               Book a free class <ArrowRight className="h-4 w-4" />
             </button>
-            <Link href="/locations/tomball">
+            <Link href={slide.href}>
               <span className="inline-flex min-h-[3.125rem] w-full cursor-pointer items-center justify-center gap-2 border border-white/70 px-5 text-xs font-extrabold uppercase tracking-[0.12em] text-white transition-colors hover:bg-white hover:text-black sm:w-auto">
-                View Tomball HQ <MapPin className="h-4 w-4" />
+                {slide.cta} <ChevronRight className="h-4 w-4" />
               </span>
             </Link>
           </div>
+        </div>
+
+        <div className="absolute bottom-8 right-4 flex items-center gap-2 md:right-7 lg:right-10">
+          {HERO_SLIDES.map((heroSlide, index) => (
+            <button
+              key={heroSlide.program}
+              type="button"
+              aria-label={`Show ${heroSlide.program} banner`}
+              aria-current={index === activeSlide ? "true" : undefined}
+              onClick={() => {
+                setActiveSlide(index);
+                setIsPaused(true);
+              }}
+              className={`h-2.5 rounded-full transition-[width,background-color] duration-300 motion-reduce:transition-none ${
+                index === activeSlide ? "w-10 bg-[#e63946]" : "w-2.5 bg-white/60 hover:bg-white"
+              }`}
+            />
+          ))}
         </div>
       </div>
     </section>

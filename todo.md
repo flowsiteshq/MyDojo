@@ -2,6 +2,12 @@
 
 ## IN PROGRESS
 
+- [x] Build a 5.5-second rotating homepage banner for MyDojo programs
+  - [x] Define slides for Little Ninjas, Kids Martial Arts, Teens & Adults, and Kickboxing
+  - [x] Generate disciplined, happy student scenes with MyDojo-attire references
+  - [x] Implement automatic rotation, manual indicators, and readable program calls to action
+  - [x] Verify responsive carousel behavior and motion-reduction support
+
 - [ ] Remove the visible gap between the public menu bar and homepage hero
   - [x] Identify the header and page offset responsible for the gap
   - [x] Make the hero start flush beneath the header

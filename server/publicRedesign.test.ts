@@ -69,10 +69,14 @@ describe("public-site redesign", () => {
     expect(layout).not.toContain('md:top-[calc(32px+var(--cookie-banner-height,0px))]');
   });
 
-  it("uses a static MyDojo training image rather than video playback in the homepage hero", () => {
+  it("uses a static MyDojo program carousel rather than video playback in the homepage hero", () => {
     const home = readPage("Home.tsx");
 
-    expect(home).toContain("mydojo-hero-real-logo_55937fd6.png");
+    expect(home).toContain("const CAROUSEL_INTERVAL = 5500");
+    expect(home).toContain("mydojo-carousel-little-ninjas");
+    expect(home).toContain("mydojo-carousel-kids-martial-arts");
+    expect(home).toContain("mydojo-carousel-teens-adults");
+    expect(home).toContain("mydojo-carousel-kickboxing");
     expect(home).not.toContain("hero_montage_v5_d1227c92.mp4");
     expect(home).not.toContain("<video");
   });
