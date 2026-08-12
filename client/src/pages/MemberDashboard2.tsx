@@ -1784,31 +1784,36 @@ export default function MemberDashboard2() {
               </div>
 
               {/* Reward Tiers */}
-              <div className="mt-4 space-y-3">
+              <div className="mt-4 space-y-4">
                 {[
-                  { referrals: 1, reward: "Free MyDojo T-Shirt", icon: "👕", desc: "Refer 1 friend who enrolls" },
-                  { referrals: 3, reward: "Free Karate Uniform (Gi)", icon: "🥋", desc: "Refer 3 friends who enroll" },
-                  { referrals: 6, reward: "Free Sparring Gear Set", icon: "🛡️", desc: "Refer 6 friends who enroll" },
-                  { referrals: 8, reward: "One Month Free Tuition", icon: "🎓", desc: "Refer 8 friends who enroll" },
-                  { referrals: 10, reward: "$500 Cash Reward", icon: "💰", desc: "Refer 10 friends who enroll" },
+                  { referrals: 1, reward: "Free MyDojo T-Shirt", img: "/manus-storage/reward-tshirt_5911ff60.jpg", desc: "Refer 1 friend who enrolls and receive a premium MyDojo training t-shirt." },
+                  { referrals: 3, reward: "Free Karate Uniform (Gi)", img: "/manus-storage/reward-uniform_9d478357.jpg", desc: "Refer 3 friends who enroll and receive a brand new Kihon Gi karate uniform." },
+                  { referrals: 6, reward: "Free Sparring Gear Set", img: "/manus-storage/reward-sparring_10b760f1.jpg", desc: "Refer 6 friends who enroll and receive a complete sparring gear set." },
+                  { referrals: 8, reward: "One Month Free Tuition", img: "/manus-storage/reward-tuition_d47d2400.jpg", desc: "Refer 8 friends who enroll and your next month of tuition is on us." },
+                  { referrals: 10, reward: "$500 Cash Reward", img: "/manus-storage/reward-cash_02508018.jpg", desc: "Refer 10 friends who enroll and receive $500 cash. No strings attached." },
                 ].map((tier, i) => (
                   <div
                     key={i}
-                    className={`flex items-center gap-4 p-4 rounded-xl border ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}
+                    className={`rounded-2xl border overflow-hidden ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 ${
-                      isDark ? "bg-white/5" : "bg-gray-50"
-                    }`}>
-                      {tier.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-bold text-sm ${t.textPrimary}`}>{tier.reward}</p>
-                      <p className={`text-xs ${t.textMuted} mt-0.5`}>{tier.desc}</p>
-                    </div>
-                    <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-black text-sm ${
-                      isDark ? "bg-white/5 text-white/60" : "bg-gray-100 text-gray-600"
-                    }`}>
-                      {tier.referrals}
+                    <div className="flex items-stretch">
+                      <div className="w-24 h-24 shrink-0 overflow-hidden">
+                        <img
+                          src={tier.img}
+                          alt={tier.reward}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div className="flex-1 p-4 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className={`font-bold text-sm ${t.textPrimary}`}>{tier.reward}</p>
+                          <p className={`text-xs ${t.textMuted} mt-1 leading-relaxed`}>{tier.desc}</p>
+                        </div>
+                        <div className="shrink-0 w-10 h-10 rounded-full bg-[#E11D2A] flex items-center justify-center">
+                          <span className="text-white font-black text-sm">{tier.referrals}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
