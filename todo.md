@@ -2,6 +2,11 @@
 
 ## IN PROGRESS
 
+- [ ] Unify the public header into one cohesive navigation treatment
+  - [x] Audit the stacked utility and main-navigation separation
+  - [x] Consolidate header spacing, borders, and brand treatment
+  - [x] Verify desktop and mobile header behavior
+
 - [x] Make the public contact form submit leads and send the established SMS confirmations
   - [x] Add client-side form state, validation, and a real submission mutation
   - [x] Reuse the tracked lead and SMS confirmation workflow without duplicate sends

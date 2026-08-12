@@ -129,8 +129,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col font-sans relative">
-      {/* Compact utility strip */}
-      <div className="relative z-50 hidden bg-black px-4 py-2 text-xs text-white md:block">
+      {/* Utility links are retained in the mobile menu and footer so the primary header stays cohesive. */}
+      <div className="hidden">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-6">
             <PhoneChooser className="flex items-center gap-2 hover:text-primary transition-colors">
@@ -172,7 +172,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Navigation */}
-      <header className="fixed top-[var(--cookie-banner-height,0px)] z-50 w-full border-b border-black/10 bg-white/95 py-3 text-black shadow-sm backdrop-blur-md md:top-[calc(32px+var(--cookie-banner-height,0px))]">
+      <header className="fixed top-[var(--cookie-banner-height,0px)] z-50 w-full border-b border-black/10 bg-white/95 py-3 text-black shadow-sm backdrop-blur-md">
         <div className="container mx-auto flex justify-between items-center px-4">
           <Link href="/">
             <div className="flex items-center gap-2 cursor-pointer group">

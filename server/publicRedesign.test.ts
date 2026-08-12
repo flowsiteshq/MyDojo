@@ -61,4 +61,11 @@ describe("public-site redesign", () => {
     expect(dashboard).toContain('href: "/locations"');
     expect(dashboard).toContain('href: "/shop"');
   });
+
+  it("keeps the public header as a single cohesive navigation layer", () => {
+    const layout = readFileSync(new URL("../client/src/components/Layout.tsx", import.meta.url), "utf8");
+
+    expect(layout).toContain('Utility links are retained in the mobile menu and footer');
+    expect(layout).not.toContain('md:top-[calc(32px+var(--cookie-banner-height,0px))]');
+  });
 });
