@@ -41,6 +41,10 @@ import {
   ChevronUp,
   Package,
   MapPin,
+  Search,
+  Home as HomeIcon,
+  ShoppingBag,
+  User as UserIcon,
 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { CurriculumViewer } from "@/components/CurriculumViewer";
@@ -720,7 +724,7 @@ function PaymentHistorySection({ isDark }: { isDark: boolean }) {
 
 export default function MemberDashboard2() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<"dashboard" | "curriculum" | "progress" | "messages" | "children" | "meal_plan" | "billing" | "bucks">("dashboard");
+  const [activeTab, setActiveTab] = useState<"home" | "benefits" | "locate" | "shop" | "account" | "search">("home");
   const [profileOpen, setProfileOpen] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showFreezeDialog, setShowFreezeDialog] = useState(false);
@@ -969,7 +973,7 @@ export default function MemberDashboard2() {
       return;
     }
     // New unread messages arrived AND student is not on the messages tab
-    if (unreadCount > prevUnreadRef.current && activeTab !== "messages") {
+    if (unreadCount > prevUnreadRef.current && activeTab !== "home") {
       const latestConv = convData?.[0];
       const lastMsg = latestConv?.lastMessage;
       const senderName = lastMsg?.senderName ?? "Instructor";
@@ -1122,7 +1126,7 @@ export default function MemberDashboard2() {
             {/* Actions */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
-                onClick={() => { setActiveTab("messages"); dismissBanner(); }}
+                onClick={() => { setActiveTab("home"); dismissBanner(); }}
                 className="text-xs font-bold text-[#E11D2A] hover:text-red-400 transition-colors whitespace-nowrap"
               >
                 View
@@ -1151,22 +1155,6 @@ export default function MemberDashboard2() {
               />
               <span className={`text-xl font-black tracking-widest ${t.textPrimary}`}>MYDOJO</span>
             </div>
-            <nav className="hidden md:flex items-center gap-1">
-              {navItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id as any)}
-                  className={`relative px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                    activeTab === item.id ? t.navActive : t.navInactive
-                  }`}
-                >
-                  {item.label}
-                  {activeTab === item.id && (
-                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-[#E11D2A] rounded-full" />
-                  )}
-                </button>
-              ))}
-            </nav>
           </div>
 
           <div className="flex items-center gap-1">
@@ -1187,7 +1175,7 @@ export default function MemberDashboard2() {
             {/* Messages */}
             <button
               className={`relative p-2 rounded-full transition-colors ${t.iconBtn}`}
-              onClick={() => setActiveTab("messages")}
+              onClick={() => setActiveTab("home")}
             >
               <MessageCircle className={`h-5 w-5 ${t.iconColor}`} />
               {unreadCount > 0 && (
@@ -1289,51 +1277,74 @@ export default function MemberDashboard2() {
       </header>
 
       {/* ── Page Body ── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
 
-        {/* ── MEAL PLAN TAB (Kickboxing only) ── */}
-        {activeTab === "meal_plan" && (
-          <div className={`rounded-2xl border ${t.borderSubtle}`}
-            style={isDark ? { background: "rgba(28,18,18,0.85)", backdropFilter: "blur(12px)" } : { background: "#fff", padding: "1.5rem" }}>
-            <MealPlanTab isDark={isDark} />
+        {/* ── BENEFITS TAB ── */}
+        {activeTab === "benefits" && (
+          <div className="space-y-6">
+            <h2 className={`text-xl font-black uppercase tracking-wider ${t.textPrimary}`}>Member Benefits</h2>
+            <ProgressTab isDark={isDark} />
+            <div className={`rounded-2xl border ${t.borderSubtle} ${isDark ? "" : "bg-white"} p-4`}
+              style={isDark ? { background: "rgba(28,18,18,0.85)", backdropFilter: "blur(12px)" } : undefined}>
+              <CurriculumViewer />
+            </div>
           </div>
         )}
 
-        {/* ── CURRICULUM TAB ── */}
-        {activeTab === "curriculum" && (
-          <div className={`rounded-2xl border ${t.borderSubtle} ${isDark ? "" : "bg-white"} p-4`}
-            style={isDark ? { background: "rgba(28,18,18,0.85)", backdropFilter: "blur(12px)" } : undefined}>
-            <CurriculumViewer />
+
+
+
+
+        {/* ── LOCATE TAB ── */}
+        {activeTab === "locate" && (
+          <div className="space-y-6">
+            <h2 className={`text-xl font-black uppercase tracking-wider ${t.textPrimary}`}>Find Us</h2>
+            <div className={`rounded-2xl border ${t.borderSubtle} overflow-hidden`} style={isDark ? { background: "rgba(28,18,18,0.85)" } : { background: "#fff" }}>
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3455.123!2d-95.616!3d30.097!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzDCsDA1JzQ5LjIiTiA5NcKwMzYnNTcuNiJX!5e0!3m2!1sen!2sus!4v1"
+                width="100%"
+                height="350"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="MyDojo Location"
+              />
+              <div className="p-6 space-y-3">
+                <h3 className={`text-lg font-bold ${t.textPrimary}`}>MyDojo Headquarters — Tomball</h3>
+                <p className={`text-sm ${t.textSecondary}`}>9797 Spring Cypress Rd, Tomball, TX 77377</p>
+                <div className="flex gap-3 pt-2">
+                  <a href="https://maps.google.com/?q=9797+Spring+Cypress+Rd+Tomball+TX+77377" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-[#E11D2A] text-white text-sm font-bold rounded-lg">Get Directions</a>
+                  <a href="tel:+18774693656" className={`px-4 py-2 border rounded-lg text-sm font-bold ${isDark ? "border-white/20 text-white" : "border-gray-300 text-gray-700"}`}>Call</a>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* ── PROGRESS TAB ── */}
-        {activeTab === "progress" && <ProgressTab isDark={isDark} />}
-
-        {/* ── MESSAGES TAB ── */}
-        {activeTab === "messages" && (
-          <MessagesTab isDark={isDark} currentUserId={user?.id} />
-        )}
-
-        {/* ── MY CHILDREN TAB ── */}
-        {activeTab === "children" && (
-          <div className={`rounded-2xl border ${t.borderSubtle} p-6`}
-            style={isDark ? { background: "rgba(28,18,18,0.85)", backdropFilter: "blur(12px)" } : { background: "#fff" }}>
-            <MyChildren isDark={isDark} />
-          </div>
-        )}
-
-        {/* ── BILLING TAB ── */}
-        {activeTab === "billing" && (
-          <div className="space-y-4">
-            <h2 className={`text-xl font-black uppercase tracking-wider ${t.textPrimary}`}>Payment History</h2>
+        {/* ── ACCOUNT TAB ── */}
+        {activeTab === "account" && (
+          <div className="space-y-6">
+            <h2 className={`text-xl font-black uppercase tracking-wider ${t.textPrimary}`}>My Account</h2>
             <PaymentHistorySection isDark={isDark} />
           </div>
         )}
 
-        {/* ── MYDOJO BUCKS TAB ── */}
-        {activeTab === "bucks" && (
-          <MyDojoBucksPage />
+        {/* ── SHOP TAB ── */}
+        {activeTab === "shop" && (
+          <div className="space-y-4">
+            <h2 className={`text-xl font-black uppercase tracking-wider ${t.textPrimary}`}>Pro Shop</h2>
+            <p className={`text-sm ${t.textSecondary}`}>Browse uniforms, sparring gear, weapons, and accessories.</p>
+            <a href="/shop" className="inline-block px-6 py-3 bg-[#E11D2A] text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors">Visit Pro Shop</a>
+          </div>
+        )}
+
+        {/* ── SEARCH TAB ── */}
+        {activeTab === "search" && (
+          <div className="space-y-4">
+            <h2 className={`text-xl font-black uppercase tracking-wider ${t.textPrimary}`}>Search</h2>
+            <input type="text" placeholder="Search classes, programs, events..." className={`w-full px-4 py-3 rounded-xl border text-sm ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/40" : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"}`} />
+          </div>
         )}
 
         {/* ── CLASS DETAIL MODAL ── */}
@@ -1488,7 +1499,7 @@ export default function MemberDashboard2() {
         })()}
 
         {/* ── DASHBOARD TAB ── */}
-        {activeTab === "dashboard" && (
+        {activeTab === "home" && (
           <div className="space-y-6">
 
             {/* Today's Date Header */}
@@ -1637,7 +1648,7 @@ export default function MemberDashboard2() {
                   </button>
                   <button
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm border transition-all ${isDark ? "text-white/80 border-white/15 bg-white/5 hover:bg-white/10" : "text-gray-700 border-gray-200 bg-white hover:bg-gray-50"}`}
-                    onClick={() => setActiveTab("curriculum")}
+                    onClick={() => setActiveTab("benefits")}
                   >
                     View Schedule <ChevronRight className="h-4 w-4" />
                   </button>
@@ -1719,7 +1730,7 @@ export default function MemberDashboard2() {
                       ) : (
                         <button
                           className="text-xs text-[#E11D2A] hover:underline flex items-center gap-1 font-semibold"
-                          onClick={() => setActiveTab('progress')}
+                          onClick={() => setActiveTab('benefits')}
                         >
                           {required - attended} more class{required - attended !== 1 ? 'es' : ''} to qualify <ChevronRight className="h-3 w-3" />
                         </button>
@@ -1748,7 +1759,7 @@ export default function MemberDashboard2() {
                 </div>
                 <button
                   className={`mt-4 w-full text-xs font-semibold border rounded-lg py-2 transition-colors flex items-center justify-center gap-1 ${isDark ? "text-white/50 border-white/10 hover:bg-white/5" : "text-gray-500 border-gray-200 hover:bg-gray-50"}`}
-                  onClick={() => setActiveTab("curriculum")}
+                  onClick={() => setActiveTab("benefits")}
                 >
                   View Curriculum <ChevronRight className="h-3 w-3" />
                 </button>
@@ -1852,7 +1863,7 @@ export default function MemberDashboard2() {
                 <button
                   className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
                   style={{ background: "linear-gradient(135deg, #E11D2A, #b01520)" }}
-                  onClick={() => setActiveTab("messages")}
+                  onClick={() => setActiveTab("home")}
                 >
                   Go to Inbox <ChevronRight className="h-4 w-4" />
                 </button>
@@ -2272,9 +2283,9 @@ export default function MemberDashboard2() {
         )}
       </main>
 
-      {/* ── Mobile Bottom Tab Bar (md and below) ── */}
+      {/* ── Bottom Tab Bar (always visible — T-Life style) ── */}
       <nav
-        className={`fixed bottom-0 left-0 right-0 z-50 md:hidden border-t flex items-stretch ${
+        className={`fixed bottom-0 left-0 right-0 z-50 border-t flex items-stretch ${
           isDark
             ? "border-white/10 bg-black/90 backdrop-blur-xl"
             : "border-gray-200 bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.08)]"
@@ -2282,23 +2293,18 @@ export default function MemberDashboard2() {
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         {([
-          { id: "dashboard", label: "Home", Icon: LayoutDashboard },
-          { id: "progress", label: "Benefits", Icon: Award },
-          { id: "locate", label: "Locate", Icon: MapPin, href: "/locations" },
-          { id: "shop", label: "Shop", Icon: Package, href: "/shop" },
-          { id: "billing", label: "Account", Icon: CreditCard },
-        ] as const).map(({ id, label, Icon, ...item }) => {
-          const isActive = id === "locate" || id === "shop" ? false : activeTab === id;
+          { id: "home", label: "Home", Icon: HomeIcon },
+          { id: "benefits", label: "Benefits", Icon: Star },
+          { id: "locate", label: "Locate", Icon: MapPin },
+          { id: "shop", label: "Shop", Icon: ShoppingBag },
+          { id: "account", label: "Account", Icon: UserIcon },
+          { id: "search", label: "Search", Icon: Search },
+        ] as const).map(({ id, label, Icon }) => {
+          const isActive = activeTab === id;
           return (
             <button
               key={id}
-              onClick={() => {
-                if ("href" in item && item.href) {
-                  window.location.href = item.href;
-                  return;
-                }
-                setActiveTab(id as "dashboard" | "progress" | "billing");
-              }}
+              onClick={() => setActiveTab(id as any)}
               className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-colors relative ${
                 isActive
                   ? "text-[#E11D2A]"
