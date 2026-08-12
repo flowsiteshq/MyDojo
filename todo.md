@@ -141,6 +141,15 @@
 
 - [x] Build /admin/classes page with full CRUD (create, edit, delete, toggle active) for class schedule management
 
+- [x] Rebuild Account tab as premium member dashboard (hero card, billing, upcoming payment, payment search, family, training, schedule, docs, notifications, settings)
+  - [x] Remove Search tab — keep exactly 5 tabs (Home, Benefits, Locate, Shop, Account)
+  - [x] Member Hero Card with profile, rank, stats, QR code, VIEW MY PROGRESS button
+  - [x] Membership & Billing section with plan summary, next payment, payment method, payment history with search
+  - [x] My Training section with belt progression, attendance, streak, achievements
+  - [x] My Schedule section with upcoming classes and events
+  - [x] Family Management section to switch between children
+  - [x] Documents, Notifications, and Settings sections
+
 - [ ] Redesign student dashboard to match a modern member experience
   - [x] Audit the active MemberDashboard2 data hooks and feature sections
   - [x] Define and implement the simplified five-item mobile member navigation

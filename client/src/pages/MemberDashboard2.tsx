@@ -615,16 +615,448 @@ function ProgressTab({ isDark }: { isDark: boolean }) {
   );
 }
 
+// ─── Account Tab (Premium Member Dashboard) ──────────────────────────────────
+function AccountTab({
+  isDark,
+  user,
+  selfPhotoUrl,
+  initials,
+  enrollment,
+  myEnrollment,
+  progressStats,
+  schedules,
+  setShowFreezeDialog,
+  setShowCancelDialog,
+  unfreezeMutation,
+  setActiveTab,
+}: {
+  isDark: boolean;
+  user: any;
+  selfPhotoUrl: string | null;
+  initials: string;
+  enrollment: any;
+  myEnrollment: any;
+  progressStats: any;
+  schedules: any;
+  setShowFreezeDialog: (v: boolean) => void;
+  setShowCancelDialog: (v: boolean) => void;
+  unfreezeMutation: any;
+  setActiveTab: (tab: any) => void;
+}) {
+  const t = useTokens(isDark);
+  const { isAuthenticated, logout } = useAuth();
+  const [accountSection, setAccountSection] = useState<string | null>(null);
+  const [paymentSearch, setPaymentSearch] = useState("");
+
+  const { data: payments, isLoading: paymentsLoading } = trpc.member.getPaymentHistory.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+
+  const formatAmount = (amount: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+  const formatDate = (date: Date | string) =>
+    new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+
+  // Derived data
+  const memberName = user?.name || "Member";
+  const memberEmail = user?.email || "";
+  const beltRank = progressStats?.beltRank ?? enrollment?.enrollment?.beltRank ?? "No Belt";
+  const beltColor = BELT_COLORS[beltRank] ?? "#9ca3af";
+  const totalClasses = progressStats?.totalClasses ?? 0;
+  const currentStreak = progressStats?.currentStreak ?? 0;
+  const nextBelt = progressStats?.nextBelt ?? null;
+  const packageName = myEnrollment?.packageName ?? enrollment?.package?.name ?? "—";
+  const monthlyPrice = myEnrollment?.packageMonthlyPrice ?? enrollment?.package?.monthlyPrice ?? null;
+  const memberSince = myEnrollment?.createdAt ?? enrollment?.enrollment?.createdAt;
+  const memberStatus = myEnrollment?.isFrozen ? "Frozen" : myEnrollment?.cancellationRequestedAt ? "Cancelling" : myEnrollment?.status ?? "Active";
+
+  // Upcoming payment (first item with status "upcoming")
+  const upcomingPayment = payments?.find((p: any) => p.status === "upcoming");
+
+  // Filtered payments for search
+  const filteredPayments = (payments ?? []).filter((p: any) => {
+    if (!paymentSearch.trim()) return true;
+    const q = paymentSearch.toLowerCase();
+    return (
+      p.description?.toLowerCase().includes(q) ||
+      formatDate(p.created).toLowerCase().includes(q) ||
+      formatAmount(p.amount).includes(q)
+    );
+  });
+
+  // If a sub-section is open, render that
+  if (accountSection === "billing") {
+    return (
+      <div className="space-y-5">
+        <button onClick={() => setAccountSection(null)} className={`flex items-center gap-2 text-sm font-semibold ${t.textSecondary} hover:text-[#E11D2A] transition-colors`}>
+          <ChevronRight className="h-4 w-4 rotate-180" /> Back
+        </button>
+        <h2 className={`text-2xl font-black ${t.textPrimary}`}>Membership & Billing</h2>
+
+        {/* Plan Summary Card */}
+        <Card isDark={isDark} className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className={`text-xs font-bold uppercase tracking-widest ${t.textMuted}`}>Current Plan</p>
+              <p className={`text-xl font-black mt-1 ${t.textPrimary}`}>{packageName}</p>
+            </div>
+            <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+              memberStatus === "Active" ? "bg-green-100 text-green-700 border border-green-200" :
+              memberStatus === "Frozen" ? "bg-blue-100 text-blue-700 border border-blue-200" :
+              "bg-amber-100 text-amber-700 border border-amber-200"
+            }`}>
+              {memberStatus}
+            </div>
+          </div>
+          {monthlyPrice && (
+            <div className={`flex items-baseline gap-1 mb-4`}>
+              <span className={`text-3xl font-black ${t.textPrimary}`}>{formatAmount(Number(monthlyPrice))}</span>
+              <span className={`text-sm ${t.textMuted}`}>/month</span>
+            </div>
+          )}
+          {upcomingPayment && (
+            <div className={`rounded-xl p-4 border ${isDark ? "border-blue-500/20 bg-blue-500/5" : "border-blue-100 bg-blue-50"}`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-blue-400" : "text-blue-600"}`}>Next Payment</p>
+                  <p className={`text-lg font-bold mt-0.5 ${t.textPrimary}`}>{formatAmount(upcomingPayment.amount)}</p>
+                </div>
+                <div className="text-right">
+                  <p className={`text-xs ${t.textMuted}`}>Due</p>
+                  <p className={`text-sm font-semibold ${t.textPrimary}`}>{formatDate(upcomingPayment.created)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {/* Payment History with Search */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className={`font-bold text-sm uppercase tracking-wider ${t.textMuted}`}>Payment History</h3>
+            <span className={`text-xs ${t.textMuted}`}>{filteredPayments.length} transaction{filteredPayments.length !== 1 ? "s" : ""}</span>
+          </div>
+          {/* Search bar */}
+          <div className="relative mb-4">
+            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${t.textMuted}`} />
+            <input
+              type="text"
+              value={paymentSearch}
+              onChange={(e) => setPaymentSearch(e.target.value)}
+              placeholder="Search payments..."
+              className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm ${
+                isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/40" : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
+              }`}
+            />
+          </div>
+          <PaymentHistorySection isDark={isDark} payments={filteredPayments} isLoading={paymentsLoading} />
+        </div>
+
+        {/* Membership Actions */}
+        {myEnrollment && (
+          <div className="space-y-3">
+            <h3 className={`font-bold text-sm uppercase tracking-wider ${t.textMuted}`}>Manage Membership</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {!myEnrollment.cancellationRequestedAt && !myEnrollment.isFrozen && (
+                <button
+                  onClick={() => setShowFreezeDialog(true)}
+                  className={`flex items-center gap-3 p-4 rounded-xl border transition-colors text-left ${
+                    isDark ? "border-white/10 hover:bg-white/5" : "border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <PauseCircle className="h-5 w-5 text-blue-500 shrink-0" />
+                  <div>
+                    <p className={`font-semibold text-sm ${t.textPrimary}`}>Pause Membership</p>
+                    <p className={`text-xs ${t.textMuted}`}>Freeze billing temporarily</p>
+                  </div>
+                </button>
+              )}
+              {myEnrollment.isFrozen && (
+                <button
+                  onClick={() => myEnrollment.id && unfreezeMutation.mutate({ enrollmentId: myEnrollment.id })}
+                  className="flex items-center gap-3 p-4 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-colors text-left"
+                >
+                  <Snowflake className="h-5 w-5 text-blue-500 shrink-0" />
+                  <div>
+                    <p className="font-semibold text-sm text-blue-800">Unfreeze Membership</p>
+                    <p className="text-xs text-blue-600">Resume your membership now</p>
+                  </div>
+                </button>
+              )}
+              {!myEnrollment.cancellationRequestedAt && (
+                <button
+                  onClick={() => setShowCancelDialog(true)}
+                  className={`flex items-center gap-3 p-4 rounded-xl border transition-colors text-left ${
+                    isDark ? "border-red-900/40 hover:bg-red-950/30" : "border-red-100 hover:bg-red-50"
+                  }`}
+                >
+                  <XCircle className="h-5 w-5 text-red-500 shrink-0" />
+                  <div>
+                    <p className={`font-semibold text-sm ${isDark ? "text-red-400" : "text-red-700"}`}>Request Cancellation</p>
+                    <p className={`text-xs ${isDark ? "text-red-400/60" : "text-red-500"}`}>30-day notice required</p>
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (accountSection === "training") {
+    return (
+      <div className="space-y-5">
+        <button onClick={() => setAccountSection(null)} className={`flex items-center gap-2 text-sm font-semibold ${t.textSecondary} hover:text-[#E11D2A] transition-colors`}>
+          <ChevronRight className="h-4 w-4 rotate-180" /> Back
+        </button>
+        <ProgressTab isDark={isDark} />
+      </div>
+    );
+  }
+
+  if (accountSection === "schedule") {
+    return (
+      <div className="space-y-5">
+        <button onClick={() => setAccountSection(null)} className={`flex items-center gap-2 text-sm font-semibold ${t.textSecondary} hover:text-[#E11D2A] transition-colors`}>
+          <ChevronRight className="h-4 w-4 rotate-180" /> Back
+        </button>
+        <h2 className={`text-2xl font-black ${t.textPrimary}`}>My Schedule</h2>
+        {!schedules || schedules.length === 0 ? (
+          <Card isDark={isDark} className="p-8 text-center">
+            <Calendar className={`h-12 w-12 mx-auto mb-3 ${t.textMuted}`} />
+            <p className={`font-bold ${t.textPrimary}`}>No Classes Scheduled</p>
+            <p className={`text-sm ${t.textMuted} mt-1`}>Your class schedule will appear here once you're enrolled in a program.</p>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {schedules.map((cls: any) => (
+              <Card key={cls.id} isDark={isDark} className="p-4 flex items-center gap-4">
+                <div className="shrink-0 text-center min-w-[56px]">
+                  <p className="text-sm font-black text-[#E11D2A]">{cls.startTime}</p>
+                  <p className={`text-xs ${t.textMuted}`}>{cls.endTime}</p>
+                </div>
+                <div className={`w-px h-10 ${isDark ? "bg-white/10" : "bg-gray-200"}`} />
+                <div className="flex-1 min-w-0">
+                  <p className={`font-bold text-sm ${t.textPrimary}`}>{cls.program}</p>
+                  <p className={`text-xs ${t.textMuted}`}>{cls.dayOfWeek} · {cls.location}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Upcoming Events */}
+        <h3 className={`font-bold text-sm uppercase tracking-wider ${t.textMuted} mt-6`}>Upcoming Events</h3>
+        <div className="space-y-3">
+          {[
+            { title: "Belt Test", date: "Saturday, August 15", time: "10:00 AM", fee: "$49" },
+            { title: "Parents Night Out", date: "Friday, August 21", time: "6:00 – 9:30 PM", fee: "Free" },
+            { title: "Master Yaeger Seminar", date: "Saturday, August 22", time: "11:00 AM – 2:00 PM", fee: "$29" },
+          ].map((evt) => (
+            <Card key={evt.title} isDark={isDark} className="p-4 flex items-center gap-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isDark ? "bg-red-500/15" : "bg-red-50"}`}>
+                <Calendar className="h-5 w-5 text-[#E11D2A]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`font-bold text-sm ${t.textPrimary}`}>{evt.title}</p>
+                <p className={`text-xs ${t.textMuted}`}>{evt.date} · {evt.time}</p>
+              </div>
+              <span className={`text-xs font-bold px-2 py-1 rounded-full ${isDark ? "bg-white/5 text-white/60" : "bg-gray-100 text-gray-600"}`}>{evt.fee}</span>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (accountSection === "family") {
+    return (
+      <div className="space-y-5">
+        <button onClick={() => setAccountSection(null)} className={`flex items-center gap-2 text-sm font-semibold ${t.textSecondary} hover:text-[#E11D2A] transition-colors`}>
+          <ChevronRight className="h-4 w-4 rotate-180" /> Back
+        </button>
+        <h2 className={`text-2xl font-black ${t.textPrimary}`}>My Family</h2>
+        <MyChildren isDark={isDark} />
+      </div>
+    );
+  }
+
+  if (accountSection === "settings") {
+    return (
+      <div className="space-y-5">
+        <button onClick={() => setAccountSection(null)} className={`flex items-center gap-2 text-sm font-semibold ${t.textSecondary} hover:text-[#E11D2A] transition-colors`}>
+          <ChevronRight className="h-4 w-4 rotate-180" /> Back
+        </button>
+        <h2 className={`text-2xl font-black ${t.textPrimary}`}>Settings</h2>
+        <div className="space-y-2">
+          {[
+            { label: "Edit Profile", icon: <UserIcon className="h-5 w-5" />, onClick: () => {} },
+            { label: "Change Password", icon: <Lock className="h-5 w-5" />, onClick: () => window.location.href = "/forgot-password" },
+            { label: "Notification Preferences", icon: <Bell className="h-5 w-5" />, onClick: () => {} },
+            { label: "Emergency Contact", icon: <Users className="h-5 w-5" />, onClick: () => {} },
+            { label: "Privacy & Terms", icon: <BookOpen className="h-5 w-5" />, onClick: () => {} },
+            { label: "Help / FAQ", icon: <MessageCircle className="h-5 w-5" />, onClick: () => {} },
+          ].map((item) => (
+            <button
+              key={item.label}
+              onClick={item.onClick}
+              className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-colors text-left ${
+                isDark ? "border-white/8 hover:bg-white/5" : "border-gray-100 hover:bg-gray-50"
+              }`}
+            >
+              <div className={`${t.textMuted}`}>{item.icon}</div>
+              <span className={`font-medium text-sm ${t.textPrimary}`}>{item.label}</span>
+              <ChevronRight className={`h-4 w-4 ml-auto ${t.textMuted}`} />
+            </button>
+          ))}
+          <button
+            onClick={() => { if (confirm("Are you sure you want to sign out?")) logout(); }}
+            className="w-full flex items-center gap-4 p-4 rounded-xl border border-red-100 hover:bg-red-50 transition-colors text-left mt-4"
+          >
+            <XCircle className="h-5 w-5 text-red-500" />
+            <span className="font-medium text-sm text-red-600">Sign Out</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Main Account Overview ──────────────────────────────────────────────────
+  return (
+    <div className="space-y-6">
+      {/* ── Member Hero Card ── */}
+      <Card isDark={isDark} className="overflow-hidden">
+        <div className="relative p-6 pb-5" style={{ background: isDark ? "linear-gradient(135deg, #1a0505, #2d0808)" : "linear-gradient(135deg, #fef2f2, #fff)" }}>
+          <div className="flex items-start gap-4">
+            {/* Avatar */}
+            <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-[#E11D2A] to-red-700 flex items-center justify-center text-xl font-bold text-white shrink-0 shadow-lg">
+              {selfPhotoUrl ? (
+                <img src={selfPhotoUrl} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                initials
+              )}
+            </div>
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <h2 className={`text-xl font-black leading-tight ${t.textPrimary}`}>{memberName}</h2>
+              <p className={`text-sm ${t.textMuted} mt-0.5`}>{packageName} Program</p>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="w-3.5 h-3.5 rounded-full border-2" style={{ background: beltColor, borderColor: beltColor }} />
+                <span className={`text-sm font-semibold ${t.textPrimary}`}>{beltRank}</span>
+              </div>
+            </div>
+            {/* Status badge */}
+            <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+              memberStatus === "Active" ? "bg-green-100 text-green-700" :
+              memberStatus === "Frozen" ? "bg-blue-100 text-blue-700" :
+              "bg-amber-100 text-amber-700"
+            }`}>
+              {memberStatus}
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className={`grid grid-cols-3 gap-3 mt-5 pt-5 border-t ${isDark ? "border-white/10" : "border-gray-200/60"}`}>
+            <div className="text-center">
+              <p className={`text-2xl font-black ${t.textPrimary}`}>{totalClasses}</p>
+              <p className={`text-[10px] font-semibold uppercase tracking-wider ${t.textMuted}`}>Classes</p>
+            </div>
+            <div className="text-center">
+              <p className={`text-2xl font-black text-orange-500`}>{currentStreak}</p>
+              <p className={`text-[10px] font-semibold uppercase tracking-wider ${t.textMuted}`}>Streak</p>
+            </div>
+            <div className="text-center">
+              <p className={`text-sm font-bold ${t.textPrimary} leading-tight`}>{nextBelt ?? "—"}</p>
+              <p className={`text-[10px] font-semibold uppercase tracking-wider ${t.textMuted}`}>Next Goal</p>
+            </div>
+          </div>
+
+          {/* View My Progress button */}
+          <button
+            onClick={() => setActiveTab("benefits")}
+            className="w-full mt-5 py-3 rounded-xl bg-[#E11D2A] hover:bg-[#c01020] text-white text-sm font-bold uppercase tracking-wider transition-colors"
+          >
+            View My Progress
+          </button>
+
+          {/* Member since */}
+          {memberSince && (
+            <p className={`text-center text-xs ${t.textMuted} mt-3`}>
+              Member since {new Date(memberSince).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+            </p>
+          )}
+        </div>
+      </Card>
+
+      {/* ── Upcoming Payment Card ── */}
+      {upcomingPayment && (
+        <Card isDark={isDark} className="p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-blue-400" : "text-blue-600"}`}>Next Payment</p>
+              <p className={`text-2xl font-black mt-1 ${t.textPrimary}`}>{formatAmount(upcomingPayment.amount)}</p>
+              <p className={`text-xs ${t.textMuted} mt-0.5`}>{upcomingPayment.description}</p>
+            </div>
+            <div className="text-right">
+              <p className={`text-sm font-semibold ${t.textPrimary}`}>{formatDate(upcomingPayment.created)}</p>
+              <p className={`text-xs ${t.textMuted}`}>Due date</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* ── Quick Actions / Section Navigation ── */}
+      <div className="space-y-2">
+        {[
+          { id: "training", label: "My Training", sublabel: `${beltRank} · ${totalClasses} classes`, icon: <Award className="h-5 w-5 text-[#E11D2A]" /> },
+          { id: "schedule", label: "My Schedule", sublabel: `${schedules?.length ?? 0} classes available`, icon: <Calendar className="h-5 w-5 text-blue-500" /> },
+          { id: "billing", label: "Membership & Billing", sublabel: monthlyPrice ? `${formatAmount(Number(monthlyPrice))}/mo · ${packageName}` : packageName, icon: <CreditCard className="h-5 w-5 text-green-500" /> },
+          { id: "family", label: "My Family", sublabel: "Manage family members", icon: <Users className="h-5 w-5 text-purple-500" /> },
+          { id: "documents", label: "Documents", sublabel: "Waivers, certificates, receipts", icon: <BookOpen className="h-5 w-5 text-orange-500" /> },
+          { id: "notifications", label: "Notifications", sublabel: "SMS, email, push preferences", icon: <Bell className="h-5 w-5 text-yellow-500" /> },
+          { id: "settings", label: "Settings", sublabel: "Profile, password, sign out", icon: <LayoutDashboard className="h-5 w-5 text-gray-500" /> },
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => {
+              if (item.id === "documents" || item.id === "notifications") {
+                toast("Coming soon — this feature is being built.");
+              } else {
+                setAccountSection(item.id);
+              }
+            }}
+            className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left group ${
+              isDark ? "border-white/8 hover:bg-white/5 hover:border-white/15" : "border-gray-100 hover:bg-gray-50 hover:border-gray-200"
+            }`}
+          >
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+              {item.icon}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`font-bold text-sm ${t.textPrimary}`}>{item.label}</p>
+              <p className={`text-xs ${t.textMuted} truncate`}>{item.sublabel}</p>
+            </div>
+            <ChevronRight className={`h-4 w-4 ${t.textMuted} group-hover:text-[#E11D2A] transition-colors`} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Payment History Section ─────────────────────────────────────────────────
-function PaymentHistorySection({ isDark }: { isDark: boolean }) {
+function PaymentHistorySection({ isDark, payments: externalPayments, isLoading: externalLoading }: { isDark: boolean; payments?: any[]; isLoading?: boolean }) {
   const t = useTokens(isDark);
   const { isAuthenticated } = useAuth();
   const [expanded, setExpanded] = useState(false);
 
-  const { data: payments, isLoading } = trpc.member.getPaymentHistory.useQuery(undefined, {
+  const { data: fetchedPayments, isLoading: fetchedLoading } = trpc.member.getPaymentHistory.useQuery(undefined, {
     enabled: isAuthenticated,
   });
 
+  const payments = externalPayments ?? fetchedPayments;
+  const isLoading = externalLoading ?? fetchedLoading;
   const displayedPayments = expanded ? (payments ?? []) : (payments ?? []).slice(0, 5);
 
   const formatAmount = (amount: number) =>
@@ -724,7 +1156,7 @@ function PaymentHistorySection({ isDark }: { isDark: boolean }) {
 
 export default function MemberDashboard2() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<"home" | "benefits" | "locate" | "shop" | "account" | "search">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "benefits" | "locate" | "shop" | "account">("home");
   const [profileOpen, setProfileOpen] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showFreezeDialog, setShowFreezeDialog] = useState(false);
@@ -1323,27 +1755,29 @@ export default function MemberDashboard2() {
         )}
 
         {/* ── ACCOUNT TAB ── */}
-        {activeTab === "account" && (
-          <div className="space-y-6">
-            <h2 className={`text-xl font-black uppercase tracking-wider ${t.textPrimary}`}>My Account</h2>
-            <PaymentHistorySection isDark={isDark} />
-          </div>
-        )}
+       {activeTab === "account" && (
+          <AccountTab
+            isDark={isDark}
+            user={user}
+            selfPhotoUrl={selfPhotoUrl}
+            initials={initials}
+            enrollment={enrollment}
+            myEnrollment={myEnrollment}
+            progressStats={progressStats}
+            schedules={schedules}
+            setShowFreezeDialog={setShowFreezeDialog}
+            setShowCancelDialog={setShowCancelDialog}
+            unfreezeMutation={unfreezeMutation}
+            setActiveTab={setActiveTab}
+          />
+       )}
 
-        {/* ── SHOP TAB ── */}
+       {/* ── SHOP TAB ── */}
         {activeTab === "shop" && (
           <div className="space-y-4">
             <h2 className={`text-xl font-black uppercase tracking-wider ${t.textPrimary}`}>Pro Shop</h2>
             <p className={`text-sm ${t.textSecondary}`}>Browse uniforms, sparring gear, weapons, and accessories.</p>
             <a href="/shop" className="inline-block px-6 py-3 bg-[#E11D2A] text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors">Visit Pro Shop</a>
-          </div>
-        )}
-
-        {/* ── SEARCH TAB ── */}
-        {activeTab === "search" && (
-          <div className="space-y-4">
-            <h2 className={`text-xl font-black uppercase tracking-wider ${t.textPrimary}`}>Search</h2>
-            <input type="text" placeholder="Search classes, programs, events..." className={`w-full px-4 py-3 rounded-xl border text-sm ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-white/40" : "bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"}`} />
           </div>
         )}
 
@@ -2298,7 +2732,6 @@ export default function MemberDashboard2() {
           { id: "locate", label: "Locate", Icon: MapPin },
           { id: "shop", label: "Shop", Icon: ShoppingBag },
           { id: "account", label: "Account", Icon: UserIcon },
-          { id: "search", label: "Search", Icon: Search },
         ] as const).map(({ id, label, Icon }) => {
           const isActive = activeTab === id;
           return (
