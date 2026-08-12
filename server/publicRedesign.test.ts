@@ -68,4 +68,12 @@ describe("public-site redesign", () => {
     expect(layout).toContain('Utility links are retained in the mobile menu and footer');
     expect(layout).not.toContain('md:top-[calc(32px+var(--cookie-banner-height,0px))]');
   });
+
+  it("uses a static MyDojo training image rather than video playback in the homepage hero", () => {
+    const home = readPage("Home.tsx");
+
+    expect(home).toContain("mydojo-hero-training-editorial_3c711d6f.jpg");
+    expect(home).not.toContain("hero_montage_v5_d1227c92.mp4");
+    expect(home).not.toContain("<video");
+  });
 });

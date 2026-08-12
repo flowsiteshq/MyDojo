@@ -2,6 +2,11 @@
 
 ## IN PROGRESS
 
+- [ ] Replace the homepage video with a clean TSK-inspired MyDojo training hero image
+  - [x] Generate a text-safe editorial training scene with MyDojo attire
+  - [x] Remove the video dependency and integrate the generated hero asset
+  - [x] Verify the hero source on desktop and mobile breakpoints and add regression coverage
+
 - [ ] Unify the public header into one cohesive navigation treatment
   - [x] Audit the stacked utility and main-navigation separation
   - [x] Consolidate header spacing, borders, and brand treatment

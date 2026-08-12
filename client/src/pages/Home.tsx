@@ -24,7 +24,7 @@ import { openBookFreeClassGate } from "@/lib/chatbot";
 import { useVisitorSms } from "@/hooks/useVisitorSms";
 
 const CDN = "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C";
-const HERO_VIDEO = "/manus-storage/hero_montage_v5_d1227c92.mp4";
+const HERO_IMAGE = "/manus-storage/mydojo-hero-training-editorial_3c711d6f.jpg";
 const TRAINING_FLOOR = `${CDN}/tomball-training-floor_9a2c684b.jpg`;
 
 const PROGRAMS = [
@@ -80,9 +80,13 @@ const FAQS = [
 function Hero({ onBook }: { onBook: () => void }) {
   return (
     <section className="relative min-h-[calc(100svh-4rem)] overflow-hidden bg-black md:min-h-[calc(100svh-6rem)]">
-      <video className="absolute inset-0 h-full w-full object-cover" src={HERO_VIDEO} autoPlay loop muted playsInline />
-      <div className="absolute inset-0 bg-black/55" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/45" />
+      <img
+        src={HERO_IMAGE}
+        alt="MyDojo students practicing martial arts"
+        className="absolute inset-0 h-full w-full object-cover object-center"
+      />
+      <div className="absolute inset-0 bg-black/45" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-black/10" />
 
       <div className="container relative z-10 flex min-h-[calc(100svh-4rem)] items-end py-14 md:min-h-[calc(100svh-6rem)] md:py-20">
         <div className="max-w-3xl text-white">
