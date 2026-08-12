@@ -1934,38 +1934,88 @@ export default function MemberDashboard2() {
 
         {/* ── DASHBOARD TAB ── */}
         {activeTab === "home" && (
-          <div className="space-y-6">
+          <div className="space-y-6 -mx-4 sm:-mx-6">
 
-            {/* ── Latest News & Events ── */}
-            <div>
-              <h2 className={`text-2xl font-black ${t.textPrimary} mb-4`}>What's New</h2>
-              <div className="space-y-3">
-                {[
-                  { title: "Belt Test — Saturday, August 15", desc: "Register your intent to promote. $49 per student.", link: "/belt-test-intent", tag: "EVENT", color: "bg-red-500" },
-                  { title: "Parents Night Out — Friday, August 21", desc: "Drop off your kids for a fun evening 6:00–9:30 PM. Free for members!", link: "/parents-night-out-aug", tag: "EVENT", color: "bg-purple-500" },
-                  { title: "Master Yaeger Seminar — Saturday, August 22", desc: "Special guest seminar 11 AM–2 PM. $29 registration.", link: "/master-yaeger-seminar", tag: "SEMINAR", color: "bg-blue-500" },
-                  { title: "New Summer Schedule Active", desc: "After School and Summer Camp programs are now running daily.", tag: "UPDATE", color: "bg-green-500" },
-                ].map((item, i) => (
-                  <button
-                    key={i}
-                    onClick={() => item.link ? (window.location.href = item.link) : null}
-                    className={`w-full flex items-start gap-4 p-4 rounded-xl border transition-all text-left group ${
-                      isDark ? "border-white/8 hover:bg-white/5" : "border-gray-100 bg-white hover:bg-gray-50"
-                    }`}
-                  >
-                    <div className={`shrink-0 mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-white ${item.color}`}>
-                      {item.tag}
+            {/* ── Welcome Banner (T-Life style) ── */}
+            <div
+              className="px-6 pt-10 pb-8 rounded-b-3xl"
+              style={{ background: "linear-gradient(135deg, #E11D2A 0%, #8b0000 50%, #1a0505 100%)" }}
+            >
+              <p className="text-white/70 text-sm font-medium">Welcome back,</p>
+              <h1 className="text-3xl font-black text-white mt-1">{firstName}</h1>
+              <p className="text-white/50 text-xs mt-2">
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+              </p>
+            </div>
+
+            {/* ── Event Cards (T-Life style large cards) ── */}
+            <div className="px-4 sm:px-6 space-y-5">
+              {[
+                {
+                  title: "Belt Test",
+                  subtitle: "Saturday, August 15 · 10:00 AM",
+                  desc: "Register your intent to promote. Show what you've learned and advance to the next rank.",
+                  price: "$49 per student",
+                  link: "/belt-test-intent",
+                  gradient: "linear-gradient(135deg, #1a0505 0%, #3d0a0a 100%)",
+                  emoji: "🥋",
+                },
+                {
+                  title: "Parents Night Out",
+                  subtitle: "Friday, August 21 · 6:00–9:30 PM",
+                  desc: "Drop off your kids for a fun evening of martial arts games, movies, and pizza while you enjoy a night out!",
+                  price: "Free for members",
+                  link: "/parents-night-out-aug",
+                  gradient: "linear-gradient(135deg, #2d1b69 0%, #4c1d95 100%)",
+                  emoji: "🎉",
+                },
+                {
+                  title: "Master Yaeger Seminar",
+                  subtitle: "Saturday, August 22 · 11 AM–2 PM",
+                  desc: "Special guest instructor seminar. Learn advanced techniques from a world-class martial artist.",
+                  price: "$29 registration",
+                  link: "/master-yaeger-seminar",
+                  gradient: "linear-gradient(135deg, #0c4a6e 0%, #075985 100%)",
+                  emoji: "⭐",
+                },
+              ].map((evt, i) => (
+                <button
+                  key={i}
+                  onClick={() => window.location.href = evt.link}
+                  className="w-full rounded-2xl overflow-hidden text-left shadow-lg hover:shadow-xl transition-shadow"
+                  style={{ background: evt.gradient }}
+                >
+                  <div className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-white/60 text-xs font-semibold uppercase tracking-widest">{evt.subtitle}</p>
+                        <h3 className="text-2xl font-black text-white mt-2">{evt.title}</h3>
+                        <p className="text-white/70 text-sm mt-3 leading-relaxed">{evt.desc}</p>
+                        <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20">
+                          <span className="text-white text-sm font-bold">{evt.price}</span>
+                          <ChevronRight className="h-4 w-4 text-white/60" />
+                        </div>
+                      </div>
+                      <span className="text-4xl ml-4 shrink-0">{evt.emoji}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-bold text-sm ${t.textPrimary} group-hover:text-[#E11D2A] transition-colors`}>{item.title}</p>
-                      <p className={`text-xs ${t.textMuted} mt-0.5`}>{item.desc}</p>
-                    </div>
-                    {item.link && <ChevronRight className={`h-4 w-4 shrink-0 mt-1 ${t.textMuted} group-hover:text-[#E11D2A]`} />}
-                  </button>
-                ))}
+                  </div>
+                </button>
+              ))}
+
+              {/* Summer Schedule Update Card */}
+              <div className={`rounded-2xl p-5 border ${isDark ? "border-white/8 bg-white/3" : "border-gray-100 bg-white"}`}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-lg">☀️</div>
+                  <div className="flex-1">
+                    <p className={`font-bold text-sm ${t.textPrimary}`}>New Summer Schedule Active</p>
+                    <p className={`text-xs ${t.textMuted} mt-0.5`}>After School and Summer Camp programs are now running daily.</p>
+                  </div>
+                </div>
               </div>
             </div>
 
+            {/* ── Today's Classes ── */}
+            <div className="px-4 sm:px-6">
             {/* Today's Date Header */}
             <div className="flex items-center justify-between">
               <div>
@@ -2070,6 +2120,8 @@ export default function MemberDashboard2() {
                 })}
               </div>
             )}
+
+            </div>
 
             {/* Hidden original dashboard rows — kept for reference only */}
             {/* Row 1: Welcome + Hero */}
