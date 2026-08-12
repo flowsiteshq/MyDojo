@@ -64,6 +64,17 @@ const BELT_MILESTONES = [
   { belt: "8th Degree Black Belt", color: "bg-black", year: "Present", note: "Founder of MyDojo — the pinnacle of mastery" },
 ];
 
+const FOUNDER_GALLERY_IMAGES = [
+  "/images/camp-weeks/black-belt.webp",
+  "/images/camp-weeks/leadership.webp",
+  "/images/camp-weeks/karate-kids.webp",
+  "/images/camp-weeks/self-defense.webp",
+  "/images/camp-weeks/board-breaking.webp",
+  "/images/camp-weeks/tournament.webp",
+];
+
+const LOCAL_IMAGE_FALLBACK = "/images/logo-circular.webp";
+
 export default function Founder() {
   return (
     <div className="flex flex-col w-full overflow-x-hidden bg-white">
@@ -73,9 +84,10 @@ export default function Founder() {
         {/* Background image */}
         <div className="absolute inset-0">
           <img
-            src="https://files.manuscdn.com/manus-storage/master-holmes-kick_b53d8ff8.jpeg"
-            alt="Master Vincent Holmes"
+            src="/images/camp-weeks/black-belt.webp"
+            alt="MyDojo martial arts training"
             className="w-full h-full object-cover object-top opacity-50"
+            onError={(event) => { event.currentTarget.src = LOCAL_IMAGE_FALLBACK; }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-transparent" />
@@ -142,9 +154,10 @@ export default function Founder() {
             >
               <div className="relative z-10 rounded-2xl overflow-hidden shadow-2xl aspect-[3/4]">
                 <img
-                  src="https://files.manuscdn.com/manus-storage/master-holmes-seiza_260a2caf.jpg"
-                  alt="Master Vincent Holmes in seiza on the mat"
+                  src="/images/camp-weeks/leadership.webp"
+                  alt="MyDojo leadership training on the mat"
                   className="w-full h-full object-cover"
+                  onError={(event) => { event.currentTarget.src = LOCAL_IMAGE_FALLBACK; }}
                 />
               </div>
               {/* Decorative accent */}
@@ -203,9 +216,10 @@ export default function Founder() {
       <section className="py-24 bg-zinc-950 text-white relative overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/kickboxing-bg_d4fcc4c5.webp"
+            src="/images/camp-weeks/self-defense.webp"
             alt="Dojo background"
             className="w-full h-full object-cover opacity-10"
+            onError={(event) => { event.currentTarget.src = LOCAL_IMAGE_FALLBACK; }}
           />
         </div>
         <div className="container mx-auto px-4 relative z-10">
@@ -271,17 +285,10 @@ export default function Founder() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-primary font-bold tracking-widest uppercase text-sm mb-3">The Dojo</h2>
-            <h3 className="text-4xl font-heading font-black text-black">MASTER HOLMES IN ACTION</h3>
+            <h3 className="text-4xl font-heading font-black text-black">MYDOJO IN ACTION</h3>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {[
-            "https://files.manuscdn.com/manus-storage/master-holmes-kick_b53d8ff8.jpeg",
-            "https://files.manuscdn.com/manus-storage/master-holmes-stance_86d12feb.jpeg",
-            "https://files.manuscdn.com/manus-storage/master-holmes-seiza_260a2caf.jpg",
-            "https://files.manuscdn.com/manus-storage/master-holmes-rashguard_fdaa5c57.jpeg",
-            "https://files.manuscdn.com/manus-storage/master-holmes-headshot_cd686d71.jpg",
-            "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/hero2_cef79f5f.webp",
-            ].map((src, i) => (
+            {FOUNDER_GALLERY_IMAGES.map((src, i) => (
               <motion.div
                 key={src}
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -290,7 +297,12 @@ export default function Founder() {
                 transition={{ delay: i * 0.07 }}
                 className="aspect-square overflow-hidden rounded-xl shadow-md"
               >
-                <img src={src} alt={`MyDojo gallery ${i + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                <img
+                  src={src}
+                  alt={`MyDojo training gallery ${i + 1}`}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  onError={(event) => { event.currentTarget.src = LOCAL_IMAGE_FALLBACK; }}
+                />
               </motion.div>
             ))}
           </div>

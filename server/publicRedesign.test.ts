@@ -100,4 +100,14 @@ describe("public-site redesign", () => {
 
     expect(home).toContain('className="public-page -mt-16 md:-mt-24"');
   });
+
+  it("uses stable local assets and fallbacks on the Founder page", () => {
+    const founder = readPage("Founder.tsx");
+
+    expect(founder).toContain("FOUNDER_GALLERY_IMAGES");
+    expect(founder).toContain("LOCAL_IMAGE_FALLBACK");
+    expect(founder).not.toContain("files.manuscdn.com/manus-storage/master-holmes");
+    expect(founder).toContain("/images/camp-weeks/black-belt.webp");
+    expect(founder).toContain("MYDOJO IN ACTION");
+  });
 });

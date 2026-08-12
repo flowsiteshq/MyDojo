@@ -2,6 +2,11 @@
 
 ## IN PROGRESS
 
+- [x] Repair broken Founder/Master Vincent page image assets
+  - [x] Inventory every intended Founder photo and identify broken URL references
+  - [x] Restore stable local MyDojo imagery where original Master Vincent photos are unavailable
+  - [x] Add image fallbacks and regression coverage to prevent empty placeholders
+
 - [ ] Replace carousel children’s Taekwondo-style uniforms with the actual MyDojo pro shop Karate uniform
   - [x] Inspect the pro shop uniform reference and document Karate-specific features
   - [x] Regenerate Little Ninjas and Kids Martial Arts scenes using matching Karate attire
