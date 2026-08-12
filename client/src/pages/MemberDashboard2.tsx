@@ -1949,68 +1949,91 @@ export default function MemberDashboard2() {
             </div>
 
             {/* ── Event Cards (T-Life style large cards) ── */}
-            <div className="px-4 sm:px-6 space-y-5">
-              {[
-                {
-                  title: "Belt Test",
-                  subtitle: "Saturday, August 15 · 10:00 AM",
-                  desc: "Register your intent to promote. Show what you've learned and advance to the next rank.",
-                  price: "$49 per student",
-                  link: "/belt-test-intent",
-                  gradient: "linear-gradient(135deg, #1a0505 0%, #3d0a0a 100%)",
-                  emoji: "🥋",
-                },
-                {
-                  title: "Parents Night Out",
-                  subtitle: "Friday, August 21 · 6:00–9:30 PM",
-                  desc: "Drop off your kids for a fun evening of martial arts games, movies, and pizza while you enjoy a night out!",
-                  price: "Free for members",
-                  link: "/parents-night-out-aug",
-                  gradient: "linear-gradient(135deg, #2d1b69 0%, #4c1d95 100%)",
-                  emoji: "🎉",
-                },
-                {
-                  title: "Master Yaeger Seminar",
-                  subtitle: "Saturday, August 22 · 11 AM–2 PM",
-                  desc: "Special guest instructor seminar. Learn advanced techniques from a world-class martial artist.",
-                  price: "$29 registration",
-                  link: "/master-yaeger-seminar",
-                  gradient: "linear-gradient(135deg, #0c4a6e 0%, #075985 100%)",
-                  emoji: "⭐",
-                },
-              ].map((evt, i) => (
-                <button
-                  key={i}
-                  onClick={() => window.location.href = evt.link}
-                  className="w-full rounded-2xl overflow-hidden text-left shadow-lg hover:shadow-xl transition-shadow"
-                  style={{ background: evt.gradient }}
-                >
-                  <div className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="text-white/60 text-xs font-semibold uppercase tracking-widest">{evt.subtitle}</p>
-                        <h3 className="text-2xl font-black text-white mt-2">{evt.title}</h3>
-                        <p className="text-white/70 text-sm mt-3 leading-relaxed">{evt.desc}</p>
-                        <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20">
-                          <span className="text-white text-sm font-bold">{evt.price}</span>
-                          <ChevronRight className="h-4 w-4 text-white/60" />
-                        </div>
-                      </div>
-                      <span className="text-4xl ml-4 shrink-0">{evt.emoji}</span>
-                    </div>
-                  </div>
-                </button>
-              ))}
+            <div className="px-4 sm:px-6 space-y-6">
 
-              {/* Summer Schedule Update Card */}
-              <div className={`rounded-2xl p-5 border ${isDark ? "border-white/8 bg-white/3" : "border-gray-100 bg-white"}`}>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-lg">☀️</div>
-                  <div className="flex-1">
-                    <p className={`font-bold text-sm ${t.textPrimary}`}>New Summer Schedule Active</p>
-                    <p className={`text-xs ${t.textMuted} mt-0.5`}>After School and Summer Camp programs are now running daily.</p>
+              {/* Belt Test Card */}
+              <button
+                onClick={() => window.location.href = "/belt-test-intent"}
+                className={`w-full rounded-2xl overflow-hidden text-left shadow-lg hover:shadow-xl transition-all ${isDark ? "bg-zinc-900" : "bg-white"} border ${isDark ? "border-white/5" : "border-gray-100"}`}
+              >
+                <div className="w-full h-48 overflow-hidden">
+                  <img
+                    src="/manus-storage/event-belt-test_8aa85132.jpg"
+                    alt="Belt testing ceremony at MyDojo"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-5">
+                  <p className="text-[#E11D2A] text-xs font-bold uppercase tracking-widest">Saturday, August 15 · 10:00 AM</p>
+                  <h3 className={`text-xl font-black mt-2 ${t.textPrimary}`}>Belt Promotion Test</h3>
+                  <p className={`text-sm mt-2 leading-relaxed ${t.textSecondary}`}>
+                    Demonstrate your skills and advance to the next rank. Students will perform kata, self-defense techniques, and board breaking in front of our panel of certified instructors.
+                  </p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className={`text-sm font-bold ${t.textPrimary}`}>$49 per student</span>
+                    <span className="text-xs font-semibold text-[#E11D2A] uppercase tracking-wider">Register Now</span>
                   </div>
                 </div>
+              </button>
+
+              {/* Parents Night Out Card */}
+              <button
+                onClick={() => window.location.href = "/parents-night-out-aug"}
+                className={`w-full rounded-2xl overflow-hidden text-left shadow-lg hover:shadow-xl transition-all ${isDark ? "bg-zinc-900" : "bg-white"} border ${isDark ? "border-white/5" : "border-gray-100"}`}
+              >
+                <div className="w-full h-48 overflow-hidden">
+                  <img
+                    src="/manus-storage/event-parents-night-out_09a404ba.jpg"
+                    alt="Kids enjoying Parents Night Out at MyDojo"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-5">
+                  <p className="text-purple-600 text-xs font-bold uppercase tracking-widest">Friday, August 21 · 6:00–9:30 PM</p>
+                  <h3 className={`text-xl font-black mt-2 ${t.textPrimary}`}>Parents Night Out</h3>
+                  <p className={`text-sm mt-2 leading-relaxed ${t.textSecondary}`}>
+                    Enjoy a well-deserved evening off while your kids have a blast at the dojo. Activities include martial arts games, obstacle courses, movie time, and pizza. Supervised by our certified instructors.
+                  </p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className={`text-sm font-bold ${t.textPrimary}`}>Free for members</span>
+                    <span className="text-xs font-semibold text-purple-600 uppercase tracking-wider">RSVP Now</span>
+                  </div>
+                </div>
+              </button>
+
+              {/* Master Yaeger Seminar Card */}
+              <button
+                onClick={() => window.location.href = "/master-yaeger-seminar"}
+                className={`w-full rounded-2xl overflow-hidden text-left shadow-lg hover:shadow-xl transition-all ${isDark ? "bg-zinc-900" : "bg-white"} border ${isDark ? "border-white/5" : "border-gray-100"}`}
+              >
+                <div className="w-full h-48 overflow-hidden">
+                  <img
+                    src="/manus-storage/event-yaeger-seminar_f56403cb.jpg"
+                    alt="Master Yaeger demonstrating advanced techniques"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-5">
+                  <p className="text-blue-600 text-xs font-bold uppercase tracking-widest">Saturday, August 22 · 11:00 AM–2:00 PM</p>
+                  <h3 className={`text-xl font-black mt-2 ${t.textPrimary}`}>Master Yaeger Seminar</h3>
+                  <p className={`text-sm mt-2 leading-relaxed ${t.textSecondary}`}>
+                    A rare opportunity to train with Master Yaeger, a world-renowned martial arts expert. This intensive seminar covers advanced striking combinations, grappling transitions, and competition strategy for all skill levels.
+                  </p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className={`text-sm font-bold ${t.textPrimary}`}>$29 registration</span>
+                    <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Reserve Your Spot</span>
+                  </div>
+                </div>
+              </button>
+
+              {/* Summer Schedule Update */}
+              <div className={`rounded-2xl p-5 border ${isDark ? "border-white/8 bg-white/3" : "border-gray-100 bg-white"} shadow-sm`}>
+                <p className="text-green-600 text-xs font-bold uppercase tracking-widest">Schedule Update</p>
+                <h4 className={`text-base font-bold mt-1 ${t.textPrimary}`}>New Summer Schedule Active</h4>
+                <p className={`text-sm ${t.textMuted} mt-1 leading-relaxed`}>After School and Summer Camp programs are now running daily. Check the schedule tab for updated class times.</p>
               </div>
             </div>
 
