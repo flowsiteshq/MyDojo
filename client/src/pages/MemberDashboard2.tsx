@@ -1733,7 +1733,7 @@ export default function MemberDashboard2() {
             <h2 className={`text-xl font-black uppercase tracking-wider ${t.textPrimary}`}>Find Us</h2>
             <div className={`rounded-2xl border ${t.borderSubtle} overflow-hidden`} style={isDark ? { background: "rgba(28,18,18,0.85)" } : { background: "#fff" }}>
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3455.123!2d-95.616!3d30.097!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzDCsDA1JzQ5LjIiTiA5NcKwMzYnNTcuNiJX!5e0!3m2!1sen!2sus!4v1"
+                src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=11721+Spring-Cypress+Road,Tomball,TX+77377"
                 width="100%"
                 height="350"
                 style={{ border: 0 }}
@@ -1744,9 +1744,9 @@ export default function MemberDashboard2() {
               />
               <div className="p-6 space-y-3">
                 <h3 className={`text-lg font-bold ${t.textPrimary}`}>MyDojo Headquarters — Tomball</h3>
-                <p className={`text-sm ${t.textSecondary}`}>9797 Spring Cypress Rd, Tomball, TX 77377</p>
+                <p className={`text-sm ${t.textSecondary}`}>11721 Spring-Cypress Road, Tomball, TX 77377</p>
                 <div className="flex gap-3 pt-2">
-                  <a href="https://maps.google.com/?q=9797+Spring+Cypress+Rd+Tomball+TX+77377" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-[#E11D2A] text-white text-sm font-bold rounded-lg">Get Directions</a>
+                  <a href="https://maps.google.com/?q=11721+Spring-Cypress+Road+Tomball+TX+77377" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-[#E11D2A] text-white text-sm font-bold rounded-lg">Get Directions</a>
                   <a href="tel:+18774693656" className={`px-4 py-2 border rounded-lg text-sm font-bold ${isDark ? "border-white/20 text-white" : "border-gray-300 text-gray-700"}`}>Call</a>
                 </div>
               </div>
@@ -1935,6 +1935,36 @@ export default function MemberDashboard2() {
         {/* ── DASHBOARD TAB ── */}
         {activeTab === "home" && (
           <div className="space-y-6">
+
+            {/* ── Latest News & Events ── */}
+            <div>
+              <h2 className={`text-2xl font-black ${t.textPrimary} mb-4`}>What's New</h2>
+              <div className="space-y-3">
+                {[
+                  { title: "Belt Test — Saturday, August 15", desc: "Register your intent to promote. $49 per student.", link: "/belt-test-intent", tag: "EVENT", color: "bg-red-500" },
+                  { title: "Parents Night Out — Friday, August 21", desc: "Drop off your kids for a fun evening 6:00–9:30 PM. Free for members!", link: "/parents-night-out-aug", tag: "EVENT", color: "bg-purple-500" },
+                  { title: "Master Yaeger Seminar — Saturday, August 22", desc: "Special guest seminar 11 AM–2 PM. $29 registration.", link: "/master-yaeger-seminar", tag: "SEMINAR", color: "bg-blue-500" },
+                  { title: "New Summer Schedule Active", desc: "After School and Summer Camp programs are now running daily.", tag: "UPDATE", color: "bg-green-500" },
+                ].map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={() => item.link ? (window.location.href = item.link) : null}
+                    className={`w-full flex items-start gap-4 p-4 rounded-xl border transition-all text-left group ${
+                      isDark ? "border-white/8 hover:bg-white/5" : "border-gray-100 bg-white hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className={`shrink-0 mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-white ${item.color}`}>
+                      {item.tag}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-bold text-sm ${t.textPrimary} group-hover:text-[#E11D2A] transition-colors`}>{item.title}</p>
+                      <p className={`text-xs ${t.textMuted} mt-0.5`}>{item.desc}</p>
+                    </div>
+                    {item.link && <ChevronRight className={`h-4 w-4 shrink-0 mt-1 ${t.textMuted} group-hover:text-[#E11D2A]`} />}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Today's Date Header */}
             <div className="flex items-center justify-between">
