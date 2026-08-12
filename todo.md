@@ -2,6 +2,11 @@
 
 ## IN PROGRESS
 
+- [ ] Replace carousel children’s Taekwondo-style uniforms with the actual MyDojo pro shop Karate uniform
+  - [x] Inspect the pro shop uniform reference and document Karate-specific features
+  - [x] Regenerate Little Ninjas and Kids Martial Arts scenes using matching Karate attire
+  - [ ] Verify the uniform match before publishing the new assets
+
 - [x] Build a 5.5-second rotating homepage banner for MyDojo programs
   - [x] Define slides for Little Ninjas, Kids Martial Arts, Teens & Adults, and Kickboxing
   - [x] Generate disciplined, happy student scenes with MyDojo-attire references

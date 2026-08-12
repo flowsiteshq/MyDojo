@@ -73,8 +73,8 @@ describe("public-site redesign", () => {
     const home = readPage("Home.tsx");
 
     expect(home).toContain("const CAROUSEL_INTERVAL = 5500");
-    expect(home).toContain("mydojo-carousel-little-ninjas");
-    expect(home).toContain("mydojo-carousel-kids-martial-arts");
+    expect(home).toContain("mydojo-carousel-little-ninjas-karate");
+    expect(home).toContain("mydojo-carousel-kids-martial-arts-karate");
     expect(home).toContain("mydojo-carousel-teens-adults");
     expect(home).toContain("mydojo-carousel-kickboxing");
     expect(home).not.toContain("hero_montage_v5_d1227c92.mp4");
