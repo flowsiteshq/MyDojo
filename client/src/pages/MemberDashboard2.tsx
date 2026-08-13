@@ -2489,7 +2489,179 @@ export default function MemberDashboard2() {
 
         {/* ── DASHBOARD TAB ── */}
         {activeTab === "home" && (
-          <div className="space-y-6 -mx-4 sm:-mx-6">
+          <>
+            <div className="space-y-5 px-4 pb-8 pt-5 sm:px-6 lg:mx-auto lg:max-w-6xl">
+              {(() => {
+                const currentBelt = progressStats?.beltRank ?? enrollment?.enrollment?.beltRank ?? "No Belt";
+                const nextBelt = progressStats?.nextBelt ?? "White Belt";
+                const beltProgress = Math.max(0, Math.min(100, Number(progressStats?.beltProgressPct ?? 0)));
+                const attended = Number(progressStats?.classesAtCurrentBelt ?? 0);
+                const required = Number(progressStats?.classesRequired ?? 0);
+                const totalClasses = Number(progressStats?.totalClasses ?? 0);
+                const streak = Number(progressStats?.currentStreak ?? 0);
+                const skillsLeft = (progressStats as any)?.skillsRemaining;
+                const upcomingClass: any = nextClass ?? todayClasses?.find((cls: any) => !cls.isCheckedIn) ?? null;
+                const greetingHour = new Date().getHours();
+                const greeting = greetingHour < 12 ? "Good morning," : greetingHour < 18 ? "Good afternoon," : "Good evening,";
+                const progressTasks = [
+                  {
+                    label: required > 0 ? `Attend ${required} qualifying classes` : "Build qualifying class attendance",
+                    value: required > 0 ? `${Math.min(attended, required)} / ${required}` : `${attended} completed`,
+                    complete: required > 0 && attended >= required,
+                  },
+                  ...(typeof skillsLeft === "number" ? [{
+                    label: "Complete required skills",
+                    value: skillsLeft <= 0 ? "Complete" : `${skillsLeft} remaining`,
+                    complete: skillsLeft <= 0,
+                  }] : []),
+                ];
+
+                return (
+                  <>
+                    <section className={`relative min-h-[285px] overflow-hidden rounded-[28px] border shadow-sm ${isDark ? "border-white/10 bg-zinc-950" : "border-slate-200 bg-white"}`}>
+                      <img
+                        src="/manus-storage/event-belt-test_8aa85132.jpg"
+                        alt="MyDojo student training"
+                        className="absolute inset-y-0 right-0 h-full w-[55%] object-cover object-center opacity-25 sm:w-[48%] sm:opacity-35"
+                      />
+                      <div className={`absolute inset-0 ${isDark ? "bg-gradient-to-r from-zinc-950 via-zinc-950/90 to-zinc-950/15" : "bg-gradient-to-r from-white via-white/95 to-white/10"}`} />
+                      <div className="relative grid min-h-[285px] gap-5 p-6 sm:p-8 lg:grid-cols-[1fr_240px] lg:items-center">
+                        <div className="max-w-xl">
+                          <p className={`text-base font-medium ${t.textSecondary}`}>{greeting}</p>
+                          <h1 className={`mt-1 text-4xl font-black tracking-tight sm:text-5xl ${t.textPrimary}`}>{firstName}!</h1>
+                          <p className={`mt-3 max-w-sm text-sm leading-relaxed ${t.textSecondary}`}>Focus, discipline, and respect — one class at a time.</p>
+                          <div className="mt-5 flex flex-wrap items-center gap-3">
+                            <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-bold ${isDark ? "border-[#E11D2A]/40 bg-[#E11D2A]/15 text-red-200" : "border-red-200 bg-red-50 text-[#C91826]"}`}>
+                              <Award className="h-4 w-4" /> {currentBelt}
+                            </span>
+                            <span className={`text-sm font-medium ${t.textSecondary}`}>{(enrollment as any)?.enrollment?.program ?? "Foundation"} Program</span>
+                          </div>
+                        </div>
+
+                        <div className={`max-w-[240px] rounded-2xl border p-5 backdrop-blur-md ${isDark ? "border-white/15 bg-black/40" : "border-white/80 bg-white/85 shadow-lg"}`}>
+                          <div className="flex items-center gap-2 text-[#E11D2A]">
+                            <Star className="h-4 w-4 fill-current" />
+                            <span className="text-xs font-bold uppercase tracking-widest">Belt Progress</span>
+                          </div>
+                          <p className={`mt-3 text-3xl font-black ${t.textPrimary}`}>{beltProgress}%</p>
+                          <div className={`mt-3 h-2 overflow-hidden rounded-full ${isDark ? "bg-white/15" : "bg-slate-200"}`}>
+                            <div className="h-full rounded-full bg-[#E11D2A]" style={{ width: `${beltProgress}%` }} />
+                          </div>
+                          <button onClick={() => { setActiveTab("training"); setTrainingDialog("progress"); }} className={`mt-4 flex w-full items-center justify-between text-left text-sm font-semibold ${t.textPrimary}`}>
+                            <span>Next rank: {nextBelt}</span><ChevronRight className="h-4 w-4 text-[#E11D2A]" />
+                          </button>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className={`grid grid-cols-2 overflow-hidden rounded-2xl border shadow-sm sm:grid-cols-4 ${isDark ? "border-white/10 bg-zinc-900" : "border-slate-200 bg-white"}`}>
+                      {[
+                        { label: "Belt Progress", value: `${beltProgress}%`, caption: `Toward ${nextBelt}`, icon: <Award className="h-6 w-6" /> },
+                        { label: "Classes", value: totalClasses, caption: "All time", icon: <Calendar className="h-6 w-6" /> },
+                        { label: "Day Streak", value: streak, caption: streak === 1 ? "Day active" : "Days active", icon: <Flame className="h-6 w-6" /> },
+                        { label: "Current Rank", value: currentBelt, caption: "Training journey", icon: <Trophy className="h-6 w-6" /> },
+                      ].map((stat, index) => (
+                        <div key={stat.label} className={`flex min-h-[126px] flex-col items-center justify-center p-4 text-center ${index < 3 ? isDark ? "sm:border-r sm:border-white/10" : "sm:border-r sm:border-slate-200" : ""} ${index < 2 ? isDark ? "border-b border-white/10 sm:border-b-0" : "border-b border-slate-200 sm:border-b-0" : ""}`}>
+                          <div className="text-[#E11D2A]">{stat.icon}</div>
+                          <p className={`mt-2 text-xl font-black ${t.textPrimary}`}>{stat.value}</p>
+                          <p className={`mt-1 text-[10px] font-bold uppercase tracking-wider ${t.textMuted}`}>{stat.label}</p>
+                          <p className={`mt-0.5 text-[11px] ${t.textMuted}`}>{stat.caption}</p>
+                        </div>
+                      ))}
+                    </section>
+
+                    <section className={`overflow-hidden rounded-2xl border shadow-sm ${isDark ? "border-white/10 bg-zinc-900" : "border-slate-200 bg-white"}`}>
+                      <div className="px-5 pt-5">
+                        <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">Next Class</p>
+                      </div>
+                      {upcomingClass ? (
+                        <div className="grid gap-5 p-5 pt-4 md:grid-cols-[130px_1fr_auto] md:items-center">
+                          <div className="h-28 overflow-hidden rounded-xl bg-slate-100">
+                            <img src="/manus-storage/event-parents-night-out_09a404ba.jpg" alt="MyDojo class training" className="h-full w-full object-cover" />
+                          </div>
+                          <div>
+                            <h2 className={`text-2xl font-black ${t.textPrimary}`}>{upcomingClass.program}</h2>
+                            <div className={`mt-3 space-y-1.5 text-sm ${t.textSecondary}`}>
+                              <p className="flex items-center gap-2"><Calendar className="h-4 w-4 text-[#E11D2A]" />{upcomingClass.day ?? "Today"}</p>
+                              <p className="flex items-center gap-2"><Clock className="h-4 w-4 text-[#E11D2A]" />{upcomingClass.startTime} – {upcomingClass.endTime}</p>
+                              <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-[#E11D2A]" />{upcomingClass.location ?? "MyDojo Tomball"}</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2 md:min-w-[160px]">
+                            <button onClick={() => window.location.href = "/check-in"} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#E11D2A] px-5 py-3 text-sm font-bold text-white active:scale-[0.97]">
+                              Check In <QrCode className="h-4 w-4" />
+                            </button>
+                            <button onClick={() => { setActiveTab("training"); setTrainingDialog("schedule"); }} className={`inline-flex items-center justify-center gap-2 rounded-xl border px-5 py-3 text-sm font-bold ${isDark ? "border-white/15 text-white hover:bg-white/5" : "border-slate-200 text-slate-700 hover:bg-slate-50"}`}>
+                              My Schedule
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-5 pt-4">
+                          <p className={`text-lg font-bold ${t.textPrimary}`}>Your next class will appear here.</p>
+                          <button onClick={() => { setActiveTab("training"); setTrainingDialog("schedule"); }} className="mt-3 text-sm font-bold text-[#E11D2A]">View My Schedule</button>
+                        </div>
+                      )}
+                    </section>
+
+                    <section>
+                      <p className={`mb-3 text-xs font-bold uppercase tracking-widest ${t.textMuted}`}>Quick Actions</p>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                        {[
+                          { label: "My Schedule", icon: <Calendar className="h-5 w-5" />, onClick: () => { setActiveTab("training"); setTrainingDialog("schedule"); } },
+                          { label: "My Badges", icon: <Trophy className="h-5 w-5" />, onClick: () => setActiveTab("training") },
+                          { label: "Goals", icon: <Target className="h-5 w-5" />, onClick: () => toast.info("Personal goals will be available soon.") },
+                          { label: "Progress", icon: <BarChart2 className="h-5 w-5" />, onClick: () => { setActiveTab("training"); setTrainingDialog("progress"); } },
+                          { label: "Belt Path", icon: <BookOpen className="h-5 w-5" />, onClick: () => { setActiveTab("training"); setTrainingDialog("curriculum"); } },
+                        ].map((action) => (
+                          <button key={action.label} onClick={action.onClick} className={`flex min-h-[78px] items-center gap-3 rounded-xl border px-4 text-left transition-colors active:scale-[0.98] ${isDark ? "border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.08]" : "border-slate-200 bg-white text-slate-800 shadow-sm hover:border-red-200 hover:bg-red-50"}`}>
+                            <span className="text-[#E11D2A]">{action.icon}</span><span className="text-sm font-bold">{action.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+
+                    <section className="grid gap-5 lg:grid-cols-[1.45fr_0.8fr]">
+                      <div className={`rounded-2xl border p-5 shadow-sm ${isDark ? "border-white/10 bg-zinc-900" : "border-slate-200 bg-white"}`}>
+                        <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">My Progress</p>
+                        <div className="mt-5 flex flex-col gap-6 sm:flex-row sm:items-center">
+                          <div className="relative mx-auto h-36 w-36 shrink-0">
+                            <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+                              <circle cx="50" cy="50" r="42" fill="none" stroke={isDark ? "rgba(255,255,255,0.12)" : "#e2e8f0"} strokeWidth="8" />
+                              <circle cx="50" cy="50" r="42" fill="none" stroke="#E11D2A" strokeWidth="8" strokeLinecap="round" strokeDasharray={`${beltProgress * 2.64} 264`} />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center"><span className={`text-3xl font-black ${t.textPrimary}`}>{beltProgress}%</span><span className={`text-xs ${t.textMuted}`}>complete</span></div>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className={`text-xl font-black ${t.textPrimary}`}>Next Belt: {nextBelt}</h3>
+                            <div className="mt-4 space-y-3">
+                              {progressTasks.map((task) => <div key={task.label} className="flex items-center gap-3"><CheckCircle2 className={`h-5 w-5 shrink-0 ${task.complete ? "text-green-500" : "text-[#E11D2A]"}`} /><span className={`min-w-0 flex-1 text-sm ${t.textSecondary}`}>{task.label}</span><span className={`whitespace-nowrap text-xs font-bold ${task.complete ? "text-green-600" : "text-[#E11D2A]"}`}>{task.value}</span></div>)}
+                            </div>
+                            <button onClick={() => { setActiveTab("training"); setTrainingDialog("progress"); }} className="mt-5 text-sm font-bold text-[#E11D2A]">View Full Progress</button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-5">
+                        <div className={`rounded-2xl border p-5 shadow-sm ${isDark ? "border-white/10 bg-zinc-900" : "border-slate-200 bg-white"}`}>
+                          <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">My Streak</p>
+                          <div className="mt-4 flex items-center gap-4"><Flame className="h-11 w-11 text-[#E11D2A]" /><div><p className={`text-3xl font-black ${t.textPrimary}`}>{streak} <span className="text-base">days</span></p><p className={`text-sm ${t.textSecondary}`}>{streak > 0 ? "Keep your training rhythm going." : "Your next class starts a new streak."}</p></div></div>
+                        </div>
+                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a0505] via-[#560b12] to-[#E11D2A] p-5 text-white shadow-sm">
+                          <p className="text-xs font-bold uppercase tracking-widest text-white/65">Belt Test</p>
+                          <h3 className="mt-2 text-xl font-black">Saturday, August 15</h3>
+                          <p className="mt-1 text-sm text-white/75">Register early and prepare for your next rank.</p>
+                          <button onClick={() => window.location.href = "/belt-test-intent"} className="mt-4 rounded-lg bg-white px-4 py-2 text-sm font-bold text-[#C91826] active:scale-[0.97]">Register Now</button>
+                        </div>
+                      </div>
+                    </section>
+                  </>
+                );
+              })()}
+            </div>
+
+            <div className="hidden">
+              <div className="space-y-6 -mx-4 sm:-mx-6">
 
             {/* ── Welcome Banner (T-Life style) ── */}
             <div
@@ -3373,7 +3545,9 @@ export default function MemberDashboard2() {
                 ))}
               </div>
             </div>
-          </div>
+              </div>
+            </div>
+          </>
         )}
       </main>
 

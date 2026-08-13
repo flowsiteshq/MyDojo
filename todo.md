@@ -1,5 +1,7 @@
 # MyDojo Website TODO
 
+- [x] Redesign the student Home tab as a structured MyDojo member dashboard with hero, activity, next-class, progress, streak, and testing panels
+
 - [x] Add a smooth swipe-down dismissal gesture and prominent close button to Training detail modals
 
 - [x] Organize the Training tab into focused Schedule, Curriculum, Progress, Attendance, and Testing modals opened from quick-action icons
