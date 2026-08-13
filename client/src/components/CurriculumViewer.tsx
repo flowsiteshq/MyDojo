@@ -5,12 +5,23 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Lock, Circle, MessageSquare } from "lucide-react";
 import { useState } from "react";
 
-export function CurriculumViewer() {
+type CurriculumViewerProps = {
+  isDark?: boolean;
+};
+
+export function CurriculumViewer({ isDark = false }: CurriculumViewerProps) {
   const { data: curriculumData, isLoading } = trpc.curriculum.getAccessibleContent.useQuery();
   const { data: progressData } = trpc.curriculum.getMyProgress.useQuery();
   const markCompletedMutation = trpc.curriculum.markCompleted.useMutation();
 
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const textPrimary = isDark ? "text-white" : "text-slate-950";
+  const textSecondary = isDark ? "text-zinc-300" : "text-slate-600";
+  const textMuted = isDark ? "text-zinc-400" : "text-slate-500";
+  const cardSurface = isDark
+    ? "border-zinc-800 bg-zinc-950"
+    : "border-slate-200 bg-white shadow-sm";
+  const subtleSurface = isDark ? "bg-zinc-900/60" : "bg-slate-50";
 
   if (isLoading) {
     return (
@@ -92,10 +103,10 @@ export function CurriculumViewer() {
   return (
     <div className="space-y-6">
       {/* Current Belt Status */}
-      <Card className="p-6 bg-gradient-to-r from-zinc-900 to-zinc-800 border-primary/20">
+      <Card className={`p-6 border ${isDark ? "border-primary/30 bg-gradient-to-r from-zinc-950 to-zinc-800" : "border-red-100 bg-gradient-to-r from-red-50 via-white to-white shadow-sm"}`}>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-heading font-bold text-white mb-2">
+            <h2 className={`text-2xl font-heading font-bold ${textPrimary} mb-2`}>
               Current Belt Rank
             </h2>
             <Badge className="bg-primary text-white text-lg px-4 py-2">
@@ -104,8 +115,8 @@ export function CurriculumViewer() {
           </div>
           {curriculumData.beltAchievedDate && (
             <div className="text-right">
-              <p className="text-sm text-gray-400">Achieved</p>
-              <p className="text-white font-semibold">
+              <p className={`text-sm ${textMuted}`}>Achieved</p>
+              <p className={`${textPrimary} font-semibold`}>
                 {new Date(curriculumData.beltAchievedDate).toLocaleDateString()}
               </p>
             </div>
@@ -125,20 +136,20 @@ export function CurriculumViewer() {
         const progressPercent = Math.round((completedItems / totalItems) * 100);
 
         return (
-          <Card key={belt} className="overflow-hidden border-zinc-800">
-            <div className="p-6 bg-zinc-900/50">
+          <Card key={belt} className={`overflow-hidden border ${cardSurface}`}>
+            <div className={`p-6 ${subtleSurface}`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 rounded-full bg-primary"></div>
-                  <h3 className="text-xl font-heading font-bold text-white">
+                  <h3 className={`text-xl font-heading font-bold ${textPrimary}`}>
                     {belt}
                   </h3>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-400">
+                  <span className={`text-sm font-medium ${textSecondary}`}>
                     {completedItems}/{totalItems} completed
                   </span>
-                  <div className="w-32 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className={`w-32 h-2 rounded-full overflow-hidden ${isDark ? "bg-zinc-800" : "bg-slate-200"}`}>
                     <div
                       className="h-full bg-primary transition-all duration-300"
                       style={{ width: `${progressPercent}%` }}
@@ -155,62 +166,62 @@ export function CurriculumViewer() {
                   const isExpanded = expandedCategory === categoryKey;
 
                   return (
-                    <div key={category} className="border border-zinc-800 rounded-lg overflow-hidden">
+                    <div key={category} className={`border rounded-xl overflow-hidden ${isDark ? "border-zinc-800" : "border-slate-200 bg-white"}`}>
                       <button
                         onClick={() =>
                           setExpandedCategory(isExpanded ? null : categoryKey)
                         }
-                        className="w-full p-4 bg-zinc-900/30 hover:bg-zinc-900/50 transition-colors text-left flex items-center justify-between"
+                        className={`w-full p-4 transition-colors text-left flex items-center justify-between ${isDark ? "bg-zinc-900/40 hover:bg-zinc-800" : "bg-white hover:bg-red-50"}`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-primary font-semibold">
+                          <span className="text-primary font-bold">
                             {category}
                           </span>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className={`text-xs ${isDark ? "border-zinc-700 text-zinc-300" : "border-slate-300 bg-slate-50 text-slate-700"}`}>
                             {items.length} items
                           </Badge>
                         </div>
-                        <span className="text-gray-400">
+                        <span className={`text-xl leading-none ${textSecondary}`}>
                           {isExpanded ? "−" : "+"}
                         </span>
                       </button>
 
                       {isExpanded && (
-                        <div className="p-4 space-y-3 bg-zinc-950/30">
+                        <div className={`p-4 space-y-3 ${isDark ? "bg-zinc-950/50" : "bg-slate-50"}`}>
                           {items.map((item) => {
                             const completed = isCompleted(item.id);
                             return (
                               <div
                                 key={item.id}
-                                className="flex items-start gap-4 p-4 bg-zinc-900/50 rounded-lg border border-zinc-800"
+                                className={`flex items-start gap-4 p-4 rounded-xl border ${isDark ? "border-zinc-800 bg-zinc-900/70" : "border-slate-200 bg-white shadow-sm"}`}
                               >
                                 <div className="flex-shrink-0 mt-1">
                                   {completed ? (
                                     <CheckCircle2 className="w-5 h-5 text-green-500" />
                                   ) : (
-                                    <Circle className="w-5 h-5 text-gray-600" />
+                                    <Circle className={`w-5 h-5 ${isDark ? "text-zinc-600" : "text-slate-300"}`} />
                                   )}
                                 </div>
                                 <div className="flex-1">
-                                  <h4 className="font-semibold text-white mb-1">
+                                  <h4 className={`font-bold ${textPrimary} mb-1`}>
                                     {item.title}
                                   </h4>
-                                  <p className="text-sm text-gray-400">
+                                  <p className={`text-sm leading-relaxed ${textSecondary}`}>
                                     {item.description}
                                   </p>
                                   
                                   {/* Instructor Feedback Display */}
                                   {getInstructorFeedback(item.id) && (
-                                    <div className="mt-3 p-3 bg-blue-900/20 border border-blue-800/30 rounded-lg">
+                                    <div className={`mt-3 p-3 rounded-lg border ${isDark ? "border-blue-800/40 bg-blue-900/20" : "border-blue-200 bg-blue-50"}`}>
                                       <div className="flex items-start gap-2">
-                                        <MessageSquare className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                                        <MessageSquare className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? "text-blue-400" : "text-blue-700"}`} />
                                         <div className="flex-1">
-                                          <p className="text-xs font-semibold text-blue-300 mb-1">Instructor Feedback</p>
-                                          <p className="text-sm text-blue-100">
+                                          <p className={`text-xs font-bold mb-1 ${isDark ? "text-blue-300" : "text-blue-900"}`}>Instructor Feedback</p>
+                                          <p className={`text-sm ${isDark ? "text-blue-100" : "text-blue-900"}`}>
                                             {getInstructorFeedback(item.id)}
                                           </p>
                                           {getFeedbackDate(item.id) && (
-                                            <p className="text-xs text-blue-400 mt-2">
+                                            <p className={`text-xs mt-2 ${isDark ? "text-blue-400" : "text-blue-700"}`}>
                                               {new Date(getFeedbackDate(item.id)!).toLocaleDateString()}
                                             </p>
                                           )}
@@ -225,7 +236,7 @@ export function CurriculumViewer() {
                                     variant="outline"
                                     onClick={() => handleMarkCompleted(item.id)}
                                     disabled={markCompletedMutation.isPending}
-                                    className="flex-shrink-0"
+                                    className={`flex-shrink-0 ${isDark ? "border-zinc-600 text-zinc-100 hover:bg-zinc-800" : "border-slate-300 bg-white text-slate-900 hover:bg-slate-100"}`}
                                   >
                                     Mark Complete
                                   </Button>
@@ -245,14 +256,14 @@ export function CurriculumViewer() {
       })}
 
       {/* Locked Content Preview */}
-      <Card className="p-6 bg-zinc-900/30 border-zinc-800">
+      <Card className={`p-6 border ${isDark ? "border-zinc-800 bg-zinc-900/50" : "border-slate-200 bg-slate-50 shadow-sm"}`}>
         <div className="flex items-center gap-3 mb-4">
-          <Lock className="w-5 h-5 text-gray-500" />
-          <h3 className="text-lg font-semibold text-gray-400">
+          <Lock className={`w-5 h-5 ${isDark ? "text-zinc-500" : "text-slate-500"}`} />
+          <h3 className={`text-lg font-bold ${textPrimary}`}>
             Future Belt Content
           </h3>
         </div>
-        <p className="text-sm text-gray-500">
+        <p className={`text-sm leading-relaxed ${textSecondary}`}>
           Continue training and advance to the next belt rank to unlock more curriculum content.
           Your dedication and progress will be rewarded with new techniques and knowledge!
         </p>

@@ -2114,7 +2114,7 @@ export default function MemberDashboard2() {
               <h2 className={`text-xl font-black ${t.textPrimary} mb-3`}>Curriculum</h2>
               <div className={`rounded-2xl border ${t.borderSubtle} ${isDark ? "" : "bg-white"} p-4`}
                 style={isDark ? { background: "rgba(28,18,18,0.85)", backdropFilter: "blur(12px)" } : undefined}>
-                <CurriculumViewer />
+                <CurriculumViewer isDark={isDark} />
               </div>
             </div>
 
