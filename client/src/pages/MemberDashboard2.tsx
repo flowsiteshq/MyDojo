@@ -49,6 +49,7 @@ import {
 import { useEffect, useState, useRef, useCallback } from "react";
 import { CurriculumViewer } from "@/components/CurriculumViewer";
 import { MessagesTab } from "@/components/MessagesTab";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Chart, registerables } from "chart.js";
 import { useDashboardTheme, type DashboardThemeMode } from "@/hooks/useDashboardTheme";
 import { MyChildren } from "@/components/MyChildren";
@@ -1198,6 +1199,7 @@ function PaymentHistorySection({ isDark, payments: externalPayments, isLoading: 
 export default function MemberDashboard2() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<"home" | "benefits" | "training" | "locate" | "shop" | "account">("home");
+  const [trainingDialog, setTrainingDialog] = useState<"schedule" | "curriculum" | "progress" | "attendance" | "testing" | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showFreezeDialog, setShowFreezeDialog] = useState(false);
@@ -2010,7 +2012,7 @@ export default function MemberDashboard2() {
                     >
                       Check In
                     </button>
-                    <button className={`px-4 py-2 text-xs font-bold rounded-lg uppercase tracking-wider border ${isDark ? "border-white/15 text-white/70 hover:bg-white/5" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
+                    <button onClick={() => setTrainingDialog("schedule")} className={`px-4 py-2 text-xs font-bold rounded-lg uppercase tracking-wider border ${isDark ? "border-white/15 text-white/70 hover:bg-white/5" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
                       View Class
                     </button>
                   </div>
@@ -2021,14 +2023,15 @@ export default function MemberDashboard2() {
             {/* ── Quick Training Actions ── */}
             <div className="flex gap-3 overflow-x-auto pb-1">
               {[
-                { label: "Schedule", icon: <Calendar className="h-5 w-5" /> },
-                { label: "Curriculum", icon: <BookOpen className="h-5 w-5" /> },
-                { label: "Progress", icon: <BarChart2 className="h-5 w-5" /> },
-                { label: "Attendance", icon: <CheckCircle2 className="h-5 w-5" /> },
-                { label: "Testing", icon: <GraduationCap className="h-5 w-5" /> },
+                { id: "schedule" as const, label: "Schedule", icon: <Calendar className="h-5 w-5" /> },
+                { id: "curriculum" as const, label: "Curriculum", icon: <BookOpen className="h-5 w-5" /> },
+                { id: "progress" as const, label: "Progress", icon: <BarChart2 className="h-5 w-5" /> },
+                { id: "attendance" as const, label: "Attendance", icon: <CheckCircle2 className="h-5 w-5" /> },
+                { id: "testing" as const, label: "Testing", icon: <GraduationCap className="h-5 w-5" /> },
               ].map((action, i) => (
                 <button
                   key={i}
+                  onClick={() => setTrainingDialog(action.id)}
                   className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border shrink-0 transition-colors ${
                     isDark ? "border-white/8 hover:bg-white/5 text-white/60 hover:text-white" : "border-gray-100 bg-white hover:bg-gray-50 text-gray-500 hover:text-gray-800"
                   }`}
@@ -2038,6 +2041,125 @@ export default function MemberDashboard2() {
                 </button>
               ))}
             </div>
+
+            {/* ── Focused Training Detail Modals ── */}
+            <Dialog open={trainingDialog !== null} onOpenChange={(open) => !open && setTrainingDialog(null)}>
+              <DialogContent className={`max-h-[calc(100dvh-2rem)] max-w-3xl overflow-hidden p-0 gap-0 ${isDark ? "border-white/10 bg-zinc-950 text-white" : "border-slate-200 bg-white text-slate-950"}`}>
+                <DialogHeader className={`border-b px-6 py-5 pr-14 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-100 bg-slate-50"}`}>
+                  <DialogTitle className={`text-xl font-black ${t.textPrimary}`}>
+                    {trainingDialog === "schedule" && "My Schedule"}
+                    {trainingDialog === "curriculum" && "My Curriculum"}
+                    {trainingDialog === "progress" && "My Progress"}
+                    {trainingDialog === "attendance" && "My Attendance"}
+                    {trainingDialog === "testing" && "Belt Testing"}
+                  </DialogTitle>
+                  <DialogDescription className={t.textSecondary}>
+                    {trainingDialog === "schedule" && "Your recurring classes and upcoming training times."}
+                    {trainingDialog === "curriculum" && "Review each technique and mark completed items as you practice."}
+                    {trainingDialog === "progress" && "Track your belt journey, stripe progress, and training milestones."}
+                    {trainingDialog === "attendance" && "See your consistency, recent class activity, and weekly attendance."}
+                    {trainingDialog === "testing" && "Review your next test and complete registration when you are ready."}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="max-h-[calc(100dvh-11rem)] overflow-y-auto p-5 sm:p-6">
+                  {trainingDialog === "schedule" && (
+                    <div className="space-y-3">
+                      {((schedules?.length ? schedules : todayClasses) ?? []).length > 0 ? ((schedules?.length ? schedules : todayClasses) ?? []).map((schedule: any) => {
+                        const scheduleDay = schedule.dayOfWeek || "Today";
+                        return (
+                          <div key={`${scheduleDay}-${schedule.id}`} className={`rounded-2xl border p-4 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white shadow-sm"}`}>
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">{scheduleDay}</p>
+                                <h3 className={`mt-1 text-lg font-black ${t.textPrimary}`}>{schedule.program}</h3>
+                                <p className={`mt-1 text-sm ${t.textSecondary}`}>{schedule.startTime} – {schedule.endTime}</p>
+                                <p className={`mt-1 text-xs ${t.textMuted}`}>{schedule.location || "MyDojo Tomball"}{schedule.instructor ? ` · ${schedule.instructor}` : ""}</p>
+                              </div>
+                              <Calendar className="h-5 w-5 shrink-0 text-[#E11D2A]" />
+                            </div>
+                          </div>
+                        );
+                      }) : (
+                        <div className={`rounded-2xl border p-8 text-center ${isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-slate-50"}`}>
+                          <Calendar className={`mx-auto h-8 w-8 ${t.textMuted}`} />
+                          <p className={`mt-3 font-bold ${t.textPrimary}`}>Your class schedule is being prepared.</p>
+                          <p className={`mt-1 text-sm ${t.textSecondary}`}>Please check back shortly or contact the front desk for help.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {trainingDialog === "curriculum" && <CurriculumViewer isDark={isDark} />}
+
+                  {trainingDialog === "progress" && <ProgressTab isDark={isDark} />}
+
+                  {trainingDialog === "attendance" && (
+                    <div className="space-y-5">
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        {[
+                          { label: "Total Classes", value: progressStats?.totalClasses ?? 0 },
+                          { label: "Current Streak", value: `${progressStats?.currentStreak ?? 0} days` },
+                          { label: "Best Streak", value: `${progressStats?.longestStreak ?? 0} days` },
+                        ].map((stat) => (
+                          <div key={stat.label} className={`rounded-2xl border p-4 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white shadow-sm"}`}>
+                            <p className={`text-2xl font-black ${t.textPrimary}`}>{stat.value}</p>
+                            <p className={`mt-1 text-xs ${t.textMuted}`}>{stat.label}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className={`rounded-2xl border p-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white shadow-sm"}`}>
+                        <h3 className={`text-lg font-black ${t.textPrimary}`}>Weekly Attendance</h3>
+                        <p className={`mt-1 text-sm ${t.textSecondary}`}>Your last 12 weeks of training activity.</p>
+                        {((progressStats as any)?.weeklyAttendance ?? []).length > 0 ? (
+                          <div className="mt-6 flex h-40 items-end gap-2 overflow-x-auto">
+                            {((progressStats as any)?.weeklyAttendance ?? []).map((week: any) => (
+                              <div key={week.weekStart || week.week} className="flex min-w-9 flex-1 flex-col items-center justify-end gap-2">
+                                <span className={`text-xs font-bold ${t.textPrimary}`}>{week.count}</span>
+                                <div className="flex h-24 w-full items-end rounded-t-md bg-[#E11D2A]/10">
+                                  <div className="w-full rounded-t-md bg-[#E11D2A]" style={{ height: `${Math.max(12, Math.min(100, Number(week.count || 0) * 20))}%` }} />
+                                </div>
+                                <span className={`whitespace-nowrap text-[10px] ${t.textMuted}`}>{week.week}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className={`mt-5 text-sm ${t.textMuted}`}>No attendance records are available yet. Your first check-in will appear here.</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {trainingDialog === "testing" && (
+                    <div className="space-y-5">
+                      <div className={`rounded-2xl border p-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white shadow-sm"}`}>
+                        <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">Next Belt Test</p>
+                        <h3 className={`mt-2 text-2xl font-black ${t.textPrimary}`}>Saturday, August 15</h3>
+                        <p className={`mt-1 text-sm ${t.textSecondary}`}>$49 per student · MyDojo Tomball</p>
+                      </div>
+                      <div className={`rounded-2xl border p-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-white shadow-sm"}`}>
+                        <h3 className={`text-lg font-black ${t.textPrimary}`}>Readiness Checklist</h3>
+                        <div className="mt-4 space-y-3">
+                          {[
+                            [true, "Attendance requirement"],
+                            [true, "Minimum training period"],
+                            [false, "Instructor evaluation"],
+                          ].map(([complete, label]) => (
+                            <div key={String(label)} className="flex items-center gap-3">
+                              {complete ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <Circle className={`h-5 w-5 ${isDark ? "text-white/30" : "text-slate-300"}`} />}
+                              <span className={`text-sm ${t.textSecondary}`}>{String(label)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <button onClick={() => window.location.href = "/belt-test-intent"} className="w-full rounded-xl bg-[#E11D2A] px-4 py-3 text-sm font-bold uppercase tracking-wider text-white hover:bg-[#c41824]">
+                        Register for Belt Test
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* ── My Program ── */}
             <div>
@@ -2070,51 +2192,6 @@ export default function MemberDashboard2() {
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
-
-            {/* ── Belt Testing ── */}
-            <div>
-              <h2 className={`text-xl font-black ${t.textPrimary}`}>Belt Testing</h2>
-              <div className={`mt-3 rounded-2xl border p-5 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
-                <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">Next Belt Test</p>
-                <p className={`text-lg font-black mt-1 ${t.textPrimary}`}>Saturday, August 15</p>
-                <p className={`text-sm ${t.textMuted} mt-1`}>$49 per student • MyDojo Tomball</p>
-                <div className="space-y-2 mt-4">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    <span className={`text-xs ${t.textSecondary}`}>Attendance requirement</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    <span className={`text-xs ${t.textSecondary}`}>Minimum training period</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Circle className={`h-4 w-4 ${isDark ? "text-white/30" : "text-gray-300"}`} />
-                    <span className={`text-xs ${t.textSecondary}`}>Instructor evaluation</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => window.location.href = "/belt-test-intent"}
-                  className="mt-4 w-full px-4 py-3 bg-[#E11D2A] text-white text-sm font-bold rounded-xl uppercase tracking-wider hover:bg-[#c41824] transition-colors"
-                >
-                  Register for Belt Test
-                </button>
-              </div>
-            </div>
-
-            {/* ── Progress & Attendance ── */}
-            <div>
-              <h2 className={`text-xl font-black ${t.textPrimary} mb-3`}>Progress & Attendance</h2>
-              <ProgressTab isDark={isDark} />
-            </div>
-
-            {/* ── Curriculum ── */}
-            <div>
-              <h2 className={`text-xl font-black ${t.textPrimary} mb-3`}>Curriculum</h2>
-              <div className={`rounded-2xl border ${t.borderSubtle} ${isDark ? "" : "bg-white"} p-4`}
-                style={isDark ? { background: "rgba(28,18,18,0.85)", backdropFilter: "blur(12px)" } : undefined}>
-                <CurriculumViewer isDark={isDark} />
               </div>
             </div>
 

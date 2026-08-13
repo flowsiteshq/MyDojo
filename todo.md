@@ -1,5 +1,7 @@
 # MyDojo Website TODO
 
+- [x] Organize the Training tab into focused Schedule, Curriculum, Progress, Attendance, and Testing modals opened from quick-action icons
+
 - [x] Fix the Training tab curriculum contrast so every requirement and status is readable in light mode
 
 - [x] Add supplied Hatchki Café specials and flyer-led Mia Bella / COCO partner cards to the Benefits tab
