@@ -4240,6 +4240,8 @@ Please enter your card details below to complete your registration securely. Tot
           cancellationEffectiveDate: schema.enrollments.cancellationEffectiveDate,
           cancellationReason: schema.enrollments.cancellationReason,
           createdAt: schema.enrollments.createdAt,
+          agreementSignature: schema.enrollments.agreementSignature,
+          agreementSignedAt: schema.enrollments.agreementSignedAt,
           packageName: schema.membershipPackages.name,
           packageMonthlyPrice: schema.membershipPackages.monthlyPrice,
         })

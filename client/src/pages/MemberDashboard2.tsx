@@ -45,9 +45,11 @@ import {
   Home as HomeIcon,
   ShoppingBag,
   User as UserIcon,
+  FileText,
 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback, type TouchEvent } from "react";
 import { CurriculumViewer } from "@/components/CurriculumViewer";
+import { EnrollmentAgreement } from "@/components/EnrollmentAgreement";
 import { ShopCheckoutModal, type ShopProduct } from "@/components/ShopCheckoutModal";
 import { MessagesTab } from "@/components/MessagesTab";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -650,6 +652,7 @@ function AccountTab({
   const { isAuthenticated, logout } = useAuth();
   const [accountSection, setAccountSection] = useState<string | null>(null);
   const [paymentSearch, setPaymentSearch] = useState("");
+  const [showEnrollmentAgreement, setShowEnrollmentAgreement] = useState(false);
 
   const { data: payments, isLoading: paymentsLoading } = trpc.member.getPaymentHistory.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -1067,12 +1070,47 @@ function AccountTab({
             </div>
           </Card>
 
+          <Card isDark={isDark} className="overflow-hidden">
+            <div className={`flex items-center justify-between border-b px-5 py-4 ${t.borderSubtle}`}>
+              <div><h3 className={`font-black ${t.textPrimary}`}>Documents</h3><p className={`mt-0.5 text-xs ${t.textMuted}`}>Your enrollment records and agreements.</p></div>
+              <FileText className="h-5 w-5 text-[#E11D2A]" />
+            </div>
+            <button onClick={() => setShowEnrollmentAgreement(true)} className={`flex w-full items-center gap-3 px-5 py-4 text-left transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-gray-50"}`}>
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isDark ? "bg-red-500/15" : "bg-red-50"}`}><FileText className="h-5 w-5 text-[#E11D2A]" /></div>
+              <div className="min-w-0 flex-1"><p className={`text-sm font-bold ${t.textPrimary}`}>Signed Enrollment Agreement</p><p className={`mt-0.5 text-xs ${t.textMuted}`}>{myEnrollment?.agreementSignedAt ? `Signed ${formatDate(myEnrollment.agreementSignedAt)}` : "View your enrollment agreement"}</p></div>
+              <span className="text-xs font-bold text-[#E11D2A]">View</span><ChevronRight className={`h-4 w-4 ${t.textMuted}`} />
+            </button>
+          </Card>
+
           <div className={`flex items-center justify-between rounded-2xl border px-5 py-4 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-gray-200 bg-white"}`}>
             <div><p className={`text-sm font-bold ${t.textPrimary}`}>{memberStatus} membership</p><p className={`mt-0.5 text-xs ${t.textMuted}`}>{memberSince ? `Member since ${new Date(memberSince).toLocaleDateString("en-US", { month: "short", year: "numeric" })}` : "Membership details"}</p></div>
             <button onClick={() => setAccountSection("billing")} className="text-sm font-bold text-[#E11D2A]">Manage <ChevronRight className="inline h-4 w-4" /></button>
           </div>
         </div>
       </div>
+
+      <Dialog open={showEnrollmentAgreement} onOpenChange={setShowEnrollmentAgreement}>
+        <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Signed Enrollment Agreement</DialogTitle>
+            <DialogDescription>Review the agreement associated with your MyDojo membership.</DialogDescription>
+          </DialogHeader>
+          {myEnrollment ? (
+            <EnrollmentAgreement
+              customerName={myEnrollment.customerName || memberName}
+              packageName={packageName}
+              monthlyPrice={Number(monthlyPrice || 0)}
+              totalDueToday={Number(myEnrollment.downPaymentAmount || 0)}
+              enrollmentFeeWaived={false}
+              readOnly
+              signedName={myEnrollment.agreementSignature}
+              signedAt={myEnrollment.agreementSignedAt}
+            />
+          ) : (
+            <div className={`rounded-xl border p-5 text-sm ${isDark ? "border-white/10 bg-white/5 text-white/70" : "border-gray-200 bg-gray-50 text-gray-600"}`}>Your enrollment agreement will appear here once a membership record is available.</div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

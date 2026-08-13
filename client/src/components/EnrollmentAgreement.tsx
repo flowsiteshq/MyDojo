@@ -17,7 +17,10 @@ interface EnrollmentAgreementProps {
   monthlyPrice: number;
   totalDueToday: number;
   enrollmentFeeWaived?: boolean;
-  onAccepted: (sig: AgreementSignature) => void;
+  onAccepted?: (sig: AgreementSignature) => void;
+  readOnly?: boolean;
+  signedName?: string | null;
+  signedAt?: Date | string | null;
 }
 
 // Individual collapsible section component
@@ -63,6 +66,9 @@ export function EnrollmentAgreement({
   totalDueToday,
   enrollmentFeeWaived = false,
   onAccepted,
+  readOnly = false,
+  signedName,
+  signedAt,
 }: EnrollmentAgreementProps) {
   const [allSectionsRead, setAllSectionsRead] = useState(false);
   const [typedName, setTypedName] = useState(customerName.trim());
@@ -71,7 +77,8 @@ export function EnrollmentAgreement({
 
   const participantName =
     studentName && studentName !== customerName ? studentName : customerName;
-  const today = new Date().toLocaleDateString("en-US", {
+  const agreementDate = readOnly && signedAt ? new Date(signedAt) : new Date();
+  const dateLabel = agreementDate.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -84,7 +91,7 @@ export function EnrollmentAgreement({
   const canProceed = allSectionsRead && nameMatches;
 
   const handleProceed = () => {
-    if (!canProceed) return;
+    if (!canProceed || !onAccepted) return;
     onAccepted({ signedName: typedName.trim(), signedAt: new Date() });
   };
 
@@ -97,7 +104,7 @@ export function EnrollmentAgreement({
         </div>
         <h2 className="text-2xl font-bold text-gray-900">Enrollment Agreement</h2>
         <p className="text-gray-500 text-base mt-1">
-          MyDojo Martial Arts &amp; Fitness · {today}
+          MyDojo Martial Arts &amp; Fitness · {dateLabel}
         </p>
       </div>
 
@@ -125,7 +132,7 @@ export function EnrollmentAgreement({
 
       {/* ── Instructions ── */}
       <p className="text-gray-600 text-base text-center">
-        Please read each section below, then scroll down to sign.
+        {readOnly ? "This is the agreement recorded with your enrollment." : "Please read each section below, then scroll down to sign."}
       </p>
 
       {/* ── Collapsible contract sections ── */}
@@ -258,6 +265,19 @@ export function EnrollmentAgreement({
         </ContractSection>
       </div>
 
+      {readOnly ? (
+        <div className="rounded-xl border border-green-200 bg-green-50 px-5 py-4 text-center">
+          <div className="flex items-center justify-center gap-2 text-green-700">
+            <CheckCircle2 className="h-5 w-5" />
+            <p className="font-bold">Enrollment Agreement Record</p>
+          </div>
+          <p className="mt-2 text-sm text-green-800">
+            {signedName ? `Electronically signed by ${signedName}` : "This enrollment record does not include an electronic signature detail."}
+            {signedAt ? ` on ${new Date(signedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}.` : ""}
+          </p>
+        </div>
+      ) : (
+        <>
       {/* ── "I've read everything" button ── */}
       {!showSignature && (
         <Button
@@ -363,6 +383,8 @@ export function EnrollmentAgreement({
             binding.
           </p>
         </div>
+      )}
+        </>
       )}
     </div>
   );

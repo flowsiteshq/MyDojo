@@ -1,5 +1,7 @@
 # MyDojo Website TODO
 
+- [x] Add a Documents section to the student Account page with secure access to the signed enrollment agreement
+
 - [x] Move student Home upcoming-event cards directly beneath the welcome banner
 
 - [x] Remove payment-processor names from all student and customer-facing payment, account, and shop copy
