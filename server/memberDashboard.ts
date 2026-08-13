@@ -282,6 +282,9 @@ export async function getMemberPaymentHistory(
  * Get member's subscription details from Stripe
  */
 export async function getMemberSubscription(stripeSubscriptionId: string) {
+  // Older imported records may retain placeholder test references that do not exist
+  // in the live account. Avoid a needless remote lookup and keep the portal usable.
+  if (!stripeSubscriptionId || stripeSubscriptionId.startsWith("sub_test_")) return null;
   try {
     const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
     
@@ -294,6 +297,10 @@ export async function getMemberSubscription(stripeSubscriptionId: string) {
       cancelAt: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : null,
     };
   } catch (error) {
+    if (error instanceof Stripe.errors.StripeInvalidRequestError && error.code === "resource_missing") {
+      console.warn("[Member Dashboard] Stored subscription reference is unavailable; showing billing record without live subscription details.");
+      return null;
+    }
     console.error("[Member Dashboard] Error fetching subscription:", error);
     return null;
   }

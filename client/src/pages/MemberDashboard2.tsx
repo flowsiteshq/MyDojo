@@ -1032,9 +1032,20 @@ function AccountTab({
           <Card isDark={isDark} className="overflow-hidden">
             <div className={`flex items-center justify-between border-b px-5 py-4 ${t.borderSubtle}`}><div><h3 className={`font-black ${t.textPrimary}`}>Payment Method</h3><p className={`mt-0.5 text-xs ${t.textMuted}`}>Your billing details are securely protected.</p></div><button onClick={() => toast.info("Secure card updates are handled through your billing settings.")} className="rounded-lg border border-[#E11D2A]/30 px-3 py-2 text-xs font-bold text-[#E11D2A] hover:bg-red-50">Update Card</button></div>
             <div className="flex items-center gap-4 p-5">
-              <div className={`flex h-11 w-14 items-center justify-center rounded-lg border text-xs font-black tracking-wider ${isDark ? "border-white/10 bg-white/5 text-white" : "border-gray-200 bg-white text-[#E11D2A]"}`}>SECURE</div>
-              <div className="min-w-0 flex-1"><p className={`font-bold ${t.textPrimary}`}>Secure payment method</p><p className={`mt-0.5 text-xs ${t.textMuted}`}>Card details are encrypted and never stored by MyDojo.</p></div>
-              <span className="rounded-full bg-green-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-700">Secure</span>
+              <div className={`flex h-11 w-14 items-center justify-center rounded-lg border text-xs font-black tracking-wider ${isDark ? "border-white/10 bg-white/5 text-white" : "border-gray-200 bg-white text-[#E11D2A]"}`}>{myEnrollment?.paymentMethodBrand?.slice(0, 5).toUpperCase() || "SECURE"}</div>
+              <div className="min-w-0 flex-1">
+                <p className={`font-bold ${t.textPrimary}`}>
+                  {myEnrollment?.paymentMethodLast4
+                    ? `${myEnrollment.paymentMethodWallet === "apple_pay" ? "Apple Pay · " : ""}${myEnrollment.paymentMethodBrand || "Card"} ending in ${myEnrollment.paymentMethodLast4}`
+                    : "Secure payment method"}
+                </p>
+                <p className={`mt-0.5 text-xs ${t.textMuted}`}>
+                  {myEnrollment?.paymentMethodExpMonth && myEnrollment?.paymentMethodExpYear
+                    ? `Expires ${String(myEnrollment.paymentMethodExpMonth).padStart(2, "0")}/${String(myEnrollment.paymentMethodExpYear).slice(-2)} · Authorized for recurring membership billing`
+                    : "Card details are encrypted and never stored by MyDojo."}
+                </p>
+              </div>
+              <span className="rounded-full bg-green-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-700">{myEnrollment?.stripeSubscriptionId ? "Recurring" : "Secure"}</span>
             </div>
           </Card>
 
@@ -1095,6 +1106,9 @@ function AccountTab({
             <DialogTitle>Signed Enrollment Agreement</DialogTitle>
             <DialogDescription>Review the agreement associated with your MyDojo membership.</DialogDescription>
           </DialogHeader>
+          {myEnrollment?.agreementPdfUrl && (
+            <a href={myEnrollment.agreementPdfUrl} target="_blank" rel="noreferrer" className="inline-flex w-fit items-center rounded-lg bg-[#E11D2A] px-3 py-2 text-sm font-bold text-white hover:bg-[#c41824]">Open signed PDF</a>
+          )}
           {myEnrollment ? (
             <EnrollmentAgreement
               customerName={myEnrollment.customerName || memberName}
@@ -1105,6 +1119,7 @@ function AccountTab({
               readOnly
               signedName={myEnrollment.agreementSignature}
               signedAt={myEnrollment.agreementSignedAt}
+              signatureImageUrl={myEnrollment.agreementSignatureImageUrl}
             />
           ) : (
             <div className={`rounded-xl border p-5 text-sm ${isDark ? "border-white/10 bg-white/5 text-white/70" : "border-gray-200 bg-gray-50 text-gray-600"}`}>Your enrollment agreement will appear here once a membership record is available.</div>

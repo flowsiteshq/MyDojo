@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import SignatureCanvas from "react-signature-canvas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +9,7 @@ import { ChevronDown, ChevronUp, FileText, CheckCircle2, PenLine } from "lucide-
 export interface AgreementSignature {
   signedName: string;
   signedAt: Date;
+  signatureDataUrl: string;
 }
 
 interface EnrollmentAgreementProps {
@@ -21,6 +23,7 @@ interface EnrollmentAgreementProps {
   readOnly?: boolean;
   signedName?: string | null;
   signedAt?: Date | string | null;
+  signatureImageUrl?: string | null;
 }
 
 // Individual collapsible section component
@@ -69,11 +72,14 @@ export function EnrollmentAgreement({
   readOnly = false,
   signedName,
   signedAt,
+  signatureImageUrl,
 }: EnrollmentAgreementProps) {
   const [allSectionsRead, setAllSectionsRead] = useState(false);
   const [typedName, setTypedName] = useState(customerName.trim());
   const [accepted, setAccepted] = useState(false);
   const [showSignature, setShowSignature] = useState(false);
+  const signatureRef = useRef<SignatureCanvas>(null);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
 
   const participantName =
     studentName && studentName !== customerName ? studentName : customerName;
@@ -87,12 +93,21 @@ export function EnrollmentAgreement({
   // Normalize: collapse multiple spaces, trim, lowercase for comparison
   const normalizeName = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase();
   const nameMatches = normalizeName(typedName) === normalizeName(customerName);
-  // Name confirmed + having clicked through the agreement is sufficient — no separate checkbox needed
-  const canProceed = allSectionsRead && nameMatches;
+  const canProceed = allSectionsRead && nameMatches && accepted && Boolean(signatureDataUrl);
+
+  const captureSignature = () => {
+    if (!signatureRef.current || signatureRef.current.isEmpty()) return;
+    setSignatureDataUrl(signatureRef.current.toDataURL("image/png"));
+  };
+
+  const clearSignature = () => {
+    signatureRef.current?.clear();
+    setSignatureDataUrl(null);
+  };
 
   const handleProceed = () => {
     if (!canProceed || !onAccepted) return;
-    onAccepted({ signedName: typedName.trim(), signedAt: new Date() });
+    onAccepted({ signedName: typedName.trim(), signedAt: new Date(), signatureDataUrl: signatureDataUrl! });
   };
 
   return (
@@ -275,6 +290,7 @@ export function EnrollmentAgreement({
             {signedName ? `Electronically signed by ${signedName}` : "This enrollment record does not include an electronic signature detail."}
             {signedAt ? ` on ${new Date(signedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}.` : ""}
           </p>
+          {signatureImageUrl && <img src={signatureImageUrl} alt="Recorded handwritten signature" className="mx-auto mt-3 h-16 max-w-[220px] object-contain" />}
         </div>
       ) : (
         <>
@@ -334,6 +350,22 @@ export function EnrollmentAgreement({
             )}
           </div>
 
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <Label className="text-base font-semibold text-gray-900">Handwritten Signature</Label>
+              <button type="button" onClick={clearSignature} className="text-sm font-semibold text-primary hover:underline">Clear</button>
+            </div>
+            <p className="text-sm text-gray-500">Use your finger or mouse to sign in the box below.</p>
+            <div className="overflow-hidden rounded-xl border-2 border-gray-300 bg-white">
+              <SignatureCanvas ref={signatureRef} penColor="#111827" canvasProps={{ width: 620, height: 150, className: "w-full touch-none" }} onEnd={captureSignature} />
+            </div>
+            {signatureDataUrl ? (
+              <p className="flex items-center gap-1 text-sm font-medium text-green-700"><CheckCircle2 className="h-4 w-4" /> Signature captured</p>
+            ) : (
+              <p className="text-sm text-amber-700">A handwritten signature is required.</p>
+            )}
+          </div>
+
           {/* Checkbox */}
           <div
             className={`flex items-start gap-4 rounded-xl p-4 cursor-pointer border-2 ${
@@ -374,7 +406,7 @@ export function EnrollmentAgreement({
                 Sign &amp; Continue to Payment
               </>
             ) : (
-              "Complete all fields above to continue"
+              "Complete your name, signature, and acknowledgement"
             )}
           </Button>
 

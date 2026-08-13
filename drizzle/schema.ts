@@ -462,6 +462,15 @@ export const enrollments = mysqlTable("enrollments", {
   stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   /** Stripe Subscription ID (if recurring billing) */
   stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
+  /** Stripe PaymentMethod ID — tokenized reference only, never a raw card number */
+  stripePaymentMethodId: varchar("stripePaymentMethodId", { length: 255 }),
+  /** Safe display metadata for the saved recurring payment method */
+  paymentMethodBrand: varchar("paymentMethodBrand", { length: 32 }),
+  paymentMethodLast4: varchar("paymentMethodLast4", { length: 4 }),
+  paymentMethodExpMonth: int("paymentMethodExpMonth"),
+  paymentMethodExpYear: int("paymentMethodExpYear"),
+  paymentMethodWallet: varchar("paymentMethodWallet", { length: 32 }),
+  paymentMethodUpdatedAt: timestamp("paymentMethodUpdatedAt"),
   /** Fluid Pay Customer Vault ID */
   fluidpayCustomerId: varchar("fluidpayCustomerId", { length: 255 }),
   /** Fluid Pay Subscription ID for recurring billing */
@@ -534,6 +543,12 @@ export const enrollments = mysqlTable("enrollments", {
   agreementSignature: varchar("agreementSignature", { length: 255 }),
   /** IP address at time of agreement signing */
   agreementSignedIp: varchar("agreementSignedIp", { length: 45 }),
+  /** Secure storage URL for the handwritten enrollment signature image */
+  agreementSignatureImageUrl: text("agreementSignatureImageUrl"),
+  /** Secure storage URL for the generated signed enrollment agreement PDF */
+  agreementPdfUrl: text("agreementPdfUrl"),
+  /** Version of the agreement terms rendered into the PDF */
+  agreementVersion: varchar("agreementVersion", { length: 32 }),
   /** Payment start date */
   startDate: timestamp("startDate"),
   /** Payment completion date (when fully paid) */

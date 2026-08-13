@@ -69,6 +69,8 @@ import { aiSmsRouter } from './aiSmsRouter';
 import { mydojoBucksRouter } from './mydojoBucks';
 import { scheduledPaymentsRouter } from './scheduledPaymentsRouter';
 import { sendLeadConfirmationSms } from "./leadConfirmationSms";
+import { getEnrollmentAgreementVersion, renderEnrollmentAgreementPdf } from "./enrollmentAgreementPdf";
+import { getOrCreateStripeCustomer, getStripe } from "./stripeHelper";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -3618,7 +3620,198 @@ Please enter your card details below to complete your registration securely. Tot
         .orderBy(schema.membershipPackages.id);
       return pkgs;
     }),
-    // Create enrollment with Fluid Pay - accepts tokenizer token, creates customer vault, charges down payment, creates subscription
+    // Start a secure membership payment. setup_future_usage consumes wallet cryptograms now
+    // and authorizes the selected card or wallet for later off-session recurring charges.
+    createStripeEnrollmentPayment: publicProcedure
+      .input(z.object({
+        packageId: z.number().int().positive().optional(),
+        customerName: z.string().min(1).max(255),
+        customerEmail: z.string().email(),
+        customerPhone: z.string().min(7).max(20),
+        studentName: z.string().max(255).optional(),
+        isSummerCamp: z.boolean().optional(),
+        summerCampWeek: z.string().max(255).optional(),
+        waiveEnrollmentFee: z.boolean().optional(),
+        waiverReason: z.string().max(200).optional(),
+        agreementSignature: z.string().min(1).max(255),
+        agreementSignedAt: z.string().datetime(),
+        agreementSignatureDataUrl: z.string().max(1_500_000).regex(/^data:image\/png;base64,/),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        let pkg: typeof schema.membershipPackages.$inferSelect | undefined;
+        if (!input.isSummerCamp) {
+          if (!input.packageId) throw new TRPCError({ code: "BAD_REQUEST", message: "Select a membership before continuing" });
+          const [foundPackage] = await db.select().from(schema.membershipPackages).where(eq(schema.membershipPackages.id, input.packageId)).limit(1);
+          if (!foundPackage || !foundPackage.isActive) throw new TRPCError({ code: "NOT_FOUND", message: "Selected membership is unavailable" });
+          pkg = foundPackage;
+        }
+
+        const enrollmentFee = Number(pkg?.enrollmentFee ?? 0);
+        const dueToday = input.isSummerCamp ? 298 : input.waiveEnrollmentFee
+          ? Math.max(0, Number(pkg!.downPayment) - enrollmentFee)
+          : Number(pkg!.downPayment);
+        const customer = await getOrCreateStripeCustomer({
+          name: input.customerName,
+          email: input.customerEmail,
+          phone: input.customerPhone,
+          metadata: { mydojoEnrollment: "true" },
+        });
+        const stripe = getStripe();
+        const intent = await stripe.paymentIntents.create({
+          amount: Math.round(dueToday * 100),
+          currency: "usd",
+          customer: customer.id,
+          automatic_payment_methods: { enabled: true },
+          setup_future_usage: "off_session",
+          description: input.isSummerCamp ? `MyDojo Summer Camp — ${input.summerCampWeek || "Registration"}` : `MyDojo ${pkg!.name} enrollment`,
+          metadata: {
+            type: input.isSummerCamp ? "summer_camp_enrollment" : "membership_enrollment",
+            packageId: input.isSummerCamp ? "0" : String(pkg!.id),
+            customerEmail: input.customerEmail,
+          },
+        });
+        return { clientSecret: intent.client_secret!, paymentIntentId: intent.id, amountCents: Math.round(dueToday * 100) };
+      }),
+
+    // Finish an approved enrollment payment, create the recurring subscription, and retain
+    // only safe Stripe payment metadata plus the signed-agreement evidence.
+    completeStripeEnrollmentPayment: publicProcedure
+      .input(z.object({
+        paymentIntentId: z.string().min(1),
+        packageId: z.number().int().positive().optional(),
+        customerName: z.string().min(1).max(255),
+        customerEmail: z.string().email(),
+        customerPhone: z.string().min(7).max(20),
+        studentName: z.string().max(255).optional(),
+        isSummerCamp: z.boolean().optional(),
+        summerCampWeek: z.string().max(255).optional(),
+        waiveEnrollmentFee: z.boolean().optional(),
+        waiverReason: z.string().max(200).optional(),
+        agreementSignature: z.string().min(1).max(255),
+        agreementSignedAt: z.string().datetime(),
+        agreementSignatureDataUrl: z.string().max(1_500_000).regex(/^data:image\/png;base64,/),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        let pkg: typeof schema.membershipPackages.$inferSelect | undefined;
+        if (!input.isSummerCamp) {
+          if (!input.packageId) throw new TRPCError({ code: "BAD_REQUEST", message: "Select a membership before continuing" });
+          const [foundPackage] = await db.select().from(schema.membershipPackages).where(eq(schema.membershipPackages.id, input.packageId)).limit(1);
+          if (!foundPackage || !foundPackage.isActive) throw new TRPCError({ code: "NOT_FOUND", message: "Selected membership is unavailable" });
+          pkg = foundPackage;
+        }
+        const stripe = getStripe();
+        const paymentIntent = await stripe.paymentIntents.retrieve(input.paymentIntentId, { expand: ["payment_method"] });
+        const expectedPaymentType = input.isSummerCamp ? "summer_camp_enrollment" : "membership_enrollment";
+        const expectedPackageId = input.isSummerCamp ? "0" : String(pkg!.id);
+        if (paymentIntent.status !== "succeeded" || paymentIntent.metadata.type !== expectedPaymentType || paymentIntent.metadata.packageId !== expectedPackageId) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "The enrollment payment could not be verified" });
+        }
+        const customerId = typeof paymentIntent.customer === "string" ? paymentIntent.customer : paymentIntent.customer?.id;
+        const paymentMethod = typeof paymentIntent.payment_method === "string"
+          ? await stripe.paymentMethods.retrieve(paymentIntent.payment_method)
+          : paymentIntent.payment_method;
+        if (!customerId || !paymentMethod || paymentMethod.type !== "card") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "A reusable card or wallet payment method is required for membership billing" });
+        }
+        if (!input.isSummerCamp) await stripe.customers.update(customerId, { invoice_settings: { default_payment_method: paymentMethod.id } });
+
+        const { getNextBillingDateStr } = await import("@shared/billingUtils");
+        const nextBillingDate = new Date(`${getNextBillingDateStr(new Date())}T12:00:00`);
+        let priceId = pkg?.stripePriceId;
+        if (!input.isSummerCamp && !priceId) {
+          const price = await stripe.prices.create({
+            unit_amount: Math.round(Number(pkg!.monthlyPrice) * 100),
+            currency: "usd",
+            recurring: { interval: "month" },
+            product_data: { name: `MyDojo ${pkg!.name} Membership` },
+          });
+          priceId = price.id;
+        }
+        let subscription: Stripe.Subscription | null = null;
+        let subscriptionCreationFailed = false;
+        if (!input.isSummerCamp) try {
+          subscription = await stripe.subscriptions.create({
+            customer: customerId,
+            items: [{ price: priceId! }],
+            default_payment_method: paymentMethod.id,
+            trial_end: Math.floor(nextBillingDate.getTime() / 1000),
+            payment_settings: { save_default_payment_method: "on_subscription" },
+            metadata: { type: "membership", packageId: String(pkg!.id), billingAnchor: getNextBillingDateStr(new Date()) },
+          });
+        } catch (subscriptionError) {
+          subscriptionCreationFailed = true;
+          console.error("[Recurring Billing] Membership payment completed but subscription setup failed", subscriptionError);
+        }
+
+        const enrollmentFee = Number(pkg?.enrollmentFee ?? 0);
+        const dueToday = input.isSummerCamp ? 298 : input.waiveEnrollmentFee ? Math.max(0, Number(pkg!.downPayment) - enrollmentFee) : Number(pkg!.downPayment);
+        const remainingBalance = input.isSummerCamp ? 0 : Math.max(0, Number(pkg!.totalPrice) - dueToday);
+        const card = paymentMethod.card;
+        const wallet = card?.wallet?.type ?? null;
+        const insertResult = await db.insert(schema.enrollments).values({
+          membershipPackageId: input.isSummerCamp ? 0 : pkg!.id,
+          customerName: input.customerName,
+          customerEmail: input.customerEmail,
+          customerPhone: input.customerPhone,
+          studentName: input.studentName || input.customerName,
+          stripeCustomerId: customerId,
+          stripePaymentIntentId: paymentIntent.id,
+          stripeSubscriptionId: subscription?.id ?? null,
+          stripePaymentMethodId: paymentMethod.id,
+          paymentMethodBrand: card?.brand ?? null,
+          paymentMethodLast4: card?.last4 ?? null,
+          paymentMethodExpMonth: card?.exp_month ?? null,
+          paymentMethodExpYear: card?.exp_year ?? null,
+          paymentMethodWallet: wallet,
+          paymentMethodUpdatedAt: new Date(),
+          downPaymentAmount: dueToday.toFixed(2),
+          paidFirstMonth: 1,
+          remainingBalance: remainingBalance.toFixed(2),
+          monthlyPaymentsRemaining: input.isSummerCamp ? 0 : Math.max(0, pkg!.durationMonths - 1),
+          status: !input.isSummerCamp && subscriptionCreationFailed ? "pending" : "active",
+          discountApplied: input.waiveEnrollmentFee ? `enrollment_fee_waived${input.waiverReason ? `:${input.waiverReason}` : ""}` : null,
+          agreementSignature: input.agreementSignature,
+          agreementSignedAt: new Date(input.agreementSignedAt),
+          startDate: new Date(),
+        });
+        const enrollmentId = (insertResult as any).insertId as number;
+        try {
+          const signatureBuffer = Buffer.from(input.agreementSignatureDataUrl.split(",")[1], "base64");
+          if (signatureBuffer.length > 1_000_000) throw new Error("Signature image exceeds the 1 MB limit");
+          const storedSignature = await storagePut(`enrollment-agreements/${enrollmentId}/signature-${Date.now()}.png`, signatureBuffer, "image/png");
+          const agreementPdf = await renderEnrollmentAgreementPdf({
+            memberName: input.customerName,
+            studentName: input.studentName,
+            packageName: input.isSummerCamp ? `Summer Camp — ${input.summerCampWeek || "Registration"}` : pkg!.name,
+            monthlyPrice: input.isSummerCamp ? 0 : Number(pkg!.monthlyPrice),
+            totalDueToday: dueToday,
+            signedAt: new Date(input.agreementSignedAt),
+            signatureName: input.agreementSignature,
+            signatureImage: signatureBuffer,
+          });
+          const storedPdf = await storagePut(`enrollment-agreements/${enrollmentId}/signed-agreement-${Date.now()}.pdf`, agreementPdf, "application/pdf");
+          await db.update(schema.enrollments).set({
+            agreementSignatureImageUrl: storedSignature.url,
+            agreementPdfUrl: storedPdf.url,
+            agreementVersion: getEnrollmentAgreementVersion(),
+          }).where(eq(schema.enrollments.id, enrollmentId));
+        } catch (artifactError) {
+          console.error("[Enrollment Agreement] Failed to store signed artifacts", { enrollmentId, artifactError });
+        }
+        if (subscriptionCreationFailed) {
+          try {
+            const { notifyOwner } = await import("./_core/notification");
+            await notifyOwner({ title: "Membership requires recurring billing review", content: `Initial membership payment for ${input.studentName || input.customerName} succeeded, but recurring billing needs staff review before ${getNextBillingDateStr(new Date())}.` });
+          } catch {}
+        }
+        return { enrollmentId, recurringStatus: subscriptionCreationFailed ? "needs_review" : subscription?.status ?? "active", nextBillingDate: getNextBillingDateStr(new Date()) };
+      }),
+
+    // Legacy FluidPay flow retained only for existing subscription support. New memberships use the secure Stripe procedures above.
     createEnrollmentCheckout: publicProcedure
       .input(z.object({
         token: z.string(), // Fluid Pay tokenizer token (2-minute expiry)
@@ -3635,6 +3828,7 @@ Please enter your card details below to complete your registration securely. Tot
         waiverReason: z.string().max(200).optional(),
         agreementSignature: z.string().max(255).optional(),
         agreementSignedAt: z.string().optional(), // ISO string
+        agreementSignatureDataUrl: z.string().max(1_500_000).regex(/^data:image\/png;base64,/).optional(),
         deferTuition: z.boolean().optional(), // if true, charge only $99 enrollment fee now; defer first month tuition
         deferredTuitionDate: z.string().optional(), // YYYY-MM-DD, must be within same calendar month
         waiveDownPayment: z.boolean().optional(), // if true, $0 charged today, recurring subscription starts immediately
@@ -3926,6 +4120,49 @@ Please enter your card details below to complete your registration securely. Tot
             startDate: new Date(),
           });
           enrollmentId = (insertResult as any).insertId;
+        }
+
+        // Preserve agreement evidence only after the enrollment row exists. This stores the
+        // handwritten signature and PDF agreement; payment credentials never reach this path.
+        if (enrollmentId && input.agreementSignature && input.agreementSignedAt) {
+          try {
+            const signedAt = new Date(input.agreementSignedAt);
+            let signatureBuffer: Buffer | null = null;
+            let signatureImageUrl: string | null = null;
+            if (input.agreementSignatureDataUrl) {
+              const base64 = input.agreementSignatureDataUrl.split(",")[1];
+              signatureBuffer = Buffer.from(base64, "base64");
+              if (signatureBuffer.length > 1_000_000) throw new Error("Signature image exceeds the 1 MB limit");
+              const storedSignature = await storagePut(
+                `enrollment-agreements/${enrollmentId}/signature-${Date.now()}.png`,
+                signatureBuffer,
+                "image/png"
+              );
+              signatureImageUrl = storedSignature.url;
+            }
+            const agreementPdf = await renderEnrollmentAgreementPdf({
+              memberName: input.customerName,
+              studentName: input.studentName,
+              packageName,
+              monthlyPrice: input.isSummerCamp ? 0 : Number(pkg?.monthlyPrice || 0),
+              totalDueToday: amountCharged,
+              signedAt,
+              signatureName: input.agreementSignature,
+              signatureImage: signatureBuffer,
+            });
+            const storedPdf = await storagePut(
+              `enrollment-agreements/${enrollmentId}/signed-agreement-${Date.now()}.pdf`,
+              agreementPdf,
+              "application/pdf"
+            );
+            await db.update(schema.enrollments).set({
+              agreementSignatureImageUrl: signatureImageUrl,
+              agreementPdfUrl: storedPdf.url,
+              agreementVersion: getEnrollmentAgreementVersion(),
+            }).where(eq(schema.enrollments.id, enrollmentId));
+          } catch (artifactError) {
+            console.error("[Enrollment Agreement] Failed to store signed agreement artifacts", { enrollmentId, artifactError });
+          }
         }
 
         // Step 4b: Award MyDojo Bucks to referrer (fire-and-forget, non-blocking)
@@ -4242,6 +4479,9 @@ Please enter your card details below to complete your registration securely. Tot
           createdAt: schema.enrollments.createdAt,
           agreementSignature: schema.enrollments.agreementSignature,
           agreementSignedAt: schema.enrollments.agreementSignedAt,
+          agreementSignatureImageUrl: schema.enrollments.agreementSignatureImageUrl,
+          agreementPdfUrl: schema.enrollments.agreementPdfUrl,
+          agreementVersion: schema.enrollments.agreementVersion,
           packageName: schema.membershipPackages.name,
           packageMonthlyPrice: schema.membershipPackages.monthlyPrice,
         })
@@ -8106,6 +8346,17 @@ Please enter your card details below to complete your registration securely. Tot
           const pm = await stripe.paymentMethods.retrieve(input.stripePaymentMethodId);
           const cardLast4 = pm.card?.last4 || '';
           const cardBrand = pm.card?.brand || '';
+          await db.update(schema.enrollments)
+            .set({
+              stripePaymentMethodId: input.stripePaymentMethodId,
+              paymentMethodBrand: cardBrand || null,
+              paymentMethodLast4: cardLast4 || null,
+              paymentMethodExpMonth: pm.card?.exp_month ?? null,
+              paymentMethodExpYear: pm.card?.exp_year ?? null,
+              paymentMethodWallet: pm.card?.wallet?.type ?? null,
+              paymentMethodUpdatedAt: new Date(),
+            })
+            .where(eq(schema.enrollments.id, input.enrollmentId));
 
           return { success: true, processor: 'stripe', cardLast4, cardType: cardBrand };
         }

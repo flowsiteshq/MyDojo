@@ -1,5 +1,10 @@
 # MyDojo Website TODO
 
+- [x] Improve Stripe recurring membership billing with saved payment-method metadata, future-use authorization, and eligible Apple Pay enrollment support
+- [ ] Validate Apple Pay recurring enrollment on an eligible iPhone/Safari wallet after publishing
+
+- [x] Add handwritten on-screen signature capture and a stored signed PDF enrollment agreement in Account Documents
+
 - [x] Add a Documents section to the student Account page with secure access to the signed enrollment agreement
 
 - [x] Move student Home upcoming-event cards directly beneath the welcome banner

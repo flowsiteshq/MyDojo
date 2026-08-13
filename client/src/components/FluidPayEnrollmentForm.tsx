@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, AlertCircle, Lock, Tag, ChevronLeft, CreditCard, FileCheck } from "lucide-react";
 import { toast } from "sonner";
 import { EnrollmentAgreement, type AgreementSignature } from "@/components/EnrollmentAgreement";
+import { StripePaymentForm } from "@/components/StripePaymentForm";
 
 interface EnrollmentData {
   packageId?: number;
@@ -111,14 +112,11 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
   const [step, setStep] = useState<"agreement" | "payment">("agreement");
   const [agreementSig, setAgreementSig] = useState<AgreementSignature | null>(null);
 
-  const [tokenizerReady, setTokenizerReady] = useState(false);
+  const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const tokenizerInstanceRef = useRef<{ submit: (amount?: string) => void } | null>(null);
-  const scriptLoadedRef = useRef(false);
-  const tokenizerInitializedRef = useRef(false);
-  const submissionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Promo code state
   const [promoInput, setPromoInput] = useState(initialPromo || "");
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; discountType: string; discountValue: number; description: string } | null>(null);
@@ -180,9 +178,8 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
     : 0;
   const totalAmount = Math.max(0, baseAmount - promoDiscount);
 
-  const createEnrollmentMutation = trpc.member.createEnrollmentCheckout.useMutation({
+  const completeStripeEnrollmentMutation = trpc.member.completeStripeEnrollmentPayment.useMutation({
     onSuccess: () => {
-      if (submissionTimeoutRef.current) { clearTimeout(submissionTimeoutRef.current); submissionTimeoutRef.current = null; }
       setIsSubmitting(false);
       setSuccess(true);
       const msg = isSummerCamp
@@ -192,7 +189,6 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
       toast.success("Enrollment complete!", { description: "Check your email for confirmation details." });
     },
     onError: (error) => {
-      if (submissionTimeoutRef.current) { clearTimeout(submissionTimeoutRef.current); submissionTimeoutRef.current = null; }
       setIsSubmitting(false);
       const msg = error.message || "Payment failed. Please try again or contact us at (877) 4-MYDOJO.";
       setErrorMessage(msg);
@@ -201,104 +197,52 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
     },
   });
 
-  // Pre-load the FluidPay script immediately so it's ready when user reaches payment step
-  useEffect(() => {
-    if (scriptLoadedRef.current) return;
-    scriptLoadedRef.current = true;
-    if (window.Tokenizer) { setTokenizerReady(true); return; }
-    const script = document.createElement("script");
-    script.src = "https://app.fluidpay.com/tokenizer/tokenizer.js";
-    script.async = true;
-    script.onload = () => setTokenizerReady(true);
-    script.onerror = () =>
-      setErrorMessage("Failed to load payment form. Please check your internet connection and refresh.");
-    document.head.appendChild(script);
-  }, []);
-
-  // Initialize tokenizer when payment step is shown
-  useEffect(() => {
-    if (step !== "payment") return;
-    if (!tokenizerReady || tokenizerInitializedRef.current) return;
-    if (!window.Tokenizer) return;
-    tokenizerInitializedRef.current = true;
-    try {
-      const instance = new window.Tokenizer({
-        url: "https://app.fluidpay.com",
-        apikey: import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "",
-        container: "#fluidpay-tokenizer-container",
-        submission: (resp) => {
-          if (!resp.token || resp.status === "error") {
-            const msg = resp.error || "Card tokenization failed. Please check your card details and try again.";
-            setErrorMessage(msg);
-            setIsSubmitting(false);
-            return;
-          }
-          createEnrollmentMutation.mutate({
-            token: resp.token,
-            packageId: enrollmentData.packageId || 0,
-            customerName: enrollmentData.customerName,
-            customerEmail: enrollmentData.customerEmail,
-            customerPhone: enrollmentData.customerPhone,
-            studentName: enrollmentData.studentName || enrollmentData.childName || enrollmentData.customerName,
-            isSummerCamp: isSummerCamp,
-            summerCampWeek: enrollmentData.weekLabel,
-            waiveEnrollmentFee: waiveEnrollmentFee || undefined,
-            waiverReason: enrollmentData.waiverReason || undefined,
-            deferTuition: enrollmentData.deferTuition || undefined,
-            deferredTuitionDate: enrollmentData.deferredTuitionDate || undefined,
-            waiveDownPayment: enrollmentData.waiveDownPayment || undefined,
-            agreementSignature: agreementSig?.signedName,
-            agreementSignedAt: agreementSig?.signedAt?.toISOString(),
-            referralCode: resolvedReferralCode || undefined,
-          });
-        },
-        onLoad: () => {},
-        settings: {
-          payment: { types: ["card"] },
-          styles: {
-            body: { "font-family": "inherit", "background-color": "transparent" },
-            inputs: {
-              "border-radius": "8px",
-              "border": "2px solid #e2e8f0",
-              "padding": "14px 16px",
-              "font-size": "18px",
-              "height": "56px",
-              "color": "#111827",
-              "background-color": "#ffffff",
-            },
-            labels: {
-              "font-size": "15px",
-              "font-weight": "600",
-              "color": "#374151",
-              "margin-bottom": "6px",
-            },
-          },
-        },
-      });
-      tokenizerInstanceRef.current = instance;
-    } catch (err: any) {
-      setErrorMessage(`Payment form error: ${err?.message || "Unknown error"}. Please refresh and try again.`);
-    }
-  }, [step, tokenizerReady]);
-
-  const handleSubmit = () => {
-    setErrorMessage(null);
-    setIsSubmitting(true);
-    // Safety timeout: if payment doesn't complete in 45 seconds, show an error
-    if (submissionTimeoutRef.current) clearTimeout(submissionTimeoutRef.current);
-    submissionTimeoutRef.current = setTimeout(() => {
+  // No payment details are collected for an explicit zero-dollar promotion. Paid
+  // memberships use the Stripe recurring enrollment flow above.
+  const createZeroDollarEnrollmentMutation = trpc.member.createEnrollmentCheckout.useMutation({
+    onSuccess: () => {
       setIsSubmitting(false);
-      setErrorMessage("Payment is taking longer than expected. Please check your internet connection and try again. If you were charged, please contact us at (877) 4-MYDOJO.");
-      submissionTimeoutRef.current = null;
-    }, 45000);
-    if (tokenizerInstanceRef.current) {
-      tokenizerInstanceRef.current.submit(totalAmount.toFixed(2));
-    } else {
-      if (submissionTimeoutRef.current) clearTimeout(submissionTimeoutRef.current);
-      setErrorMessage("Payment form not ready. Please refresh and try again.");
+      setSuccess(true);
+      const message = "Welcome to MyDojo! Your enrollment is confirmed.";
+      onSuccess?.(message);
+      toast.success("Enrollment complete!", { description: "Check your email for confirmation details." });
+    },
+    onError: (error) => {
       setIsSubmitting(false);
-    }
-  };
+      const message = error.message || "Unable to complete your enrollment. Please contact MyDojo.";
+      setErrorMessage(message);
+      onError?.(message);
+    },
+  });
+
+  const createStripePaymentMutation = trpc.member.createStripeEnrollmentPayment.useMutation({
+    onSuccess: (result) => {
+      setPaymentIntentId(result.paymentIntentId);
+      setPaymentClientSecret(result.clientSecret);
+      setErrorMessage(null);
+    },
+    onError: (error) => setErrorMessage(error.message || "Unable to prepare secure payment. Please try again."),
+  });
+
+  // Prepare a PaymentIntent only after the member has signed. It is configured for
+  // future off-session use so eligible Apple Pay or card methods can be billed monthly.
+  useEffect(() => {
+    if (step !== "payment" || !agreementSig || totalAmount <= 0 || paymentClientSecret || createStripePaymentMutation.isPending) return;
+    createStripePaymentMutation.mutate({
+      packageId: enrollmentData.packageId || 0,
+      customerName: enrollmentData.customerName,
+      customerEmail: enrollmentData.customerEmail,
+      customerPhone: enrollmentData.customerPhone,
+      studentName: enrollmentData.studentName || enrollmentData.childName || enrollmentData.customerName,
+      isSummerCamp,
+      summerCampWeek: enrollmentData.weekLabel,
+      waiveEnrollmentFee: waiveEnrollmentFee || undefined,
+      waiverReason: enrollmentData.waiverReason || undefined,
+      agreementSignature: agreementSig.signedName,
+      agreementSignedAt: agreementSig.signedAt.toISOString(),
+      agreementSignatureDataUrl: agreementSig.signatureDataUrl,
+    });
+  }, [step, agreementSig, totalAmount, paymentClientSecret, enrollmentData, waiveEnrollmentFee]);
 
   const handleAgreementAccepted = (sig: AgreementSignature) => {
     setAgreementSig(sig);
@@ -309,8 +253,8 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
 
   const handleBackToAgreement = () => {
     setStep("agreement");
-    tokenizerInitializedRef.current = false;
-    tokenizerInstanceRef.current = null;
+    setPaymentClientSecret(null);
+    setPaymentIntentId(null);
   };
 
   // ── Success screen ────────────────────────────────────────────────────────
@@ -463,19 +407,46 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
             )}
           </div>
 
-          {/* Payment form */}
+          {/* Secure payment form — cards and eligible wallet methods are saved for recurring tuition. */}
           <div className="border-2 border-gray-200 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-4">
               <CreditCard className="w-5 h-5 text-gray-600" />
-              <p className="font-semibold text-gray-900 text-base">Card Details</p>
+              <p className="font-semibold text-gray-900 text-base">Payment Details</p>
             </div>
-            {!tokenizerReady && !errorMessage && (
+            {!paymentClientSecret && !errorMessage && totalAmount > 0 && (
               <div className="flex items-center justify-center py-10 gap-3 text-gray-500">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span className="text-base">Loading secure payment form…</span>
               </div>
             )}
-            <div id="fluidpay-tokenizer-container" className={tokenizerReady ? "block" : "hidden"} />
+            {paymentClientSecret && paymentIntentId && agreementSig && (
+              <StripePaymentForm
+                clientSecret={paymentClientSecret}
+                mode="payment"
+                submitLabel={`Complete Enrollment — $${totalAmount.toFixed(2)}`}
+                loading={isSubmitting || completeStripeEnrollmentMutation.isPending}
+                onError={setErrorMessage}
+                onSuccess={(result) => {
+                  if (!result.paymentIntentId) return;
+                  setIsSubmitting(true);
+                  completeStripeEnrollmentMutation.mutate({
+                    paymentIntentId: result.paymentIntentId,
+                    packageId: enrollmentData.packageId || 0,
+                    customerName: enrollmentData.customerName,
+                    customerEmail: enrollmentData.customerEmail,
+                    customerPhone: enrollmentData.customerPhone,
+                    studentName: enrollmentData.studentName || enrollmentData.childName || enrollmentData.customerName,
+                    isSummerCamp,
+                    summerCampWeek: enrollmentData.weekLabel,
+                    waiveEnrollmentFee: waiveEnrollmentFee || undefined,
+                    waiverReason: enrollmentData.waiverReason || undefined,
+                    agreementSignature: agreementSig.signedName,
+                    agreementSignedAt: agreementSig.signedAt.toISOString(),
+                    agreementSignatureDataUrl: agreementSig.signatureDataUrl,
+                  });
+                }}
+              />
+            )}
           </div>
 
           {errorMessage && (
@@ -489,7 +460,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
             <Button
               onClick={() => {
                 if (appliedPromo) markPromoUsed.mutate({ code: appliedPromo.code });
-                createEnrollmentMutation.mutate({
+                createZeroDollarEnrollmentMutation.mutate({
                   token: "PROMO_FREE",
                   packageId: enrollmentData.packageId || 0,
                   customerName: enrollmentData.customerName,
@@ -502,6 +473,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
                   waiverReason: `Promo code: ${appliedPromo?.code}`,
                   agreementSignature: agreementSig?.signedName,
                   agreementSignedAt: agreementSig?.signedAt?.toISOString(),
+                  agreementSignatureDataUrl: agreementSig?.signatureDataUrl,
                   referralCode: resolvedReferralCode || undefined,
                 });
               }}
@@ -513,19 +485,6 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
                 <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Processing…</>
               ) : (
                 "Complete Enrollment — FREE"
-              )}
-            </Button>
-          ) : tokenizerReady && !errorMessage ? (
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-lg"
-              style={{ minHeight: 60 }}
-            >
-              {isSubmitting ? (
-                <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Processing…</>
-              ) : (
-                enrollmentData.waiveDownPayment ? `Save Card & Complete Enrollment — $0 Today` : `Pay $${totalAmount.toFixed(2)} & Complete Enrollment`
               )}
             </Button>
           ) : null}
