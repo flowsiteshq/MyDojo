@@ -1,5 +1,7 @@
 # MyDojo Website TODO
 
+- [x] Remove payment-processor names from all student and customer-facing payment, account, and shop copy
+
 - [x] Restructure the student Account tab with member summary, billing, payment method, family, events, and account management actions
 
 - [x] Restore visible product cards in the student Pro Shop and use Stripe checkout for all store purchases

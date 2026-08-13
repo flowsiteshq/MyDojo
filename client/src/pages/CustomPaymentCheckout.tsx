@@ -526,7 +526,7 @@ export default function CustomPaymentCheckout() {
 
               <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1">
                 <Lock className="h-3 w-3" />
-                Secured by FluidPay · All major cards accepted
+                Secure payment · All major cards accepted
               </p>
 
               <Button

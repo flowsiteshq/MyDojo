@@ -216,7 +216,7 @@ export default function MasterYaegerSeminar() {
                 <span className="text-blue-400 font-black text-xl">$29.00</span>
               </div>
               <p className="text-xs text-gray-500 mt-3">
-                You will be redirected to a secure Stripe checkout to complete payment.
+                You will be redirected to secure checkout to complete payment.
               </p>
             </div>
 

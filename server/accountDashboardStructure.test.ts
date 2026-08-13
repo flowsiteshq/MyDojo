@@ -25,8 +25,8 @@ describe("student Account billing dashboard", () => {
     expect(dashboard).toContain("upcomingPayment?.amount");
   });
 
-  it("keeps payment details Stripe-secured and exposes relevant account actions", () => {
-    expect(dashboard).toContain("Secure Stripe payment method");
+  it("keeps payment details secure and exposes relevant account actions", () => {
+    expect(dashboard).toContain("Secure payment method");
     expect(dashboard).toContain("Update Card");
     expect(dashboard).toContain("Add Member");
     expect(dashboard).toContain("Manage Plan");

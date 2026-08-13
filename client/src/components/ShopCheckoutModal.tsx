@@ -58,7 +58,7 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
         customerPhone: phone.trim() || undefined,
         returnTo: window.location.pathname.startsWith("/dashboard") ? "/dashboard" : "/shop",
       });
-      if (!checkoutUrl) throw new Error("Stripe checkout could not be created.");
+      if (!checkoutUrl) throw new Error("Secure checkout could not be created.");
       window.location.assign(checkoutUrl);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Unable to start secure checkout. Please try again.");
@@ -71,7 +71,7 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ShoppingBag className="h-5 w-5 text-[#E11D2A]" />
-            Checkout with Stripe
+            Secure Checkout
           </DialogTitle>
         </DialogHeader>
 
@@ -110,10 +110,10 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
           {formError ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</p> : null}
           <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
             <Lock className="h-3.5 w-3.5 shrink-0" />
-            You will complete your secure payment on Stripe. MyDojo never stores your card details.
+            You will complete your secure payment here. MyDojo never stores your card details.
           </div>
           <Button onClick={startCheckout} disabled={checkoutMutation.isPending} className="w-full bg-[#E11D2A] font-bold text-white hover:bg-[#C91826]">
-            {checkoutMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Opening secure checkout…</> : <>Continue to Stripe — ${product.price.toFixed(2)}</>}
+            {checkoutMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Opening secure checkout…</> : <>Continue to Secure Checkout — ${product.price.toFixed(2)}</>}
           </Button>
         </div>
       </DialogContent>

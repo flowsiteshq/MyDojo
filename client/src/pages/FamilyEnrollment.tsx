@@ -331,7 +331,7 @@ export default function FamilyEnrollment() {
 
                 <div className="flex items-center gap-2 text-white/50 text-xs">
                   <Shield className="w-4 h-4" />
-                  <span>Secured by FluidPay — your card data is encrypted and never stored on our servers.</span>
+                  <span>Secure payment — your card data is encrypted and never stored on our servers.</span>
                 </div>
 
                 <Button

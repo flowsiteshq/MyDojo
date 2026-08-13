@@ -404,7 +404,7 @@ function PaymentStep({
 
       <div className="flex items-center justify-center gap-2 text-white/30 text-xs">
         <Shield className="w-3.5 h-3.5" />
-        <span>256-bit SSL · Powered by FluidPay · No recurring charges</span>
+        <span>256-bit SSL · Secure payment · No recurring charges</span>
       </div>
     </div>
   );

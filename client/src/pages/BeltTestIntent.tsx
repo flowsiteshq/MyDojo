@@ -767,7 +767,7 @@ export default function BeltTestIntent() {
                 <span className="font-bold text-lg text-gray-900">Total Due Today</span>
                 <span className="font-black text-2xl text-red-600">${totalAmount}.00</span>
               </div>
-              <p className="text-xs text-gray-400 mt-2">You will be redirected to a secure Stripe checkout. Your spot is not reserved until payment is received.</p>
+              <p className="text-xs text-gray-400 mt-2">You will be redirected to secure checkout. Your spot is not reserved until payment is received.</p>
             </div>
             <Button onClick={handleSubmit} disabled={loading}
               className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-wider text-lg py-6 h-auto">

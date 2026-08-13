@@ -844,7 +844,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
 
                     <p className="text-xs text-gray-300 text-center mt-5 flex items-center justify-center gap-1.5">
                       <Shield className="w-3 h-3" />
-                      Secure checkout powered by Stripe · No commitment required
+                      Secure checkout · No commitment required
                     </p>
                   </div>
                 )}

@@ -1027,10 +1027,10 @@ function AccountTab({
       <div className="grid gap-5 xl:grid-cols-[1.12fr_0.88fr]">
         <div className="space-y-5">
           <Card isDark={isDark} className="overflow-hidden">
-            <div className={`flex items-center justify-between border-b px-5 py-4 ${t.borderSubtle}`}><div><h3 className={`font-black ${t.textPrimary}`}>Payment Method</h3><p className={`mt-0.5 text-xs ${t.textMuted}`}>Your billing details are secured by Stripe.</p></div><button onClick={() => toast.info("Secure card updates are handled through Stripe billing.")} className="rounded-lg border border-[#E11D2A]/30 px-3 py-2 text-xs font-bold text-[#E11D2A] hover:bg-red-50">Update Card</button></div>
+            <div className={`flex items-center justify-between border-b px-5 py-4 ${t.borderSubtle}`}><div><h3 className={`font-black ${t.textPrimary}`}>Payment Method</h3><p className={`mt-0.5 text-xs ${t.textMuted}`}>Your billing details are securely protected.</p></div><button onClick={() => toast.info("Secure card updates are handled through your billing settings.")} className="rounded-lg border border-[#E11D2A]/30 px-3 py-2 text-xs font-bold text-[#E11D2A] hover:bg-red-50">Update Card</button></div>
             <div className="flex items-center gap-4 p-5">
-              <div className={`flex h-11 w-14 items-center justify-center rounded-lg border text-xs font-black tracking-wider ${isDark ? "border-white/10 bg-white/5 text-white" : "border-gray-200 bg-white text-[#1a1f71]"}`}>STRIPE</div>
-              <div className="min-w-0 flex-1"><p className={`font-bold ${t.textPrimary}`}>Secure Stripe payment method</p><p className={`mt-0.5 text-xs ${t.textMuted}`}>Card details are encrypted and never stored by MyDojo.</p></div>
+              <div className={`flex h-11 w-14 items-center justify-center rounded-lg border text-xs font-black tracking-wider ${isDark ? "border-white/10 bg-white/5 text-white" : "border-gray-200 bg-white text-[#E11D2A]"}`}>SECURE</div>
+              <div className="min-w-0 flex-1"><p className={`font-bold ${t.textPrimary}`}>Secure payment method</p><p className={`mt-0.5 text-xs ${t.textMuted}`}>Card details are encrypted and never stored by MyDojo.</p></div>
               <span className="rounded-full bg-green-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-700">Secure</span>
             </div>
           </Card>
@@ -1059,7 +1059,7 @@ function AccountTab({
             <h3 className={`font-black ${t.textPrimary}`}>Account Actions</h3><p className={`mt-1 text-xs ${t.textMuted}`}>Make changes to your membership and account.</p>
             <div className="mt-4 grid grid-cols-2 gap-3">
               {[
-                { label: "Update Card", sublabel: "Stripe billing", icon: <CreditCard className="h-5 w-5 text-[#E11D2A]" />, action: () => toast.info("Secure card updates are handled through Stripe billing.") },
+                { label: "Update Card", sublabel: "Billing settings", icon: <CreditCard className="h-5 w-5 text-[#E11D2A]" />, action: () => toast.info("Secure card updates are handled through your billing settings.") },
                 { label: "Add Member", sublabel: "Manage family", icon: <Users className="h-5 w-5 text-[#8B5CF6]" />, action: () => setAccountSection("family") },
                 { label: "Manage Plan", sublabel: "Billing & plan", icon: <Package className="h-5 w-5 text-[#E11D2A]" />, action: () => setAccountSection("billing") },
                 { label: "Payment Settings", sublabel: "Billing preferences", icon: <LayoutDashboard className="h-5 w-5 text-slate-500" />, action: () => setAccountSection("settings") },
@@ -2332,7 +2332,7 @@ export default function MemberDashboard2() {
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">Member Store</p>
                 <h2 className={`mt-1 text-3xl font-black tracking-tight ${t.textPrimary}`}>Pro Shop</h2>
-                <p className={`mt-2 max-w-lg text-sm ${t.textSecondary}`}>Official uniforms, apparel, and training gear. Every purchase is completed securely with Stripe.</p>
+                <p className={`mt-2 max-w-lg text-sm ${t.textSecondary}`}>Official uniforms, apparel, and training gear. Every purchase is completed through secure checkout.</p>
               </div>
               <a href="/shop" className={`rounded-xl border px-4 py-2 text-sm font-bold transition-colors ${isDark ? "border-white/15 text-white hover:bg-white/5" : "border-slate-200 text-slate-800 hover:bg-slate-50"}`}>View All Gear</a>
             </div>
@@ -2352,7 +2352,7 @@ export default function MemberDashboard2() {
                 </button>
               ))}
             </div>
-            <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-xs ${isDark ? "border-white/10 bg-white/[0.04] text-white/60" : "border-slate-200 bg-slate-50 text-slate-500"}`}><Lock className="h-4 w-4 text-[#E11D2A]" /> Secure checkout powered by Stripe. MyDojo does not store card details.</div>
+            <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-xs ${isDark ? "border-white/10 bg-white/[0.04] text-white/60" : "border-slate-200 bg-slate-50 text-slate-500"}`}><Lock className="h-4 w-4 text-[#E11D2A]" /> Secure checkout. MyDojo does not store card details.</div>
           </section>
         )}
 
@@ -3370,7 +3370,7 @@ export default function MemberDashboard2() {
                         </div>
                         <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-white/40' : 'text-gray-400'}`}>
                           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                          Secured by FluidPay — your card data is encrypted and never stored on our servers.
+                          Secure payment — your card data is encrypted and never stored on our servers.
                         </div>
                         <div className="flex gap-3">
                           <button

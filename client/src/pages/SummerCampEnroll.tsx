@@ -687,7 +687,7 @@ export default function SummerCampEnroll() {
 
                 <div className="flex items-center justify-center gap-2 text-xs text-gray-400 mt-4">
                   <Lock className="w-3.5 h-3.5" />
-                  <span>Secured by Fluid Pay · PCI DSS Compliant · Card info never stored on our servers</span>
+                  <span>Secure payment · PCI DSS Compliant · Card info never stored on our servers</span>
                 </div>
               </>
             )}

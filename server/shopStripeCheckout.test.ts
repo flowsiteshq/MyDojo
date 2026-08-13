@@ -28,7 +28,7 @@ describe("student Pro Shop and Stripe checkout", () => {
   it("shows a real catalog inside the student Shop tab", () => {
     expect(dashboard).toContain("STUDENT_SHOP_PRODUCTS.map");
     expect(dashboard).toContain("Member Store");
-    expect(dashboard).toContain("Secure checkout powered by Stripe");
+    expect(dashboard).toContain("Secure checkout. MyDojo does not store card details.");
     expect(catalog).toContain("kihon-gi");
     expect(catalog).toContain("kickboxing-gloves");
     expect(catalog).toContain("tetsujin-gi");
@@ -44,8 +44,8 @@ describe("student Pro Shop and Stripe checkout", () => {
     expect(shopRouterSource).not.toContain("FluidPay");
   });
 
-  it("sends the customer to Stripe rather than tokenizing card data in the app", () => {
-    expect(checkoutModal).toContain("Checkout with Stripe");
+  it("sends the customer to secure checkout rather than tokenizing card data in the app", () => {
+    expect(checkoutModal).toContain("Secure Checkout");
     expect(checkoutModal).toContain("trpc.shop.createCheckout.useMutation");
     expect(checkoutModal).toContain("window.location.assign(checkoutUrl)");
     expect(checkoutModal).not.toContain("FluidPay");

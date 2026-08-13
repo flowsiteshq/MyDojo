@@ -520,7 +520,7 @@ export default function SummerCampOpenHouse() {
                     className="w-full mt-4 bg-primary hover:bg-primary/90 text-white text-lg py-6 h-auto font-heading uppercase tracking-wider">
                     {isLoading ? <><Loader2 className="animate-spin mr-2 w-5 h-5" /> Processing...</> : <><Lock className="mr-2 w-5 h-5" /> Pay ${pricing?.total.toFixed(2)} & Enroll</>}
                   </Button>
-                  <p className="text-xs text-gray-500 text-center mt-3">Your card is processed securely via FluidPay. We never store your card details.</p>
+                  <p className="text-xs text-gray-500 text-center mt-3">Your card is processed securely. We never store your card details.</p>
                 </div>
               )}
             </div>

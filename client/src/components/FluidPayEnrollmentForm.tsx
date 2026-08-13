@@ -532,7 +532,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
 
           <div className="flex items-center justify-center gap-2 text-sm text-gray-400 pb-2">
             <Lock className="w-4 h-4" />
-            <span>Secured by Fluid Pay · PCI DSS Compliant</span>
+            <span>Secure payment · PCI DSS Compliant</span>
           </div>
         </div>
       )}

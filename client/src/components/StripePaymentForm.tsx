@@ -246,7 +246,7 @@ function InnerForm({ mode, submitLabel, loading, onSuccess, onError }: InnerForm
 
         <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1">
           <Lock className="h-3 w-3" />
-          Secured by Stripe · Apple Pay &amp; Google Pay supported
+          Secure payment · Apple Pay &amp; Google Pay supported
         </p>
       </form>
     </div>
