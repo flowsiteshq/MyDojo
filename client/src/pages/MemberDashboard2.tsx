@@ -46,7 +46,7 @@ import {
   ShoppingBag,
   User as UserIcon,
 } from "lucide-react";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, type TouchEvent } from "react";
 import { CurriculumViewer } from "@/components/CurriculumViewer";
 import { MessagesTab } from "@/components/MessagesTab";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -1200,6 +1200,8 @@ export default function MemberDashboard2() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<"home" | "benefits" | "training" | "locate" | "shop" | "account">("home");
   const [trainingDialog, setTrainingDialog] = useState<"schedule" | "curriculum" | "progress" | "attendance" | "testing" | null>(null);
+  const [trainingModalDragOffset, setTrainingModalDragOffset] = useState(0);
+  const trainingModalTouchStartY = useRef<number | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showFreezeDialog, setShowFreezeDialog] = useState(false);
@@ -1223,6 +1225,34 @@ export default function MemberDashboard2() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { mode, setMode, isDark } = useDashboardTheme();
   const t = useTokens(isDark);
+
+  const closeTrainingModal = useCallback(() => {
+    trainingModalTouchStartY.current = null;
+    setTrainingModalDragOffset(0);
+    setTrainingDialog(null);
+  }, []);
+
+  const handleTrainingModalTouchStart = useCallback((event: TouchEvent<HTMLDivElement>) => {
+    trainingModalTouchStartY.current = event.touches[0]?.clientY ?? null;
+  }, []);
+
+  const handleTrainingModalTouchMove = useCallback((event: TouchEvent<HTMLDivElement>) => {
+    const startY = trainingModalTouchStartY.current;
+    const currentY = event.touches[0]?.clientY;
+    if (startY === null || currentY === undefined) return;
+    setTrainingModalDragOffset(Math.min(180, Math.max(0, currentY - startY)));
+  }, []);
+
+  const handleTrainingModalTouchEnd = useCallback((event: TouchEvent<HTMLDivElement>) => {
+    const startY = trainingModalTouchStartY.current;
+    const endY = event.changedTouches[0]?.clientY;
+    trainingModalTouchStartY.current = null;
+    if (startY !== null && endY !== undefined && endY - startY >= 96) {
+      closeTrainingModal();
+      return;
+    }
+    setTrainingModalDragOffset(0);
+  }, [closeTrainingModal]);
 
   const uploadSelfPhotoMutation = trpc.member.uploadSelfPhoto.useMutation({
     onSuccess: (data) => {
@@ -2043,26 +2073,52 @@ export default function MemberDashboard2() {
             </div>
 
             {/* ── Focused Training Detail Modals ── */}
-            <Dialog open={trainingDialog !== null} onOpenChange={(open) => !open && setTrainingDialog(null)}>
-              <DialogContent className={`max-h-[calc(100dvh-2rem)] max-w-3xl overflow-hidden p-0 gap-0 ${isDark ? "border-white/10 bg-zinc-950 text-white" : "border-slate-200 bg-white text-slate-950"}`}>
-                <DialogHeader className={`border-b px-6 py-5 pr-14 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-100 bg-slate-50"}`}>
-                  <DialogTitle className={`text-xl font-black ${t.textPrimary}`}>
-                    {trainingDialog === "schedule" && "My Schedule"}
-                    {trainingDialog === "curriculum" && "My Curriculum"}
-                    {trainingDialog === "progress" && "My Progress"}
-                    {trainingDialog === "attendance" && "My Attendance"}
-                    {trainingDialog === "testing" && "Belt Testing"}
-                  </DialogTitle>
-                  <DialogDescription className={t.textSecondary}>
-                    {trainingDialog === "schedule" && "Your recurring classes and upcoming training times."}
-                    {trainingDialog === "curriculum" && "Review each technique and mark completed items as you practice."}
-                    {trainingDialog === "progress" && "Track your belt journey, stripe progress, and training milestones."}
-                    {trainingDialog === "attendance" && "See your consistency, recent class activity, and weekly attendance."}
-                    {trainingDialog === "testing" && "Review your next test and complete registration when you are ready."}
-                  </DialogDescription>
-                </DialogHeader>
+            <Dialog open={trainingDialog !== null} onOpenChange={(open) => !open && closeTrainingModal()}>
+              <DialogContent showCloseButton={false} className={`max-h-[calc(100dvh-2rem)] max-w-3xl overflow-hidden p-0 gap-0 ${isDark ? "border-white/10 bg-zinc-950 text-white" : "border-slate-200 bg-white text-slate-950"}`}>
+                <div
+                  className="will-change-transform"
+                  style={{
+                    transform: `translateY(${trainingModalDragOffset}px)`,
+                    transition: trainingModalDragOffset > 0 ? "none" : "transform 220ms cubic-bezier(0.23, 1, 0.32, 1)",
+                  }}
+                >
+                  <div
+                    aria-label="Swipe down to dismiss"
+                    className={`relative touch-none border-b px-6 pb-5 pt-3 pr-16 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-100 bg-slate-50"}`}
+                    onTouchStart={handleTrainingModalTouchStart}
+                    onTouchMove={handleTrainingModalTouchMove}
+                    onTouchEnd={handleTrainingModalTouchEnd}
+                    onTouchCancel={() => { trainingModalTouchStartY.current = null; setTrainingModalDragOffset(0); }}
+                  >
+                    <div className={`mx-auto mb-3 h-1.5 w-12 rounded-full ${isDark ? "bg-white/25" : "bg-slate-300"}`} />
+                    <button
+                      type="button"
+                      onClick={closeTrainingModal}
+                      aria-label="Close training details"
+                      className={`absolute right-4 top-3 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold transition-colors ${isDark ? "bg-white/10 text-white hover:bg-white/20" : "bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-100"}`}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      Close
+                    </button>
+                    <DialogHeader className="gap-1 text-left">
+                      <DialogTitle className={`text-xl font-black ${t.textPrimary}`}>
+                        {trainingDialog === "schedule" && "My Schedule"}
+                        {trainingDialog === "curriculum" && "My Curriculum"}
+                        {trainingDialog === "progress" && "My Progress"}
+                        {trainingDialog === "attendance" && "My Attendance"}
+                        {trainingDialog === "testing" && "Belt Testing"}
+                      </DialogTitle>
+                      <DialogDescription className={t.textSecondary}>
+                        {trainingDialog === "schedule" && "Your recurring classes and upcoming training times."}
+                        {trainingDialog === "curriculum" && "Review each technique and mark completed items as you practice."}
+                        {trainingDialog === "progress" && "Track your belt journey, stripe progress, and training milestones."}
+                        {trainingDialog === "attendance" && "See your consistency, recent class activity, and weekly attendance."}
+                        {trainingDialog === "testing" && "Review your next test and complete registration when you are ready."}
+                      </DialogDescription>
+                    </DialogHeader>
+                  </div>
 
-                <div className="max-h-[calc(100dvh-11rem)] overflow-y-auto p-5 sm:p-6">
+                  <div className="max-h-[calc(100dvh-11rem)] overflow-y-auto p-5 sm:p-6">
                   {trainingDialog === "schedule" && (
                     <div className="space-y-3">
                       {((schedules?.length ? schedules : todayClasses) ?? []).length > 0 ? ((schedules?.length ? schedules : todayClasses) ?? []).map((schedule: any) => {
@@ -2157,6 +2213,7 @@ export default function MemberDashboard2() {
                       </button>
                     </div>
                   )}
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>

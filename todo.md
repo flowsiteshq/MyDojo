@@ -1,5 +1,7 @@
 # MyDojo Website TODO
 
+- [x] Add a smooth swipe-down dismissal gesture and prominent close button to Training detail modals
+
 - [x] Organize the Training tab into focused Schedule, Curriculum, Progress, Attendance, and Testing modals opened from quick-action icons
 
 - [x] Fix the Training tab curriculum contrast so every requirement and status is readable in light mode
