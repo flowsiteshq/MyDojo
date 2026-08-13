@@ -1,5 +1,7 @@
 # MyDojo Website TODO
 
+- [x] Restructure the student Account tab with member summary, billing, payment method, family, events, and account management actions
+
 - [x] Restore visible product cards in the student Pro Shop and use Stripe checkout for all store purchases
 - [x] Add clear Stripe shop purchase success/cancel feedback in the public and student shop experiences
 - [x] Verify and document the shop_purchase Stripe webhook or fulfillment recording path

@@ -654,6 +654,9 @@ function AccountTab({
   const { data: payments, isLoading: paymentsLoading } = trpc.member.getPaymentHistory.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+  const { data: childProfiles } = trpc.childProfiles.list.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
 
   const formatAmount = (amount: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
@@ -675,6 +678,14 @@ function AccountTab({
 
   // Upcoming payment (first item with status "upcoming")
   const upcomingPayment = payments?.find((p: any) => p.status === "upcoming");
+  const completedPayments = (payments ?? []).filter((p: any) => p.status !== "upcoming");
+  const recentPayments = completedPayments.slice(0, 5);
+  const overdueBalance = (payments ?? [])
+    .filter((p: any) => p.status === "overdue" || p.status === "past_due")
+    .reduce((total: number, p: any) => total + Number(p.amount || 0), 0);
+  const memberCount = 1 + (Array.isArray(childProfiles) ? childProfiles.length : 0);
+  const nextPaymentAmount = upcomingPayment?.amount ?? (monthlyPrice ? Number(monthlyPrice) : null);
+  const nextPaymentDate = upcomingPayment?.created ? formatDate(upcomingPayment.created) : "Not scheduled";
 
   // Filtered payments for search
   const filteredPayments = (payments ?? []).filter((p: any) => {
@@ -970,120 +981,97 @@ function AccountTab({
 
   // ── Main Account Overview ──────────────────────────────────────────────────
   return (
-    <div className="space-y-6">
-      {/* ── Member Hero Card ── */}
-      <Card isDark={isDark} className="overflow-hidden">
-        <div className="relative p-6 pb-5" style={{ background: isDark ? "linear-gradient(135deg, #1a0505, #2d0808)" : "linear-gradient(135deg, #fef2f2, #fff)" }}>
-          <div className="flex items-start gap-4">
-            {/* Avatar */}
-            <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-[#E11D2A] to-red-700 flex items-center justify-center text-xl font-bold text-white shrink-0 shadow-lg">
-              {selfPhotoUrl ? (
-                <img src={selfPhotoUrl} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                initials
-              )}
-            </div>
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <h2 className={`text-xl font-black leading-tight ${t.textPrimary}`}>{memberName}</h2>
-              <p className={`text-sm ${t.textMuted} mt-0.5`}>{packageName} Program</p>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="w-3.5 h-3.5 rounded-full border-2" style={{ background: beltColor, borderColor: beltColor }} />
-                <span className={`text-sm font-semibold ${t.textPrimary}`}>{beltRank}</span>
-              </div>
-            </div>
-            {/* Status badge */}
-            <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-              memberStatus === "Active" ? "bg-green-100 text-green-700" :
-              memberStatus === "Frozen" ? "bg-blue-100 text-blue-700" :
-              "bg-amber-100 text-amber-700"
-            }`}>
-              {memberStatus}
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className={`grid grid-cols-3 gap-3 mt-5 pt-5 border-t ${isDark ? "border-white/10" : "border-gray-200/60"}`}>
-            <div className="text-center">
-              <p className={`text-2xl font-black ${t.textPrimary}`}>{totalClasses}</p>
-              <p className={`text-[10px] font-semibold uppercase tracking-wider ${t.textMuted}`}>Classes</p>
-            </div>
-            <div className="text-center">
-              <p className={`text-2xl font-black text-orange-500`}>{currentStreak}</p>
-              <p className={`text-[10px] font-semibold uppercase tracking-wider ${t.textMuted}`}>Streak</p>
-            </div>
-            <div className="text-center">
-              <p className={`text-sm font-bold ${t.textPrimary} leading-tight`}>{nextBelt ?? "—"}</p>
-              <p className={`text-[10px] font-semibold uppercase tracking-wider ${t.textMuted}`}>Next Goal</p>
-            </div>
-          </div>
-
-          {/* View My Progress button */}
-          <button
-            onClick={() => setActiveTab("training")}
-            className="w-full mt-5 py-3 rounded-xl bg-[#E11D2A] hover:bg-[#c01020] text-white text-sm font-bold uppercase tracking-wider transition-colors"
-          >
-            View My Progress
-          </button>
-
-          {/* Member since */}
-          {memberSince && (
-            <p className={`text-center text-xs ${t.textMuted} mt-3`}>
-              Member since {new Date(memberSince).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-            </p>
-          )}
+    <div className="space-y-6 pb-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#E11D2A]">Member account</p>
+          <h2 className={`mt-1 text-3xl font-black tracking-tight ${t.textPrimary}`}>Account &amp; Billing</h2>
+          <p className={`mt-1 text-sm ${t.textSecondary}`}>Manage your membership, payments, and family in one place.</p>
         </div>
-      </Card>
-
-      {/* ── Upcoming Payment Card ── */}
-      {upcomingPayment && (
-        <Card isDark={isDark} className="p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? "text-blue-400" : "text-blue-600"}`}>Next Payment</p>
-              <p className={`text-2xl font-black mt-1 ${t.textPrimary}`}>{formatAmount(upcomingPayment.amount)}</p>
-              <p className={`text-xs ${t.textMuted} mt-0.5`}>{upcomingPayment.description}</p>
-            </div>
-            <div className="text-right">
-              <p className={`text-sm font-semibold ${t.textPrimary}`}>{formatDate(upcomingPayment.created)}</p>
-              <p className={`text-xs ${t.textMuted}`}>Due date</p>
-            </div>
+        <button onClick={() => setActiveTab("training")} className={`flex items-center gap-3 rounded-2xl border px-3 py-2 text-left ${isDark ? "border-white/10 bg-white/5" : "border-gray-200 bg-white"}`}>
+          <div className="h-10 w-10 overflow-hidden rounded-xl bg-[#E11D2A] text-center leading-10 font-black text-white">
+            {selfPhotoUrl ? <img src={selfPhotoUrl} alt="Profile" className="h-full w-full object-cover" /> : initials}
           </div>
-        </Card>
-      )}
+          <div className="pr-2"><p className={`text-sm font-bold ${t.textPrimary}`}>{memberName}</p><p className={`text-xs ${t.textMuted}`}>{beltRank}</p></div>
+          <ChevronRight className={`h-4 w-4 ${t.textMuted}`} />
+        </button>
+      </div>
 
-      {/* ── Quick Actions / Section Navigation ── */}
-      <div className="space-y-2">
-        {[
-          { id: "billing", label: "Membership & Billing", sublabel: monthlyPrice ? `${formatAmount(Number(monthlyPrice))}/mo · ${packageName}` : packageName, icon: <CreditCard className="h-5 w-5 text-green-500" /> },
-          { id: "family", label: "My Family", sublabel: "Manage family members", icon: <Users className="h-5 w-5 text-purple-500" /> },
-          { id: "documents", label: "Documents", sublabel: "Waivers, certificates, receipts", icon: <BookOpen className="h-5 w-5 text-orange-500" /> },
-          { id: "notifications", label: "Notifications", sublabel: "SMS, email, push preferences", icon: <Bell className="h-5 w-5 text-yellow-500" /> },
-          { id: "settings", label: "Settings", sublabel: "Profile, password, sign out", icon: <LayoutDashboard className="h-5 w-5 text-gray-500" /> },
-        ].map((item) => (
-          <button
-            key={item.id}
-            onClick={() => {
-              if (item.id === "documents" || item.id === "notifications") {
-                toast("Coming soon — this feature is being built.");
-              } else {
-                setAccountSection(item.id);
-              }
-            }}
-            className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left group ${
-              isDark ? "border-white/8 hover:bg-white/5 hover:border-white/15" : "border-gray-100 hover:bg-gray-50 hover:border-gray-200"
-            }`}
-          >
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
-              {item.icon}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Card isDark={isDark} className="p-4">
+          <div className="flex items-start justify-between"><CreditCard className="h-5 w-5 text-[#E11D2A]" /><span className="text-[10px] font-bold uppercase tracking-wider text-green-600">{overdueBalance > 0 ? "Due" : "Current"}</span></div>
+          <p className={`mt-4 text-xs font-semibold ${t.textMuted}`}>Current Balance</p>
+          <p className={`mt-1 text-2xl font-black ${t.textPrimary}`}>{formatAmount(overdueBalance)}</p>
+          <p className={`mt-1 text-xs ${overdueBalance > 0 ? "text-red-600" : "text-green-600"}`}>{overdueBalance > 0 ? "Please review your balance" : "All caught up"}</p>
+        </Card>
+        <Card isDark={isDark} className="p-4">
+          <Calendar className="h-5 w-5 text-[#E11D2A]" />
+          <p className={`mt-4 text-xs font-semibold ${t.textMuted}`}>Next Payment</p>
+          <p className={`mt-1 text-base font-black leading-tight ${t.textPrimary}`}>{nextPaymentDate}</p>
+          <p className={`mt-1 text-xs ${t.textSecondary}`}>{nextPaymentAmount !== null ? formatAmount(Number(nextPaymentAmount)) : "Billing date pending"}</p>
+        </Card>
+        <Card isDark={isDark} className="p-4">
+          <Receipt className="h-5 w-5 text-[#E11D2A]" />
+          <p className={`mt-4 text-xs font-semibold ${t.textMuted}`}>Membership Plan</p>
+          <p className={`mt-1 text-base font-black leading-tight ${t.textPrimary}`}>{packageName}</p>
+          <p className={`mt-1 text-xs ${t.textSecondary}`}>{monthlyPrice ? `${formatAmount(Number(monthlyPrice))} / month` : "Plan details unavailable"}</p>
+        </Card>
+        <button onClick={() => setAccountSection("family")} className={`rounded-2xl border p-4 text-left transition-colors ${isDark ? "border-white/8 bg-white/[0.03] hover:bg-white/[0.07]" : "border-gray-200 bg-white hover:bg-gray-50"}`}>
+          <Users className="h-5 w-5 text-[#8B5CF6]" />
+          <p className={`mt-4 text-xs font-semibold ${t.textMuted}`}>Members</p>
+          <p className={`mt-1 text-2xl font-black ${t.textPrimary}`}>{memberCount}</p>
+          <p className="mt-1 text-xs font-semibold text-[#E11D2A]">View all members</p>
+        </button>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.12fr_0.88fr]">
+        <div className="space-y-5">
+          <Card isDark={isDark} className="overflow-hidden">
+            <div className={`flex items-center justify-between border-b px-5 py-4 ${t.borderSubtle}`}><div><h3 className={`font-black ${t.textPrimary}`}>Payment Method</h3><p className={`mt-0.5 text-xs ${t.textMuted}`}>Your billing details are secured by Stripe.</p></div><button onClick={() => toast.info("Secure card updates are handled through Stripe billing.")} className="rounded-lg border border-[#E11D2A]/30 px-3 py-2 text-xs font-bold text-[#E11D2A] hover:bg-red-50">Update Card</button></div>
+            <div className="flex items-center gap-4 p-5">
+              <div className={`flex h-11 w-14 items-center justify-center rounded-lg border text-xs font-black tracking-wider ${isDark ? "border-white/10 bg-white/5 text-white" : "border-gray-200 bg-white text-[#1a1f71]"}`}>STRIPE</div>
+              <div className="min-w-0 flex-1"><p className={`font-bold ${t.textPrimary}`}>Secure Stripe payment method</p><p className={`mt-0.5 text-xs ${t.textMuted}`}>Card details are encrypted and never stored by MyDojo.</p></div>
+              <span className="rounded-full bg-green-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-green-700">Secure</span>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className={`font-bold text-sm ${t.textPrimary}`}>{item.label}</p>
-              <p className={`text-xs ${t.textMuted} truncate`}>{item.sublabel}</p>
+          </Card>
+
+          <Card isDark={isDark} className="overflow-hidden">
+            <div className={`flex items-center justify-between border-b px-5 py-4 ${t.borderSubtle}`}><div><h3 className={`font-black ${t.textPrimary}`}>Upcoming Charges &amp; Events</h3><p className={`mt-0.5 text-xs ${t.textMuted}`}>Important dates for your MyDojo membership.</p></div><button onClick={() => setActiveTab("home")} className="text-xs font-bold text-[#E11D2A]">View all</button></div>
+            <div className="divide-y divide-gray-100 dark:divide-white/10">
+              {[
+                { title: "Belt Test", detail: "Saturday, August 15 · Registration required", amount: "$49.00", action: "Register", onClick: () => { window.location.href = "/belt-test-intent"; } },
+                { title: "Parents Night Out", detail: "Friday, August 21 · 6:00–9:30 PM", amount: "Member event", action: "View", onClick: () => { window.location.href = "/parents-night-out-aug"; } },
+                { title: "Master Yaeger Seminar", detail: "Saturday, August 22 · 11:00 AM–2:00 PM", amount: "$29.00", action: "Details", onClick: () => { window.location.href = "/master-yaeger-seminar"; } },
+              ].map((item) => (
+                <div key={item.title} className="flex items-center gap-3 px-5 py-4"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E11D2A]/10"><Calendar className="h-4 w-4 text-[#E11D2A]" /></div><div className="min-w-0 flex-1"><p className={`text-sm font-bold ${t.textPrimary}`}>{item.title}</p><p className={`mt-0.5 text-xs ${t.textMuted}`}>{item.detail}</p></div><div className="text-right"><p className={`text-sm font-black ${t.textPrimary}`}>{item.amount}</p><button onClick={item.onClick} className="mt-1 rounded-lg bg-[#E11D2A] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white hover:bg-[#c41824]">{item.action}</button></div></div>
+              ))}
             </div>
-            <ChevronRight className={`h-4 w-4 ${t.textMuted} group-hover:text-[#E11D2A] transition-colors`} />
-          </button>
-        ))}
+          </Card>
+        </div>
+
+        <div className="space-y-5">
+          <Card isDark={isDark} className="overflow-hidden">
+            <div className={`flex items-center justify-between border-b px-5 py-4 ${t.borderSubtle}`}><div><h3 className={`font-black ${t.textPrimary}`}>Billing History</h3><p className={`mt-0.5 text-xs ${t.textMuted}`}>Your recent membership payments.</p></div><button onClick={() => setAccountSection("billing")} className="text-xs font-bold text-[#E11D2A]">View all</button></div>
+            {paymentsLoading ? <div className="flex justify-center p-10"><div className="h-5 w-5 animate-spin rounded-full border-2 border-[#E11D2A] border-t-transparent" /></div> : recentPayments.length === 0 ? <div className={`p-8 text-center text-sm ${t.textMuted}`}>No billing history is available yet.</div> : <div className="divide-y divide-gray-100 dark:divide-white/10">{recentPayments.map((payment: any) => <div key={payment.id} className="flex items-center gap-3 px-5 py-3.5"><div className="min-w-0 flex-1"><p className={`text-sm font-semibold ${t.textPrimary}`}>{formatDate(payment.created)}</p><p className={`mt-0.5 truncate text-xs ${t.textMuted}`}>{payment.description}</p></div><div className="text-right"><p className={`text-sm font-black ${t.textPrimary}`}>{formatAmount(payment.amount)}</p><span className="mt-0.5 inline-block rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-700">Paid</span></div></div>)}</div>}
+          </Card>
+
+          <Card isDark={isDark} className="p-5">
+            <h3 className={`font-black ${t.textPrimary}`}>Account Actions</h3><p className={`mt-1 text-xs ${t.textMuted}`}>Make changes to your membership and account.</p>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              {[
+                { label: "Update Card", sublabel: "Stripe billing", icon: <CreditCard className="h-5 w-5 text-[#E11D2A]" />, action: () => toast.info("Secure card updates are handled through Stripe billing.") },
+                { label: "Add Member", sublabel: "Manage family", icon: <Users className="h-5 w-5 text-[#8B5CF6]" />, action: () => setAccountSection("family") },
+                { label: "Manage Plan", sublabel: "Billing & plan", icon: <Package className="h-5 w-5 text-[#E11D2A]" />, action: () => setAccountSection("billing") },
+                { label: "Payment Settings", sublabel: "Billing preferences", icon: <LayoutDashboard className="h-5 w-5 text-slate-500" />, action: () => setAccountSection("settings") },
+              ].map((action) => <button key={action.label} onClick={action.action} className={`rounded-xl border p-3 text-left transition-colors ${isDark ? "border-white/10 hover:bg-white/5" : "border-gray-200 hover:bg-gray-50"}`}><div className="mb-3">{action.icon}</div><p className={`text-sm font-bold ${t.textPrimary}`}>{action.label}</p><p className={`mt-0.5 text-xs ${t.textMuted}`}>{action.sublabel}</p></button>)}
+            </div>
+          </Card>
+
+          <div className={`flex items-center justify-between rounded-2xl border px-5 py-4 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-gray-200 bg-white"}`}>
+            <div><p className={`text-sm font-bold ${t.textPrimary}`}>{memberStatus} membership</p><p className={`mt-0.5 text-xs ${t.textMuted}`}>{memberSince ? `Member since ${new Date(memberSince).toLocaleDateString("en-US", { month: "short", year: "numeric" })}` : "Membership details"}</p></div>
+            <button onClick={() => setAccountSection("billing")} className="text-sm font-bold text-[#E11D2A]">Manage <ChevronRight className="inline h-4 w-4" /></button>
+          </div>
+        </div>
       </div>
     </div>
   );
