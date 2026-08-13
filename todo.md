@@ -1,5 +1,7 @@
 # MyDojo Website TODO
 
+- [x] Move student Home upcoming-event cards directly beneath the welcome banner
+
 - [x] Remove payment-processor names from all student and customer-facing payment, account, and shop copy
 
 - [x] Restructure the student Account tab with member summary, billing, payment method, family, events, and account management actions

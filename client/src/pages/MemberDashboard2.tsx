@@ -2582,6 +2582,36 @@ export default function MemberDashboard2() {
                       </div>
                     </section>
 
+                    <section aria-labelledby="home-upcoming-events">
+                      <div className="mb-3 flex items-end justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">Plan Ahead</p>
+                          <h2 id="home-upcoming-events" className={`mt-1 text-2xl font-black ${t.textPrimary}`}>Upcoming Events</h2>
+                        </div>
+                        <button onClick={() => window.location.href = "/events"} className="shrink-0 text-sm font-bold text-[#E11D2A]">View all</button>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-3">
+                        {[
+                          { title: "Belt Test", date: "Saturday, August 15", detail: "$49 per student · Promotion testing", image: "/manus-storage/event-belt-test_8aa85132.jpg", href: "/belt-test-intent" },
+                          { title: "Parents Night Out", date: "Friday, August 21", detail: "6:00–9:30 PM · A night of fun", image: "/manus-storage/event-parents-night-out_09a404ba.jpg", href: "/parents-night-out-aug" },
+                          { title: "Master Yaeger Seminar", date: "Saturday, August 22", detail: "11:00 AM–2:00 PM · $29 registration", image: "/manus-storage/event-yaeger-seminar_f56403cb.jpg", href: "/master-yaeger-seminar" },
+                        ].map((event) => (
+                          <button key={event.title} onClick={() => { window.location.href = event.href; }} className={`group overflow-hidden rounded-2xl border text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] ${isDark ? "border-white/10 bg-zinc-900" : "border-slate-200 bg-white"}`}>
+                            <div className="relative h-28 overflow-hidden">
+                              <img src={event.image} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                              <p className="absolute bottom-3 left-4 text-xs font-bold uppercase tracking-widest text-white">{event.date}</p>
+                            </div>
+                            <div className="p-4">
+                              <h3 className={`text-base font-black ${t.textPrimary}`}>{event.title}</h3>
+                              <p className={`mt-1 text-xs leading-relaxed ${t.textSecondary}`}>{event.detail}</p>
+                              <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#E11D2A]">Learn more <ChevronRight className="h-3.5 w-3.5" /></span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+
                     <section className={`grid grid-cols-2 overflow-hidden rounded-2xl border shadow-sm sm:grid-cols-4 ${isDark ? "border-white/10 bg-zinc-900" : "border-slate-200 bg-white"}`}>
                       {[
                         { label: "Belt Progress", value: `${beltProgress}%`, caption: `Toward ${nextBelt}`, icon: <Award className="h-6 w-6" /> },
@@ -2674,12 +2704,6 @@ export default function MemberDashboard2() {
                         <div className={`rounded-2xl border p-5 shadow-sm ${isDark ? "border-white/10 bg-zinc-900" : "border-slate-200 bg-white"}`}>
                           <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">My Streak</p>
                           <div className="mt-4 flex items-center gap-4"><Flame className="h-11 w-11 text-[#E11D2A]" /><div><p className={`text-3xl font-black ${t.textPrimary}`}>{streak} <span className="text-base">days</span></p><p className={`text-sm ${t.textSecondary}`}>{streak > 0 ? "Keep your training rhythm going." : "Your next class starts a new streak."}</p></div></div>
-                        </div>
-                        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a0505] via-[#560b12] to-[#E11D2A] p-5 text-white shadow-sm">
-                          <p className="text-xs font-bold uppercase tracking-widest text-white/65">Belt Test</p>
-                          <h3 className="mt-2 text-xl font-black">Saturday, August 15</h3>
-                          <p className="mt-1 text-sm text-white/75">Register early and prepare for your next rank.</p>
-                          <button onClick={() => window.location.href = "/belt-test-intent"} className="mt-4 rounded-lg bg-white px-4 py-2 text-sm font-bold text-[#C91826] active:scale-[0.97]">Register Now</button>
                         </div>
                       </div>
                     </section>

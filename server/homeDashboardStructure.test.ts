@@ -30,6 +30,17 @@ describe("member Home dashboard", () => {
     expect(homeBlock).toContain('window.location.href = "/belt-test-intent"');
   });
 
+  it("places upcoming events immediately below the welcome banner before dashboard activity panels", () => {
+    const eventSection = homeBlock.indexOf('id="home-upcoming-events"');
+    const activitySummary = homeBlock.indexOf('grid grid-cols-2 overflow-hidden rounded-2xl');
+    const nextClass = homeBlock.indexOf('>Next Class<');
+    expect(eventSection).toBeGreaterThan(homeBlock.indexOf("Belt Progress"));
+    expect(eventSection).toBeLessThan(activitySummary);
+    expect(eventSection).toBeLessThan(nextClass);
+    expect(homeBlock).toContain('href: "/parents-night-out-aug"');
+    expect(homeBlock).toContain('href: "/master-yaeger-seminar"');
+  });
+
   it("keeps the former stacked Home layout hidden after the new overview", () => {
     expect(homeBlock).toContain('<div className="hidden">');
     expect(homeBlock.indexOf('<div className="hidden">')).toBeGreaterThan(homeBlock.indexOf("Belt Test"));
