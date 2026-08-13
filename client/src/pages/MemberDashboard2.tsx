@@ -1053,7 +1053,6 @@ function AccountTab({
       <div className="space-y-2">
         {[
           { id: "billing", label: "Membership & Billing", sublabel: monthlyPrice ? `${formatAmount(Number(monthlyPrice))}/mo · ${packageName}` : packageName, icon: <CreditCard className="h-5 w-5 text-green-500" /> },
-          { id: "perks", label: "Benefits & Perks", sublabel: "Plan details, referrals, partner deals", icon: <Star className="h-5 w-5 text-[#E11D2A]" /> },
           { id: "family", label: "My Family", sublabel: "Manage family members", icon: <Users className="h-5 w-5 text-purple-500" /> },
           { id: "documents", label: "Documents", sublabel: "Waivers, certificates, receipts", icon: <BookOpen className="h-5 w-5 text-orange-500" /> },
           { id: "notifications", label: "Notifications", sublabel: "SMS, email, push preferences", icon: <Bell className="h-5 w-5 text-yellow-500" /> },
@@ -1836,23 +1835,95 @@ export default function MemberDashboard2() {
             {/* Partner Deals */}
             <div>
               <h2 className={`text-2xl font-black ${t.textPrimary}`}>Partner Deals</h2>
-              <p className={`text-sm ${t.textMuted} mt-1`}>Exclusive discounts from our local partners</p>
-              <div className="mt-4 space-y-3">
-                {[
-                  { name: "Mia Bella Restaurant", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Dining" },
-                  { name: "Hatchki Cafe", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Cafe" },
-                  { name: "Coco Restaurant", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Dining" },
-                  { name: "180 Rodeo Rink", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Entertainment" },
-                  { name: "Chick-fil-A", deal: "Exclusive member offer — details coming soon", location: "Tomball, TX", category: "Food" },
-                ].map((partner, i) => (
-                  <div key={i} className={`p-4 rounded-xl border ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
-                    <div className="flex items-center justify-between">
-                      <div><p className={`font-bold text-sm ${t.textPrimary}`}>{partner.name}</p><p className="text-[#E11D2A] text-xs font-semibold mt-0.5">{partner.deal}</p><p className={`text-xs ${t.textMuted} mt-1`}>{partner.location}</p></div>
-                      <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isDark ? "bg-white/5 text-white/50" : "bg-gray-100 text-gray-500"}`}>{partner.category}</div>
+              <p className={`text-sm ${t.textMuted} mt-1`}>Member offers and local favorites, curated for the MyDojo community.</p>
+
+              {/* Hatchki Cafe */}
+              <div className={`mt-4 rounded-2xl border overflow-hidden ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+                <div className={`p-5 border-b ${isDark ? "border-white/8 bg-white/[0.02]" : "border-gray-100 bg-stone-50"}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className={`text-lg font-black ${t.textPrimary}`}>Hatchki Cafe</p>
+                      <p className={`text-xs ${t.textMuted} mt-1`}>Exclusive MyDojo member menu</p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-[#E11D2A]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#E11D2A]">Cafe</span>
+                  </div>
+                </div>
+                <div className="p-5 space-y-5">
+                  <div>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className={`text-sm font-black uppercase tracking-wide ${t.textPrimary}`}>The School Drop-Off Combo</p>
+                      <span className={`text-xs font-semibold ${t.textMuted}`}>8–10 AM</span>
+                    </div>
+                    <div className={`mt-3 divide-y ${isDark ? "divide-white/8" : "divide-gray-100"}`}>
+                      <div className="flex items-center justify-between gap-4 py-2"><span className={`text-sm ${t.textSecondary}`}>16 oz latte + empanada</span><span className={`text-sm font-black ${t.textPrimary}`}>$8.99</span></div>
+                      <div className="flex items-center justify-between gap-4 py-2"><span className={`text-sm ${t.textSecondary}`}>16 oz latte + kolache</span><span className={`text-sm font-black ${t.textPrimary}`}>$9.49</span></div>
                     </div>
                   </div>
+                  <div className={`border-t pt-5 ${isDark ? "border-white/8" : "border-gray-100"}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className={`text-sm font-black uppercase tracking-wide ${t.textPrimary}`}>Crepe Night</p>
+                      <span className={`text-xs font-semibold ${t.textMuted}`}>Thursday–Saturday evenings</span>
+                    </div>
+                    <p className={`text-sm ${t.textSecondary} mt-2`}>Crepes <span className="font-black">$9–$11</span></p>
+                    <p className={`text-xs ${t.textMuted} mt-2`}>Add a 16 oz latte for $5 or a 16 oz refresher for $3.50.</p>
+                  </div>
+                  <div className={`border-t pt-5 ${isDark ? "border-white/8" : "border-gray-100"}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className={`text-sm font-black uppercase tracking-wide ${t.textPrimary}`}>The Hall Pass</p>
+                        <p className={`text-xs ${t.textMuted} mt-1`}>Secret menu • Thursday–Saturday</p>
+                      </div>
+                      <span className="rounded-full bg-[#E11D2A] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">Member special</span>
+                    </div>
+                    <p className={`text-sm font-semibold ${t.textSecondary} mt-3`}>Strawberry Pineapple Lemonade</p>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      {[
+                        ["12 oz", "$3.50"],
+                        ["16 oz", "$4.50"],
+                        ["24 oz", "$6.50"],
+                      ].map(([size, price]) => (
+                        <div key={size} className={`rounded-xl p-3 text-center ${isDark ? "bg-white/5" : "bg-stone-50"}`}>
+                          <p className={`text-[11px] ${t.textMuted}`}>{size}</p>
+                          <p className={`text-sm font-black mt-0.5 ${t.textPrimary}`}>{price}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Supplied partner flyers */}
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <a href="/manus-storage/mia-bella-flyer_c9bcdf96.jpeg" target="_blank" rel="noreferrer" className={`group rounded-2xl border overflow-hidden transition-colors ${isDark ? "border-white/8 bg-zinc-900 hover:border-white/20" : "border-gray-100 bg-white hover:border-gray-200"} shadow-sm`}>
+                  <img src="/manus-storage/mia-bella-flyer_c9bcdf96.jpeg" alt="Mia Bella Trattoria weekly specials flyer" className="block w-full h-auto" loading="lazy" />
+                  <div className="p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div><p className={`text-lg font-black ${t.textPrimary}`}>Mia Bella Trattoria</p><p className={`text-sm ${t.textMuted} mt-1`}>Italian dining, brunch, and weekly specials in Vintage Park.</p></div>
+                      <ChevronRight className={`h-5 w-5 shrink-0 ${t.textMuted} group-hover:text-[#E11D2A]`} />
+                    </div>
+                  </div>
+                </a>
+                <a href="/manus-storage/coco-flyer_d22898ad.png" target="_blank" rel="noreferrer" className={`group rounded-2xl border overflow-hidden transition-colors ${isDark ? "border-white/8 bg-zinc-900 hover:border-white/20" : "border-gray-100 bg-white hover:border-gray-200"} shadow-sm`}>
+                  <img src="/manus-storage/coco-flyer_d22898ad.png" alt="COCO Crêpes, Waffles and Coffee opening flyer" className="block w-full h-auto" loading="lazy" />
+                  <div className="p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div><p className={`text-lg font-black ${t.textPrimary}`}>COCO Crêpes, Waffles & Coffee</p><p className={`text-sm ${t.textMuted} mt-1`}>Coming this fall to Elyson Town Center, Cypress.</p></div>
+                      <ChevronRight className={`h-5 w-5 shrink-0 ${t.textMuted} group-hover:text-[#E11D2A]`} />
+                    </div>
+                  </div>
+                </a>
+              </div>
+
+              <div className={`mt-4 grid gap-3 sm:grid-cols-2`}>
+                {[
+                  { name: "180 Rodeo Rink", category: "Entertainment" },
+                  { name: "Chick-fil-A", category: "Food" },
+                ].map((partner) => (
+                  <div key={partner.name} className={`flex items-center justify-between gap-3 rounded-xl border p-4 ${isDark ? "border-white/8 bg-zinc-900" : "border-gray-100 bg-white"} shadow-sm`}>
+                    <div><p className={`font-bold text-sm ${t.textPrimary}`}>{partner.name}</p><p className={`text-xs ${t.textMuted} mt-1`}>Member offer details coming soon</p></div>
+                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${isDark ? "bg-white/5 text-white/50" : "bg-gray-100 text-gray-500"}`}>{partner.category}</span>
+                  </div>
                 ))}
-                <p className={`text-xs ${t.textMuted} text-center mt-2`}>Show your MyDojo member ID at checkout to redeem. More partners coming soon!</p>
               </div>
             </div>
 

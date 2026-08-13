@@ -1,5 +1,7 @@
 # MyDojo Website TODO
 
+- [x] Add supplied Hatchki Café specials and flyer-led Mia Bella / COCO partner cards to the Benefits tab
+
 ## IN PROGRESS
 
 - [x] Replace the generic shield icon on the MyDojo direct login screen with the real MyDojo logo
