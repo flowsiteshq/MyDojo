@@ -1,5 +1,10 @@
 # MyDojo Website TODO
 
+- [x] Restore visible product cards in the student Pro Shop and use Stripe checkout for all store purchases
+- [x] Add clear Stripe shop purchase success/cancel feedback in the public and student shop experiences
+- [x] Verify and document the shop_purchase Stripe webhook or fulfillment recording path
+- [x] Verify creation of a Stripe Checkout URL from the shop purchase flow without completing a payment
+
 - [x] Redesign the student Home tab as a structured MyDojo member dashboard with hero, activity, next-class, progress, streak, and testing panels
 
 - [x] Add a smooth swipe-down dismissal gesture and prominent close button to Training detail modals

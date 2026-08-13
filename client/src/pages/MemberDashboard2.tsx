@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, useRef, useCallback, type TouchEvent } from "react";
 import { CurriculumViewer } from "@/components/CurriculumViewer";
+import { ShopCheckoutModal, type ShopProduct } from "@/components/ShopCheckoutModal";
 import { MessagesTab } from "@/components/MessagesTab";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Chart, registerables } from "chart.js";
@@ -57,6 +58,7 @@ import { MealPlanTab } from "@/components/MealPlanTab";
 import MyDojoBucksPage from "./MyDojoBucks";
 import { toast } from "sonner";
 import { programs } from "@/data/programs";
+import { STUDENT_SHOP_PRODUCTS } from "@/data/shopCatalog";
 Chart.register(...registerables);
 
 // ─── Theme-aware token helper ─────────────────────────────────────────────────
@@ -1401,6 +1403,14 @@ export default function MemberDashboard2() {
 
   const [checkingInId, setCheckingInId] = useState<number | null>(null);
   const [selectedClass, setSelectedClass] = useState<(typeof todayClasses extends (infer T)[] | undefined ? T : never) | null>(null);
+  const [shopCheckoutProduct, setShopCheckoutProduct] = useState<ShopProduct | null>(null);
+
+  useEffect(() => {
+    const shopStatus = new URLSearchParams(window.location.search).get("shop");
+    if (shopStatus === "success") toast.success("Order received — your MyDojo team will follow up with fulfillment details.");
+    if (shopStatus === "cancelled") toast.info("Shop checkout was cancelled. No payment was made.");
+    if (shopStatus === "success" || shopStatus === "cancelled") window.history.replaceState({}, "", window.location.pathname);
+  }, []);
 
   const checkInMutation = trpc.attendance.checkIn.useMutation({
     onSuccess: () => {
@@ -2329,12 +2339,42 @@ export default function MemberDashboard2() {
 
        {/* ── SHOP TAB ── */}
         {activeTab === "shop" && (
-          <div className="space-y-4">
-            <h2 className={`text-xl font-black uppercase tracking-wider ${t.textPrimary}`}>Pro Shop</h2>
-            <p className={`text-sm ${t.textSecondary}`}>Browse uniforms, sparring gear, weapons, and accessories.</p>
-            <a href="/shop" className="inline-block px-6 py-3 bg-[#E11D2A] text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors">Visit Pro Shop</a>
-          </div>
+          <section className="space-y-5">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-[#E11D2A]">Member Store</p>
+                <h2 className={`mt-1 text-3xl font-black tracking-tight ${t.textPrimary}`}>Pro Shop</h2>
+                <p className={`mt-2 max-w-lg text-sm ${t.textSecondary}`}>Official uniforms, apparel, and training gear. Every purchase is completed securely with Stripe.</p>
+              </div>
+              <a href="/shop" className={`rounded-xl border px-4 py-2 text-sm font-bold transition-colors ${isDark ? "border-white/15 text-white hover:bg-white/5" : "border-slate-200 text-slate-800 hover:bg-slate-50"}`}>View All Gear</a>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+              {STUDENT_SHOP_PRODUCTS.map((product) => (
+                <button key={product.id} onClick={() => setShopCheckoutProduct(product)} className={`group overflow-hidden rounded-2xl border text-left transition-all active:scale-[0.98] ${isDark ? "border-white/10 bg-white/[0.04] hover:bg-white/[0.08]" : "border-slate-200 bg-white shadow-sm hover:border-red-200 hover:shadow-md"}`}>
+                  <div className={`relative aspect-square overflow-hidden ${isDark ? "bg-white/[0.05]" : "bg-slate-50"}`}>
+                    <img src={product.image} alt={product.name} className="h-full w-full object-contain p-3 transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                    {product.badge ? <span className="absolute left-2 top-2 rounded-full bg-[#E11D2A] px-2 py-1 text-[10px] font-bold text-white">{product.badge}</span> : null}
+                  </div>
+                  <div className="p-3">
+                    <p className={`line-clamp-2 text-sm font-black leading-tight ${t.textPrimary}`}>{product.name}</p>
+                    <p className={`mt-1 text-xs ${t.textMuted}`}>{product.category}</p>
+                    <div className="mt-3 flex items-center justify-between gap-2"><span className={`text-base font-black ${t.textPrimary}`}>${product.price.toFixed(2)}</span><span className="rounded-lg bg-[#E11D2A] px-2.5 py-1.5 text-xs font-bold text-white">Buy</span></div>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-xs ${isDark ? "border-white/10 bg-white/[0.04] text-white/60" : "border-slate-200 bg-slate-50 text-slate-500"}`}><Lock className="h-4 w-4 text-[#E11D2A]" /> Secure checkout powered by Stripe. MyDojo does not store card details.</div>
+          </section>
         )}
+
+        <ShopCheckoutModal
+          product={shopCheckoutProduct}
+          open={!!shopCheckoutProduct}
+          onClose={() => setShopCheckoutProduct(null)}
+          defaultName={user?.name ?? ""}
+          defaultEmail={user?.email ?? ""}
+        />
 
         {/* ── CLASS DETAIL MODAL ── */}
         {selectedClass && (() => {

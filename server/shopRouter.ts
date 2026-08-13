@@ -2,66 +2,65 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, router } from "./_core/trpc";
 
+const SHOP_CATALOG: Record<string, { name: string; amountCents: number; category: string }> = {
+  "kihon-gi": { name: "Kihon Gi", amountCents: 4900, category: "Uniforms & Gis" },
+  "mydojo-classic-tshirt": { name: "MyDojo Classic T-Shirt", amountCents: 2900, category: "Apparel" },
+  "kickboxing-gloves": { name: "Kickboxing Gloves", amountCents: 6900, category: "Fight Gear" },
+  "kiacho-gi-middle": { name: "Kaicho Gi — Middle Weight", amountCents: 6850, category: "Uniforms & Gis" },
+  "kiacho-gi-heavy": { name: "Kaicho Gi — Heavy Weight", amountCents: 9900, category: "Uniforms & Gis" },
+  "shinobi-gi-middle": { name: "Shinobi Gi — Middle Weight", amountCents: 6850, category: "Uniforms & Gis" },
+  "shinobi-gi-heavy": { name: "Shinobi Gi — Heavy Weight", amountCents: 9900, category: "Uniforms & Gis" },
+  "tetsujin-gi": { name: "Tetsujin Gi", amountCents: 22500, category: "Uniforms & Gis" },
+};
+
 export const shopRouter = router({
-  purchaseProduct: publicProcedure
+  createCheckout: publicProcedure
     .input(z.object({
-      token: z.string().min(1),
       productId: z.string().min(1),
-      productName: z.string().min(1),
-      amountCents: z.number().int().positive(),
-      size: z.string().optional(),
-      customerName: z.string().min(1),
+      size: z.string().max(32).optional(),
+      customerName: z.string().min(1).max(120),
       customerEmail: z.string().email(),
-      customerPhone: z.string().optional(),
+      customerPhone: z.string().max(40).optional(),
+      returnTo: z.enum(["/shop", "/dashboard"]).default("/shop"),
     }))
-    .mutation(async ({ input }) => {
-      const fluidPayKey = process.env.FLUIDPAY_SECRET_KEY;
-      if (!fluidPayKey) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
+    .mutation(async ({ input, ctx }) => {
+      const product = SHOP_CATALOG[input.productId];
+      if (!product) throw new TRPCError({ code: "BAD_REQUEST", message: "This shop item is unavailable." });
 
-      const firstName = input.customerName.split(' ')[0];
-      const lastName = input.customerName.split(' ').slice(1).join(' ') || '';
-      const description = input.size
-        ? `MyDojo Shop – ${input.productName} (Size: ${input.size})`
-        : `MyDojo Shop – ${input.productName}`;
+      const secretKey = process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+      if (!secretKey) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Stripe checkout is not configured." });
 
-      const chargeRes = await fetch('https://app.fluidpay.com/api/transaction', {
-        method: 'POST',
-        headers: { 'Authorization': fluidPayKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'sale',
-          amount: input.amountCents,
-          payment_method: { token: input.token },
-          billing_address: {
-            first_name: firstName,
-            last_name: lastName,
-            email: input.customerEmail,
-            phone: (input.customerPhone || '').replace(/\D/g, ''),
+      const Stripe = (await import("stripe")).default;
+      const stripe = new Stripe(secretKey, { apiVersion: "2026-01-28.clover" as any });
+      const origin = (ctx.req.headers.origin as string) || "https://mydojoma.com";
+      const description = input.size ? `${product.category} · Size: ${input.size}` : product.category;
+
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        payment_method_types: ["card"],
+        customer_email: input.customerEmail,
+        line_items: [{
+          price_data: {
+            currency: "usd",
+            product_data: { name: product.name, description },
+            unit_amount: product.amountCents,
           },
-          order_id: `shop-${input.productId}-${Date.now()}`,
-          description,
-        }),
+          quantity: 1,
+        }],
+        metadata: {
+          type: "shop_purchase",
+          product_id: input.productId,
+          product_name: product.name,
+          product_category: product.category,
+          customer_name: input.customerName,
+          customer_phone: input.customerPhone || "",
+          size: input.size || "",
+        },
+        success_url: `${origin}${input.returnTo}?shop=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}${input.returnTo}?shop=cancelled`,
       });
 
-      const chargeBody = await chargeRes.json() as {
-        status: string;
-        msg: string;
-        data?: { id: string; status: string; response_body?: { card?: { response_text?: string } } };
-      };
-
-      if (chargeBody.status !== 'success' || !chargeBody.data) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: chargeBody.msg || 'Payment failed' });
-      }
-      const txn = chargeBody.data;
-      if (txn.status !== 'approved') {
-        const declineMsg = txn.response_body?.card?.response_text || `Transaction ${txn.status}`;
-        throw new TRPCError({ code: 'BAD_REQUEST', message: `Payment declined: ${declineMsg}` });
-      }
-
-      return {
-        success: true,
-        transactionId: txn.id,
-        productName: input.productName,
-        amountCents: input.amountCents,
-      };
+      if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Stripe did not return a checkout URL." });
+      return { checkoutUrl: session.url };
     }),
 });

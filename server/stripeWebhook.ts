@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Stripe from "stripe";
 import { getDb } from "./db";
-import { enrollments, membershipPackages, trialSignups, beltTestIntents, eventRegistrations } from "../drizzle/schema";
+import { enrollments, membershipPackages, trialSignups, beltTestIntents, eventRegistrations, shopOrders } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { notifyOwner } from "./_core/notification";
 
@@ -53,6 +53,8 @@ export async function handleStripeWebhook(req: Request, res: Response) {
           await handleEventRegistrationPayment(session);
         } else if (session.metadata?.type === "intro_offer") {
           await handleIntroOfferPayment(session);
+        } else if (session.metadata?.type === "shop_purchase") {
+          await handleShopPurchase(session);
         } else {
           await handleCheckoutSessionCompleted(session);
         }
@@ -84,6 +86,48 @@ export async function handleStripeWebhook(req: Request, res: Response) {
     console.error(`[Stripe Webhook] Error processing ${event.type}:`, error);
     res.status(500).send(`Webhook processing error: ${error.message}`);
   }
+}
+
+/** Records a paid Pro Shop order for staff fulfillment. */
+async function handleShopPurchase(session: Stripe.Checkout.Session) {
+  const db = await getDb();
+  if (!db) {
+    console.error("[Stripe Webhook] Database not available for shop order");
+    return;
+  }
+
+  const [existing] = await db.select().from(shopOrders).where(eq(shopOrders.stripeSessionId, session.id)).limit(1);
+  if (existing) {
+    console.log("[Stripe Webhook] Shop order already recorded:", session.id);
+    return;
+  }
+
+  const metadata = session.metadata ?? {};
+  const customerName = metadata.customer_name || session.customer_details?.name || "MyDojo Member";
+  const customerEmail = session.customer_details?.email || session.customer_email || "";
+  const productName = metadata.product_name || "MyDojo Pro Shop Item";
+  const amountCents = session.amount_total ?? 0;
+
+  await db.insert(shopOrders).values({
+    stripeSessionId: session.id,
+    stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
+    customerName,
+    customerEmail,
+    customerPhone: metadata.customer_phone || null,
+    productId: metadata.product_id || "unknown",
+    productName,
+    productCategory: metadata.product_category || "Pro Shop",
+    size: metadata.size || null,
+    amountCents,
+    paymentStatus: "paid",
+    fulfillmentStatus: "pending",
+  });
+
+  await notifyOwner({
+    title: `Pro Shop Order — ${productName}`,
+    content: `${customerName} purchased ${productName}${metadata.size ? ` (size ${metadata.size})` : ""} for $${(amountCents / 100).toFixed(2)}. Order is ready for fulfillment. Stripe session: ${session.id}`,
+  });
+  console.log("[Stripe Webhook] Recorded shop order:", session.id);
 }
 
 /**

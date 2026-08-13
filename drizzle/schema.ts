@@ -2017,6 +2017,29 @@ export const customPaymentLinkPayments = mysqlTable("customPaymentLinkPayments",
 export type CustomPaymentLinkPayment = typeof customPaymentLinkPayments.$inferSelect;
 export type InsertCustomPaymentLinkPayment = typeof customPaymentLinkPayments.$inferInsert;
 
+/**
+ * Completed MyDojo Pro Shop purchases paid through Stripe Checkout.
+ * The Stripe session identifier makes webhook fulfillment idempotent.
+ */
+export const shopOrders = mysqlTable("shopOrders", {
+  id: int("id").autoincrement().primaryKey(),
+  stripeSessionId: varchar("stripeSessionId", { length: 255 }).notNull().unique(),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
+  customerName: varchar("customerName", { length: 255 }).notNull(),
+  customerEmail: varchar("customerEmail", { length: 320 }).notNull(),
+  customerPhone: varchar("customerPhone", { length: 40 }),
+  productId: varchar("productId", { length: 120 }).notNull(),
+  productName: varchar("productName", { length: 255 }).notNull(),
+  productCategory: varchar("productCategory", { length: 120 }).notNull(),
+  size: varchar("size", { length: 32 }),
+  amountCents: int("amountCents").notNull(),
+  paymentStatus: mysqlEnum("paymentStatus", ["paid", "refunded"]).default("paid").notNull(),
+  fulfillmentStatus: mysqlEnum("fulfillmentStatus", ["pending", "ready", "fulfilled"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ShopOrder = typeof shopOrders.$inferSelect;
+export type InsertShopOrder = typeof shopOrders.$inferInsert;
 // ─── AI SMS Assistant ────────────────────────────────────────────────────────
 
 /**

@@ -498,6 +498,13 @@
       "when": 1786490388096,
       "tag": "0070_sweet_captain_marvel",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "5",
+      "when": 1786646707759,
+      "tag": "0071_dapper_silver_sable",
+      "breakpoints": true
     }
   ]
 }

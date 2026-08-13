@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Filter } from "lucide-react";
 import { ShopCheckoutModal, type ShopProduct } from "@/components/ShopCheckoutModal";
@@ -198,6 +198,15 @@ export default function Shop() {
   const [checkoutProduct, setCheckoutProduct] = useState<ShopProduct | null>(null);
   const [showBack, setShowBack] = useState<Record<string, boolean>>({});
   const [modalShowBack, setModalShowBack] = useState(false);
+  const [checkoutStatus, setCheckoutStatus] = useState<"success" | "cancelled" | null>(null);
+
+  useEffect(() => {
+    const status = new URLSearchParams(window.location.search).get("shop");
+    if (status === "success" || status === "cancelled") {
+      setCheckoutStatus(status);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   const filtered =
     selectedCategory === "All"
@@ -262,6 +271,12 @@ export default function Shop() {
       {/* Product Grid */}
       <section className="py-16 md:py-20">
         <div className="container">
+          {checkoutStatus ? (
+            <div className={`mb-8 flex items-start justify-between gap-4 border p-5 ${checkoutStatus === "success" ? "border-green-200 bg-green-50 text-green-950" : "border-amber-200 bg-amber-50 text-amber-950"}`} role="status">
+              <div><p className="font-bold">{checkoutStatus === "success" ? "Order received" : "Checkout cancelled"}</p><p className="mt-1 text-sm">{checkoutStatus === "success" ? "Thank you for your order. Your MyDojo team will prepare your gear and follow up with fulfillment details." : "No payment was made. Your selected gear is still available whenever you are ready."}</p></div>
+              <button onClick={() => setCheckoutStatus(null)} className="text-sm font-bold underline">Dismiss</button>
+            </div>
+          ) : null}
           <div className="grid border-l border-t border-[var(--mydojo-line)] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtered.map((product) => (
               <div
