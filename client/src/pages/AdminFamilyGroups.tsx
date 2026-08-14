@@ -2,16 +2,26 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Input } from "@/components/ui/input";
-import { Users, Search, CheckCircle, Tag, Calendar, CreditCard, ChevronDown, ChevronUp } from "lucide-react";
+import { Users, Search, CheckCircle, Tag, Calendar, CreditCard, ChevronDown, ChevronUp, UserPlus } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AdminFamilyGroups() {
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [enrollmentIds, setEnrollmentIds] = useState<Record<number, string>>({});
 
   const { data: groups = [], isLoading } = trpc.family.adminListFamilyGroups.useQuery(
     search ? { search } : undefined,
     { refetchInterval: 30000 }
   );
+  const utils = trpc.useUtils();
+  const assignMember = trpc.family.assignEnrollmentToGroup.useMutation({
+    onSuccess: (result) => {
+      toast.success(result.hasDiscount ? `Member #${result.memberOrder} assigned at $${result.discountedMonthlyAmount.toFixed(2)}/month.` : "Primary family member assigned at full monthly tuition.");
+      utils.family.adminListFamilyGroups.invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
   const totalFamilies = groups.length;
   const totalMembers = groups.reduce((acc, g) => acc + g.memberCount, 0);
@@ -167,6 +177,30 @@ export default function AdminFamilyGroups() {
                           )}
                         </div>
                       </div>
+                    </div>
+
+                    {/* Staff assignment control */}
+                    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <label className="flex-1 text-sm font-semibold text-slate-700">Add existing enrollment
+                          <input
+                            inputMode="numeric"
+                            value={enrollmentIds[group.id] || ""}
+                            onChange={(event) => setEnrollmentIds(current => ({ ...current, [group.id]: event.target.value.replace(/\D/g, "") }))}
+                            placeholder="Enrollment ID"
+                            className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 px-3 font-normal"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          disabled={assignMember.isPending || !enrollmentIds[group.id]}
+                          onClick={() => assignMember.mutate({ familyGroupId: group.id, enrollmentId: Number(enrollmentIds[group.id]) })}
+                          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50"
+                        >
+                          <UserPlus className="h-4 w-4" /> Assign member
+                        </button>
+                      </div>
+                      <p className="mt-2 text-xs text-slate-500">The first member remains at full tuition. The second and third members are automatically set to 50% of their plan’s recurring monthly tuition.</p>
                     </div>
 
                     {/* Members */}

@@ -17,6 +17,11 @@
 - [x] Add regression coverage for payment-form initialization after agreement signing
 - [x] Replace the broken embedded live enrollment payment panel with a hosted checkout handoff that preserves signed agreements
 - [x] Fulfill pending signed enrollments safely when the hosted checkout completes
+- [x] Set the standard new-member enrollment down payment to $99 across public packages and checkout
+- [x] Apply 50% monthly tuition to the second and third enrolled family members while retaining recurring billing
+- [x] Create a controlled promo code that waives the $99 new-member down payment
+- [x] Add regression coverage for new-member pricing, family discounts, promo waiver, and recurring charge amounts
+- [x] Automatically detect eligible second and third family members during enrollment checkout
 
 - [ ] Verify a published live Stripe enrollment payment after the user completes the agreed end-to-end test
 

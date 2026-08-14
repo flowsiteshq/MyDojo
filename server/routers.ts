@@ -3239,6 +3239,7 @@ Please enter your card details below to complete your registration securely. Tot
         studentName: z.string().max(255).optional(),
         waiveEnrollmentFee: z.boolean().optional(),
         waiverReason: z.string().max(200).optional(),
+        promoCode: z.string().min(3).max(50).optional(),
         agreementSignature: z.string().min(1).max(255),
         agreementSignedAt: z.string().datetime(),
         agreementSignatureDataUrl: z.string().max(1_500_000).regex(/^data:image\/png;base64,/),
@@ -3253,17 +3254,48 @@ Please enter your card details below to complete your registration securely. Tot
         if (!pkg || !pkg.isActive) throw new TRPCError({ code: "NOT_FOUND", message: "Selected membership is unavailable" });
         if (pkg.invitationOnly) throw new TRPCError({ code: "FORBIDDEN", message: "This membership is available by staff invitation only" });
 
+        let promo: typeof schema.promoCodes.$inferSelect | undefined;
+        if (input.promoCode) {
+          const [foundPromo] = await db.select().from(schema.promoCodes)
+            .where(eq(schema.promoCodes.code, input.promoCode.trim().toUpperCase()))
+            .limit(1);
+          if (!foundPromo || !foundPromo.active || (foundPromo.expiresAt && Date.now() > foundPromo.expiresAt) || (foundPromo.maxUses !== null && foundPromo.usedCount >= foundPromo.maxUses)) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "This promo code is no longer available" });
+          }
+          promo = foundPromo;
+        }
+
         const monthlyPrice = Number(pkg.monthlyPrice);
         const enrollmentFee = Number(pkg.enrollmentFee);
-        const dueToday = input.waiveEnrollmentFee
+        const undiscountedDueToday = input.waiveEnrollmentFee
           ? Math.max(0, Number(pkg.downPayment) - enrollmentFee)
           : Number(pkg.downPayment);
+        const dueToday = promo?.discountType === "waive_down_payment"
+          ? 0
+          : promo?.discountType === "percent"
+            ? Math.max(0, undiscountedDueToday * (1 - Number(promo.discountValue) / 100))
+            : promo?.discountType === "fixed"
+              ? Math.max(0, undiscountedDueToday - Number(promo.discountValue))
+              : undiscountedDueToday;
         const customer = await getOrCreateStripeCustomer({
           name: input.customerName,
           email: input.customerEmail,
           phone: input.customerPhone,
           metadata: { mydojoEnrollment: "true" },
         });
+        const [familyGroup] = await db.select().from(schema.familyGroups)
+          .where(and(
+            eq(schema.familyGroups.primaryContactEmail, input.customerEmail),
+            eq(schema.familyGroups.registrationFeePaid, 1),
+          ))
+          .limit(1);
+        const existingFamilyMembers = familyGroup
+          ? await db.select().from(schema.familyGroupMembers).where(eq(schema.familyGroupMembers.familyGroupId, familyGroup.id))
+          : [];
+        const familyMemberOrder = familyGroup ? existingFamilyMembers.length + 1 : 1;
+        const { calculateFamilyRecurringTuition, receivesFamilyRecurringDiscount } = await import("./membershipPricingPolicy");
+        const hasFamilyDiscount = Boolean(familyGroup) && receivesFamilyRecurringDiscount(familyMemberOrder);
+        const recurringMonthlyAmount = calculateFamilyRecurringTuition(monthlyPrice, familyMemberOrder);
 
         const insertResult = await db.insert(schema.enrollments).values({
           membershipPackageId: pkg.id,
@@ -3277,7 +3309,7 @@ Please enter your card details below to complete your registration securely. Tot
           remainingBalance: Number(pkg.totalPrice).toFixed(2),
           monthlyPaymentsRemaining: pkg.durationMonths,
           status: "pending",
-          discountApplied: input.waiverReason || null,
+          discountApplied: promo ? `promo:${promo.code}` : input.waiverReason || null,
           agreementSignature: input.agreementSignature,
           agreementSignedAt: new Date(input.agreementSignedAt),
           startDate: new Date(),
@@ -3309,37 +3341,59 @@ Please enter your card details below to complete your registration securely. Tot
 
         const origin = (ctx.req.headers.origin as string) || "https://mydojoma.com";
         const stripe = getStripe();
-        const session = await stripe.checkout.sessions.create({
-          mode: "payment",
+        const sharedCheckoutData = {
           customer: customer.id,
-          line_items: [{
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: `MyDojo ${pkg.name} Enrollment`,
-                description: "Initial membership enrollment payment",
-              },
-              unit_amount: Math.round(dueToday * 100),
-            },
-            quantity: 1,
-          }],
-          payment_intent_data: {
-            setup_future_usage: "off_session",
-            metadata: {
-              type: "membership_enrollment_checkout",
-              enrollmentId: String(enrollmentId),
-            },
-          },
           metadata: {
             type: "membership_enrollment_checkout",
             enrollmentId: String(enrollmentId),
+            promoCode: promo?.code || "",
+            familyGroupId: familyGroup ? String(familyGroup.id) : "",
+            familyMemberOrder: familyGroup ? String(familyMemberOrder) : "",
+            recurringMonthlyAmount: recurringMonthlyAmount.toFixed(2),
+            familyDiscount: hasFamilyDiscount ? "50_percent" : "",
           },
           success_url: `${origin}/enrollment/success?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${origin}/enroll?package=${pkg.id}&checkout=cancelled`,
           allow_promotion_codes: false,
-        });
+        };
+        const session = dueToday === 0
+          ? await stripe.checkout.sessions.create({
+              ...sharedCheckoutData,
+              mode: "setup",
+              payment_method_types: ["card"],
+              setup_intent_data: {
+                metadata: { type: "membership_enrollment_checkout", enrollmentId: String(enrollmentId) },
+              },
+            })
+          : await stripe.checkout.sessions.create({
+              ...sharedCheckoutData,
+              mode: "payment",
+              line_items: [{
+                price_data: {
+                  currency: "usd",
+                  product_data: {
+                    name: `MyDojo ${pkg.name} Enrollment`,
+                    description: "Initial membership enrollment payment",
+                  },
+                  unit_amount: Math.round(dueToday * 100),
+                },
+                quantity: 1,
+              }],
+              payment_intent_data: {
+                setup_future_usage: "off_session",
+                metadata: { type: "membership_enrollment_checkout", enrollmentId: String(enrollmentId) },
+              },
+            });
         if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create secure checkout" });
-        return { checkoutUrl: session.url, enrollmentId, amountCents: Math.round(dueToday * 100), enrollmentFee };
+        return {
+          checkoutUrl: session.url,
+          enrollmentId,
+          amountCents: Math.round(dueToday * 100),
+          enrollmentFee,
+          familyMemberOrder: familyGroup ? familyMemberOrder : null,
+          recurringMonthlyAmount,
+          hasFamilyDiscount,
+        };
       }),
 
     // Finish an approved enrollment payment, create the recurring subscription, and retain
@@ -9938,6 +9992,69 @@ Please enter your card details below to complete your registration securely. Tot
           hasDiscount: !!hasDiscount,
           discountedMonthlyAmount: hasDiscount ? input.originalMonthlyAmount * 0.5 : input.originalMonthlyAmount,
         };
+      }),
+
+    /** Staff: attach an active existing enrollment and apply the policy-approved family recurring rate. */
+    assignEnrollmentToGroup: protectedProcedure
+      .input(z.object({ familyGroupId: z.number().int().positive(), enrollmentId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== "admin" && ctx.user.role !== "staff") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Staff access is required" });
+        }
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const [group] = await db.select().from(schema.familyGroups).where(eq(schema.familyGroups.id, input.familyGroupId)).limit(1);
+        if (!group || !group.registrationFeePaid) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "The family registration must be paid before members can be assigned" });
+        }
+        const [enrollment] = await db.select().from(schema.enrollments).where(eq(schema.enrollments.id, input.enrollmentId)).limit(1);
+        if (!enrollment || enrollment.status !== "active") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Choose an active enrollment" });
+        }
+        const [pkg] = await db.select().from(schema.membershipPackages).where(eq(schema.membershipPackages.id, enrollment.membershipPackageId)).limit(1);
+        if (!pkg) throw new TRPCError({ code: "NOT_FOUND", message: "Membership package not found" });
+        const existingMembers = await db.select().from(schema.familyGroupMembers)
+          .where(eq(schema.familyGroupMembers.familyGroupId, input.familyGroupId));
+        if (existingMembers.some(member => member.enrollmentId === input.enrollmentId)) {
+          throw new TRPCError({ code: "CONFLICT", message: "This enrollment is already part of the family group" });
+        }
+        const memberOrder = existingMembers.length + 1;
+        const { calculateFamilyRecurringTuition, receivesFamilyRecurringDiscount } = await import("./membershipPricingPolicy");
+        const hasDiscount = receivesFamilyRecurringDiscount(memberOrder);
+        const originalMonthlyAmount = Number(pkg.monthlyPrice);
+        const discountedMonthlyAmount = calculateFamilyRecurringTuition(originalMonthlyAmount, memberOrder);
+
+        if (hasDiscount) {
+          if (!enrollment.stripeSubscriptionId) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "This enrollment has no active recurring subscription to update" });
+          }
+          const stripe = getStripe();
+          const subscription = await stripe.subscriptions.retrieve(enrollment.stripeSubscriptionId);
+          const subscriptionItem = subscription.items.data[0];
+          if (!subscriptionItem) throw new TRPCError({ code: "BAD_REQUEST", message: "The recurring subscription has no billable item" });
+          const familyPrice = await stripe.prices.create({
+            currency: "usd",
+            unit_amount: Math.round(discountedMonthlyAmount * 100),
+            recurring: { interval: "month" },
+            product_data: { name: `MyDojo ${pkg.name} Family Member Tuition` },
+            metadata: { type: "family_member_discount", familyGroupId: String(group.id), enrollmentId: String(enrollment.id), memberOrder: String(memberOrder) },
+          });
+          await stripe.subscriptions.update(enrollment.stripeSubscriptionId, {
+            items: [{ id: subscriptionItem.id, price: familyPrice.id }],
+            proration_behavior: "none",
+            metadata: { type: "membership", packageId: String(pkg.id), familyGroupId: String(group.id), familyMemberOrder: String(memberOrder), familyDiscount: "50_percent" },
+          });
+        }
+
+        await db.insert(schema.familyGroupMembers).values({
+          familyGroupId: input.familyGroupId,
+          enrollmentId: input.enrollmentId,
+          memberOrder,
+          hasDiscount: hasDiscount ? 1 : 0,
+          discountedMonthlyAmount: hasDiscount ? discountedMonthlyAmount.toFixed(2) : null,
+          originalMonthlyAmount: originalMonthlyAmount.toFixed(2),
+        });
+        return { memberOrder, hasDiscount, originalMonthlyAmount, discountedMonthlyAmount };
       }),
 
     /** Starts hosted checkout for a new family kickboxing add-on. */

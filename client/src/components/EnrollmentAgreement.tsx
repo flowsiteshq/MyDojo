@@ -155,12 +155,10 @@ export function EnrollmentAgreement({
         <ContractSection title="1. Membership Terms" defaultOpen>
           <p>
             Member enrolls in the <strong>{packageName}</strong> program at a rate of{" "}
-            <strong>${monthlyPrice.toFixed(2)} per month</strong>. The total amount due today is{" "}
+            <strong>${monthlyPrice.toFixed(2)} per month</strong>. The new-member down payment due today is{" "}
             <strong>${totalDueToday.toFixed(2)}</strong>
-            {enrollmentFeeWaived
-              ? " (enrollment fee waived as a promotional discount)"
-              : " (includes first month's tuition and a one-time enrollment fee)"}
-            . Monthly billing continues on a recurring basis until cancelled in accordance with the
+            {totalDueToday === 0 || enrollmentFeeWaived ? " (waived as an approved promotional discount)" : ""}
+            . Monthly tuition continues on a recurring basis until cancelled in accordance with the
             cancellation policy below.
           </p>
           <p>Membership fees are non-refundable once the billing period has begun.</p>

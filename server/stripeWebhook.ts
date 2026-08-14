@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import Stripe from "stripe";
 import { getDb } from "./db";
-import { enrollments, membershipPackages, trialSignups, beltTestIntents, eventRegistrations, shopOrders, introOfferPurchases, dayPasses, attendance, familyGroups, paymentFailures, summerCampEnrollments, familyKickboxingAddOns, scheduledPayments } from "../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { enrollments, membershipPackages, trialSignups, beltTestIntents, eventRegistrations, shopOrders, introOfferPurchases, dayPasses, attendance, familyGroups, familyGroupMembers, paymentFailures, summerCampEnrollments, familyKickboxingAddOns, scheduledPayments, promoCodes } from "../drizzle/schema";
+import { eq, sql } from "drizzle-orm";
 import { notifyOwner } from "./_core/notification";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_LIVE_SECRET_KEY || "";
@@ -118,13 +118,24 @@ async function handleHostedMembershipEnrollment(session: Stripe.Checkout.Session
   if (enrollment.status === "active" && enrollment.stripeSubscriptionId) return;
 
   const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : null;
-  if (!paymentIntentId) throw new Error("Hosted membership checkout is missing its payment intent");
-  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ["payment_method"] });
-  if (paymentIntent.status !== "succeeded") throw new Error("Hosted membership checkout payment is not complete");
-  const paymentMethod = typeof paymentIntent.payment_method === "string"
-    ? await stripe.paymentMethods.retrieve(paymentIntent.payment_method)
-    : paymentIntent.payment_method;
-  const customerId = typeof paymentIntent.customer === "string" ? paymentIntent.customer : paymentIntent.customer?.id;
+  const setupIntentId = typeof session.setup_intent === "string" ? session.setup_intent : null;
+  let paymentMethod: Stripe.PaymentMethod | null = null;
+  let customerId: string | null = null;
+  if (paymentIntentId) {
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ["payment_method"] });
+    if (paymentIntent.status !== "succeeded") throw new Error("Hosted membership checkout payment is not complete");
+    paymentMethod = typeof paymentIntent.payment_method === "string"
+      ? await stripe.paymentMethods.retrieve(paymentIntent.payment_method)
+      : paymentIntent.payment_method;
+    customerId = typeof paymentIntent.customer === "string" ? paymentIntent.customer : paymentIntent.customer?.id ?? null;
+  } else if (setupIntentId) {
+    const setupIntent = await stripe.setupIntents.retrieve(setupIntentId, { expand: ["payment_method"] });
+    if (setupIntent.status !== "succeeded") throw new Error("Hosted membership payment setup is not complete");
+    paymentMethod = typeof setupIntent.payment_method === "string"
+      ? await stripe.paymentMethods.retrieve(setupIntent.payment_method)
+      : setupIntent.payment_method;
+    customerId = typeof setupIntent.customer === "string" ? setupIntent.customer : setupIntent.customer?.id ?? null;
+  }
   if (!customerId || !paymentMethod || paymentMethod.type !== "card") {
     throw new Error("Hosted membership checkout did not provide a reusable payment method");
   }
@@ -132,13 +143,23 @@ async function handleHostedMembershipEnrollment(session: Stripe.Checkout.Session
   const [pkg] = await db.select().from(membershipPackages).where(eq(membershipPackages.id, enrollment.membershipPackageId)).limit(1);
   if (!pkg) throw new Error(`Membership package for pending enrollment ${enrollmentId} was not found`);
   await stripe.customers.update(customerId, { invoice_settings: { default_payment_method: paymentMethod.id } });
+  const familyGroupId = Number(session.metadata?.familyGroupId || 0);
+  const familyMemberOrder = Number(session.metadata?.familyMemberOrder || 0);
+  const hasFamilyDiscount = session.metadata?.familyDiscount === "50_percent" && (familyMemberOrder === 2 || familyMemberOrder === 3);
+  const recurringMonthlyAmount = hasFamilyDiscount
+    ? Number(session.metadata?.recurringMonthlyAmount)
+    : Number(pkg.monthlyPrice);
+  if (!Number.isFinite(recurringMonthlyAmount) || recurringMonthlyAmount < 0) {
+    throw new Error("Hosted membership checkout has an invalid recurring tuition amount");
+  }
   let priceId = pkg.stripePriceId;
-  if (!priceId) {
+  if (hasFamilyDiscount || !priceId) {
     const price = await stripe.prices.create({
-      unit_amount: Math.round(Number(pkg.monthlyPrice) * 100),
+      unit_amount: Math.round(recurringMonthlyAmount * 100),
       currency: "usd",
       recurring: { interval: "month" },
-      product_data: { name: `MyDojo ${pkg.name} Membership` },
+      product_data: { name: hasFamilyDiscount ? `MyDojo ${pkg.name} Family Member Tuition` : `MyDojo ${pkg.name} Membership` },
+      metadata: hasFamilyDiscount ? { type: "family_member_discount", familyGroupId: String(familyGroupId), enrollmentId: String(enrollmentId), memberOrder: String(familyMemberOrder) } : undefined,
     });
     priceId = price.id;
   }
@@ -150,7 +171,7 @@ async function handleHostedMembershipEnrollment(session: Stripe.Checkout.Session
     default_payment_method: paymentMethod.id,
     trial_end: Math.floor(nextBillingDate.getTime() / 1000),
     payment_settings: { save_default_payment_method: "on_subscription" },
-    metadata: { type: "membership", packageId: String(pkg.id), billingAnchor: getNextBillingDateStr(new Date()) },
+    metadata: { type: "membership", packageId: String(pkg.id), billingAnchor: getNextBillingDateStr(new Date()), ...(hasFamilyDiscount ? { familyGroupId: String(familyGroupId), familyMemberOrder: String(familyMemberOrder), familyDiscount: "50_percent" } : {}) },
   });
 
   const amountTotal = (session.amount_total ?? 0) / 100;
@@ -158,7 +179,7 @@ async function handleHostedMembershipEnrollment(session: Stripe.Checkout.Session
   await db.update(enrollments).set({
     stripeCustomerId: customerId,
     stripeSubscriptionId: subscription.id,
-    stripePaymentIntentId: paymentIntentId,
+    stripePaymentIntentId: paymentIntentId || setupIntentId,
     stripePaymentMethodId: paymentMethod.id,
     paymentMethodBrand: card?.brand ?? null,
     paymentMethodLast4: card?.last4 ?? null,
@@ -167,12 +188,29 @@ async function handleHostedMembershipEnrollment(session: Stripe.Checkout.Session
     paymentMethodWallet: card?.wallet?.type ?? null,
     paymentMethodUpdatedAt: new Date(),
     downPaymentAmount: amountTotal.toFixed(2),
-    paidFirstMonth: 1,
+    paidFirstMonth: paymentIntentId ? 1 : 0,
     remainingBalance: Math.max(0, Number(pkg.totalPrice) - amountTotal).toFixed(2),
     monthlyPaymentsRemaining: Math.max(0, pkg.durationMonths - 1),
     status: "active",
     startDate: new Date(),
   }).where(eq(enrollments.id, enrollmentId));
+  if (familyGroupId > 0 && familyMemberOrder > 0) {
+    const existingMembers = await db.select().from(familyGroupMembers).where(eq(familyGroupMembers.familyGroupId, familyGroupId));
+    if (!existingMembers.some(member => member.enrollmentId === enrollmentId)) {
+      await db.insert(familyGroupMembers).values({
+        familyGroupId,
+        enrollmentId,
+        memberOrder: familyMemberOrder,
+        hasDiscount: hasFamilyDiscount ? 1 : 0,
+        discountedMonthlyAmount: hasFamilyDiscount ? recurringMonthlyAmount.toFixed(2) : null,
+        originalMonthlyAmount: Number(pkg.monthlyPrice).toFixed(2),
+      });
+    }
+  }
+  if (session.metadata?.promoCode) {
+    await db.update(promoCodes).set({ usedCount: sql`usedCount + 1`, updatedAt: Date.now() })
+      .where(eq(promoCodes.code, session.metadata.promoCode));
+  }
 }
 
 /** Records a paid Pro Shop order for staff fulfillment. */

@@ -120,7 +120,6 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
   const validatePromo = trpc.promo.validate.useMutation();
-  const markPromoUsed = trpc.promo.markUsed.useMutation();
 
   // Auto-apply promo code from URL on first render
   useEffect(() => {
@@ -340,27 +339,18 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
             ) : (
               <>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>First month's membership</span>
-                  <span>${(enrollmentData.monthlyPrice || 0).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm text-gray-600">
                   <span className="flex items-center gap-1.5">
-                    One-time enrollment fee
-                    {waiveEnrollmentFee && (
+                    New-member down payment
+                    {totalAmount === 0 && (
                       <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50 text-xs px-1.5 py-0 h-auto">
                         <Tag className="h-2.5 w-2.5 mr-0.5" />WAIVED
                       </Badge>
                     )}
                   </span>
-                  <span className={waiveEnrollmentFee ? "line-through text-gray-400" : ""}>
-                    ${enrollmentFee.toFixed(2)}
+                  <span className={totalAmount === 0 ? "line-through text-gray-400" : ""}>
+                    ${baseAmount.toFixed(2)}
                   </span>
                 </div>
-                {waiveEnrollmentFee && (
-                  <div className="flex justify-between text-sm text-green-700 font-medium">
-                    <span>Discount</span><span>-${enrollmentFee.toFixed(2)}</span>
-                  </div>
-                )}
               </>
             )}
             {appliedPromo && promoDiscount > 0 && (
@@ -399,6 +389,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
                     studentName: enrollmentData.studentName || enrollmentData.childName || enrollmentData.customerName,
                     waiveEnrollmentFee: waiveEnrollmentFee || undefined,
                     waiverReason: enrollmentData.waiverReason || undefined,
+                    promoCode: appliedPromo?.code,
                     agreementSignature: agreementSig.signedName,
                     agreementSignedAt: agreementSig.signedAt.toISOString(),
                     agreementSignatureDataUrl: agreementSig.signatureDataUrl,
@@ -419,35 +410,6 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
               <span className="text-base">{errorMessage}</span>
             </div>
           )}
-
-          {totalAmount === 0 && !enrollmentData.waiveDownPayment ? (
-            <Button
-              onClick={() => {
-                if (appliedPromo) markPromoUsed.mutate({ code: appliedPromo.code });
-                createZeroDollarEnrollmentMutation.mutate({
-                  packageId: enrollmentData.packageId || 0,
-                  customerName: enrollmentData.customerName,
-                  customerEmail: enrollmentData.customerEmail,
-                  customerPhone: enrollmentData.customerPhone,
-                  studentName: enrollmentData.studentName || enrollmentData.childName || enrollmentData.customerName,
-                  waiveEnrollmentFee: true,
-                  waiverReason: `Promo code: ${appliedPromo?.code}`,
-                  agreementSignature: agreementSig!.signedName,
-                  agreementSignedAt: agreementSig!.signedAt.toISOString(),
-                  agreementSignatureDataUrl: agreementSig!.signatureDataUrl,
-                });
-              }}
-              disabled={isSubmitting}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg"
-              style={{ minHeight: 60 }}
-            >
-              {isSubmitting ? (
-                <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Processing…</>
-              ) : (
-                "Complete Enrollment — FREE"
-              )}
-            </Button>
-          ) : null}
 
           <div className="flex items-center justify-center gap-2 text-sm text-gray-400 pb-2">
             <Lock className="w-4 h-4" />
