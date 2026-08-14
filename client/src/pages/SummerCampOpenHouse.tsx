@@ -123,70 +123,6 @@ export default function SummerCampOpenHouse() {
     });
   }, [studentCount]);
 
-  // Load FluidPay tokenizer script
-  useEffect(() => {
-    if (scriptLoadedRef.current) return;
-    scriptLoadedRef.current = true;
-    if (window.Tokenizer) { setTokenizerReady(true); return; }
-    const script = document.createElement("script");
-    script.src = "https://app.fluidpay.com/tokenizer/tokenizer.js";
-    script.async = true;
-    script.onload = () => setTokenizerReady(true);
-    script.onerror = () => setPaymentError("Failed to load payment form. Please refresh.");
-    document.head.appendChild(script);
-  }, []);
-
-  // Initialize tokenizer when payment section is shown
-  useEffect(() => {
-    if (!showPayment) return;
-    if (!tokenizerReady || tokenizerInitializedRef.current) return;
-    if (!window.Tokenizer) return;
-    tokenizerInitializedRef.current = true;
-    try {
-      const instance = new window.Tokenizer({
-        apikey: import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "",
-        container: "#oh-fluidpay-tokenizer",
-        submission: async (resp) => {
-          if (!resp.token || resp.status === "error") {
-            setPaymentError(resp.error || "Card tokenization failed. Please check your card details.");
-            setIsLoading(false);
-            return;
-          }
-          try {
-            const selectedWeekLabels = isFullSummerMode
-              ? CAMP_WEEKS.map(w => w.theme)
-              : CAMP_WEEKS.filter(w => selectedWeeks.has(w.id)).map(w => w.theme);
-            await checkoutMutation.mutateAsync({
-              token: resp.token,
-              weeks: selectedWeekLabels,
-              students: students.map(s => ({ name: s.name, age: getAgeFromDob(s.dob), dob: s.dob })),
-              parentName, parentEmail, parentPhone,
-              isFullSummer,
-              totalCents: pricing!.totalCents,
-            });
-            setEnrollSuccess(true);
-            toast.success("Enrollment complete! 🎉", { description: "Check your phone for a confirmation text." });
-          } catch (err: any) {
-            setPaymentError(err?.message ?? "Payment failed. Please try again.");
-            setIsLoading(false);
-          }
-        },
-        onLoad: () => {},
-        settings: {
-          payment: { types: ["card"] },
-          styles: {
-            body: { "font-family": "inherit", "background-color": "transparent" },
-            inputs: { "border-radius": "8px", "border": "2px solid #e5e7eb", "padding": "12px 14px", "font-size": "16px", "height": "48px" },
-            labels: { "font-size": "14px", "font-weight": "700", "color": "#111827", "margin-bottom": "6px" },
-          },
-        },
-      });
-      tokenizerInstanceRef.current = instance;
-    } catch (err: any) {
-      setPaymentError(`Payment form error: ${err?.message || "Unknown"}. Please refresh.`);
-    }
-  }, [showPayment, tokenizerReady]);
-
   const handleProceedToPayment = () => {
     if (weeksCount === 0) { toast.error("Please select at least one week."); return; }
     const validStudents = students.slice(0, studentCount).filter(s => s.name.trim() && s.dob);
@@ -196,11 +132,23 @@ export default function SummerCampOpenHouse() {
     setTimeout(() => enrollRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   };
 
-  const handleSubmitPayment = () => {
-    if (!tokenizerInstanceRef.current) { toast.error("Payment form not ready. Please wait."); return; }
+  const handleSubmitPayment = async () => {
     setIsLoading(true);
     setPaymentError(null);
-    tokenizerInstanceRef.current.submit(pricing!.total.toFixed(2));
+    try {
+      const selectedWeekLabels = isFullSummerMode ? CAMP_WEEKS.map(w => w.theme) : CAMP_WEEKS.filter(w => selectedWeeks.has(w.id)).map(w => w.theme);
+      const result = await checkoutMutation.mutateAsync({
+        weeks: selectedWeekLabels,
+        students: students.map(s => ({ name: s.name, age: getAgeFromDob(s.dob), dob: s.dob })),
+        parentName, parentEmail, parentPhone, isFullSummer,
+        totalCents: pricing!.totalCents,
+        origin: window.location.origin,
+      });
+      window.location.assign(result.checkoutUrl);
+    } catch (error: any) {
+      setPaymentError(error?.message || "Unable to open secure checkout. Please try again.");
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -512,13 +460,10 @@ export default function SummerCampOpenHouse() {
                   {paymentError && (
                     <div className="bg-red-900/30 border border-red-700 rounded-lg p-3 mb-4 text-red-300 text-sm">{paymentError}</div>
                   )}
-                  {!tokenizerReady && !paymentError && (
-                    <div className="flex items-center gap-2 text-gray-400 mb-4"><Loader2 className="animate-spin w-4 h-4" /> Loading payment form...</div>
-                  )}
-                  <div id="oh-fluidpay-tokenizer" className={tokenizerReady ? "block" : "hidden"} />
-                  <Button onClick={handleSubmitPayment} disabled={isLoading || !tokenizerReady}
+                  <p className="mb-4 text-sm text-gray-400">Continue to secure checkout to complete registration. MyDojo never stores full card numbers.</p>
+                  <Button onClick={handleSubmitPayment} disabled={isLoading}
                     className="w-full mt-4 bg-primary hover:bg-primary/90 text-white text-lg py-6 h-auto font-heading uppercase tracking-wider">
-                    {isLoading ? <><Loader2 className="animate-spin mr-2 w-5 h-5" /> Processing...</> : <><Lock className="mr-2 w-5 h-5" /> Pay ${pricing?.total.toFixed(2)} & Enroll</>}
+                    {isLoading ? <><Loader2 className="animate-spin mr-2 w-5 h-5" /> Opening secure checkout...</> : <><Lock className="mr-2 w-5 h-5" /> Continue securely · ${pricing?.total.toFixed(2)}</>}
                   </Button>
                   <p className="text-xs text-gray-500 text-center mt-3">Your card is processed securely. We never store your card details.</p>
                 </div>

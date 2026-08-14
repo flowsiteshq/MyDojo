@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Stripe from "stripe";
 import { getDb } from "./db";
-import { enrollments, membershipPackages, trialSignups, beltTestIntents, eventRegistrations, shopOrders } from "../drizzle/schema";
+import { enrollments, membershipPackages, trialSignups, beltTestIntents, eventRegistrations, shopOrders, introOfferPurchases, dayPasses, attendance, familyGroups, paymentFailures, summerCampEnrollments, familyKickboxingAddOns, scheduledPayments } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { notifyOwner } from "./_core/notification";
 
@@ -55,6 +55,16 @@ export async function handleStripeWebhook(req: Request, res: Response) {
           await handleIntroOfferPayment(session);
         } else if (session.metadata?.type === "shop_purchase") {
           await handleShopPurchase(session);
+        } else if (session.metadata?.type === "day_pass") {
+          await handleDayPassPurchase(session);
+        } else if (session.metadata?.type === "family_registration") {
+          await handleFamilyRegistration(session);
+        } else if (session.metadata?.type === "summer_camp_enrollment") {
+          await handleSummerCampEnrollment(session);
+        } else if (session.metadata?.type === "family_kickboxing_addon") {
+          await handleFamilyKickboxingAddOn(session);
+        } else if (session.metadata?.type === "scheduled_payment_setup") {
+          await handleScheduledPaymentSetup(session);
         } else {
           await handleCheckoutSessionCompleted(session);
         }
@@ -75,6 +85,10 @@ export async function handleStripeWebhook(req: Request, res: Response) {
 
       case "invoice.payment_failed":
         await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+        break;
+
+      case "invoice.payment_succeeded":
+        await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
         break;
 
       default:
@@ -453,15 +467,44 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     return;
   }
 
-  // Mark enrollment as failed
+  // Mark enrollment as failed and create one visible recovery record per
+  // invoice. This gives staff a concrete card-update path instead of a silent
+  // recurring failure.
   await db
     .update(enrollments)
-    .set({
-      status: "failed",
-    })
+    .set({ status: "failed" })
     .where(eq(enrollments.id, enrollment.id));
 
+  const [openFailure] = await db.select().from(paymentFailures)
+    .where(eq(paymentFailures.stripeInvoiceId, invoice.id)).limit(1);
+  if (!openFailure) {
+    await db.insert(paymentFailures).values({
+      enrollmentId: enrollment.id,
+      stripeInvoiceId: invoice.id,
+      stripeSubscriptionId: subscriptionId,
+      amountCents: invoice.amount_due ?? 0,
+      failureReason: (invoice as any).last_finalization_error?.message || "Recurring payment failed",
+      status: "open",
+    });
+  }
+  await notifyOwner({
+    title: `Recurring Payment Needs Attention — ${enrollment.studentName || enrollment.customerName}`,
+    content: `A recurring payment failed for ${enrollment.customerName}. The member can update their payment method from Account, or staff can update it in the admin panel.`,
+  });
   console.log("[Stripe Webhook] Enrollment marked as failed due to payment failure:", enrollment.id);
+}
+
+/** Restores active billing status and resolves recovery records after a successful retry. */
+async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
+  const db = await getDb();
+  if (!db) return;
+  const subscriptionId = (invoice as any).subscription as string | undefined;
+  if (!subscriptionId) return;
+  const [enrollment] = await db.select().from(enrollments).where(eq(enrollments.stripeSubscriptionId, subscriptionId)).limit(1);
+  if (!enrollment) return;
+  await db.update(enrollments).set({ status: "active" }).where(eq(enrollments.id, enrollment.id));
+  await db.update(paymentFailures).set({ status: "resolved" }).where(eq(paymentFailures.stripeSubscriptionId, subscriptionId));
+  console.log("[Stripe Webhook] Recurring payment succeeded for enrollment:", enrollment.id);
 }
 
 /**
@@ -488,6 +531,36 @@ async function handleIntroOfferPayment(session: Stripe.Checkout.Session) {
   const customerPhone = session.metadata?.customerPhone || session.customer_details?.phone || "";
   const program = session.metadata?.program || "Not Sure";
   const amountPaid = session.amount_total ? session.amount_total / 100 : 29;
+  const introOfferPackage = session.metadata?.introOfferPackage;
+
+  // New hosted intro-offer checkout: create the class-pass record first. The
+  // Stripe session ID makes the webhook idempotent and removes the old
+  // ambiguous legacy transaction field from all new purchases.
+  if (introOfferPackage === "starter" || introOfferPackage === "explorer") {
+    const [existingPurchase] = await db
+      .select()
+      .from(introOfferPurchases)
+      .where(eq(introOfferPurchases.stripeCheckoutSessionId, session.id))
+      .limit(1);
+    if (!existingPurchase) {
+      const classesIncluded = introOfferPackage === "starter" ? 3 : 5;
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+      await db.insert(introOfferPurchases).values({
+        name: customerName,
+        email: customerEmail.toLowerCase(),
+        phone: customerPhone || null,
+        packageId: introOfferPackage,
+        amountCents: session.amount_total ?? (introOfferPackage === "starter" ? 2900 : 4900),
+        classesIncluded,
+        classesRemaining: classesIncluded,
+        stripeCheckoutSessionId: session.id,
+        stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
+        status: "paid",
+        expiresAt,
+      });
+    }
+  }
   const isSummerCampTrial = session.metadata?.type === 'summer_camp_intro';
 
   // Map program string to valid enum value
@@ -707,4 +780,145 @@ async function handleEventRegistrationPayment(session: Stripe.Checkout.Session) 
   }
 
   console.log(`[Stripe Webhook] Event registration confirmed for ${name} — ${eventId} — $${amountPaid}`);
+}
+
+/** Records a paid day pass and guest attendance after hosted checkout. */
+async function handleDayPassPurchase(session: Stripe.Checkout.Session) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable for day pass");
+
+  const [existing] = await db.select().from(dayPasses).where(eq(dayPasses.stripeCheckoutSessionId, session.id)).limit(1);
+  if (existing) return;
+
+  const metadata = session.metadata ?? {};
+  const name = metadata.customerName || session.customer_details?.name || "Guest";
+  const email = metadata.customerEmail || session.customer_details?.email || session.customer_email || "";
+  const program = metadata.program || "Day Pass";
+  const checkInAt = new Date();
+
+  await db.insert(dayPasses).values({
+    name,
+    email,
+    phone: metadata.customerPhone || session.customer_details?.phone || null,
+    program,
+    amountCents: session.amount_total ?? 0,
+    stripeCheckoutSessionId: session.id,
+    stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
+    status: "paid",
+    classId: metadata.classId ? Number.parseInt(metadata.classId, 10) : null,
+  } as any);
+  await db.insert(attendance).values({
+    studentId: 0,
+    checkInDate: checkInAt.toISOString().slice(0, 10),
+    checkInTimestamp: checkInAt,
+    beltRankAtCheckIn: "Guest",
+    programType: metadata.programType || program,
+    source: "kiosk",
+    xpAwarded: 0,
+    notes: `Secure day pass ${session.id} — ${name}`,
+  } as any);
+
+  await notifyOwner({
+    title: `Day Pass Paid — ${name}`,
+    content: `${name} purchased a ${program} day pass for $${((session.amount_total ?? 0) / 100).toFixed(2)}.`,
+  });
+}
+
+/** Creates the paid family record after hosted family registration checkout. */
+async function handleFamilyRegistration(session: Stripe.Checkout.Session) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable for family registration");
+  const [existing] = await db.select().from(familyGroups).where(eq(familyGroups.stripeCheckoutSessionId, session.id)).limit(1);
+  if (existing) return;
+  const metadata = session.metadata ?? {};
+  const name = metadata.primaryContactName || session.customer_details?.name || "MyDojo Family";
+  const email = metadata.primaryContactEmail || session.customer_details?.email || session.customer_email || "";
+  await db.insert(familyGroups).values({
+    primaryContactName: name,
+    primaryContactEmail: email,
+    primaryContactPhone: metadata.primaryContactPhone || session.customer_details?.phone || null,
+    registrationFeePaid: 1,
+    registrationFeeAmount: ((session.amount_total ?? 9900) / 100).toFixed(2),
+    registrationFeePaidAt: new Date(),
+    stripeCheckoutSessionId: session.id,
+    stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
+  } as any);
+  await notifyOwner({ title: `Family Registration Paid — ${name}`, content: `${name} completed the $99 family registration. Add family members from the admin portal.` });
+}
+
+/** Creates one paid summer camp enrollment after a completed hosted checkout. */
+async function handleSummerCampEnrollment(session: Stripe.Checkout.Session) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable for summer camp enrollment");
+  const [existing] = await db.select().from(summerCampEnrollments).where(eq(summerCampEnrollments.stripeCheckoutSessionId, session.id)).limit(1);
+  if (existing) return;
+  const metadata = session.metadata ?? {};
+  const students = metadata.students || "[]";
+  const weeks = metadata.weeks || "[]";
+  await db.insert(summerCampEnrollments).values({
+    parentName: metadata.parentName || session.customer_details?.name || "MyDojo Parent",
+    parentEmail: metadata.parentEmail || session.customer_details?.email || session.customer_email || "",
+    parentPhone: metadata.parentPhone || session.customer_details?.phone || "",
+    students,
+    weeks,
+    weekCount: Number(metadata.weekCount || 0),
+    studentCount: Number(metadata.studentCount || 0),
+    isFullSummer: metadata.isFullSummer === "true" ? 1 : 0,
+    amountCents: session.amount_total ?? 0,
+    stripeCheckoutSessionId: session.id,
+    stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
+    status: "approved",
+  } as any);
+  await notifyOwner({ title: "Summer Camp Enrollment Paid", content: `${metadata.parentName || session.customer_details?.name || "A parent"} completed a summer camp enrollment. Review it in Admin > Summer Camp.` });
+}
+
+/** Records a hosted recurring kickboxing add-on exactly once. */
+async function handleFamilyKickboxingAddOn(session: Stripe.Checkout.Session) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable for family kickboxing add-on");
+  const [existing] = await db.select().from(familyKickboxingAddOns).where(eq(familyKickboxingAddOns.stripeCheckoutSessionId, session.id)).limit(1);
+  if (existing) return;
+  const metadata = session.metadata ?? {};
+  await db.insert(familyKickboxingAddOns).values({
+    familyGroupId: Number(metadata.familyGroupId || 0),
+    memberName: metadata.memberName || "Kickboxing Member",
+    memberEmail: metadata.memberEmail || session.customer_details?.email || session.customer_email || "",
+    memberPhone: metadata.memberPhone || null,
+    monthlyAmount: "49.00",
+    stripeCustomerId: typeof session.customer === "string" ? session.customer : null,
+    stripeSubscriptionId: typeof session.subscription === "string" ? session.subscription : null,
+    stripeCheckoutSessionId: session.id,
+    status: "active",
+  } as any);
+  await notifyOwner({ title: "Family Kickboxing Add-On Paid", content: `${metadata.memberName || "A family member"} is enrolled in the $49/month kickboxing add-on.` });
+}
+
+/** Stores a future scheduled charge after the customer authorizes a reusable payment method. */
+async function handleScheduledPaymentSetup(session: Stripe.Checkout.Session) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable for scheduled payment setup");
+  const setupIntentId = typeof session.setup_intent === "string" ? session.setup_intent : null;
+  if (!setupIntentId) throw new Error("Missing setup intent for scheduled payment");
+  const setupIntent = await stripe.setupIntents.retrieve(setupIntentId);
+  const paymentMethodId = typeof setupIntent.payment_method === "string" ? setupIntent.payment_method : null;
+  if (!paymentMethodId) throw new Error("Missing reusable payment method for scheduled payment");
+  const [existing] = await db.select().from(scheduledPayments).where(eq(scheduledPayments.stripeSetupIntentId, setupIntentId)).limit(1);
+  if (existing) return;
+  const metadata = session.metadata ?? {};
+  const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+  await db.insert(scheduledPayments).values({
+    customerName: metadata.customerName || session.customer_details?.name || "Customer",
+    customerEmail: metadata.customerEmail || session.customer_details?.email || session.customer_email || null,
+    customerPhone: metadata.customerPhone || session.customer_details?.phone || null,
+    amount: metadata.amount || "0.00",
+    description: metadata.description || "Scheduled MyDojo payment",
+    scheduledDate: metadata.scheduledDate as unknown as Date,
+    stripeCustomerId: typeof session.customer === "string" ? session.customer : null,
+    stripePaymentMethodId: paymentMethodId,
+    stripeSetupIntentId: setupIntentId,
+    cardLast4: paymentMethod.card?.last4 || null,
+    cardBrand: paymentMethod.card?.brand || null,
+    status: "pending",
+    createdByUserId: Number(metadata.createdByUserId || 0) || null,
+  } as any);
 }

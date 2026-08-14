@@ -244,7 +244,7 @@ function WebhookEventsTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Showing the last {events?.length ?? 0} webhook events received from Fluid Pay.
+          Showing the last {events?.length ?? 0} historical payment webhook events.
         </p>
         <Button variant="outline" size="sm" onClick={() => refetch()}>
           <RefreshCw className="h-4 w-4 mr-1" />
@@ -258,10 +258,7 @@ function WebhookEventsTab() {
             <Webhook className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
             <p className="text-lg font-semibold">No webhook events yet</p>
             <p className="text-muted-foreground text-sm">
-              Events will appear here once Fluid Pay starts sending them to{" "}
-              <code className="text-xs bg-muted px-1 py-0.5 rounded">
-                /api/fluidpay/webhook
-              </code>
+              Historical events are retained for reconciliation. New secure payment events are handled through the active billing workflow.
             </p>
           </CardContent>
         </Card>
@@ -339,28 +336,17 @@ function WebhookEventsTab() {
         </Card>
       )}
 
-      {/* Setup instructions */}
+      {/* Historic provider archive notice */}
       <Card className="border-dashed">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            Fluid Pay Webhook Setup
+            Historic Payment Archive
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>To start receiving events, configure a webhook in Fluid Pay:</p>
-          <ol className="list-decimal list-inside space-y-1 pl-2">
-            <li>Log in to <strong>app.fluidpay.com</strong></li>
-            <li>Go to <strong>Manage → Settings → Webhooks</strong></li>
-            <li>
-              Set the endpoint URL to:{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-xs">
-                https://mydojo-fitness-lu5er8yq.manus.space/api/fluidpay/webhook
-              </code>
-            </li>
-            <li>Select event types: <strong>Transaction</strong> (all)</li>
-            <li>Copy the <strong>Signature UUID</strong> and add it as <code className="text-xs">FLUIDPAY_WEBHOOK_SECRET</code> in Settings → Secrets</li>
-          </ol>
+          <p>New payments and recurring billing use the secure Stripe workflow. Historical payment events remain visible here only for reconciliation and reporting.</p>
+          <p>No legacy payment-provider setup is required for new enrollments, registrations, subscriptions, or payment links.</p>
         </CardContent>
       </Card>
     </div>
@@ -376,7 +362,7 @@ export default function AdminBilling() {
         <div>
           <h1 className="text-2xl font-bold">Billing &amp; Webhooks</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Monitor subscription renewals, payment failures, and Fluid Pay webhook events.
+            Monitor secure subscription renewals, payment failures, and preserved historical payment events.
           </p>
         </div>
 

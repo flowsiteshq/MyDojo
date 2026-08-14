@@ -85,205 +85,6 @@ export const appRouter = router({
 
   // ── Manual Enrollment Tool (Staff Transfer) ────────────────────────────────
   manualEnrollments: router({
-    /**
-     * Create a manual enrollment for a student being transferred from an old system.
-     * Accepts a FluidPay tokenizer token, creates a customer vault, optionally runs
-     * a pre-authorization, and sets up a recurring subscription starting on nextChargeDate.
-     */
-    create: protectedProcedure
-      .input(z.object({
-        // Student info
-        studentName: z.string().min(1),
-        parentName: z.string().optional(),
-        phone: z.string().min(7),
-        email: z.string().email().optional().or(z.literal('')),
-        // Program & billing
-        program: z.enum(['kickboxing', 'martial_arts', 'summer_camp', 'after_school']),
-        customPrice: z.number().positive(), // dollars
-        nextChargeDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD
-        // Payment
-        token: z.string().min(1), // FluidPay tokenizer token
-        preAuthOnly: z.boolean().default(false), // if true, run $1 pre-auth instead of full charge
-        // Optional
-        notes: z.string().optional(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
-
-        const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
-        const FLUIDPAY_SECRET_KEY = process.env.FLUIDPAY_SECRET_KEY;
-        if (!FLUIDPAY_SECRET_KEY) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
-
-        const fpHeaders = { 'Authorization': FLUIDPAY_SECRET_KEY, 'Content-Type': 'application/json' };
-        const nameParts = input.studentName.trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-
-        // Determine billing frequency from program
-        const billingFrequency: 'monthly' | 'weekly' =
-          (input.program === 'kickboxing' || input.program === 'martial_arts') ? 'monthly' : 'weekly';
-
-        // Step 1: Create Customer Vault
-        const customerRes = await fetch(`${FLUIDPAY_API_URL}/api/vault/customer`, {
-          method: 'POST',
-          headers: fpHeaders,
-          body: JSON.stringify({
-            description: `MyDojo manual enrollment: ${input.studentName}`,
-            default_payment: { token: input.token },
-            default_billing_address: {
-              first_name: firstName,
-              last_name: lastName,
-              email: input.email || '',
-              phone: input.phone.replace(/\D/g, ''),
-            },
-          }),
-        });
-        const customerData = await customerRes.json() as any;
-        if (customerData.status !== 'success') {
-          console.error('[ManualEnroll] Vault creation failed:', customerData);
-          throw new TRPCError({ code: 'BAD_REQUEST', message: customerData.msg || 'Failed to save payment method' });
-        }
-        const fpCustomerId: string = customerData.data.id;
-        const fpPaymentMethodId: string = customerData.data.data?.customer?.defaults?.payment_method_id;
-        const cardLast4: string = customerData.data.data?.customer?.payment_methods?.card?.[0]?.card_number?.slice(-4) || '';
-        const cardType: string = customerData.data.data?.customer?.payment_methods?.card?.[0]?.card_type || '';
-
-        // Step 2: Pre-auth OR full charge
-        let preAuthTransactionId: string | null = null;
-        let initialTransactionId: string | null = null;
-        const amountCents = Math.round(input.customPrice * 100);
-        const programLabel = { kickboxing: 'Kickboxing', martial_arts: 'Martial Arts', summer_camp: 'Summer Camp', after_school: 'After School' }[input.program];
-        const shortId = `me-${Date.now().toString(36).slice(-11)}`; // ≤14 chars
-
-        if (input.preAuthOnly) {
-          // Run $1 pre-authorization to verify card
-          const preAuthRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
-            method: 'POST',
-            headers: fpHeaders,
-            body: JSON.stringify({
-              type: 'authorize',
-              amount: 100, // $1.00
-              currency: 'usd',
-              payment_method: { customer: { id: fpCustomerId, payment_method_type: 'card', payment_method_id: fpPaymentMethodId } },
-              billing_address: { first_name: firstName, last_name: lastName, email: input.email || '', phone: input.phone.replace(/\D/g, '') },
-              order_id: shortId,
-              order_meta: { description: `MyDojo ${programLabel} - Pre-Auth (${input.studentName})` },
-            }),
-          });
-          const preAuthData = await preAuthRes.json() as any;
-          if (preAuthData.status !== 'success' || (preAuthData.data?.status !== 'authorized' && preAuthData.data?.status !== 'pending_settlement' && preAuthData.data?.status !== 'approved')) {
-            console.error('[ManualEnroll] Pre-auth failed:', preAuthData);
-            const msg = preAuthData.data?.response_body?.card?.processor_response_text || preAuthData.msg || 'Pre-authorization failed';
-            throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
-          }
-          preAuthTransactionId = preAuthData.data?.id || null;
-        } else {
-          // Charge the first period upfront
-          const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
-            method: 'POST',
-            headers: fpHeaders,
-            body: JSON.stringify({
-              type: 'sale',
-              amount: amountCents,
-              currency: 'usd',
-              payment_method: { customer: { id: fpCustomerId, payment_method_type: 'card', payment_method_id: fpPaymentMethodId } },
-              billing_address: { first_name: firstName, last_name: lastName, email: input.email || '', phone: input.phone.replace(/\D/g, '') },
-              order_id: shortId,
-              order_meta: { description: `MyDojo ${programLabel} - ${billingFrequency === 'monthly' ? 'First Month' : 'First Week'} (${input.studentName})` },
-            }),
-          });
-          const chargeData = await chargeRes.json() as any;
-          if (chargeData.status !== 'success' || (chargeData.data?.status !== 'approved' && chargeData.data?.status !== 'pending_settlement')) {
-            console.error('[ManualEnroll] Initial charge failed:', chargeData);
-            const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.msg || 'Payment declined';
-            throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
-          }
-          initialTransactionId = chargeData.data?.id || null;
-        }
-
-        // Step 3: Create recurring subscription using the 1st/15th billing cycle rule:
-        // Enrollment day 1–14 → bill on the 1st of next month
-        // Enrollment day 15–31 → bill on the 15th of next month
-        const { getNextBillingDateStr, getBillingAnchorDayStr } = await import('@shared/billingUtils');
-        const computedNextChargeDate = getNextBillingDateStr(new Date());
-        const computedBillingDay = getBillingAnchorDayStr(new Date());
-        const subscriptionBody: any = {
-          description: `MyDojo ${programLabel} - ${input.studentName}`,
-          customer: { id: fpCustomerId },
-          amount: amountCents,
-          billing_cycle_interval: 1,
-          billing_frequency: billingFrequency,
-          next_bill_date: computedNextChargeDate,
-        };
-        if (billingFrequency === 'monthly') {
-          subscriptionBody.billing_days = computedBillingDay;
-        }
-        const subscriptionRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
-          method: 'POST',
-          headers: fpHeaders,
-          body: JSON.stringify(subscriptionBody),
-        });
-        const subscriptionData = await subscriptionRes.json() as any;
-        let fpSubscriptionId: string | null = null;
-        let manualSubFailed = false;
-        if (subscriptionData.status === 'success') {
-          fpSubscriptionId = subscriptionData.data?.id || null;
-        } else {
-          console.error('[ManualEnroll] Subscription creation failed:', JSON.stringify(subscriptionData));
-          manualSubFailed = true;
-        }
-
-        // Step 4: Save enrollment record
-        const insertResult = await db.insert(schema.manualEnrollments).values({
-          studentName: input.studentName,
-          parentName: input.parentName || null,
-          phone: input.phone,
-          email: input.email || null,
-          program: input.program,
-          customPrice: input.customPrice.toFixed(2),
-          billingFrequency,
-          nextChargeDate: computedNextChargeDate,
-          preAuthEnabled: input.preAuthOnly ? 1 : 0,
-          preAuthTransactionId,
-          fluidpayCustomerId: fpCustomerId,
-          fluidpaySubscriptionId: fpSubscriptionId,
-          initialTransactionId,
-          cardLast4: cardLast4 || null,
-          cardType: cardType || null,
-          // If subscription creation failed, mark as pending so admin can fix it
-          status: manualSubFailed ? 'pending' : 'active',
-          notes: input.notes || null,
-          createdByStaffId: ctx.user.id,
-          createdByStaffName: ctx.user.name || ctx.user.email,
-        });
-        const enrollmentId = (insertResult as any).insertId;
-
-        // Notify owner
-        try {
-          const { notifyOwner } = await import('./_core/notification');
-          const subNote = manualSubFailed
-            ? ' \u26a0\ufe0f SUBSCRIPTION CREATION FAILED — enrollment is PENDING. Please create the subscription manually in FluidPay.'
-            : '';
-          await notifyOwner({
-            title: manualSubFailed ? '\ud83d\udea8 Manual Enrollment PENDING (Subscription Failed)' : 'Manual Enrollment Created',
-            content: `${ctx.user.name || ctx.user.email} enrolled ${input.studentName} in ${programLabel} at $${input.customPrice}/${billingFrequency}. Next charge: ${input.nextChargeDate}. ${input.preAuthOnly ? 'Pre-auth only.' : `Charged $${input.customPrice} today.`}${subNote}`,
-          });
-        } catch {}
-
-        return {
-          success: true,
-          enrollmentId,
-          fpCustomerId,
-          fpSubscriptionId,
-          preAuthTransactionId,
-          initialTransactionId,
-          billingFrequency,
-          cardLast4,
-          cardType,
-        };
-      }),
-
     /** List all manual enrollments (staff/admin only) */
     list: protectedProcedure
       .input(z.object({
@@ -331,63 +132,6 @@ export const appRouter = router({
           .set(updateData)
           .where(eq(schema.manualEnrollments.id, input.id));
         return { success: true };
-      }),
-
-    /** Manually trigger a charge on an existing manual enrollment */
-    charge: protectedProcedure
-      .input(z.object({
-        id: z.number(),
-        amountOverride: z.number().positive().optional(), // if omitted, uses customPrice
-        description: z.string().optional(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
-
-        const [enrollment] = await db.select().from(schema.manualEnrollments)
-          .where(eq(schema.manualEnrollments.id, input.id));
-        if (!enrollment) throw new TRPCError({ code: 'NOT_FOUND', message: 'Enrollment not found' });
-        if (!enrollment.fluidpayCustomerId) throw new TRPCError({ code: 'BAD_REQUEST', message: 'No payment method on file' });
-
-        const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
-        const FLUIDPAY_SECRET_KEY = process.env.FLUIDPAY_SECRET_KEY;
-        if (!FLUIDPAY_SECRET_KEY) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
-
-        const fpHeaders = { 'Authorization': FLUIDPAY_SECRET_KEY, 'Content-Type': 'application/json' };
-        const amountCents = Math.round((input.amountOverride ?? parseFloat(enrollment.customPrice as string)) * 100);
-        const programLabel = { kickboxing: 'Kickboxing', martial_arts: 'Martial Arts', summer_camp: 'Summer Camp', after_school: 'After School' }[enrollment.program];
-        const shortId = `mc-${Date.now().toString(36).slice(-11)}`;
-
-        const nameParts = enrollment.studentName.trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-
-        const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
-          method: 'POST',
-          headers: fpHeaders,
-          body: JSON.stringify({
-            type: 'sale',
-            amount: amountCents,
-            currency: 'usd',
-            payment_method: { customer: { id: enrollment.fluidpayCustomerId, payment_method_type: 'card' } },
-            billing_address: { first_name: firstName, last_name: lastName, email: enrollment.email || '', phone: enrollment.phone.replace(/\D/g, '') },
-            order_id: shortId,
-            order_meta: { description: input.description || `MyDojo ${programLabel} - Manual Charge (${enrollment.studentName})` },
-          }),
-        });
-        const chargeData = await chargeRes.json() as any;
-        if (chargeData.status !== 'success' || (chargeData.data?.status !== 'approved' && chargeData.data?.status !== 'pending_settlement')) {
-          const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.msg || 'Payment declined';
-          throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
-        }
-        const transactionId = chargeData.data?.id;
-
-        // Update enrollment record with latest transaction
-        await db.update(schema.manualEnrollments)
-          .set({ initialTransactionId: transactionId, status: 'active' })
-          .where(eq(schema.manualEnrollments.id, input.id));
-
-        return { success: true, transactionId, amountCharged: amountCents / 100 };
       }),
 
     /** Create a Stripe SetupIntent for a new manual enrollment (card-on-file + first charge) */
@@ -827,267 +571,6 @@ export const appRouter = router({
         };
       }),
 
-    /** Process a payment for a custom payment link (public — called from checkout page) */
-    processCheckout: publicProcedure
-      .input(z.object({
-        token: z.string(),
-        // FluidPay tokenizer token
-        fpToken: z.string().min(1),
-        // Customer info
-        customerName: z.string().min(1),
-        customerEmail: z.string().email().optional().or(z.literal('')),
-        customerPhone: z.string().optional(),
-        // For merchandise: quantities selected
-        selectedItems: z.array(z.object({
-          name: z.string(),
-          price: z.number(),
-          quantity: z.number().int().positive(),
-        })).optional(),
-        // For merchandise with shipping
-        shippingAddress: z.string().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
-
-        // Fetch and validate the link
-        const [link] = await db.select().from(schema.customPaymentLinks)
-          .where(eq(schema.customPaymentLinks.token, input.token));
-        if (!link) throw new TRPCError({ code: 'NOT_FOUND', message: 'Payment link not found' });
-        if (!link.isActive) throw new TRPCError({ code: 'FORBIDDEN', message: 'This payment link is no longer active' });
-        if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'This payment link has expired' });
-        }
-
-        const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
-        const FLUIDPAY_SECRET_KEY = process.env.FLUIDPAY_SECRET_KEY;
-        if (!FLUIDPAY_SECRET_KEY) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
-        const fpHeaders = { 'Authorization': FLUIDPAY_SECRET_KEY, 'Content-Type': 'application/json' };
-
-        const nameParts = input.customerName.trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-        const shortId = `cpl-${Date.now().toString(36).slice(-10)}`;
-
-        // Calculate amount
-        let amountDollars = 0;
-        let merchandiseSnapshot: any[] | null = null;
-        if (link.type === 'merchandise' && input.selectedItems && input.selectedItems.length > 0) {
-          amountDollars = input.selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-          merchandiseSnapshot = input.selectedItems;
-        } else {
-          amountDollars = parseFloat(link.amount as string);
-        }
-        const amountCents = Math.round(amountDollars * 100);
-
-        let transactionId: string | null = null;
-        let fpCustomerId: string | null = null;
-        let fpSubscriptionId: string | null = null;
-        let cardLast4 = '';
-        let cardType = '';
-        let paymentStatus: 'approved' | 'declined' | 'failed' = 'failed';
-
-        if (link.type === 'recurring') {
-          // Step 1: Create customer vault
-          const vaultRes = await fetch(`${FLUIDPAY_API_URL}/api/vault/customer`, {
-            method: 'POST',
-            headers: fpHeaders,
-            body: JSON.stringify({
-              description: `MyDojo custom payment: ${link.title} - ${input.customerName}`,
-              default_payment: { token: input.fpToken },
-              default_billing_address: {
-                first_name: firstName, last_name: lastName,
-                email: input.customerEmail || '',
-                phone: (input.customerPhone || '').replace(/\D/g, ''),
-              },
-            }),
-          });
-          const vaultData = await vaultRes.json() as any;
-          if (vaultData.status !== 'success') {
-            const rawMsg = vaultData.msg || '';
-            // Detect expired/invalid token and give a clear user-friendly message
-            const isTokenError = rawMsg.toLowerCase().includes('token') || rawMsg.toLowerCase().includes('invalid');
-            const userMsg = isTokenError
-              ? 'Your card session expired. Please re-enter your card details and try again.'
-              : rawMsg || 'Failed to save payment method. Please try again.';
-            throw new TRPCError({ code: 'BAD_REQUEST', message: userMsg });
-          }
-          fpCustomerId = vaultData.data.id;
-          cardLast4 = vaultData.data.data?.customer?.payment_methods?.card?.[0]?.card_number?.slice(-4) || '';
-          cardType = vaultData.data.data?.customer?.payment_methods?.card?.[0]?.card_type || '';
-
-          // Step 2: Determine what to charge today
-          // If there's a down payment, charge that today. Otherwise charge first recurring amount.
-          const hasDownPayment = link.downPayment && parseFloat(link.downPayment as string) > 0;
-          const todayChargeAmount = hasDownPayment
-            ? Math.round(parseFloat(link.downPayment as string) * 100)
-            : amountCents;
-          const todayChargeDesc = hasDownPayment
-            ? `${link.title} - Down payment / Registration fee (${input.customerName})`
-            : `${link.title} - First payment (${input.customerName})`;
-
-          const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
-            method: 'POST',
-            headers: fpHeaders,
-            body: JSON.stringify({
-              type: 'sale',
-              amount: todayChargeAmount,
-              currency: 'usd',
-              payment_method: { customer: { id: fpCustomerId, payment_method_type: 'card' } },
-              billing_address: { first_name: firstName, last_name: lastName, email: input.customerEmail || '', phone: (input.customerPhone || '').replace(/\D/g, '') },
-              order_id: shortId,
-              order_meta: { description: todayChargeDesc },
-            }),
-          });
-          const chargeData = await chargeRes.json() as any;
-          if (chargeData.status !== 'success' || (chargeData.data?.status !== 'approved' && chargeData.data?.status !== 'pending_settlement')) {
-            const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.msg || 'Payment declined';
-            throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
-          }
-          transactionId = chargeData.data?.id;
-          paymentStatus = 'approved';
-
-          // Step 3: Create recurring subscription
-          // Use firstRecurringDate if set, otherwise calculate based on billing interval
-          const today = new Date();
-          const intervalMap: Record<string, string> = { weekly: 'weekly', monthly: 'monthly', yearly: 'monthly' };
-          const cycleIntervalMap: Record<string, number> = { weekly: 1, monthly: 1, yearly: 12 };
-          let nextBillDateStr: string;
-          if (link.firstRecurringDate) {
-            // Staff specified the first recurring charge date
-            nextBillDateStr = new Date(link.firstRecurringDate).toISOString().slice(0, 10);
-          } else if (hasDownPayment) {
-            // Down payment charged today, first recurring is next billing cycle
-            const nextBillDate = new Date(today);
-            if (link.billingInterval === 'weekly') nextBillDate.setDate(today.getDate() + 7);
-            else if (link.billingInterval === 'yearly') nextBillDate.setFullYear(today.getFullYear() + 1);
-            else nextBillDate.setMonth(today.getMonth() + 1);
-            nextBillDateStr = nextBillDate.toISOString().slice(0, 10);
-          } else {
-            // No down payment, first recurring is next billing cycle after today's charge
-            const nextBillDate = new Date(today);
-            if (link.billingInterval === 'weekly') nextBillDate.setDate(today.getDate() + 7);
-            else if (link.billingInterval === 'yearly') nextBillDate.setFullYear(today.getFullYear() + 1);
-            else nextBillDate.setMonth(today.getMonth() + 1);
-            nextBillDateStr = nextBillDate.toISOString().slice(0, 10);
-          }
-
-          // billing_days is required by FluidPay when billing_frequency is set
-          // For monthly: day of month (e.g. '5' = 5th of each month)
-          // For weekly: day of week (e.g. '1' = Monday)
-          // 1st/15th billing cycle rule for monthly; weekly/yearly keep day-of-week/day-of-year
-          const { getBillingAnchorDayStr: _anchorStr, getNextBillingDateStr: _nextStr } = await import('@shared/billingUtils');
-          const billingDaysMap: Record<string, string> = { weekly: String(new Date().getDay() || 1), monthly: _anchorStr(new Date()), yearly: _anchorStr(new Date()) };
-          const subBody: any = {
-            description: `${link.title} - ${input.customerName}`,
-            customer: { id: fpCustomerId },
-            amount: amountCents,
-            billing_cycle_interval: cycleIntervalMap[link.billingInterval || 'monthly'],
-            billing_frequency: intervalMap[link.billingInterval || 'monthly'],
-            billing_days: billingDaysMap[link.billingInterval || 'monthly'],
-            next_bill_date: nextBillDateStr,
-          };
-          if (link.billingCycles) subBody.billing_cycles = link.billingCycles;
-          const subRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
-            method: 'POST', headers: fpHeaders, body: JSON.stringify(subBody),
-          });
-          const subData = await subRes.json() as any;
-          if (subData.status === 'success') {
-            fpSubscriptionId = subData.data?.id || null;
-          } else {
-            // Log the error but don't block the payment — subscription can be created manually
-            console.error('[RecurringPayment] Subscription creation failed for', input.customerName, ':', subData.msg || JSON.stringify(subData));
-            // Still mark payment as approved since the charge succeeded
-          }
-
-        } else {
-          // One-time or merchandise: direct charge with tokenizer token
-          const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
-            method: 'POST',
-            headers: fpHeaders,
-            body: JSON.stringify({
-              type: 'sale',
-              amount: amountCents,
-              currency: 'usd',
-              payment_method: { token: input.fpToken },
-              billing_address: { first_name: firstName, last_name: lastName, email: input.customerEmail || '', phone: (input.customerPhone || '').replace(/\D/g, '') },
-              order_id: shortId,
-              order_meta: { description: `${link.title} (${input.customerName})` },
-            }),
-          });
-          const chargeData = await chargeRes.json() as any;
-          if (chargeData.status !== 'success' || (chargeData.data?.status !== 'approved' && chargeData.data?.status !== 'pending_settlement')) {
-            const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.msg || 'Payment declined';
-            throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
-          }
-          transactionId = chargeData.data?.id;
-          cardLast4 = chargeData.data?.response_body?.card?.last_four || '';
-          cardType = chargeData.data?.response_body?.card?.card_type || '';
-          paymentStatus = 'approved';
-        }
-
-        // Save payment record
-        await db.insert(schema.customPaymentLinkPayments).values({
-          linkId: link.id,
-          customerName: input.customerName,
-          customerEmail: input.customerEmail || null,
-          customerPhone: input.customerPhone || null,
-          amountCharged: amountDollars.toFixed(2),
-          fluidpayTransactionId: transactionId,
-          fluidpayCustomerId: fpCustomerId,
-          fluidpaySubscriptionId: fpSubscriptionId,
-          cardLast4: cardLast4 || null,
-          cardType: cardType || null,
-          status: paymentStatus,
-          merchandiseItems: merchandiseSnapshot,
-          shippingAddress: input.shippingAddress || null,
-        });
-
-        // Increment use count
-        await db.update(schema.customPaymentLinks)
-          .set({ useCount: sql`${schema.customPaymentLinks.useCount} + 1` })
-          .where(eq(schema.customPaymentLinks.id, link.id));
-
-        // Notify owner
-        try {
-          const { notifyOwner } = await import('./_core/notification');
-          await notifyOwner({
-            title: `Payment Received: ${link.title}`,
-            content: `${input.customerName} paid $${amountDollars.toFixed(2)} via custom payment link "${link.title}". ${link.type === 'recurring' ? `Recurring ${link.billingInterval}.` : ''} Transaction: ${transactionId}`,
-          });
-        } catch {}
-
-        // Alert all staff via SMS about the new student/payment
-        try {
-          const { sendSms } = await import('./sms800');
-          const STAFF_PHONES = [
-            { name: 'Vincent', phone: '+12818189288' },
-            { name: 'Debbie', phone: '+12812369283' },
-            { name: 'Hector', phone: '+18187454612' },
-            { name: 'Dominique', phone: '+12406011818' },
-            { name: 'Clover', phone: '+17034997761' },
-            { name: 'Brenda', phone: '+18326655442' },
-          ];
-          const typeLabel = link.type === 'recurring' ? `recurring ${link.billingInterval} membership` : link.type === 'merchandise' ? 'merchandise order' : 'one-time payment';
-          const staffMsg = `🎉 New Student Alert! ${input.customerName} just paid $${amountDollars.toFixed(2)} for "${link.title}" (${typeLabel}).${input.customerPhone ? ` Phone: ${input.customerPhone}` : ''}${input.customerEmail ? ` Email: ${input.customerEmail}` : ''} — MyDojo`;
-          await Promise.allSettled(
-            STAFF_PHONES.map(s => sendSms({ to: s.phone, message: staffMsg }))
-          );
-        } catch (e) {
-          console.error('[CustomPayment] Staff SMS alert failed:', e);
-        }
-
-        return {
-          success: true,
-          transactionId,
-          amountCharged: amountDollars,
-          cardLast4,
-          cardType,
-          isRecurring: link.type === 'recurring',
-          fpSubscriptionId,
-        };
-      }),
-
     /**
      * Step 1 of Stripe checkout: create a PaymentIntent (one-time/merchandise)
      * or SetupIntent (recurring) and return the clientSecret to the frontend.
@@ -1258,16 +741,18 @@ export const appRouter = router({
           }
         }
 
-        // Save payment record (reuse existing table, store Stripe IDs in fluidpay columns for now)
+        // Save reconciliation data in dedicated Stripe columns. Legacy records
+        // remain readable through the FluidPay columns but new payments never
+        // reuse those identifiers.
         await db.insert(schema.customPaymentLinkPayments).values({
           linkId: link.id,
           customerName: input.customerName,
           customerEmail: input.customerEmail || null,
           customerPhone: input.customerPhone || null,
           amountCharged: amountDollars.toFixed(2),
-          fluidpayTransactionId: stripePaymentIntentId,
-          fluidpayCustomerId: input.stripeCustomerId,
-          fluidpaySubscriptionId: stripeSubscriptionId,
+          stripePaymentIntentId,
+          stripeCustomerId: input.stripeCustomerId,
+          stripeSubscriptionId,
           cardLast4: cardLast4 || null,
           cardType: cardBrand || null,
           status: 'approved',
@@ -3620,6 +3105,69 @@ Please enter your card details below to complete your registration securely. Tot
         .orderBy(schema.membershipPackages.id);
       return pkgs;
     }),
+    // Completes a verified zero-dollar promotion without collecting payment data.
+    // Paid and recurring memberships always use the secure Stripe payment path below.
+    completeZeroDollarEnrollment: publicProcedure
+      .input(z.object({
+        packageId: z.number().int().positive(),
+        customerName: z.string().min(1).max(255),
+        customerEmail: z.string().email(),
+        customerPhone: z.string().min(7).max(20),
+        studentName: z.string().max(255).optional(),
+        waiveEnrollmentFee: z.literal(true),
+        waiverReason: z.string().min(1).max(200),
+        agreementSignature: z.string().min(1).max(255),
+        agreementSignedAt: z.string().datetime(),
+        agreementSignatureDataUrl: z.string().max(1_500_000).regex(/^data:image\/png;base64,/),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const [pkg] = await db.select().from(schema.membershipPackages)
+          .where(eq(schema.membershipPackages.id, input.packageId)).limit(1);
+        if (!pkg || !pkg.isActive) throw new TRPCError({ code: "NOT_FOUND", message: "Selected membership is unavailable" });
+
+        const insertResult = await db.insert(schema.enrollments).values({
+          membershipPackageId: pkg.id,
+          customerName: input.customerName,
+          customerEmail: input.customerEmail,
+          customerPhone: input.customerPhone,
+          studentName: input.studentName || input.customerName,
+          downPaymentAmount: "0.00",
+          paidFirstMonth: 0,
+          remainingBalance: Number(pkg.totalPrice).toFixed(2),
+          monthlyPaymentsRemaining: pkg.durationMonths,
+          status: "active",
+          discountApplied: input.waiverReason,
+          agreementSignature: input.agreementSignature,
+          agreementSignedAt: new Date(input.agreementSignedAt),
+          startDate: new Date(),
+        });
+        const enrollmentId = (insertResult as any).insertId as number;
+        try {
+          const signatureBuffer = Buffer.from(input.agreementSignatureDataUrl.split(",")[1], "base64");
+          const storedSignature = await storagePut(`enrollment-agreements/${enrollmentId}/signature-${Date.now()}.png`, signatureBuffer, "image/png");
+          const agreementPdf = await renderEnrollmentAgreementPdf({
+            memberName: input.customerName,
+            studentName: input.studentName,
+            packageName: pkg.name,
+            monthlyPrice: Number(pkg.monthlyPrice),
+            totalDueToday: 0,
+            signedAt: new Date(input.agreementSignedAt),
+            signatureName: input.agreementSignature,
+            signatureImage: signatureBuffer,
+          });
+          const storedPdf = await storagePut(`enrollment-agreements/${enrollmentId}/signed-agreement-${Date.now()}.pdf`, agreementPdf, "application/pdf");
+          await db.update(schema.enrollments).set({
+            agreementSignatureImageUrl: storedSignature.url,
+            agreementPdfUrl: storedPdf.url,
+            agreementVersion: getEnrollmentAgreementVersion(),
+          }).where(eq(schema.enrollments.id, enrollmentId));
+        } catch (artifactError) {
+          console.error("[Enrollment Agreement] Failed to store zero-dollar agreement artifacts", { enrollmentId, artifactError });
+        }
+        return { success: true, enrollmentId };
+      }),
     // Start a secure membership payment. setup_future_usage consumes wallet cryptograms now
     // and authorizes the selected card or wallet for later off-session recurring charges.
     createStripeEnrollmentPayment: publicProcedure
@@ -3811,444 +3359,6 @@ Please enter your card details below to complete your registration securely. Tot
         return { enrollmentId, recurringStatus: subscriptionCreationFailed ? "needs_review" : subscription?.status ?? "active", nextBillingDate: getNextBillingDateStr(new Date()) };
       }),
 
-    // Legacy FluidPay flow retained only for existing subscription support. New memberships use the secure Stripe procedures above.
-    createEnrollmentCheckout: publicProcedure
-      .input(z.object({
-        token: z.string(), // Fluid Pay tokenizer token (2-minute expiry)
-        packageId: z.number().optional(), // not required for summer camp
-        customerName: z.string(),
-        customerEmail: z.string().email(),
-        customerPhone: z.string(),
-        studentName: z.string().optional(),
-        leadId: z.number().optional(),
-        discountCode: z.string().optional(),
-        isSummerCamp: z.boolean().optional(),
-        summerCampWeek: z.string().optional(),
-        waiveEnrollmentFee: z.boolean().optional(),
-        waiverReason: z.string().max(200).optional(),
-        agreementSignature: z.string().max(255).optional(),
-        agreementSignedAt: z.string().optional(), // ISO string
-        agreementSignatureDataUrl: z.string().max(1_500_000).regex(/^data:image\/png;base64,/).optional(),
-        deferTuition: z.boolean().optional(), // if true, charge only $99 enrollment fee now; defer first month tuition
-        deferredTuitionDate: z.string().optional(), // YYYY-MM-DD, must be within same calendar month
-        waiveDownPayment: z.boolean().optional(), // if true, $0 charged today, recurring subscription starts immediately
-        referralCode: z.string().max(20).optional(), // MyDojo Bucks referral code (e.g. "JOHN-X7K2")
-      }))
-      .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
-
-        // Validate deferred tuition date is within the same calendar month
-        if (input.deferTuition && input.deferredTuitionDate) {
-          const today = new Date();
-          const deferDate = new Date(input.deferredTuitionDate + 'T12:00:00');
-          if (
-            deferDate.getMonth() !== today.getMonth() ||
-            deferDate.getFullYear() !== today.getFullYear() ||
-            deferDate <= today
-          ) {
-            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Deferred tuition date must be a future date within the current calendar month' });
-          }
-        }
-
-        const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
-        const FLUIDPAY_SECRET_KEY = process.env.FLUIDPAY_SECRET_KEY;
-        if (!FLUIDPAY_SECRET_KEY) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
-
-        // Fetch membership package (not needed for summer camp)
-        let pkg: typeof schema.membershipPackages.$inferSelect | undefined;
-        if (!input.isSummerCamp) {
-          if (!input.packageId) throw new TRPCError({ code: 'BAD_REQUEST', message: 'packageId is required for membership enrollment' });
-          const [foundPkg] = await db.select().from(schema.membershipPackages).where(eq(schema.membershipPackages.id, input.packageId));
-          if (!foundPkg) throw new TRPCError({ code: 'NOT_FOUND', message: 'Membership package not found' });
-          if (!foundPkg.fluidpayPlanId) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Membership package not configured for Fluid Pay' });
-          pkg = foundPkg;
-        }
-
-        const fpHeaders = { 'Authorization': FLUIDPAY_SECRET_KEY, 'Content-Type': 'application/json' };
-        const nameParts = input.customerName.trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-
-        // Detect promo-free (zero-cost) enrollment — skip vault creation and charge entirely
-        const isPromoFree = input.token === 'PROMO_FREE';
-        let fpCustomerId: string | null = null;
-        let fpPaymentMethodId: string | null = null;
-        let fpTransactionId: string | null = null;
-
-        if (!isPromoFree) {
-          // Step 1: Create Customer Vault with tokenized card
-          const customerRes = await fetch(`${FLUIDPAY_API_URL}/api/vault/customer`, {
-            method: 'POST',
-            headers: fpHeaders,
-            body: JSON.stringify({
-              description: `MyDojo member: ${input.customerName}`,
-              default_payment: { token: input.token },
-              default_billing_address: {
-                first_name: firstName,
-                last_name: lastName,
-                email: input.customerEmail,
-                phone: input.customerPhone.replace(/\D/g, ''),
-              },
-            }),
-          });
-          const customerData = await customerRes.json();
-          if (customerData.status !== 'success') {
-            console.error('[FluidPay] Customer vault creation failed:', customerData);
-            throw new TRPCError({ code: 'BAD_REQUEST', message: customerData.msg || 'Failed to save payment method' });
-          }
-          fpCustomerId = customerData.data.id;
-          fpPaymentMethodId = customerData.data.data?.customer?.defaults?.payment_method_id;
-
-          // Step 2: Charge the initial amount
-          let chargeCents: number;
-          let chargeDescription: string;
-          if (input.isSummerCamp) {
-            // Summer camp: $199 camp fee + $99 registration = $298 flat
-            chargeCents = 29800;
-            chargeDescription = `MyDojo Summer Camp - ${input.summerCampWeek || 'Registration'}`;
-          } else if (input.waiveDownPayment) {
-            // No enrollment fee: charge only first month's tuition today, recurring starts next month
-            const monthlyPriceAmt = parseFloat(pkg!.monthlyPrice as string);
-            chargeCents = Math.round(monthlyPriceAmt * 100);
-            chargeDescription = `MyDojo ${pkg!.name} Membership - First Month (No Enrollment Fee)`;
-          } else if (input.deferTuition) {
-            // Deferred tuition: charge only the $99 enrollment fee now; first month tuition charged later
-            const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '149') as string);
-            chargeCents = Math.round(enrollmentFeeAmt * 100);
-            chargeDescription = `MyDojo ${pkg!.name} Membership - Enrollment Fee (Tuition deferred to ${input.deferredTuitionDate || 'later this month'})`;
-          } else {
-            // Membership: down payment (first month + enrollment fee), optionally waived
-            const downPaymentAmt = parseFloat(pkg!.downPayment as string);
-            const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '149') as string);
-            const effectiveCharge = input.waiveEnrollmentFee
-              ? Math.max(0, downPaymentAmt - enrollmentFeeAmt)
-              : downPaymentAmt;
-            chargeCents = Math.round(effectiveCharge * 100);
-            chargeDescription = input.waiveEnrollmentFee
-              ? `MyDojo ${pkg!.name} Membership - First Month (Enrollment Fee Waived${input.waiverReason ? ': ' + input.waiverReason : ''})`
-              : `MyDojo ${pkg!.name} Membership - Down Payment`;
-          }
-
-          // Skip charge if amount is $0 (waiveDownPayment path)
-          if (chargeCents > 0) {
-            const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
-              method: 'POST',
-              headers: fpHeaders,
-              body: JSON.stringify({
-                type: 'sale',
-                amount: chargeCents,
-                currency: 'usd',
-                payment_method: { customer: { id: fpCustomerId, payment_method_type: 'card', payment_method_id: fpPaymentMethodId } },
-                billing_address: { first_name: firstName, last_name: lastName, email: input.customerEmail, phone: input.customerPhone.replace(/\D/g, '') },
-                order_meta: { description: chargeDescription },
-              }),
-            });
-            const chargeData = await chargeRes.json();
-            if (chargeData.status !== 'success' || chargeData.data?.response_body?.card?.processor_response_code !== '00') {
-              console.error('[FluidPay] Charge failed:', chargeData);
-              const msg = chargeData.data?.response_body?.card?.processor_response_text || chargeData.msg || 'Payment declined';
-              throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
-            }
-            fpTransactionId = chargeData.data?.id;
-          }
-        } // end !isPromoFree
-
-        // Step 3: Create recurring subscription for monthly billing (membership only, skip for promo-free)
-        let fpSubscriptionId: string | null = null;
-        let subscriptionCreationFailed = false;
-        if (!isPromoFree && !input.isSummerCamp && pkg && fpCustomerId) {
-          // Start subscription next month — first month is always charged upfront (whether via down payment or waiveDownPayment)
-          // 1st/15th billing cycle rule
-          const { getNextBillingDateStr, getBillingAnchorDayStr } = await import('@shared/billingUtils');
-          const startDate = getNextBillingDateStr(new Date());
-          const billingDay = getBillingAnchorDayStr(new Date());
-          const subscriptionRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
-            method: 'POST',
-            headers: fpHeaders,
-            body: JSON.stringify({
-              plan_id: pkg.fluidpayPlanId,
-              customer_id: fpCustomerId,
-              description: `MyDojo ${pkg.name} Monthly Membership`,
-              start: startDate,
-              billing_days: billingDay,
-            }),
-          });
-          const subscriptionData = await subscriptionRes.json();
-          if (subscriptionData.status !== 'success') {
-            console.error('[FluidPay] Subscription creation failed:', JSON.stringify(subscriptionData));
-            subscriptionCreationFailed = true;
-            // Notify owner immediately — enrollment will be saved as 'pending' until fixed
-            try {
-              const { notifyOwner } = await import('./_core/notification');
-              await notifyOwner({
-                title: '🚨 Subscription Setup Failed',
-                content: `Enrollment for ${input.studentName || input.customerName} (${input.customerEmail}) was charged successfully but the recurring subscription could NOT be created. Enrollment saved as PENDING. Please create the subscription manually in FluidPay and update the enrollment. FluidPay error: ${JSON.stringify(subscriptionData?.msg || subscriptionData?.status || 'unknown')}`,
-              });
-            } catch {}
-          } else {
-            fpSubscriptionId = subscriptionData.data?.id || null;
-          }
-        }
-
-        // Step 4: Create enrollment record in database
-        let enrollmentId: number | null = null;
-        let packageName: string;
-        let amountCharged: number;
-
-        if (input.isSummerCamp) {
-          packageName = `Summer Camp - ${input.summerCampWeek || 'Registration'}`;
-          amountCharged = 298;
-          const insertResult = await db.insert(schema.enrollments).values({
-            membershipPackageId: 0, // 0 = summer camp (no membership package)
-            leadId: input.leadId || null,
-            customerName: input.customerName,
-            customerEmail: input.customerEmail,
-            customerPhone: input.customerPhone,
-            studentName: input.studentName || input.customerName,
-            fluidpayCustomerId: fpCustomerId,
-            fluidpaySubscriptionId: null,
-            stripePaymentIntentId: fpTransactionId,
-            downPaymentAmount: '298.00',
-            paidFirstMonth: 1,
-            remainingBalance: '0.00',
-            monthlyPaymentsRemaining: 0,
-            status: 'active', // summer camp has no subscription
-            discountApplied: input.discountCode || null,
-            agreementSignature: input.agreementSignature || null,
-            agreementSignedAt: input.agreementSignedAt ? new Date(input.agreementSignedAt) : null,
-            startDate: new Date(),
-          });
-          enrollmentId = (insertResult as any).insertId;
-        } else if (input.deferTuition) {
-          // Deferred tuition path: only $99 enrollment fee charged now; first month tuition deferred
-          const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '149') as string);
-          const monthlyPrice = parseFloat(pkg!.monthlyPrice as string);
-          const totalPrice = parseFloat(pkg!.totalPrice as string);
-          const remainingBalance = Math.max(0, totalPrice - enrollmentFeeAmt);
-          packageName = pkg!.name;
-          amountCharged = enrollmentFeeAmt;
-          const deferDate = input.deferredTuitionDate
-            ? new Date(input.deferredTuitionDate + 'T12:00:00')
-            : null;
-          const insertResult = await db.insert(schema.enrollments).values({
-            membershipPackageId: pkg!.id,
-            leadId: input.leadId || null,
-            customerName: input.customerName,
-            customerEmail: input.customerEmail,
-            customerPhone: input.customerPhone,
-            studentName: input.studentName || input.customerName,
-            fluidpayCustomerId: fpCustomerId,
-            fluidpaySubscriptionId: fpSubscriptionId,
-            stripePaymentIntentId: fpTransactionId,
-            downPaymentAmount: enrollmentFeeAmt.toFixed(2),
-            paidFirstMonth: 0, // first month NOT yet paid
-            deferredTuitionDate: deferDate,
-            deferredTuitionAmount: monthlyPrice.toFixed(2),
-            deferredTuitionCharged: 0, // pending
-            remainingBalance: remainingBalance.toFixed(2),
-            monthlyPaymentsRemaining: pkg!.durationMonths,
-            // If subscription creation failed, mark as pending so admin can fix it
-            status: subscriptionCreationFailed ? 'pending' : 'active',
-            discountApplied: input.discountCode || null,
-            agreementSignature: input.agreementSignature || null,
-            agreementSignedAt: input.agreementSignedAt ? new Date(input.agreementSignedAt) : null,
-            startDate: new Date(),
-          });
-          enrollmentId = (insertResult as any).insertId;
-        } else if (input.waiveDownPayment) {
-          // No enrollment fee: first month's tuition charged today, recurring starts next month
-          const monthlyPriceAmt = parseFloat(pkg!.monthlyPrice as string);
-          const totalPrice = parseFloat(pkg!.totalPrice as string);
-          const remainingBalance = Math.max(0, totalPrice - monthlyPriceAmt);
-          packageName = pkg!.name;
-          amountCharged = monthlyPriceAmt;
-          const insertResult = await db.insert(schema.enrollments).values({
-            membershipPackageId: pkg!.id,
-            leadId: input.leadId || null,
-            customerName: input.customerName,
-            customerEmail: input.customerEmail,
-            customerPhone: input.customerPhone,
-            studentName: input.studentName || input.customerName,
-            fluidpayCustomerId: fpCustomerId,
-            fluidpaySubscriptionId: fpSubscriptionId,
-            stripePaymentIntentId: fpTransactionId,
-            downPaymentAmount: monthlyPriceAmt.toFixed(2),
-            paidFirstMonth: 1,
-            remainingBalance: remainingBalance.toFixed(2),
-            monthlyPaymentsRemaining: pkg!.durationMonths - 1,
-            // If subscription creation failed, mark as pending so admin can fix it
-            status: subscriptionCreationFailed ? 'pending' : 'active',
-            discountApplied: 'enrollment_fee_waived',
-            agreementSignature: input.agreementSignature || null,
-            agreementSignedAt: input.agreementSignedAt ? new Date(input.agreementSignedAt) : null,
-            startDate: new Date(),
-          });
-          enrollmentId = (insertResult as any).insertId;
-        } else {
-          const downPayment = parseFloat(pkg!.downPayment as string);
-          const enrollmentFeeAmt = parseFloat((pkg!.enrollmentFee ?? '149') as string);
-          const effectiveDownPayment = input.waiveEnrollmentFee
-            ? Math.max(0, downPayment - enrollmentFeeAmt)
-            : downPayment;
-          const totalPrice = parseFloat(pkg!.totalPrice as string);
-          const remainingBalance = Math.max(0, totalPrice - effectiveDownPayment);
-          packageName = pkg!.name;
-          amountCharged = effectiveDownPayment;
-          const discountNote = input.waiveEnrollmentFee
-            ? `enrollment_fee_waived${input.waiverReason ? ':' + input.waiverReason : ''}`
-            : (input.discountCode || null);
-          const insertResult = await db.insert(schema.enrollments).values({
-            membershipPackageId: pkg!.id,
-            leadId: input.leadId || null,
-            customerName: input.customerName,
-            customerEmail: input.customerEmail,
-            customerPhone: input.customerPhone,
-            studentName: input.studentName || input.customerName,
-            fluidpayCustomerId: fpCustomerId,
-            fluidpaySubscriptionId: fpSubscriptionId,
-            stripePaymentIntentId: fpTransactionId,
-            downPaymentAmount: effectiveDownPayment.toFixed(2),
-            paidFirstMonth: 1,
-            remainingBalance: remainingBalance.toFixed(2),
-            monthlyPaymentsRemaining: pkg!.durationMonths - 1,
-            // If subscription creation failed, mark as pending so admin can fix it
-            status: subscriptionCreationFailed ? 'pending' : 'active',
-            discountApplied: discountNote,
-            agreementSignature: input.agreementSignature || null,
-            agreementSignedAt: input.agreementSignedAt ? new Date(input.agreementSignedAt) : null,
-            startDate: new Date(),
-          });
-          enrollmentId = (insertResult as any).insertId;
-        }
-
-        // Preserve agreement evidence only after the enrollment row exists. This stores the
-        // handwritten signature and PDF agreement; payment credentials never reach this path.
-        if (enrollmentId && input.agreementSignature && input.agreementSignedAt) {
-          try {
-            const signedAt = new Date(input.agreementSignedAt);
-            let signatureBuffer: Buffer | null = null;
-            let signatureImageUrl: string | null = null;
-            if (input.agreementSignatureDataUrl) {
-              const base64 = input.agreementSignatureDataUrl.split(",")[1];
-              signatureBuffer = Buffer.from(base64, "base64");
-              if (signatureBuffer.length > 1_000_000) throw new Error("Signature image exceeds the 1 MB limit");
-              const storedSignature = await storagePut(
-                `enrollment-agreements/${enrollmentId}/signature-${Date.now()}.png`,
-                signatureBuffer,
-                "image/png"
-              );
-              signatureImageUrl = storedSignature.url;
-            }
-            const agreementPdf = await renderEnrollmentAgreementPdf({
-              memberName: input.customerName,
-              studentName: input.studentName,
-              packageName,
-              monthlyPrice: input.isSummerCamp ? 0 : Number(pkg?.monthlyPrice || 0),
-              totalDueToday: amountCharged,
-              signedAt,
-              signatureName: input.agreementSignature,
-              signatureImage: signatureBuffer,
-            });
-            const storedPdf = await storagePut(
-              `enrollment-agreements/${enrollmentId}/signed-agreement-${Date.now()}.pdf`,
-              agreementPdf,
-              "application/pdf"
-            );
-            await db.update(schema.enrollments).set({
-              agreementSignatureImageUrl: signatureImageUrl,
-              agreementPdfUrl: storedPdf.url,
-              agreementVersion: getEnrollmentAgreementVersion(),
-            }).where(eq(schema.enrollments.id, enrollmentId));
-          } catch (artifactError) {
-            console.error("[Enrollment Agreement] Failed to store signed agreement artifacts", { enrollmentId, artifactError });
-          }
-        }
-
-        // Step 4b: Award MyDojo Bucks to referrer (fire-and-forget, non-blocking)
-        if (input.referralCode && enrollmentId) {
-          import('./mydojoBucks').then(({ lookupReferralCode, awardReferralBucks }) => {
-            lookupReferralCode(input.referralCode!).then(refRow => {
-              if (!refRow) return;
-              awardReferralBucks({
-                referralCodeId: refRow.id,
-                referrerId: refRow.userId,
-                referredName: input.studentName || input.customerName,
-                referredPhone: input.customerPhone,
-                referredEmail: input.customerEmail,
-                enrollmentId: enrollmentId!,
-              }).catch(err => console.error('[MyDojo Bucks] Award referral bucks error:', err));
-            }).catch(err => console.error('[MyDojo Bucks] Lookup referral code error:', err));
-          }).catch(err => console.error('[MyDojo Bucks] Import error:', err));
-        }
-
-        // Step 5: Send enrollment confirmation email (fire-and-forget, non-blocking)
-        const nextBillingDate = (() => {
-          const d = new Date();
-          d.setMonth(d.getMonth() + 1);
-          return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        })();
-        sendEnrollmentConfirmationEmail({
-          toEmail: input.customerEmail,
-          customerName: input.customerName,
-          studentName: input.studentName || input.customerName,
-          packageName,
-          monthlyPrice: pkg ? parseFloat(pkg.monthlyPrice as string) : null,
-          // If fee was waived, show $0 in the breakdown so the email is accurate
-          enrollmentFee: input.waiveEnrollmentFee ? 0 : (pkg ? parseFloat((pkg.enrollmentFee ?? '149') as string) : 149),
-          totalDueToday: amountCharged,
-          nextBillingDate: input.isSummerCamp ? null : nextBillingDate,
-          isSummerCamp: input.isSummerCamp ?? false,
-          summerCampWeek: input.summerCampWeek ?? null,
-          transactionId: fpTransactionId ?? null,
-          waiverReason: input.waiveEnrollmentFee ? (input.waiverReason || 'Enrollment fee waived') : undefined,
-        }).catch(err => console.error('[Email] Enrollment confirmation fire-and-forget error:', err));
-        // Step 5b: Send program confirmation email with QR code and live schedule (fire-and-forget)
-        (() => {
-          const programName = pkg?.name ?? (input.isSummerCamp ? 'Summer Camp' : 'Martial Arts');
-          const qrPayload = JSON.stringify({ type: 'member', email: input.customerEmail, program: programName, enrollmentId, ts: Date.now() });
-          Promise.all([
-            QRCode.toDataURL(qrPayload, { width: 200, margin: 1 }),
-            getScheduleForProgram(programName),
-          ]).then(([qrCodeDataUrl, scheduleRows]) => {
-            return sendProgramConfirmationEmail({
-              toEmail: input.customerEmail,
-              customerName: input.customerName,
-              program: programName,
-              amountPaid: amountCharged,
-              qrCodeDataUrl,
-              scheduleRows: scheduleRows.map((r: any) => ({
-                dayOfWeek: r.dayOfWeek,
-                startTime: r.startTime,
-                endTime: r.endTime,
-                location: r.location,
-                instructor: r.instructor,
-              })),
-              referenceId: enrollmentId ?? undefined,
-            });
-          }).catch(err => console.error('[Email] Program confirmation with QR fire-and-forget error:', err));
-        })();
-        // Step 6: Notify staff via SMS (fire-and-forget)
-        import('./notifyStaffNewEnrollment').then(({ notifyStaffNewEnrollment }) => {
-          notifyStaffNewEnrollment({
-            studentName: input.studentName || input.customerName,
-            customerName: input.customerName,
-            customerEmail: input.customerEmail,
-            customerPhone: input.customerPhone,
-            packageName,
-            amountCharged,
-            program: pkg?.name ?? undefined,
-          }).catch(() => {});
-        }).catch(() => {});
-        return {
-          success: true,
-          enrollmentId,
-          transactionId: fpTransactionId,
-          subscriptionId: fpSubscriptionId,
-          packageName,
-          amountCharged,
-        };
-      }),
     // ── Request to Cancel ────────────────────────────────────────────────────
     requestCancellation: protectedProcedure
       .input(z.object({
@@ -5549,185 +4659,100 @@ Please enter your card details below to complete your registration securely. Tot
       }
     }),
 
-    // Confirm day pass after Fluid Pay token received — charges card and records attendance
-    confirmDayPassCheckIn: publicProcedure
+    createDayPassCheckout: publicProcedure
       .input(z.object({
-        token: z.string(),          // Fluid Pay Tokenizer token (valid 2 min)
         name: z.string().min(1),
         email: z.string().email(),
         phone: z.string().optional(),
         program: z.string().min(1),
         classId: z.number().optional(),
         programType: z.string().optional(),
+        origin: z.string().url().optional(),
       }))
       .mutation(async ({ input }) => {
         const db = await getDb();
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
-
-        // Get price from config
-        let amountCents = 2000; // default $20
-        try {
-          const rows = await db.select().from(schema.adminConfig).where(eq(schema.adminConfig.key, 'dayPassAmountCents'));
-          if (rows[0]) amountCents = parseInt(rows[0].value);
-        } catch {}
-
-        // Charge via Fluid Pay REST API
-        const fluidPayKey = process.env.FLUIDPAY_SECRET_KEY;
-        if (!fluidPayKey) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
-
-        const chargeRes = await fetch('https://app.fluidpay.com/api/transaction', {
-          method: 'POST',
-          headers: { 'Authorization': fluidPayKey, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'sale',
-            amount: amountCents,
-            payment_method: { token: input.token },
-            billing_address: { first_name: input.name.split(' ')[0], last_name: input.name.split(' ').slice(1).join(' ') || '' },
-            order_id: `dp-${Date.now().toString(36).slice(-10)}`,
-            description: `MyDojo Day Pass – ${input.program}`,
-          }),
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const configRows = await db.select().from(schema.adminConfig).where(eq(schema.adminConfig.key, "dayPassAmountCents"));
+        const amountCents = configRows[0] ? Number.parseInt(configRows[0].value, 10) : 2000;
+        const stripe = getStripe();
+        const safeOrigin = input.origin?.startsWith("https://mydojoma.com") ? input.origin : "https://mydojoma.com";
+        const session = await stripe.checkout.sessions.create({
+          mode: "payment",
+          customer_email: input.email,
+          phone_number_collection: { enabled: !input.phone },
+          line_items: [{
+            price_data: {
+              currency: "usd",
+              product_data: { name: `MyDojo Day Pass — ${input.program}` },
+              unit_amount: amountCents,
+            },
+            quantity: 1,
+          }],
+          metadata: {
+            type: "day_pass",
+            customerName: input.name,
+            customerEmail: input.email,
+            customerPhone: input.phone || "",
+            program: input.program,
+            classId: input.classId ? String(input.classId) : "",
+            programType: input.programType || input.program,
+          },
+          success_url: `${safeOrigin}/buy-day-pass?success=1&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${safeOrigin}/buy-day-pass?cancelled=1`,
         });
-
-        const chargeBody = await chargeRes.json() as { status: string; msg: string; data?: { id: string; status: string; response_code: string; response_body?: { card?: { response_text?: string } } } };
-
-        if (chargeBody.status !== 'success' || !chargeBody.data) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: chargeBody.msg || 'Payment failed' });
-        }
-
-        const txn = chargeBody.data;
-        if (txn.status !== 'approved') {
-          const declineMsg = txn.response_body?.card?.response_text || `Transaction ${txn.status}`;
-          throw new TRPCError({ code: 'BAD_REQUEST', message: `Payment declined: ${declineMsg}` });
-        }
-
-        // Record the day pass
-        await db.insert(schema.dayPasses).values({
-          name: input.name,
-          email: input.email,
-          phone: input.phone,
-          program: input.program,
-          amountCents,
-          paymentTransactionId: txn.id,
-          classId: input.classId,
-          status: 'paid',
-        } as any);
-
-        // Record attendance for the day pass guest
-        const today = new Date();
-        const checkInDate = today.toISOString().split('T')[0];
-
-        await db.insert(schema.attendance).values({
-          studentId: 0,
-          checkInDate,
-          checkInTimestamp: today,
-          beltRankAtCheckIn: 'Guest',
-          programType: input.programType || input.program,
-          source: 'kiosk',
-          xpAwarded: 0,
-          notes: `Day pass: ${input.name} (${input.email}) — txn ${txn.id}`,
-        } as any);
-
-        return {
-          success: true,
-          name: input.name,
-          program: input.program,
-          amountCents,
-          transactionId: txn.id,
-        };
+        if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to start secure checkout" });
+        return { checkoutUrl: session.url };
       }),
 
-    // ── Intro Offer Checkout (FluidPay) ──────────────────────────────────────
+    // ── Intro Offer Checkout (Stripe) ─────────────────────────────────────────
     // Packages: starter ($29/3 classes) | explorer ($49/5 classes)
-    purchaseIntroOffer: publicProcedure
+    createIntroOfferCheckout: publicProcedure
       .input(z.object({
-        token: z.string().min(1),
         name: z.string().min(1),
         email: z.string().email(),
         phone: z.string().optional(),
-        packageId: z.enum(['starter', 'explorer']),
+        packageId: z.enum(["starter", "explorer"]),
+        origin: z.string().url().optional(),
       }))
       .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        const packages = {
+          starter: { amountCents: 2900, classesIncluded: 3, label: "Intro Offer — 3 Classes" },
+          explorer: { amountCents: 4900, classesIncluded: 5, label: "Intro Offer — 5 Classes" },
+        } as const;
+        const pkg = packages[input.packageId];
+        const stripe = getStripe();
+        const safeOrigin = input.origin?.startsWith("https://mydojoma.com")
+          ? input.origin
+          : "https://mydojoma.com";
 
-        const PACKAGES = {
-          starter:  { amountCents: 2900, classesIncluded: 3,  label: 'Intro Offer – 3 Classes' },
-          explorer: { amountCents: 4900, classesIncluded: 5,  label: 'Intro Offer – 5 Classes' },
-        };
-        const pkg = PACKAGES[input.packageId];
-
-        const fluidPayKey = process.env.FLUIDPAY_SECRET_KEY;
-        if (!fluidPayKey) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
-
-        // Charge via FluidPay REST API
-        const chargeRes = await fetch('https://app.fluidpay.com/api/transaction', {
-          method: 'POST',
-          headers: { 'Authorization': fluidPayKey, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'sale',
-            amount: pkg.amountCents,
-            payment_method: { token: input.token },
-            billing_address: {
-              first_name: input.name.split(' ')[0],
-              last_name: input.name.split(' ').slice(1).join(' ') || '',
-              email: input.email,
+        const session = await stripe.checkout.sessions.create({
+          mode: "payment",
+          customer_email: input.email,
+          phone_number_collection: { enabled: !input.phone },
+          line_items: [{
+            price_data: {
+              currency: "usd",
+              product_data: { name: `MyDojo ${pkg.label}` },
+              unit_amount: pkg.amountCents,
             },
-            order_id: `enrl-${Date.now().toString(36).slice(-12)}`,
-            description: `MyDojo ${pkg.label}`,
-          }),
+            quantity: 1,
+          }],
+          metadata: {
+            type: "intro_offer",
+            introOfferPackage: input.packageId,
+            classesIncluded: String(pkg.classesIncluded),
+            customerName: input.name,
+            customerEmail: input.email,
+            customerPhone: input.phone || "",
+          },
+          success_url: `${safeOrigin}/intro-offer?success=1&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${safeOrigin}/intro-offer?cancelled=1`,
         });
 
-        const chargeBody = await chargeRes.json() as {
-          status: string;
-          msg: string;
-          data?: { id: string; status: string; response_body?: { card?: { response_text?: string } } };
-        };
-
-        if (chargeBody.status !== 'success' || !chargeBody.data) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: chargeBody.msg || 'Payment failed' });
-        }
-        const txn = chargeBody.data;
-        if (txn.status !== 'approved') {
-          const declineMsg = txn.response_body?.card?.response_text || `Transaction ${txn.status}`;
-          throw new TRPCError({ code: 'BAD_REQUEST', message: `Payment declined: ${declineMsg}` });
-        }
-
-        // Record the purchase
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 30); // 30 days to use classes
-
-        await db.insert(schema.introOfferPurchases).values({
-          name: input.name,
-          email: input.email,
-          phone: input.phone,
-          packageId: input.packageId,
-          amountCents: pkg.amountCents,
-          classesIncluded: pkg.classesIncluded,
-          classesRemaining: pkg.classesIncluded,
-          fpTransactionId: txn.id,
-          status: 'paid',
-          expiresAt,
-        } as any);
-
-        // Notify owner
-        try {
-          const { notifyOwner } = await import('./_core/notification');
-          await notifyOwner({
-            title: `New Intro Offer Purchase – ${pkg.label}`,
-            content: `${input.name} (${input.email}) purchased the ${pkg.label} for $${(pkg.amountCents / 100).toFixed(2)}. Transaction ID: ${txn.id}`,
-          });
-        } catch {}
-
-        return {
-          success: true,
-          name: input.name,
-          packageId: input.packageId,
-          classesIncluded: pkg.classesIncluded,
-          amountCents: pkg.amountCents,
-          transactionId: txn.id,
-          expiresAt,
-        };
+        if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to start secure checkout" });
+        return { checkoutUrl: session.url };
       }),
+
     // ── Kiosk Walk-In Lead Capture ─────────────────────────────────────────────
     captureWalkInLead: publicProcedure
       .input(z.object({
@@ -8093,93 +7118,6 @@ Please enter your card details below to complete your registration securely. Tot
         return { success: true };
       }),
 
-    // ─── Create Missing FluidPay Subscription ────────────────────────────────
-    // Admin: create a FluidPay recurring subscription for an enrollment that
-    // was saved without one (subscription creation failed at checkout time).
-    createMissingSubscription: protectedProcedure
-      .input(z.object({
-        enrollmentId: z.number().int(),
-        nextChargeDate: z.string(), // YYYY-MM-DD
-      }))
-      .mutation(async ({ input, ctx }) => {
-        if (ctx.user.role !== 'admin' && ctx.user.role !== 'staff') {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin/staff only' });
-        }
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
-
-        const [enrollment] = await db
-          .select()
-          .from(schema.enrollments)
-          .where(eq(schema.enrollments.id, input.enrollmentId))
-          .limit(1);
-        if (!enrollment) throw new TRPCError({ code: 'NOT_FOUND', message: 'Enrollment not found' });
-        if (!enrollment.fluidpayCustomerId) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No FluidPay customer ID on this enrollment — cannot create subscription automatically.' });
-        }
-        if (enrollment.fluidpaySubscriptionId) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Enrollment already has a FluidPay subscription ID.' });
-        }
-
-        // Look up the membership package to get the plan ID
-        const [pkg] = await db
-          .select()
-          .from(schema.membershipPackages)
-          .where(eq(schema.membershipPackages.id, enrollment.membershipPackageId))
-          .limit(1);
-        if (!pkg) throw new TRPCError({ code: 'NOT_FOUND', message: 'Membership package not found' });
-        if (!pkg.fluidpayPlanId) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Membership package has no FluidPay plan ID configured.' });
-        }
-
-        const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
-        const FLUIDPAY_KEY = process.env.FLUIDPAY_SECRET_KEY || '';
-        // 1st/15th billing cycle rule
-        const { getNextBillingDateStr: _cmsNextStr, getBillingAnchorDayStr: _cmsAnchorStr } = await import('@shared/billingUtils');
-        const computedNextChargeDateCMS = _cmsNextStr(new Date());
-        const billingDay = _cmsAnchorStr(new Date());
-
-        const subscriptionRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
-          method: 'POST',
-          headers: { 'Authorization': FLUIDPAY_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            plan_id: pkg.fluidpayPlanId,
-            customer_id: enrollment.fluidpayCustomerId,
-            description: `MyDojo ${pkg.name} Monthly Membership`,
-            start: computedNextChargeDateCMS,
-            billing_days: billingDay,
-          }),
-        });
-        const subscriptionData = await subscriptionRes.json() as any;
-        if (subscriptionData.status !== 'success') {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: `FluidPay subscription creation failed: ${subscriptionData?.msg || JSON.stringify(subscriptionData)}`,
-          });
-        }
-        const fpSubscriptionId = subscriptionData.data?.id;
-        if (!fpSubscriptionId) {
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'FluidPay returned no subscription ID' });
-        }
-
-        // Update enrollment with new subscription ID and set status to active
-        await db
-          .update(schema.enrollments)
-          .set({ fluidpaySubscriptionId: fpSubscriptionId, status: 'active' })
-          .where(eq(schema.enrollments.id, input.enrollmentId));
-
-        // Notify owner
-        try {
-          const { notifyOwner } = await import('./_core/notification');
-          await notifyOwner({
-            title: '\u2705 Missing Subscription Created',
-            content: `${ctx.user.name || ctx.user.email} manually created a FluidPay subscription for ${enrollment.studentName || enrollment.customerName}. Sub ID: ${fpSubscriptionId}. First charge: ${input.nextChargeDate}. Enrollment re-activated.`,
-          });
-        } catch {}
-
-        return { success: true, fpSubscriptionId };
-      }),
-
     // ─── Send Payment Reminder SMS ────────────────────────────────────────────
     // Admin: send a custom SMS reminder to a member about their payment.
     sendPaymentReminderSms: protectedProcedure
@@ -8238,8 +7176,6 @@ Please enter your card details below to complete your registration securely. Tot
     updateEnrollmentPaymentMethod: protectedProcedure
       .input(z.object({
         enrollmentId: z.number().int(),
-        // For FluidPay enrollments — tokenizer token from FluidPay.js
-        fpToken: z.string().optional(),
         // For Stripe enrollments — PaymentMethod ID from Stripe.js
         stripePaymentMethodId: z.string().optional(),
       }))
@@ -8257,66 +7193,6 @@ Please enter your card details below to complete your registration securely. Tot
           .limit(1);
         if (!enrollment) throw new TRPCError({ code: 'NOT_FOUND', message: 'Enrollment not found' });
 
-        const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
-        const FLUIDPAY_KEY = process.env.FLUIDPAY_SECRET_KEY || process.env.FLUIDPAY_DEMO_SECRET_KEY || '';
-
-        // ── FluidPay path ─────────────────────────────────────────────────────
-        if (input.fpToken && enrollment.fluidpayCustomerId) {
-          // 1. Add new card to existing customer vault
-          const addCardRes = await fetch(
-            `${FLUIDPAY_API_URL}/api/vault/customer/${enrollment.fluidpayCustomerId}/paymentmethod/card`,
-            {
-              method: 'POST',
-              headers: { 'Authorization': FLUIDPAY_KEY, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ token_id: input.fpToken }),
-            }
-          );
-          const addCardData = await addCardRes.json() as any;
-          if (addCardData.status !== 'success') {
-            throw new TRPCError({
-              code: 'BAD_REQUEST',
-              message: addCardData.msg || 'Failed to add card to vault',
-            });
-          }
-
-          // 2. Get the new payment method ID
-          const newPmId: string = addCardData.data?.id;
-          const cardLast4: string = addCardData.data?.card_number?.slice(-4) || '';
-          const cardType: string = addCardData.data?.card_type || '';
-
-          // 3. Set as default payment method on the customer vault
-          await fetch(
-            `${FLUIDPAY_API_URL}/api/vault/customer/${enrollment.fluidpayCustomerId}`,
-            {
-              method: 'POST',
-              headers: { 'Authorization': FLUIDPAY_KEY, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ default_payment_method_id: newPmId }),
-            }
-          );
-
-          // 4. Update the subscription's payment method if one exists
-          if (enrollment.fluidpaySubscriptionId) {
-            await fetch(
-              `${FLUIDPAY_API_URL}/api/recurring/subscription/${enrollment.fluidpaySubscriptionId}`,
-              {
-                method: 'POST',
-                headers: { 'Authorization': FLUIDPAY_KEY, 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  payment_method: {
-                    customer: {
-                      id: enrollment.fluidpayCustomerId,
-                      payment_method_type: 'card',
-                      payment_method_id: newPmId,
-                    },
-                  },
-                }),
-              }
-            );
-          }
-
-          return { success: true, processor: 'fluidpay', cardLast4, cardType };
-        }
-
         // ── Stripe path ───────────────────────────────────────────────────────
         if (input.stripePaymentMethodId && enrollment.stripeCustomerId) {
           const Stripe = (await import('stripe')).default;
@@ -8325,10 +7201,17 @@ Please enter your card details below to complete your registration securely. Tot
             { apiVersion: '2026-01-28.clover' as any }
           );
 
-          // 1. Attach the payment method to the customer
-          await stripe.paymentMethods.attach(input.stripePaymentMethodId, {
-            customer: enrollment.stripeCustomerId,
-          });
+          // 1. A SetupIntent can already attach this method to the customer.
+          // Attach only when needed and never move a method from another account.
+          const existingPm = await stripe.paymentMethods.retrieve(input.stripePaymentMethodId);
+          if (existingPm.customer && existingPm.customer !== enrollment.stripeCustomerId) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'The selected payment method belongs to another customer.' });
+          }
+          if (!existingPm.customer) {
+            await stripe.paymentMethods.attach(input.stripePaymentMethodId, {
+              customer: enrollment.stripeCustomerId,
+            });
+          }
 
           // 2. Set it as the customer's default
           await stripe.customers.update(enrollment.stripeCustomerId, {
@@ -8384,18 +7267,26 @@ Please enter your card details below to complete your registration securely. Tot
           .where(eq(schema.enrollments.id, input.enrollmentId))
           .limit(1);
         if (!enrollment) throw new TRPCError({ code: 'NOT_FOUND', message: 'Enrollment not found' });
-        if (!enrollment.stripeCustomerId) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This enrollment does not have a Stripe customer ID' });
-        }
-
         const Stripe = (await import('stripe')).default;
         const stripe = new Stripe(
           process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '',
           { apiVersion: '2026-01-28.clover' as any }
         );
 
+        let stripeCustomerId = enrollment.stripeCustomerId;
+        if (!stripeCustomerId) {
+          const customer = await stripe.customers.create({
+            name: enrollment.customerName,
+            email: enrollment.customerEmail || undefined,
+            phone: enrollment.customerPhone || undefined,
+            metadata: { enrollmentId: String(enrollment.id), migratedFromLegacyBilling: 'true' },
+          });
+          stripeCustomerId = customer.id;
+          await db.update(schema.enrollments).set({ stripeCustomerId }).where(eq(schema.enrollments.id, enrollment.id));
+        }
+
         const setupIntent = await stripe.setupIntents.create({
-          customer: enrollment.stripeCustomerId,
+          customer: stripeCustomerId,
           payment_method_types: ['card'],
           usage: 'off_session',
         });
@@ -9455,10 +8346,9 @@ Please enter your card details below to complete your registration securely. Tot
       }),
 
     // ─── Summer Camp Enrollment Checkout ────────────────────────────────────────
-    // Builds a Stripe Checkout session with correct per-week, per-student pricing.
+    // Builds a hosted Stripe Checkout session with correct per-week, per-student pricing.
     createSummerCampEnrollCheckout: publicProcedure
       .input(z.object({
-        token: z.string().min(1),           // FluidPay tokenizer token
         weeks: z.array(z.string()).min(1),
         students: z.array(z.object({ name: z.string(), age: z.number(), dob: z.string().optional() })).min(1),
         parentName: z.string().min(1),
@@ -9466,96 +8356,34 @@ Please enter your card details below to complete your registration securely. Tot
         parentPhone: z.string().min(7),
         isFullSummer: z.boolean(),
         totalCents: z.number().int().positive(),
+        origin: z.string().url().optional(),
       }))
       .mutation(async ({ input }) => {
-        const fluidPayKey = process.env.FLUIDPAY_SECRET_KEY;
-        if (!fluidPayKey) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
-
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
-
         const weeksCount = input.weeks.length;
         const studentCount = input.students.length;
-        const studentsList = input.students.map(s => `${s.name} (age ${s.age}${s.dob ? ', DOB ' + s.dob : ''})`).join(', ');
-        const weeksList = input.weeks.join(', ');
-
-        // Charge via FluidPay REST API
-        const chargeRes = await fetch('https://app.fluidpay.com/api/transaction', {
-          method: 'POST',
-          headers: { 'Authorization': fluidPayKey, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'sale',
-            amount: input.totalCents,
-            payment_method: { token: input.token },
-            billing_address: {
-              first_name: input.parentName.split(' ')[0],
-              last_name: input.parentName.split(' ').slice(1).join(' ') || '',
-              email: input.parentEmail,
-              phone: input.parentPhone,
-            },
-            order_id: `camp-${Date.now().toString(36).slice(-12)}`,
-            description: `MyDojo Summer Camp 2025 — ${studentCount} student${studentCount !== 1 ? 's' : ''}, ${weeksCount} week${weeksCount !== 1 ? 's' : ''}`,
-          }),
+        const stripe = getStripe();
+        const safeOrigin = input.origin?.startsWith('https://mydojoma.com') ? input.origin : 'https://mydojoma.com';
+        const session = await stripe.checkout.sessions.create({
+          mode: 'payment',
+          customer_email: input.parentEmail,
+          phone_number_collection: { enabled: false },
+          line_items: [{ price_data: { currency: 'usd', product_data: { name: `MyDojo Summer Camp · ${weeksCount} week${weeksCount !== 1 ? 's' : ''}` }, unit_amount: input.totalCents }, quantity: 1 }],
+          success_url: `${safeOrigin}/summer-camp/enroll?success=1&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${safeOrigin}/summer-camp/enroll?cancelled=1`,
+          metadata: {
+            type: 'summer_camp_enrollment',
+            parentName: input.parentName,
+            parentEmail: input.parentEmail,
+            parentPhone: input.parentPhone,
+            students: JSON.stringify(input.students),
+            weeks: JSON.stringify(input.weeks),
+            isFullSummer: input.isFullSummer ? 'true' : 'false',
+            studentCount: String(studentCount),
+            weekCount: String(weeksCount),
+          },
         });
-
-        const chargeBody = await chargeRes.json() as {
-          status: string;
-          msg: string;
-          data?: { id: string; status: string; response_body?: { card?: { response_text?: string } } };
-        };
-
-        if (chargeBody.status !== 'success' || !chargeBody.data) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: chargeBody.msg || 'Payment failed' });
-        }
-        const txn = chargeBody.data;
-        if (txn.status !== 'approved') {
-          const declineMsg = txn.response_body?.card?.response_text || `Transaction ${txn.status}`;
-          throw new TRPCError({ code: 'BAD_REQUEST', message: `Payment declined: ${declineMsg}` });
-        }
-
-        // Record enrollment
-        await db.insert(schema.summerCampEnrollments).values({
-          parentName: input.parentName,
-          parentEmail: input.parentEmail,
-          parentPhone: input.parentPhone,
-          students: JSON.stringify(input.students),
-          weeks: JSON.stringify(input.weeks),
-          weekCount: weeksCount,
-          studentCount,
-          isFullSummer: input.isFullSummer ? 1 : 0,
-          amountCents: input.totalCents,
-          fpTransactionId: txn.id,
-          status: 'approved',
-        } as any);
-
-        // Notify owner
-        try {
-          const { notifyOwner } = await import('./_core/notification');
-          await notifyOwner({
-            title: `🏕️ New Summer Camp Enrollment — ${input.parentName}`,
-            content: `${input.parentName} (${input.parentEmail}, ${input.parentPhone}) enrolled ${studentCount} student${studentCount !== 1 ? 's' : ''} for ${weeksCount} week${weeksCount !== 1 ? 's' : ''}${input.isFullSummer ? ' (Full Summer!)' : ''}. Total: $${(input.totalCents / 100).toFixed(2)}. Students: ${studentsList}. Weeks: ${weeksList}. FP Txn: ${txn.id}`,
-          });
-        } catch {}
-
-        // Send confirmation SMS to parent
-        try {
-          const { sendSms } = await import('./sms800');
-          const firstName = input.parentName.split(' ')[0];
-          const studentNames = input.students.map(s => s.name).join(' & ');
-          const weeksLabel = input.isFullSummer ? 'the Full Summer (all 10 weeks)' : `${weeksCount} week${weeksCount !== 1 ? 's' : ''}`;
-          const amountFormatted = `$${(input.totalCents / 100).toFixed(2)}`;
-          const confirmMsg = `🏕️ Hi ${firstName}! Your MyDojo Summer Camp enrollment is CONFIRMED! 🎉\n\n` +
-            `👦 Student${studentCount !== 1 ? 's' : ''}: ${studentNames}\n` +
-            `📅 Enrolled for: ${weeksLabel}\n` +
-            `💳 Total charged: ${amountFormatted}\n\n` +
-            `We can't wait to see ${studentCount !== 1 ? 'them' : 'them'} at camp! Questions? Call us at (877) 4-MYDOJO. 🥋`;
-          await sendSms({ to: input.parentPhone, message: confirmMsg });
-        } catch (smsErr) {
-          // Non-fatal — enrollment already recorded, just log
-          console.error('[CampEnroll] Confirmation SMS failed:', smsErr);
-        }
-
-        return { success: true, transactionId: txn.id, amountCharged: input.totalCents };
+        if (!session.url) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Unable to start secure checkout' });
+        return { checkoutUrl: session.url };
       }),
 
     // ─── Visitor SMS Trigger ──────────────────────────────────────────────────
@@ -10834,67 +9662,35 @@ Please enter your card details below to complete your registration securely. Tot
 
   // ── Family Discount Router ─────────────────────────────────────────────────
   family: router({
-    /** Create a new family group and charge the one-time $99 registration fee via FluidPay */
-    createFamilyGroup: publicProcedure
+    createStripeRegistrationCheckout: publicProcedure
       .input(z.object({
         primaryContactName: z.string().min(2),
         primaryContactEmail: z.string().email(),
         primaryContactPhone: z.string().optional(),
-        cardToken: z.string(),
+        origin: z.string().url().optional(),
       }))
       .mutation(async ({ input }) => {
-        const db = await getDb();
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
-        const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
-        const FLUIDPAY_KEY = process.env.FLUIDPAY_SECRET_KEY || '';
-        // 1. Create customer vault
-        const vaultRes = await fetch(`${FLUIDPAY_API_URL}/api/customer`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': FLUIDPAY_KEY },
-          body: JSON.stringify({
-            description: `Family: ${input.primaryContactName}`,
-            payment_method: { card: { token_id: input.cardToken } },
-          }),
+        const stripe = getStripe();
+        const safeOrigin = input.origin?.startsWith("https://mydojoma.com") ? input.origin : "https://mydojoma.com";
+        const session = await stripe.checkout.sessions.create({
+          mode: "payment",
+          customer_email: input.primaryContactEmail,
+          phone_number_collection: { enabled: !input.primaryContactPhone },
+          line_items: [{
+            price_data: { currency: "usd", product_data: { name: "MyDojo Family Registration" }, unit_amount: 9900 },
+            quantity: 1,
+          }],
+          metadata: {
+            type: "family_registration",
+            primaryContactName: input.primaryContactName,
+            primaryContactEmail: input.primaryContactEmail,
+            primaryContactPhone: input.primaryContactPhone || "",
+          },
+          success_url: `${safeOrigin}/family-enrollment?success=1&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${safeOrigin}/family-enrollment?cancelled=1`,
         });
-        const vaultData = await vaultRes.json() as any;
-        const fpCustomerId = vaultData?.data?.id;
-        if (!fpCustomerId) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create payment vault' });
-        // 2. Charge $99 family registration fee
-        const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': FLUIDPAY_KEY },
-          body: JSON.stringify({
-            type: 'sale',
-            amount: 9900,
-            currency: 'USD',
-            payment_method: { customer: { id: fpCustomerId } },
-            billing_address: {
-              first_name: input.primaryContactName.split(' ')[0],
-              last_name: input.primaryContactName.split(' ').slice(1).join(' ') || 'Family',
-              email: input.primaryContactEmail,
-            },
-            order_id: `fam-${Date.now().toString(36).slice(-13)}`,
-            description: 'MyDojo Family Registration Fee',
-          }),
-        });
-        const chargeData = await chargeRes.json() as any;
-        if (chargeData?.data?.status !== 'pending_settlement' && chargeData?.data?.status !== 'approved') {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: chargeData?.msg || 'Payment failed. Please check your card details.' });
-        }
-        const txId = chargeData?.data?.id;
-        // 3. Save family group
-        const [result] = await db.insert(schema.familyGroups).values({
-          primaryContactName: input.primaryContactName,
-          primaryContactEmail: input.primaryContactEmail,
-          primaryContactPhone: input.primaryContactPhone,
-          registrationFeePaid: 1,
-          registrationFeeTransactionId: txId,
-          registrationFeeAmount: '149.00',
-          registrationFeePaidAt: new Date(),
-          fluidpayCustomerId: fpCustomerId,
-        });
-        const familyGroupId = (result as any).insertId;
-        return { familyGroupId, fpCustomerId, txId, success: true };
+        if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to start secure checkout" });
+        return { checkoutUrl: session.url };
       }),
 
     /** Look up a family group by email */
@@ -10943,144 +9739,37 @@ Please enter your card details below to complete your registration securely. Tot
         };
       }),
 
-    /** Add a family member to kickboxing at the discounted $49/month family rate */
-    addFamilyKickboxingMember: protectedProcedure
+    /** Starts hosted checkout for a new family kickboxing add-on. */
+    createFamilyKickboxingCheckout: protectedProcedure
       .input(z.object({
-        memberName: z.string().min(2, 'Name is required'),
-        memberEmail: z.string().email('Valid email required'),
+        memberName: z.string().min(1),
+        memberEmail: z.string().email(),
         memberPhone: z.string().optional(),
-        cardToken: z.string().min(1, 'Payment token is required'),
+        origin: z.string().url().optional(),
       }))
-      .mutation(async ({ input, ctx }) => {
+      .mutation(async ({ ctx, input }) => {
         const db = await getDb();
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
-        const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
-        const FLUIDPAY_SECRET_KEY = process.env.FLUIDPAY_SECRET_KEY;
-        if (!FLUIDPAY_SECRET_KEY) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment processor not configured' });
-        const fpHeaders = { 'Authorization': FLUIDPAY_SECRET_KEY, 'Content-Type': 'application/json' };
-        // Look up the family group by the logged-in user's email
-        // Auto-create a family group if one doesn't exist — no pre-registration required
-        let groups = await db.select().from(schema.familyGroups)
-          .where(eq(schema.familyGroups.primaryContactEmail, ctx.user.email))
-          .limit(1);
-        if (!groups.length) {
-          console.log(`[FamilyKickboxing] No family group found for ${ctx.user.email} — auto-creating one`);
-          const [insertFg] = await db.insert(schema.familyGroups).values({
-            primaryContactName: ctx.user.name || ctx.user.email,
-            primaryContactEmail: ctx.user.email,
-            primaryContactPhone: '',
-          });
-          const newFgId = (insertFg as any).insertId;
-          groups = await db.select().from(schema.familyGroups)
-            .where(eq(schema.familyGroups.id, newFgId))
-            .limit(1);
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        let [familyGroup] = await db.select().from(schema.familyGroups).where(eq(schema.familyGroups.primaryContactEmail, ctx.user.email)).limit(1);
+        if (!familyGroup) {
+          const created = await db.insert(schema.familyGroups).values({ primaryContactName: ctx.user.name || input.memberName, primaryContactEmail: ctx.user.email, primaryContactPhone: input.memberPhone || null } as any);
+          [familyGroup] = await db.select().from(schema.familyGroups).where(eq(schema.familyGroups.id, Number((created as any)[0]?.insertId ?? (created as any).insertId))).limit(1);
         }
-        const familyGroup = groups[0];
-        // Step 1: Create customer vault with the new card token
-        const nameParts = input.memberName.trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-        const vaultRes = await fetch(`${FLUIDPAY_API_URL}/api/vault/customer`, {
-          method: 'POST',
-          headers: fpHeaders,
-          body: JSON.stringify({
-            description: `MyDojo Kickboxing Family Member: ${input.memberName}`,
-            default_payment: { token: input.cardToken },
-            default_billing_address: {
-              first_name: firstName,
-              last_name: lastName,
-              email: input.memberEmail,
-              phone: (input.memberPhone || '').replace(/\D/g, ''),
-            },
-          }),
+        const stripe = getStripe();
+        const customer = await getOrCreateStripeCustomer({ email: input.memberEmail, name: input.memberName, phone: input.memberPhone });
+        const price = await stripe.prices.create({ currency: "usd", unit_amount: 4900, recurring: { interval: "month" }, product_data: { name: "MyDojo Family Kickboxing Add-On" } });
+        const origin = input.origin?.startsWith("https://mydojoma.com") ? input.origin : "https://mydojoma.com";
+        const session = await stripe.checkout.sessions.create({
+          mode: "subscription",
+          customer: customer.id,
+          line_items: [{ price: price.id, quantity: 1 }],
+          success_url: `${origin}/dashboard?kickboxing=success&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}/dashboard?kickboxing=cancelled`,
+          metadata: { type: "family_kickboxing_addon", familyGroupId: String(familyGroup.id), memberName: input.memberName, memberEmail: input.memberEmail, memberPhone: input.memberPhone || "" },
+          subscription_data: { metadata: { type: "family_kickboxing_addon", familyGroupId: String(familyGroup.id), memberName: input.memberName, memberEmail: input.memberEmail, memberPhone: input.memberPhone || "" } },
         });
-        const vaultData = await vaultRes.json() as any;
-        if (vaultData.status !== 'success') {
-          console.error('[FluidPay] Vault creation failed:', vaultData);
-          throw new TRPCError({ code: 'BAD_REQUEST', message: vaultData.msg || 'Failed to save payment method' });
-        }
-        const fpCustomerId = vaultData.data.id;
-        // Step 2: Charge first month ($49)
-        const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
-          method: 'POST',
-          headers: fpHeaders,
-          body: JSON.stringify({
-            type: 'sale',
-            amount: 4900,
-            currency: 'USD',
-            payment_method: { customer: { id: fpCustomerId } },
-            billing_address: { first_name: firstName, last_name: lastName, email: input.memberEmail },
-            order_id: `kbx-${Date.now().toString(36).slice(-13)}`,
-            description: `MyDojo Kickboxing Family Add-On - ${input.memberName} (First Month)`,
-          }),
-        });
-        const chargeData = await chargeRes.json() as any;
-        if (chargeData.status !== 'success' || !chargeData.data) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: chargeData.msg || 'Payment failed' });
-        }
-        const txn = chargeData.data;
-        if (txn.status !== 'approved' && txn.status !== 'pending_settlement') {
-          const declineMsg = txn.response_body?.card?.processor_response_text || `Transaction ${txn.status}`;
-          throw new TRPCError({ code: 'BAD_REQUEST', message: `Payment declined: ${declineMsg}` });
-        }
-        const fpTransactionId = txn.id;
-        // Step 3: Create recurring subscription for monthly billing ($49/month)
-        const { getNextBillingDateStr: _campNextStr2, getBillingAnchorDayStr: _campAnchorStr2 } = await import('@shared/billingUtils');
-        const startDate = _campNextStr2(new Date());
-        const subscriptionRes = await fetch(`${FLUIDPAY_API_URL}/api/recurring/subscription`, {
-          method: 'POST',
-          headers: fpHeaders,
-          body: JSON.stringify({
-            description: `MyDojo Kickboxing Family Add-On - ${input.memberName}`,
-            customer: { id: fpCustomerId },
-            amount: 4900,
-            billing_cycle_interval: 1,
-            billing_frequency: 'monthly',
-            billing_days: _campAnchorStr2(new Date()),
-            next_bill_date: startDate,
-          }),
-        });
-        const subscriptionData = await subscriptionRes.json() as any;
-        let fpSubscriptionId: string | null = null;
-        if (subscriptionData.status === 'success') {
-          fpSubscriptionId = subscriptionData.data?.id || null;
-        } else {
-          console.error('[FluidPay] Kickboxing subscription creation failed:', subscriptionData);
-        }
-        // Step 4: Save the add-on record
-        const insertResult = await db.insert(schema.familyKickboxingAddOns).values({
-          familyGroupId: familyGroup.id,
-          memberName: input.memberName,
-          memberEmail: input.memberEmail,
-          memberPhone: input.memberPhone || null,
-          monthlyAmount: '49.00',
-          fluidpayCustomerId: fpCustomerId,
-          fluidpaySubscriptionId: fpSubscriptionId,
-          firstChargeTransactionId: fpTransactionId,
-          status: 'active',
-        });
-        const addOnId = (insertResult as any).insertId;
-        // Step 5: Notify owner
-        try {
-          const { notifyOwner } = await import('./_core/notification');
-          await notifyOwner({
-            title: 'New Family Kickboxing Add-On',
-            content: `${ctx.user.name || ctx.user.email} added ${input.memberName} (${input.memberEmail}) to kickboxing at $49/month. Transaction: ${fpTransactionId}`,
-          });
-        } catch {}
-        // Step 6: Notify staff via SMS (fire-and-forget)
-        import('./notifyStaffNewEnrollment').then(({ notifyStaffNewEnrollment }) => {
-          notifyStaffNewEnrollment({
-            studentName: input.memberName,
-            customerName: ctx.user.name || ctx.user.email,
-            customerEmail: ctx.user.email,
-            customerPhone: input.memberPhone,
-            packageName: 'Family Kickboxing Add-On',
-            amountCharged: 49.00,
-            program: 'Kickboxing',
-          }).catch(() => {});
-        }).catch(() => {});
-        return { success: true, addOnId, transactionId: fpTransactionId, subscriptionId: fpSubscriptionId };
+        if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to start secure checkout" });
+        return { checkoutUrl: session.url };
       }),
     /** Get all kickboxing add-ons for the current user's family group */
     getFamilyKickboxingAddOns: protectedProcedure.query(async ({ ctx }) => {
@@ -11210,47 +9899,6 @@ Please enter your card details below to complete your registration securely. Tot
       }),
   }),
 
-  /** $1 test charge — runs a real $1 transaction through FluidPay to verify card processing */
-  testCharge: publicProcedure
-    .input(z.object({
-      name: z.string().min(2),
-      email: z.string().email(),
-      token: z.string(),
-    }))
-    .mutation(async ({ input }) => {
-      const FLUIDPAY_API_URL = 'https://app.fluidpay.com';
-      const FLUIDPAY_KEY = process.env.FLUIDPAY_SECRET_KEY || '';
-      const nameParts = input.name.trim().split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
-      const chargeRes = await fetch(`${FLUIDPAY_API_URL}/api/transaction`, {
-        method: 'POST',
-        headers: { 'Authorization': FLUIDPAY_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'sale',
-          amount: 100,
-          currency: 'usd',
-          payment_method: { token: input.token },
-          billing_address: { first_name: firstName, last_name: lastName, email: input.email },
-          order_meta: { description: 'MyDojo $1 Test Transaction' },
-        }),
-      });
-      const chargeData = await chargeRes.json();
-      // FluidPay returns response_code 100 for approved, status can be 'pending_settlement' or 'approved'
-      const txData = chargeData.data;
-      const isApproved = chargeData.status === 'success' && txData && txData.response_code === 100 && txData.response_body?.card?.processor_response_code === '00';
-      if (!isApproved) {
-        const msg = txData?.response_body?.card?.processor_response_text || txData?.response_body?.card?.response_text || chargeData.msg || 'Payment declined';
-        throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
-      }
-      return {
-        success: true,
-        transactionId: txData?.id,
-        last4: txData?.response_body?.card?.last_four,
-        cardType: txData?.response_body?.card?.card_type,
-        amount: '$1.00',
-      };
-    }),
   pno: router({
     submitRsvp: publicProcedure
       .input(z.object({

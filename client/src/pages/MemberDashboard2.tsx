@@ -1253,9 +1253,6 @@ export default function MemberDashboard2() {
   const [kickboxingMemberName, setKickboxingMemberName] = useState("");
   const [kickboxingMemberEmail, setKickboxingMemberEmail] = useState("");
   const [kickboxingMemberPhone, setKickboxingMemberPhone] = useState("");
-  const [kickboxingTokenizerReady, setKickboxingTokenizerReady] = useState(false);
-  const kickboxingTokenizerRef = useRef<any>(null);
-  const kickboxingTokenizerInitRef = useRef(false);
   const [kickboxingIsSubmitting, setKickboxingIsSubmitting] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [freezeStartDate, setFreezeStartDate] = useState("");
@@ -1366,68 +1363,15 @@ export default function MemberDashboard2() {
     onError: (err) => alert("Error: " + err.message),
   });
 
-  const addKickboxingMutation = trpc.family.addFamilyKickboxingMember.useMutation({
+  const kickboxingCheckoutMutation = trpc.family.createFamilyKickboxingCheckout.useMutation({
     onSuccess: () => {
-      setKickboxingStep("success");
-      setKickboxingIsSubmitting(false);
+      // Hosted checkout navigation is handled by the payment action once a URL is returned.
     },
     onError: (err) => {
       setKickboxingIsSubmitting(false);
-      alert("Payment failed: " + err.message);
+      alert("Unable to open secure checkout: " + err.message);
     },
   });
-
-  // Load FluidPay tokenizer when kickboxing payment step is shown
-  useEffect(() => {
-    if (!showAddKickboxingDialog || kickboxingStep !== "payment") return;
-    if (kickboxingTokenizerInitRef.current) return;
-    const initTokenizer = () => {
-      if (!window.Tokenizer) return;
-      kickboxingTokenizerInitRef.current = true;
-      const publicKey = import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "";
-      const instance = new window.Tokenizer({
-        apikey: publicKey,
-        container: "#kickboxing-tokenizer-container",
-        submission: (resp: { token?: string; status?: string; error?: string }) => {
-          if (!resp.token || resp.status === "error") {
-            alert(resp.error || "Card tokenization failed. Please check your card details.");
-            setKickboxingIsSubmitting(false);
-            return;
-          }
-          addKickboxingMutation.mutate({
-            memberName: kickboxingMemberName,
-            memberEmail: kickboxingMemberEmail,
-            memberPhone: kickboxingMemberPhone || undefined,
-            cardToken: resp.token,
-          });
-        },
-        onLoad: () => setKickboxingTokenizerReady(true),
-        settings: {
-          payment: { types: ["card"] },
-          styles: {
-            body: { "font-family": "inherit", "background-color": "transparent" },
-            inputs: { "border-radius": "8px", "border": "2px solid #e2e8f0", "padding": "14px 16px", "font-size": "16px" },
-          },
-        },
-      });
-      kickboxingTokenizerRef.current = instance;
-    };
-    if (window.Tokenizer) {
-      initTokenizer();
-    } else {
-      const existing = document.getElementById("fluidpay-tokenizer-script");
-      if (!existing) {
-        const script = document.createElement("script");
-        script.id = "fluidpay-tokenizer-script";
-        script.src = "https://app.fluidpay.com/tokenizer/tokenizer.js";
-        script.async = true;
-        script.onload = initTokenizer;
-        document.head.appendChild(script);
-      } else {
-        existing.addEventListener("load", initTokenizer);
-      }
-    }
-  }, [showAddKickboxingDialog, kickboxingStep]);
 
   const { data: enrollment, isLoading: enrollmentLoading } = trpc.member.getEnrollment.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -3308,9 +3252,6 @@ export default function MemberDashboard2() {
                         setKickboxingMemberName("");
                         setKickboxingMemberEmail("");
                         setKickboxingMemberPhone("");
-                        setKickboxingTokenizerReady(false);
-                        kickboxingTokenizerInitRef.current = false;
-                        kickboxingTokenizerRef.current = null;
                         setShowAddKickboxingDialog(true);
                       }}
                       className={`flex items-center gap-3 p-4 rounded-xl border transition-colors text-left ${
@@ -3438,12 +3379,9 @@ export default function MemberDashboard2() {
                           <p className={`text-sm font-bold ${isDark ? 'text-green-300' : 'text-green-800'}`}>$49.00 billed today</p>
                           <p className={`text-xs ${isDark ? 'text-green-400/80' : 'text-green-700'}`}>Then $49/month recurring on the same date each month. Cancel anytime.</p>
                         </div>
-                        <div>
-                          <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-white/70' : 'text-gray-700'}`}>Card Details</label>
-                          <div id="kickboxing-tokenizer-container" className={`rounded-xl border min-h-[80px] ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white'}`} />
-                          {!kickboxingTokenizerReady && (
-                            <p className={`text-xs mt-2 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Loading secure payment form...</p>
-                          )}
+                        <div className={`rounded-xl border p-4 ${isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white'}`}>
+                          <p className={`text-sm font-medium ${isDark ? 'text-white/80' : 'text-gray-800'}`}>Secure Checkout</p>
+                          <p className={`mt-1 text-xs ${isDark ? 'text-white/50' : 'text-gray-500'}`}>Continue to secure checkout to authorize today’s first month and future monthly billing. Full card numbers are never stored by MyDojo.</p>
                         </div>
                         <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-white/40' : 'text-gray-400'}`}>
                           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
@@ -3457,15 +3395,24 @@ export default function MemberDashboard2() {
                             Back
                           </button>
                           <button
-                            disabled={kickboxingIsSubmitting || !kickboxingTokenizerReady}
-                            onClick={() => {
-                              if (!kickboxingTokenizerRef.current) return;
+                            disabled={kickboxingIsSubmitting || kickboxingCheckoutMutation.isPending}
+                            onClick={async () => {
                               setKickboxingIsSubmitting(true);
-                              kickboxingTokenizerRef.current.submit();
+                              try {
+                                const result = await kickboxingCheckoutMutation.mutateAsync({
+                                  memberName: kickboxingMemberName,
+                                  memberEmail: kickboxingMemberEmail,
+                                  memberPhone: kickboxingMemberPhone || undefined,
+                                  origin: window.location.origin,
+                                });
+                                window.location.assign(result.checkoutUrl);
+                              } catch {
+                                setKickboxingIsSubmitting(false);
+                              }
                             }}
                             className="flex-1 py-3 rounded-xl font-semibold text-sm bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            {kickboxingIsSubmitting ? "Processing..." : "Pay $49.00"}
+                            {kickboxingIsSubmitting ? "Opening secure checkout..." : "Continue securely · $49.00"}
                           </button>
                         </div>
                       </div>

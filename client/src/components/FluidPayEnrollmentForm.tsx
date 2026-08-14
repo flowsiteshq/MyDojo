@@ -199,7 +199,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
 
   // No payment details are collected for an explicit zero-dollar promotion. Paid
   // memberships use the Stripe recurring enrollment flow above.
-  const createZeroDollarEnrollmentMutation = trpc.member.createEnrollmentCheckout.useMutation({
+  const createZeroDollarEnrollmentMutation = trpc.member.completeZeroDollarEnrollment.useMutation({
     onSuccess: () => {
       setIsSubmitting(false);
       setSuccess(true);
@@ -461,20 +461,16 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
               onClick={() => {
                 if (appliedPromo) markPromoUsed.mutate({ code: appliedPromo.code });
                 createZeroDollarEnrollmentMutation.mutate({
-                  token: "PROMO_FREE",
                   packageId: enrollmentData.packageId || 0,
                   customerName: enrollmentData.customerName,
                   customerEmail: enrollmentData.customerEmail,
                   customerPhone: enrollmentData.customerPhone,
                   studentName: enrollmentData.studentName || enrollmentData.childName || enrollmentData.customerName,
-                  isSummerCamp: isSummerCamp,
-                  summerCampWeek: enrollmentData.weekLabel,
                   waiveEnrollmentFee: true,
                   waiverReason: `Promo code: ${appliedPromo?.code}`,
-                  agreementSignature: agreementSig?.signedName,
-                  agreementSignedAt: agreementSig?.signedAt?.toISOString(),
-                  agreementSignatureDataUrl: agreementSig?.signatureDataUrl,
-                  referralCode: resolvedReferralCode || undefined,
+                  agreementSignature: agreementSig!.signedName,
+                  agreementSignedAt: agreementSig!.signedAt.toISOString(),
+                  agreementSignatureDataUrl: agreementSig!.signatureDataUrl,
                 });
               }}
               disabled={isSubmitting}

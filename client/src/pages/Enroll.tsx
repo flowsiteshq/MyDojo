@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 /**
  * Enroll.tsx
  * Standalone enrollment page that students reach by scanning the kiosk QR code.
- * Shows a package selector → personal info form → FluidPay payment form.
+ * Shows a package selector → personal info form → secure payment authorization form.
  * URL: /enroll?program=Kickboxing
  */
 import { useState, useEffect } from "react";

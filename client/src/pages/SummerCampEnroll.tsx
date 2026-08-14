@@ -9,27 +9,13 @@
  *  - Full summer (all 10 weeks): 15% bonus discount applied to total
  *  - Ages 5–14
  */
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Check, Users, Tag, Star, Sun, Loader2, CreditCard, Lock, CheckCircle } from "lucide-react";
-
-// FluidPay Tokenizer global type
-declare global {
-  interface Window {
-    Tokenizer?: new (config: {
-      url?: string;
-      apikey: string;
-      container: string;
-      submission: (resp: { token?: string; status?: string; error?: string }) => void;
-      onLoad?: () => void;
-      settings?: { payment?: { types?: string[] }; styles?: { body?: Record<string, string>; inputs?: Record<string, string>; labels?: Record<string, string> } };
-    }) => { submit: (amount?: string) => void };
-  }
-}
 
 // ─── Camp Week Definitions ────────────────────────────────────────────────────
 const CAMP_WEEKS = [
@@ -143,75 +129,8 @@ export default function SummerCampEnroll() {
   const [isLoading, setIsLoading] = useState(false);
   const [enrollSuccess, setEnrollSuccess] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [tokenizerReady, setTokenizerReady] = useState(false);
-  const tokenizerInstanceRef = useRef<{ submit: (amount?: string) => void } | null>(null);
-  const tokenizerInitializedRef = useRef(false);
-  const scriptLoadedRef = useRef(false);
 
   const checkoutMutation = trpc.popup.createSummerCampEnrollCheckout.useMutation();
-
-  // Pre-load FluidPay tokenizer script
-  useEffect(() => {
-    if (scriptLoadedRef.current) return;
-    scriptLoadedRef.current = true;
-    if (window.Tokenizer) { setTokenizerReady(true); return; }
-    const script = document.createElement("script");
-    script.src = "https://app.fluidpay.com/tokenizer/tokenizer.js";
-    script.async = true;
-    script.onload = () => setTokenizerReady(true);
-    script.onerror = () => setPaymentError("Failed to load payment form. Please refresh and try again.");
-    document.head.appendChild(script);
-  }, []);
-
-  // Initialize tokenizer when review step is shown
-  useEffect(() => {
-    if (step !== "review") return;
-    if (!tokenizerReady || tokenizerInitializedRef.current) return;
-    if (!window.Tokenizer) return;
-    tokenizerInitializedRef.current = true;
-    try {
-      const instance = new window.Tokenizer({
-        apikey: import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "",
-        container: "#camp-fluidpay-tokenizer",
-        submission: async (resp) => {
-          if (!resp.token || resp.status === "error") {
-            const msg = resp.error || "Card tokenization failed. Please check your card details.";
-            setPaymentError(msg);
-            setIsLoading(false);
-            return;
-          }
-          // Token received — fire the charge
-          try {
-            const selectedWeekLabels = CAMP_WEEKS.filter(w => selectedWeeks.has(w.id)).map(w => w.theme);
-            await checkoutMutation.mutateAsync({
-              token: resp.token,
-              weeks: selectedWeekLabels,
-              students: students.map(s => ({ name: s.name, age: getAgeFromDob(s.dob), dob: s.dob })),
-              parentName, parentEmail, parentPhone, isFullSummer,
-              totalCents: pricing!.totalCents,
-            });
-            setEnrollSuccess(true);
-            toast.success("Enrollment complete! 🎉", { description: "Check your email for confirmation." });
-          } catch (err: any) {
-            setPaymentError(err?.message ?? "Payment failed. Please try again.");
-            setIsLoading(false);
-          }
-        },
-        onLoad: () => {},
-        settings: {
-          payment: { types: ["card"] },
-          styles: {
-            body: { "font-family": "inherit", "background-color": "transparent" },
-            inputs: { "border-radius": "12px", "border": "2px solid #fed7aa", "padding": "14px 16px", "font-size": "16px", "height": "52px" },
-            labels: { "font-size": "14px", "font-weight": "700", "color": "#374151", "margin-bottom": "6px" },
-          },
-        },
-      });
-      tokenizerInstanceRef.current = instance;
-    } catch (err: any) {
-      setPaymentError(`Payment form error: ${err?.message || "Unknown"}. Please refresh.`);
-    }
-  }, [step, tokenizerReady]);
 
   const isFullSummer = selectedWeeks.size === CAMP_WEEKS.length;
   const weeksCount = selectedWeeks.size;
@@ -268,13 +187,21 @@ export default function SummerCampEnroll() {
     return age;
   };
 
-  const handlePayNow = () => {
+  const handlePayNow = async () => {
     setPaymentError(null);
     setIsLoading(true);
-    if (tokenizerInstanceRef.current) {
-      tokenizerInstanceRef.current.submit(pricing!.total.toFixed(2));
-    } else {
-      setPaymentError("Payment form not ready. Please refresh and try again.");
+    try {
+      const selectedWeekLabels = CAMP_WEEKS.filter(w => selectedWeeks.has(w.id)).map(w => w.theme);
+      const result = await checkoutMutation.mutateAsync({
+        weeks: selectedWeekLabels,
+        students: students.map(s => ({ name: s.name, age: getAgeFromDob(s.dob), dob: s.dob })),
+        parentName, parentEmail, parentPhone, isFullSummer,
+        totalCents: pricing!.totalCents,
+        origin: window.location.origin,
+      });
+      window.location.assign(result.checkoutUrl);
+    } catch (err: any) {
+      setPaymentError(err?.message ?? "Unable to open secure checkout. Please try again.");
       setIsLoading(false);
     }
   };
@@ -567,7 +494,7 @@ export default function SummerCampEnroll() {
           </div>
         )}
 
-        {/* ══ STEP 4: Review & Pay (FluidPay) ═══════════════════════════════ */}
+        {/* ══ STEP 4: Review & Continue Securely ═══════════════════════════ */}
         {step === "review" && pricing && (
           <div>
             {/* Success screen */}
@@ -583,8 +510,8 @@ export default function SummerCampEnroll() {
             ) : (
               <>
                 <div className="text-center mb-6">
-                  <h1 className="text-3xl font-black text-gray-800 mb-2">💳 Review & Pay</h1>
-                  <p className="text-gray-600">Everything look good? Enter your card to secure your spots!</p>
+                  <h1 className="text-3xl font-black text-gray-800 mb-2">Review & Continue</h1>
+                  <p className="text-gray-600">Everything looks good. Continue to secure checkout to reserve your spots.</p>
                 </div>
 
                 {/* Order Summary */}
@@ -652,19 +579,12 @@ export default function SummerCampEnroll() {
                   </div>
                 </div>
 
-                {/* FluidPay Card Form */}
                 <div className="bg-white rounded-2xl shadow-lg p-5 mb-4 border border-orange-100">
                   <div className="flex items-center gap-2 mb-4">
                     <CreditCard className="w-5 h-5 text-orange-500" />
-                    <span className="font-black text-gray-800">Card Details</span>
+                    <span className="font-black text-gray-800">Secure Checkout</span>
                   </div>
-                  {!tokenizerReady && !paymentError && (
-                    <div className="flex items-center justify-center py-8 gap-3 text-gray-400">
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Loading secure payment form…</span>
-                    </div>
-                  )}
-                  <div id="camp-fluidpay-tokenizer" className={tokenizerReady ? "block" : "hidden"} />
+                  <p className="text-sm leading-6 text-gray-600">Your card details are collected on our secure checkout page. MyDojo never stores full card numbers.</p>
                 </div>
 
                 {paymentError && (
@@ -677,11 +597,11 @@ export default function SummerCampEnroll() {
                   <Button onClick={() => setStep("info")} variant="outline" className="flex-1 border-gray-300 text-gray-600 rounded-2xl py-6">← Back</Button>
                   <Button
                     onClick={handlePayNow}
-                    disabled={isLoading || !tokenizerReady}
+                    disabled={isLoading}
                     className="flex-1 text-white font-black uppercase tracking-wider py-6 text-base rounded-2xl shadow-xl"
                     style={{ background: "linear-gradient(135deg, #FF6B35, #FF4500)" }}
                   >
-                    {isLoading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Processing…</> : `Pay $${pricing.total.toFixed(2)} →`}
+                    {isLoading ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Opening secure checkout…</> : `Continue securely · $${pricing.total.toFixed(2)} →`}
                   </Button>
                 </div>
 

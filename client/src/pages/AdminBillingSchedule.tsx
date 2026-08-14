@@ -133,20 +133,6 @@ function CreateSubscriptionDialog({
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const today = new Date();
-  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
-  const defaultDate = nextMonth.toISOString().slice(0, 10);
-  const [nextChargeDate, setNextChargeDate] = useState(defaultDate);
-
-  const createSub = trpc.admin.createMissingSubscription.useMutation({
-    onSuccess: (data) => {
-      toast.success(`Subscription created! ID: ${data.fpSubscriptionId}`);
-      onSuccess();
-      onClose();
-    },
-    onError: (err) => toast.error(err.message || "Failed to create subscription"),
-  });
-
   if (!enrollment) return null;
 
   return (
@@ -161,7 +147,7 @@ function CreateSubscriptionDialog({
         <div className="space-y-4">
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
             <AlertTriangle className="inline w-4 h-4 mr-1" />
-            This enrollment was charged but the recurring subscription was never created. Set the first charge date below to activate billing.
+            This legacy enrollment needs a secure payment-method update before recurring billing can resume. Use the member’s Account payment update flow; new subscriptions are created through secure checkout only.
           </div>
           <div>
             <p className="text-sm font-medium mb-1">Student</p>
@@ -171,26 +157,8 @@ function CreateSubscriptionDialog({
             <p className="text-sm font-medium mb-1">Program</p>
             <p className="text-sm text-muted-foreground">{enrollment.programName}</p>
           </div>
-          <div>
-            <label className="text-sm font-medium block mb-1">First Charge Date</label>
-            <input
-              type="date"
-              value={nextChargeDate}
-              onChange={(e) => setNextChargeDate(e.target.value)}
-              className="w-full border rounded-md px-3 py-2 text-sm"
-              min={new Date().toISOString().slice(0, 10)}
-            />
-          </div>
           <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
-            <Button
-              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
-              disabled={createSub.isPending || !nextChargeDate}
-              onClick={() => createSub.mutate({ enrollmentId: enrollment.id, nextChargeDate })}
-            >
-              {createSub.isPending ? <RefreshCw className="w-4 h-4 animate-spin mr-1" /> : <Plus className="w-4 h-4 mr-1" />}
-              Create Subscription
-            </Button>
+            <Button variant="outline" onClick={onClose} className="flex-1">Close</Button>
           </div>
         </div>
       </DialogContent>
@@ -242,7 +210,6 @@ export default function AdminBillingSchedule() {
     const revenue = paid.reduce((s, r) => s + (r.lastPaymentAmount || r.subAmount || 0), 0);
     const missingSub = enriched.filter(r =>
       r.enrollmentStatus === "active" &&
-      !r.fluidpaySubscriptionId &&
       !r.stripeSubscriptionId
     );
     const pendingCount = enriched.filter(r => r.enrollmentStatus === "pending");
@@ -324,7 +291,7 @@ export default function AdminBillingSchedule() {
                     {stats.missingSub} active member{stats.missingSub > 1 ? "s" : ""} with NO recurring subscription
                   </p>
                   <p className="text-sm text-amber-700 mt-0.5">
-                    These enrollments are active but have no FluidPay or Stripe subscription ID. They will not be billed automatically.
+                    These enrollments are active but have no Stripe subscription. They will not be billed automatically until a secure payment method is updated.
                   </p>
                 </div>
                 <Button
@@ -412,7 +379,7 @@ export default function AdminBillingSchedule() {
             {isLoading ? (
               <div className="flex items-center justify-center py-16 text-muted-foreground">
                 <RefreshCw className="h-5 w-5 animate-spin mr-2" />
-                Loading payment data from FluidPay…
+                Loading payment data…
               </div>
             ) : !filtered.length ? (
               <div className="py-12 text-center text-muted-foreground">
@@ -439,7 +406,7 @@ export default function AdminBillingSchedule() {
                   <tbody>
                     {filtered.map(row => {
                       const cfg = STATUS_CONFIG[row._status as keyof typeof STATUS_CONFIG];
-                      const isMissingSub = row.enrollmentStatus === "active" && !row.fluidpaySubscriptionId && !row.stripeSubscriptionId;
+                      const isMissingSub = row.enrollmentStatus === "active" && !row.stripeSubscriptionId;
                       const isPending = row.enrollmentStatus === "pending";
                       return (
                         <tr key={row.id} className={`border-b hover:bg-muted/20 ${cfg.rowBg}`}>
@@ -500,7 +467,7 @@ export default function AdminBillingSchedule() {
                                   size="sm"
                                   variant="outline"
                                   className="h-7 px-2 text-xs border-purple-300 text-purple-700 hover:bg-purple-50"
-                                  title="Create missing FluidPay subscription"
+                                  title="Recover Stripe subscription"
                                   onClick={() => setCreateSubFor(row)}
                                 >
                                   <Plus className="w-3 h-3 mr-1" />
@@ -555,12 +522,12 @@ export default function AdminBillingSchedule() {
           {selected && (
             <div className="space-y-5">
               {/* Billing health warning */}
-              {(selected.enrollmentStatus === "pending" || (!selected.fluidpaySubscriptionId && !selected.stripeSubscriptionId && selected.enrollmentStatus === "active")) && (
+              {(selected.enrollmentStatus === "pending" || (!selected.stripeSubscriptionId && selected.enrollmentStatus === "active")) && (
                 <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <div>
                     <p className="font-semibold">No recurring subscription found</p>
-                    <p className="mt-0.5">This enrollment has no FluidPay or Stripe subscription. The member will not be billed automatically. Use the "Create Sub" button to fix this.</p>
+                    <p className="mt-0.5">This enrollment has no Stripe subscription. The member will not be billed automatically until their secure payment method is updated.</p>
                     <Button
                       size="sm"
                       className="mt-2 bg-purple-600 hover:bg-purple-700 text-white h-7 text-xs"
@@ -581,7 +548,7 @@ export default function AdminBillingSchedule() {
                 <div><span className="text-gray-500">Remaining Balance:</span> <span className="font-medium ml-1">{fmt(parseFloat(String(selected.remainingBalance || 0)))}</span></div>
                 <div><span className="text-gray-500">Payments Made:</span> <span className="font-medium text-green-700 ml-1">{selected.totalSuccessfulPayments}</span></div>
                 <div><span className="text-gray-500">Payments Left:</span> <span className="font-medium ml-1">{selected.monthlyPaymentsRemaining ?? "—"}</span></div>
-                <div><span className="text-gray-500">Sub ID:</span> <span className="font-mono text-xs ml-1 text-gray-600">{selected.fluidpaySubscriptionId || selected.stripeSubscriptionId || "None"}</span></div>
+                <div><span className="text-gray-500">Stripe Subscription:</span> <span className="font-mono text-xs ml-1 text-gray-600">{selected.stripeSubscriptionId || "None"}</span></div>
                 <div><span className="text-gray-500">Sub Status:</span> <span className={`font-medium ml-1 ${selected.subStatus === "active" ? "text-green-700" : selected.subStatus === "failed" ? "text-red-600" : "text-gray-600"}`}>{selected.subStatus || "—"}</span></div>
                 {selected.totalFailedPayments > 0 && (
                   <div className="col-span-2 text-red-600">
@@ -622,7 +589,7 @@ export default function AdminBillingSchedule() {
                 </h3>
                 {selected.paymentHistory.length === 0 ? (
                   <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-lg text-sm">
-                    No payment transactions found in FluidPay
+                    No payment transactions found
                   </div>
                 ) : (
                   <div className="space-y-2">

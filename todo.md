@@ -1,5 +1,21 @@
 # MyDojo Website TODO
 
+- [x] Audit and rebuild every MyDojo customer payment, enrollment, event, shop, and recurring-billing flow into one reliable Stripe-based system
+- [x] Remove or hard-disable remaining legacy FluidPay payment-creation mutations and fallbacks after confirming no active route depends on them
+- [x] Verify safe Stripe Checkout/session creation for every active payment entry point, including custom links, day pass, family registration, camp, enrollment, kickboxing, scheduled setup, shop, and events
+- [x] Add regression coverage preventing active payment routes or server mutations from using legacy FluidPay/tokenizer flows for new payments
+- [x] Audit and document all remaining paid belt-test and event-registration checkout paths
+- [x] Add focused checkout-session verification for enrollment, kickboxing, scheduled setup, belt test, paid events, custom links, day pass, family registration, camp, and shop
+- [x] Complete and document a final legacy-payment audit distinguishing historical read-only lookups from callable charge or setup mutations
+- [x] Add direct session or setup-intent creation tests for membership enrollment, custom links, summer camp, and family kickboxing add-ons
+- [x] Produce an exhaustive file-by-file legacy payment reference inventory classifying every remaining reference
+- [x] Replace residual active FluidPay labels, setup instructions, and legacy plan configuration from administrative payment interfaces
+- [x] Confirm remaining FluidPay references are historical data fields, compatibility fallbacks, or disabled diagnostics only
+
+- [ ] Restore Clover Dojo’s access to the MyDojo admin panel
+
+- [x] Verify Nayeli’s recent enrollment payment status and report the recorded result
+
 - [x] Improve Stripe recurring membership billing with saved payment-method metadata, future-use authorization, and eligible Apple Pay enrollment support
 - [ ] Validate Apple Pay recurring enrollment on an eligible iPhone/Safari wallet after publishing
 

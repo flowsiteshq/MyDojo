@@ -14,8 +14,8 @@
 import { getDb } from "./db";
 import * as schema from "../drizzle/schema";
 import { eq, and, lte, isNotNull } from "drizzle-orm";
-import { chargeVaultedCard } from "./scheduledPaymentsRouter";
 import { sendSms } from "./sms800";
+import { getStripe } from "./stripeHelper";
 
 export async function runScheduledPaymentsJob() {
   console.log("[ScheduledPayments Job] Starting...");
@@ -36,8 +36,8 @@ export async function runScheduledPaymentsJob() {
     .where(
       and(
         eq(schema.scheduledPayments.status, "pending"),
-        isNotNull(schema.scheduledPayments.fluidpayCustomerId),
-        isNotNull(schema.scheduledPayments.fluidpayPaymentMethodId),
+        isNotNull(schema.scheduledPayments.stripeCustomerId),
+        isNotNull(schema.scheduledPayments.stripePaymentMethodId),
         lte(schema.scheduledPayments.scheduledDate, todayStr as unknown as Date)
       )
     );
@@ -50,7 +50,7 @@ export async function runScheduledPaymentsJob() {
   for (const payment of pending) {
     const amount = parseFloat(payment.amount as string);
 
-    if (!amount || !payment.fluidpayCustomerId || !payment.fluidpayPaymentMethodId) {
+    if (!amount || !payment.stripeCustomerId || !payment.stripePaymentMethodId) {
       console.warn(`[ScheduledPayments Job] Payment ${payment.id}: missing data, skipping`);
       failed++;
       await db
@@ -61,18 +61,27 @@ export async function runScheduledPaymentsJob() {
     }
 
     try {
-      const { transactionId } = await chargeVaultedCard(
-        payment.fluidpayCustomerId,
-        payment.fluidpayPaymentMethodId,
-        amount,
-        payment.description
-      );
+      let transactionId: string;
+      let stripePaymentIntentId: string | null = null;
+      const intent = await getStripe().paymentIntents.create({
+        amount: Math.round(amount * 100),
+        currency: "usd",
+        customer: payment.stripeCustomerId,
+        payment_method: payment.stripePaymentMethodId,
+        off_session: true,
+        confirm: true,
+        description: payment.description,
+        metadata: { type: "scheduled_payment", scheduledPaymentId: String(payment.id) },
+      });
+      transactionId = intent.id;
+      stripePaymentIntentId = intent.id;
 
       await db
         .update(schema.scheduledPayments)
         .set({
           status: "charged",
           chargeTransactionId: transactionId,
+          stripePaymentIntentId,
           chargedAt: new Date(),
         })
         .where(eq(schema.scheduledPayments.id, payment.id));

@@ -257,21 +257,6 @@ function PackageDialog({ open, onClose, editingId, initialForm, onSaved }: Packa
             />
           </div>
 
-          {/* Fluid Pay Plan ID */}
-          <div className="space-y-1">
-            <Label htmlFor="pkg-fp-plan">Fluid Pay Plan ID</Label>
-            <Input
-              id="pkg-fp-plan"
-              value={form.fluidpayPlanId}
-              onChange={(e) => setForm({ ...form, fluidpayPlanId: e.target.value })}
-              placeholder="fp_plan_xxxxxxxx"
-              className="font-mono text-sm"
-            />
-            <p className="text-xs text-muted-foreground">
-              Required for automatic monthly billing via Fluid Pay recurring subscriptions.
-            </p>
-          </div>
-
           {/* Invitation Only */}
           <div className="flex items-center justify-between">
             <div>
@@ -413,18 +398,6 @@ function PackageCard({ pkg, onEdit, onToggleActive, isToggling }: PackageCardPro
             </ul>
           </div>
         )}
-
-        {/* Fluid Pay Plan */}
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Fluid Pay Plan ID</span>
-          {pkg.fluidpayPlanId ? (
-            <code className="text-xs bg-muted px-2 py-0.5 rounded font-mono">
-              {pkg.fluidpayPlanId}
-            </code>
-          ) : (
-            <span className="text-red-500 text-xs">Not set — recurring billing disabled</span>
-          )}
-        </div>
 
         {/* Active toggle */}
         <div className="flex items-center justify-between pt-1 border-t">

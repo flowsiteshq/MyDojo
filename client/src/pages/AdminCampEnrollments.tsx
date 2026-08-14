@@ -59,7 +59,7 @@ export default function AdminCampEnrollments() {
         "Full Summer",
         "Weeks Enrolled",
         "Amount Charged",
-        "FluidPay Txn ID",
+        "Payment Record ID",
       ],
     ];
     for (const e of enrollments) {
@@ -77,7 +77,7 @@ export default function AdminCampEnrollments() {
           e.isFullSummer === 1 ? "Yes" : "No",
           e.weeks.join(" | "),
           `$${(e.amountCents / 100).toFixed(2)}`,
-          e.fpTransactionId,
+          e.fpTransactionId || e.stripePaymentIntentId || "",
         ]);
       });
     }
@@ -113,7 +113,7 @@ export default function AdminCampEnrollments() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Summer Camp Enrollments</h1>
-            <p className="text-sm text-gray-500">Summer 2025 · Paid signups via FluidPay</p>
+            <p className="text-sm text-gray-500">Summer 2025 · Paid signup history</p>
           </div>
         </div>
 

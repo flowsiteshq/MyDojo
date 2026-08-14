@@ -139,19 +139,6 @@ export default function AdminManualEnrollment() {
     },
   });
 
-  // Charge mutation
-  const chargeMutation = trpc.manualEnrollments.charge.useMutation({
-    onSuccess: (data: { success: boolean; transactionId: string; amountCharged: number }) => {
-      toast.success(`Charge successful — $${data.amountCharged} charged. Transaction: ${data.transactionId}`);
-      refetch();
-    },
-    onError: (err: { message: string }) => {
-      toast.error(`Charge failed: ${err.message}`);
-    },
-  });
-
-
-
   const handleProgramChange = (program: Program) => {
     const freq = getFrequency(program);
     setForm(prev => ({
@@ -690,19 +677,7 @@ export default function AdminManualEnrollment() {
                         <span className="text-xs text-gray-500">{enrollment.createdByStaffName || "—"}</span>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs"
-                          disabled={chargeMutation.isPending}
-                          onClick={() => {
-                            if (confirm(`Charge $${parseFloat(enrollment.customPrice as string).toFixed(2)} to ${enrollment.studentName}?`)) {
-                              chargeMutation.mutate({ id: enrollment.id });
-                            }
-                          }}
-                        >
-                          <DollarSign className="w-3 h-3 mr-1" /> Charge
-                        </Button>
+                        <span className="text-xs text-slate-500">Secure checkout required</span>
                       </TableCell>
                     </TableRow>
                   );

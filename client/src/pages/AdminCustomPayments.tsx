@@ -275,7 +275,7 @@ function CreateLinkDialog({ onClose, onCreated }: { onClose: () => void; onCreat
             Create Payment Link
           </DialogTitle>
           <DialogDescription>
-            Generate a shareable payment link for customers to pay via FluidPay.
+            Generate a shareable secure payment link for customers.
           </DialogDescription>
         </DialogHeader>
 
@@ -770,7 +770,7 @@ export default function AdminCustomPayments() {
               Custom Payment Links
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Create shareable FluidPay payment links for one-time charges, recurring memberships, and merchandise.
+              Create shareable secure payment links for one-time charges, recurring memberships, and merchandise.
             </p>
           </div>
           <Button onClick={() => setShowCreate(true)}>

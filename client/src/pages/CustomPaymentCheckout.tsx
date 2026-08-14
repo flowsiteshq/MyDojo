@@ -1,14 +1,22 @@
-import { useState, useEffect, useRef } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { StripePaymentForm } from "@/components/StripePaymentForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  DollarSign, Repeat, ShoppingBag, CheckCircle2, XCircle, Loader2,
-  ShieldCheck, AlertTriangle, ArrowLeft, Lock,
+  DollarSign,
+  Repeat,
+  ShoppingBag,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  ShieldCheck,
+  ArrowLeft,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,28 +28,14 @@ interface MerchandiseItem {
   quantity: number;
 }
 
-// FluidPay Tokenizer global type
-declare global {
-  interface Window {
-    Tokenizer?: new (config: {
-      url?: string;
-      apikey: string;
-      container: string;
-      submission: (resp: { token?: string; status?: string; error?: string }) => void;
-      onLoad?: () => void;
-      settings?: {
-        payment?: { types?: string[] };
-        styles?: {
-          body?: Record<string, string>;
-          inputs?: Record<string, string>;
-          labels?: Record<string, string>;
-        };
-      };
-    }) => { submit: (amount?: string) => void };
-  }
+interface CheckoutSession {
+  clientSecret: string;
+  mode: "payment" | "setup";
+  stripeCustomerId: string;
+  paymentIntentId?: string;
+  setupIntentId?: string;
+  amountDollars: number;
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function TypeIcon({ type }: { type: PaymentType }) {
   const icons = { one_time: DollarSign, recurring: Repeat, merchandise: ShoppingBag };
@@ -50,497 +44,226 @@ function TypeIcon({ type }: { type: PaymentType }) {
 }
 
 function TypeLabel({ type }: { type: PaymentType }) {
-  const labels = { one_time: "One-Time Payment", recurring: "Recurring Membership", merchandise: "Merchandise" };
+  const labels = {
+    one_time: "One-time payment",
+    recurring: "Membership enrollment",
+    merchandise: "Merchandise order",
+  };
   return <span>{labels[type]}</span>;
 }
 
-// ─── Success Screen ───────────────────────────────────────────────────────────
-
-function SuccessScreen({ title, amount, isRecurring, interval }: {
+function OutcomeScreen({
+  success,
+  title,
+  amount,
+  isRecurring,
+  interval,
+  message,
+}: {
+  success: boolean;
   title: string;
-  amount: number;
-  isRecurring: boolean;
+  amount?: number;
+  isRecurring?: boolean;
   interval?: string | null;
+  message?: string;
 }) {
+  const Icon = success ? CheckCircle2 : XCircle;
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="max-w-md w-full text-center">
-        <CardContent className="pt-10 pb-10">
-          <div className="flex justify-center mb-6">
-            <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="h-10 w-10 text-green-600" />
-            </div>
+    <div className="min-h-screen bg-[#f6f7f9] flex items-center justify-center p-4">
+      <Card className="max-w-md w-full border-slate-200 shadow-xl shadow-slate-200/50">
+        <CardContent className="pt-10 pb-10 text-center">
+          <div className={`mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full ${success ? "bg-emerald-100" : "bg-rose-100"}`}>
+            <Icon className={`h-10 w-10 ${success ? "text-emerald-600" : "text-rose-600"}`} />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Payment Successful!</h1>
-          <p className="text-muted-foreground mb-4">Thank you for your payment.</p>
-          <div className="p-4 bg-green-50 rounded-lg mb-6">
-            <p className="font-semibold text-green-800">{title}</p>
-            <p className="text-2xl font-bold text-green-700 mt-1">${amount.toFixed(2)}</p>
-            {isRecurring && interval && (
-              <p className="text-sm text-green-600 mt-1">Recurring {interval} — first payment charged today</p>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            You'll receive a confirmation via email if provided. For questions, contact MyDojo at (877) 4-MYDOJO.
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">MyDojo</p>
+          <h1 className="mt-2 text-2xl font-bold text-slate-950">{success ? "Payment confirmed" : "Payment could not be completed"}</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            {message || (success ? "Your payment was recorded successfully." : "No payment was recorded. Please try again or contact MyDojo for help.")}
           </p>
+          {success && amount !== undefined && (
+            <div className="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-left">
+              <p className="font-semibold text-emerald-950">{title}</p>
+              <p className="mt-1 text-3xl font-bold text-emerald-700">${amount.toFixed(2)}</p>
+              {isRecurring && interval && <p className="mt-1 text-xs text-emerald-700">Recurring {interval} billing is now active.</p>}
+            </div>
+          )}
+          <p className="mt-7 text-xs text-slate-500">Questions? Call or text MyDojo at (877) 4-MYDOJO.</p>
         </CardContent>
       </Card>
     </div>
   );
 }
-
-// ─── Error Screen ─────────────────────────────────────────────────────────────
-
-function ErrorScreen({ message }: { message: string }) {
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="max-w-md w-full text-center">
-        <CardContent className="pt-10 pb-10">
-          <div className="flex justify-center mb-6">
-            <div className="h-20 w-20 rounded-full bg-red-100 flex items-center justify-center">
-              <XCircle className="h-10 w-10 text-red-600" />
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold mb-2">Link Unavailable</h1>
-          <p className="text-muted-foreground">{message}</p>
-          <p className="text-sm text-muted-foreground mt-4">
-            Please contact MyDojo at (877) 4-MYDOJO for assistance.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-// ─── Main Checkout Page ───────────────────────────────────────────────────────
 
 export default function CustomPaymentCheckout() {
   const { token } = useParams<{ token: string }>();
-  const [step, setStep] = useState<"info" | "payment" | "confirming" | "success" | "error">("info");
-  const [successData, setSuccessData] = useState<{ amount: number; isRecurring: boolean; interval?: string | null } | null>(null);
-
-  // Customer info
+  const [step, setStep] = useState<"info" | "checkout" | "success" | "error">("info");
+  const [checkoutSession, setCheckoutSession] = useState<CheckoutSession | null>(null);
+  const [successAmount, setSuccessAmount] = useState<number | null>(null);
+  const [failureMessage, setFailureMessage] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [shippingAddress, setShippingAddress] = useState("");
-
-  // Merchandise quantities
   const [quantities, setQuantities] = useState<Record<number, number>>({});
-
-  // FluidPay tokenizer
-  const tokenizerRef = useRef<{ submit: (amount?: string) => void } | null>(null);
-  const tokenizerInitializedRef = useRef(false);
-  const scriptLoadedRef = useRef(false);
-  const [tokenizerReady, setTokenizerReady] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
   const { data: link, isLoading, error } = trpc.customPayments.getByToken.useQuery(
     { token: token || "" },
-    { enabled: !!token, retry: false }
+    { enabled: Boolean(token), retry: false },
   );
 
-  // Process payment via FluidPay
-  const processCheckoutMutation = trpc.customPayments.processCheckout.useMutation({
-    onSuccess: (data) => {
-      setSuccessData({
-        amount: data.amountCharged,
-        isRecurring: data.isRecurring,
-        interval: link?.billingInterval,
-      });
+  const items = useMemo(
+    () => (link?.type === "merchandise" ? (link.merchandiseItems as MerchandiseItem[] | null) : null),
+    [link],
+  );
+
+  const selectedItems = useMemo(
+    () => items?.map((item, index) => ({
+      name: item.name,
+      price: item.price,
+      quantity: quantities[index] ?? item.quantity,
+    })),
+    [items, quantities],
+  );
+
+  const total = useMemo(() => {
+    if (!link) return 0;
+    if (items) return selectedItems?.reduce((sum, item) => sum + item.price * item.quantity, 0) || 0;
+    return Number.parseFloat(String(link.amount || "0"));
+  }, [items, link, selectedItems]);
+
+  const startCheckout = trpc.customPayments.createStripeIntent.useMutation({
+    onSuccess: (result) => {
+      setCheckoutSession(result as CheckoutSession);
+      setStep("checkout");
+    },
+    onError: (err) => toast.error(err.message || "We could not start secure checkout. Please try again."),
+  });
+
+  const confirmCheckout = trpc.customPayments.confirmStripeCheckout.useMutation({
+    onSuccess: (result) => {
+      setSuccessAmount(result.amountCharged);
       setStep("success");
-      setSubmitting(false);
     },
     onError: (err) => {
-      const msg = err.message || 'Payment failed. Please try again.';
-      toast.error(msg);
-      // If token expired, reset the tokenizer so user can re-enter card details
-      const isTokenExpired = msg.toLowerCase().includes('expired') || msg.toLowerCase().includes('session');
-      if (isTokenExpired) {
-        tokenizerInitializedRef.current = false;
-        tokenizerRef.current = null;
-      }
-      setStep('payment');
-      setSubmitting(false);
+      setFailureMessage(err.message || "Your payment was not recorded. Please try again.");
+      setStep("error");
     },
   });
 
-  // Initialize merchandise quantities when link loads
-  useEffect(() => {
-    if (link?.type === "merchandise" && link.merchandiseItems) {
-      const items = link.merchandiseItems as MerchandiseItem[];
-      const initial: Record<number, number> = {};
-      items.forEach((item, i) => { initial[i] = item.quantity; });
-      setQuantities(initial);
-    }
-  }, [link]);
-
-  // Pre-load FluidPay script on mount (same as working enrollment form)
-  useEffect(() => {
-    if (scriptLoadedRef.current) return;
-    scriptLoadedRef.current = true;
-    if (window.Tokenizer) { setTokenizerReady(true); return; }
-    const script = document.createElement("script");
-    script.src = "https://app.fluidpay.com/tokenizer/tokenizer.js";
-    script.async = true;
-    script.onload = () => setTokenizerReady(true);
-    script.onerror = () => toast.error("Failed to load payment form. Please check your connection and refresh.");
-    document.head.appendChild(script);
-  }, []);
-
-  // Initialize tokenizer instance when payment step is shown and script is ready
-  useEffect(() => {
-    if (step !== "payment") return;
-    if (!tokenizerReady || tokenizerInitializedRef.current) return;
-    if (!window.Tokenizer) return;
-    tokenizerInitializedRef.current = true;
-
-    const FLUIDPAY_PUBLIC_KEY = import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "";
-
-    try {
-      const instance = new window.Tokenizer({
-        url: "https://app.fluidpay.com",
-        apikey: FLUIDPAY_PUBLIC_KEY,
-        container: "#fluidpay-tokenizer-container",
-        submission: (resp) => {
-          if (resp.token) {
-            const selectedItems = link?.type === "merchandise" && link.merchandiseItems
-              ? (link.merchandiseItems as MerchandiseItem[]).map((item, i) => ({
-                  name: item.name,
-                  price: item.price,
-                  quantity: quantities[i] ?? item.quantity,
-                }))
-              : undefined;
-
-            processCheckoutMutation.mutate({
-              token: token || "",
-              fpToken: resp.token,
-              customerName,
-              customerEmail: customerEmail || undefined,
-              customerPhone: customerPhone || undefined,
-              selectedItems,
-              shippingAddress: shippingAddress || undefined,
-            });
-          } else {
-            const msg = resp.error || "Card tokenization failed. Please check your card details.";
-            toast.error(msg);
-            setSubmitting(false);
-          }
-        },
-        onLoad: () => {},
-        settings: {
-          payment: { types: ["card"] },
-          styles: {
-            body: { "font-family": "inherit", "background-color": "transparent" },
-            inputs: {
-              "border-radius": "8px",
-              "border": "2px solid #e2e8f0",
-              "padding": "14px 16px",
-              "font-size": "18px",
-              "height": "56px",
-              "color": "#111827",
-              "background-color": "#ffffff",
-            },
-            labels: {
-              "font-size": "15px",
-              "font-weight": "600",
-              "color": "#374151",
-              "margin-bottom": "6px",
-            },
-          },
-        },
-      });
-      tokenizerRef.current = instance;
-    } catch (err: any) {
-      toast.error(`Payment form error: ${err?.message || "Unknown error"}. Please refresh and try again.`);
-    }
-  }, [step, tokenizerReady]);
-
-  const calculateTotal = () => {
-    if (!link) return 0;
-    if (link.type === "merchandise" && link.merchandiseItems) {
-      const items = link.merchandiseItems as MerchandiseItem[];
-      return items.reduce((sum, item, i) => sum + item.price * (quantities[i] ?? item.quantity), 0);
-    }
-    return parseFloat(link.amount as string || "0");
-  };
-
   const handleInfoSubmit = () => {
-    if (!customerName.trim()) { toast.error("Please enter your name"); return; }
-    if (customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
-      toast.error("Please enter a valid email address"); return;
-    }
-    if (link?.requiresShipping && !shippingAddress.trim()) {
-      toast.error("Shipping address is required"); return;
-    }
-    setStep("payment");
+    if (!customerName.trim()) return toast.error("Please enter your name.");
+    if (customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) return toast.error("Please enter a valid email address.");
+    if (link?.requiresShipping && !shippingAddress.trim()) return toast.error("A shipping address is required for this order.");
+    startCheckout.mutate({
+      token: token || "",
+      customerName: customerName.trim(),
+      customerEmail: customerEmail.trim(),
+      customerPhone: customerPhone.trim() || undefined,
+      selectedItems: selectedItems,
+    });
   };
 
-  const handlePaySubmit = () => {
-    if (!tokenizerRef.current) {
-      toast.error("Payment form not ready. Please wait a moment and try again.");
-      return;
-    }
-    setSubmitting(true);
-    setStep("confirming");
-    tokenizerRef.current.submit(total.toFixed(2));
+  const handleStripeSuccess = (result: { paymentIntentId?: string; setupIntentId?: string; paymentMethodId?: string }) => {
+    if (!checkoutSession || !link) return;
+    confirmCheckout.mutate({
+      token: token || "",
+      stripeCustomerId: checkoutSession.stripeCustomerId,
+      paymentIntentId: result.paymentIntentId || checkoutSession.paymentIntentId,
+      setupIntentId: result.setupIntentId || checkoutSession.setupIntentId,
+      paymentMethodId: result.paymentMethodId,
+      customerName: customerName.trim(),
+      customerEmail: customerEmail.trim(),
+      customerPhone: customerPhone.trim() || undefined,
+      selectedItems,
+      shippingAddress: shippingAddress.trim() || undefined,
+    });
   };
-
-  // ─── Render states ──────────────────────────────────────────────────────────
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <div className="min-h-screen bg-[#f6f7f9] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
   if (error || !link) {
-    return <ErrorScreen message={error?.message || "This payment link could not be found."} />;
+    return <OutcomeScreen success={false} title="Payment link" message={error?.message || "This payment link is unavailable."} />;
   }
 
-  if (step === "success" && successData) {
-    return (
-      <SuccessScreen
-        title={link.title}
-        amount={successData.amount}
-        isRecurring={successData.isRecurring}
-        interval={successData.interval}
-      />
-    );
+  if (step === "success") {
+    return <OutcomeScreen success title={link.title} amount={successAmount ?? total} isRecurring={link.type === "recurring"} interval={link.billingInterval} />;
   }
 
-  if (step === "confirming") {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full text-center">
-          <CardContent className="pt-10 pb-10">
-            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-            <h2 className="text-xl font-semibold">Processing Payment...</h2>
-            <p className="text-muted-foreground mt-2">Please don't close this page.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  if (step === "error") {
+    return <OutcomeScreen success={false} title={link.title} message={failureMessage} />;
   }
-
-  const total = calculateTotal();
-  const items = link.type === "merchandise" ? link.merchandiseItems as MerchandiseItem[] | null : null;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-lg mx-auto space-y-4">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <img
-            src="/images/logo-full-black.webp"
-            alt="MyDojo"
-            className="h-10 mx-auto mb-4"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-          />
-          <div className="inline-flex items-center gap-2 text-sm text-muted-foreground bg-white border rounded-full px-3 py-1 mb-3">
+    <main className="min-h-screen bg-[#f6f7f9] px-4 py-8 sm:py-12">
+      <div className="mx-auto max-w-xl space-y-5">
+        <header className="text-center">
+          <img src="/images/logo-full-black.webp" alt="MyDojo" className="mx-auto mb-5 h-10" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm">
             <TypeIcon type={link.type as PaymentType} />
             <TypeLabel type={link.type as PaymentType} />
           </div>
-          <h1 className="text-2xl font-bold">{link.title}</h1>
-          {link.description && (
-            <p className="text-muted-foreground mt-2 text-sm">{link.description}</p>
-          )}
-        </div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950">{link.title}</h1>
+          {link.description && <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">{link.description}</p>}
+        </header>
 
-        {/* Order Summary */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Order Summary</CardTitle>
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="border-b border-slate-100 pb-4">
+            <CardTitle className="text-base">Order summary</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {link.type === "merchandise" && items ? (
-              <div className="space-y-2">
-                {items.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between">
+          <CardContent className="space-y-4 pt-5">
+            {items ? (
+              <div className="space-y-3">
+                {items.map((item, index) => (
+                  <div key={`${item.name}-${index}`} className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-sm font-medium">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">Qty: {quantities[i] ?? item.quantity}</p>
+                      <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+                      <p className="text-xs text-slate-500">${item.price.toFixed(2)} each</p>
                     </div>
-                    <p className="text-sm font-medium">${(item.price * (quantities[i] ?? item.quantity)).toFixed(2)}</p>
+                    <div className="flex items-center gap-3">
+                      <Input aria-label={`${item.name} quantity`} type="number" min={1} className="h-9 w-16 text-center" value={quantities[index] ?? item.quantity} onChange={(event) => setQuantities((current) => ({ ...current, [index]: Math.max(1, Number(event.target.value) || 1) }))} />
+                      <p className="w-20 text-right text-sm font-semibold">${(item.price * (quantities[index] ?? item.quantity)).toFixed(2)}</p>
+                    </div>
                   </div>
                 ))}
-                <div className="border-t pt-2 flex justify-between font-semibold">
-                  <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
-                </div>
               </div>
             ) : (
-              <div className="flex justify-between items-center">
+              <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="font-medium">{link.title}</p>
-                  {link.type === "recurring" && link.billingInterval && (
-                    <p className="text-xs text-muted-foreground">
-                      Billed {link.billingInterval}{link.billingCycles ? ` × ${link.billingCycles} cycles` : " (ongoing)"}
-                    </p>
-                  )}
+                  <p className="font-semibold text-slate-900">{link.title}</p>
+                  {link.type === "recurring" && <p className="mt-1 text-xs text-slate-500">Securely saved for {link.billingInterval || "monthly"} billing. You can update your payment method any time.</p>}
                 </div>
-                <p className="text-xl font-bold">${total.toFixed(2)}</p>
+                <p className="text-xl font-bold text-slate-950">${total.toFixed(2)}</p>
               </div>
             )}
-
-            {link.type === "recurring" && (() => {
-              const downPayment = link.downPayment ? parseFloat(link.downPayment as string) : 0;
-              const firstRecurringDate = link.firstRecurringDate
-                ? new Date(link.firstRecurringDate as unknown as string).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-                : null;
-              if (downPayment > 0) {
-                return (
-                  <div className="space-y-2">
-                    <div className="flex items-start gap-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
-                      <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                      <span>
-                        <strong>Due today:</strong> ${downPayment.toFixed(2)} (registration / down payment)
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2 p-2 bg-purple-50 rounded text-xs text-purple-700">
-                      <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                      <span>
-                        <strong>Recurring charge:</strong> ${total.toFixed(2)}/{link.billingInterval} starting{" "}
-                        {firstRecurringDate ? `on ${firstRecurringDate}` : `next ${link.billingInterval}`}
-                        {link.billingCycles ? ` for ${link.billingCycles} billing cycles` : ""}
-                      </span>
-                    </div>
-                  </div>
-                );
-              }
-              const _today = new Date();
-              const _anchor = _today.getDate() <= 14 ? 1 : 15;
-              const _nextBill = new Date(_today);
-              _nextBill.setMonth(_nextBill.getMonth() + 1);
-              _nextBill.setDate(_anchor);
-              const _nextBillStr = _nextBill.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-              const _suffix = _anchor === 1 ? 'st' : 'th';
-              return (
-                <div className="flex items-start gap-2 p-2 bg-purple-50 rounded text-xs text-purple-700">
-                  <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                  <span>
-                    Your card will be charged <strong>${total.toFixed(2)}</strong> today, then <strong>${total.toFixed(2)}</strong> on the <strong>{_anchor}{_suffix} of each month</strong> starting {_nextBillStr}{link.billingCycles ? ` for ${link.billingCycles} billing cycles` : " until cancelled"}.
-                  </span>
-                </div>
-              );
-            })()}
+            <div className="flex items-center justify-between border-t border-slate-100 pt-4 text-base font-bold text-slate-950"><span>Total due today</span><span>${total.toFixed(2)}</span></div>
           </CardContent>
         </Card>
 
-        {/* Step: Customer Info */}
-        {step === "info" && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Your Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-1.5">
-                <Label>Full Name *</Label>
-                <Input
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Jane Smith"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Email <span className="text-muted-foreground text-xs">(for receipt)</span></Label>
-                <Input
-                  type="email"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  placeholder="jane@example.com"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Phone <span className="text-muted-foreground text-xs">(optional)</span></Label>
-                <Input
-                  type="tel"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder="(555) 000-0000"
-                />
-              </div>
-              {link.requiresShipping && (
-                <div className="space-y-1.5">
-                  <Label>Shipping Address *</Label>
-                  <Textarea
-                    value={shippingAddress}
-                    onChange={(e) => setShippingAddress(e.target.value)}
-                    placeholder="123 Main St, City, State, ZIP"
-                    rows={2}
-                    className="resize-none text-sm"
-                  />
-                </div>
-              )}
-              <Button
-                className="w-full"
-                onClick={handleInfoSubmit}
-              >
-                Continue to Payment
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step: Payment (FluidPay Tokenizer) */}
-        {step === "payment" && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-green-600" />
-                Secure Payment
-              </CardTitle>
-            </CardHeader>
+        {step === "info" ? (
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="pb-3"><CardTitle className="text-base">Your information</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                Paying as: <strong>{customerName}</strong>
-                {customerEmail && <> · {customerEmail}</>}
-              </div>
-
-              {/* FluidPay tokenizer iframe container */}
-              <div
-                id="fluidpay-tokenizer-container"
-                style={{ minHeight: 220 }}
-                className="w-full"
-              />
-
-              {!tokenizerReady && (
-                <div className="flex items-center justify-center py-8 text-muted-foreground text-sm gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading secure payment form…
-                </div>
-              )}
-
-              <Button
-                className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 text-base"
-                onClick={handlePaySubmit}
-                disabled={!tokenizerReady || submitting}
-              >
-                <Lock className="mr-2 h-4 w-4" />
-                {link.type === "recurring"
-                  ? `Save Card & Start $${total.toFixed(2)}/${link.billingInterval} Membership`
-                  : `Pay $${total.toFixed(2)}`}
-              </Button>
-
-              <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1">
-                <Lock className="h-3 w-3" />
-                Secure payment · All major cards accepted
-              </p>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-muted-foreground"
-                onClick={() => setStep("info")}
-              >
-                <ArrowLeft className="mr-1 h-3 w-3" /> Back to info
-              </Button>
+              <div className="space-y-1.5"><Label htmlFor="payment-name">Full name</Label><Input id="payment-name" value={customerName} onChange={(event) => setCustomerName(event.target.value)} autoComplete="name" placeholder="Jane Smith" /></div>
+              <div className="space-y-1.5"><Label htmlFor="payment-email">Email for your receipt</Label><Input id="payment-email" type="email" value={customerEmail} onChange={(event) => setCustomerEmail(event.target.value)} autoComplete="email" placeholder="jane@example.com" /></div>
+              <div className="space-y-1.5"><Label htmlFor="payment-phone">Phone <span className="text-slate-400">(optional)</span></Label><Input id="payment-phone" value={customerPhone} onChange={(event) => setCustomerPhone(event.target.value)} autoComplete="tel" placeholder="(555) 000-0000" /></div>
+              {link.requiresShipping && <div className="space-y-1.5"><Label htmlFor="payment-shipping">Shipping address</Label><Textarea id="payment-shipping" value={shippingAddress} onChange={(event) => setShippingAddress(event.target.value)} placeholder="123 Main St, City, State, ZIP" rows={2} /></div>}
+              <Button className="h-12 w-full font-semibold" onClick={handleInfoSubmit} disabled={startCheckout.isPending}><Lock className="mr-2 h-4 w-4" />{startCheckout.isPending ? "Preparing secure checkout…" : "Continue securely"}</Button>
             </CardContent>
           </Card>
-        )}
+        ) : checkoutSession ? (
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="border-b border-slate-100 pb-4"><CardTitle className="flex items-center gap-2 text-base"><ShieldCheck className="h-4 w-4 text-emerald-600" />Secure payment</CardTitle></CardHeader>
+            <CardContent className="space-y-4 pt-5">
+              <p className="text-sm text-slate-600">Paying as <strong className="text-slate-900">{customerName}</strong>{customerEmail && ` · ${customerEmail}`}</p>
+              <StripePaymentForm clientSecret={checkoutSession.clientSecret} mode={checkoutSession.mode} submitLabel={link.type === "recurring" ? `Start ${link.billingInterval || "monthly"} membership` : `Pay $${total.toFixed(2)}`} loading={confirmCheckout.isPending} onSuccess={handleStripeSuccess} onError={(message) => toast.error(message)} />
+              <p className="flex items-center justify-center gap-1 text-center text-xs text-slate-500"><Lock className="h-3.5 w-3.5" />Card details are encrypted and never stored by MyDojo.</p>
+              <Button variant="ghost" size="sm" className="w-full text-slate-500" disabled={confirmCheckout.isPending} onClick={() => { setCheckoutSession(null); setStep("info"); }}><ArrowLeft className="mr-1 h-3.5 w-3.5" />Back to information</Button>
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
-    </div>
+    </main>
   );
 }

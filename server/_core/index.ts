@@ -21,7 +21,6 @@ import { startDailyClassRosterJob } from "../dailyClassRosterJob";
 import { handleStripeWebhook } from "../stripeWebhook";
 import { handleGHLWebhook } from "../ghlWebhook";
 import { handleFacebookWebhook, verifyFacebookWebhook } from "../facebookWebhook";
-import { handleFluidPayWebhook } from "../fluidpayWebhook";
 import { handleSitemap } from "../sitemap";
 import { handleSyncExport } from "../syncExport";
 import { handleSummerCampReminder } from "../summerCampReminderJob";
@@ -49,28 +48,6 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   }
   throw new Error(`No available port found starting from ${startPort}`);
 }
-
-// ─── Global FluidPay fetch timeout ──────────────────────────────────────────
-// Wraps the global fetch to add a 20-second timeout for all FluidPay API calls.
-// This prevents the payment spinner from hanging forever when FluidPay is slow.
-const _originalFetch = globalThis.fetch;
-globalThis.fetch = function patchedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : (input as Request).url;
-  if (url && url.includes('fluidpay.com') && !init?.signal) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 20_000);
-    const patchedInit = { ...(init ?? {}), signal: controller.signal };
-    return _originalFetch(input, patchedInit).finally(() => clearTimeout(timer)).catch((err: any) => {
-      clearTimeout(timer);
-      if (err?.name === 'AbortError') {
-        throw new Error('FluidPay API timeout (20s). Please try again.');
-      }
-      throw err;
-    });
-  }
-  return _originalFetch(input, init);
-} as typeof fetch;
-// ─────────────────────────────────────────────────────────────────────────────
 
 async function startServer() {
   const app = express();
@@ -123,14 +100,6 @@ async function startServer() {
   // POST: lead event delivery
   app.get("/api/facebook/webhook", verifyFacebookWebhook);
   app.post("/api/facebook/webhook", express.json({ limit: "1mb" }), handleFacebookWebhook);
-
-  // Fluid Pay webhook endpoint - receives subscription renewal and payment failure events
-  // Must use raw body parser so we can verify the HMAC-SHA256 Signature header
-  app.post(
-    "/api/fluidpay/webhook",
-    express.raw({ type: "application/json" }),
-    handleFluidPayWebhook
-  );
 
   // 800.com inbound SMS webhook — receives member replies for AI SMS assistant
   app.post("/api/sms/inbound", express.json({ limit: "1mb" }), async (req: any, res: any) => {

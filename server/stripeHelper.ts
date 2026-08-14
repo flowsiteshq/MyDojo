@@ -119,7 +119,10 @@ export async function createStripeSubscription(params: {
     items: [{ price: price.id }],
     default_payment_method: params.paymentMethodId,
     metadata: params.metadata,
-    payment_behavior: "default_incomplete",
+    // The payment method was already confirmed with a SetupIntent before this
+    // call. Do not create an incomplete subscription that the customer cannot
+    // recover from in the browser; surface an actionable error instead.
+    payment_behavior: "error_if_incomplete",
     payment_settings: { save_default_payment_method: "on_subscription" },
     expand: ["latest_invoice.payment_intent"],
   };
@@ -145,7 +148,9 @@ export async function retrievePaymentIntent(
   paymentIntentId: string
 ): Promise<Stripe.PaymentIntent> {
   const stripe = getStripe();
-  return stripe.paymentIntents.retrieve(paymentIntentId);
+  return stripe.paymentIntents.retrieve(paymentIntentId, {
+    expand: ["payment_method"],
+  });
 }
 
 /**

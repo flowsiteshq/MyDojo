@@ -1052,8 +1052,12 @@ export const dayPasses = mysqlTable("dayPasses", {
   program: varchar("program", { length: 100 }).notNull(),
   /** Amount charged in cents (e.g. 2000 = $20.00) */
   amountCents: int("amountCents").notNull(),
-  /** Payment processor transaction ID (Fluid Pay transaction ID) */
+  /** Legacy payment processor transaction ID */
   paymentTransactionId: varchar("paymentTransactionId", { length: 255 }),
+  /** Stripe Checkout session ID for new day-pass purchases */
+  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 255 }),
+  /** Stripe PaymentIntent ID for new day-pass purchases */
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   /** Payment status: pending | paid | failed */
   status: mysqlEnum("status", ["pending", "paid", "failed"]).default("pending").notNull(),
   /** Attendance record ID created on successful check-in */
@@ -1110,10 +1114,14 @@ export const paymentFailures = mysqlTable("paymentFailures", {
   id: int("id").autoincrement().primaryKey(),
   /** Reference to the enrollment */
   enrollmentId: int("enrollmentId").notNull(),
-  /** Fluid Pay transaction ID of the failed charge */
+  /** Legacy processor transaction ID of the failed charge */
   fpTransactionId: varchar("fpTransactionId", { length: 255 }),
-  /** Fluid Pay subscription ID */
+  /** Legacy processor subscription ID */
   fpSubscriptionId: varchar("fpSubscriptionId", { length: 255 }),
+  /** Stripe invoice ID for new recurring failures */
+  stripeInvoiceId: varchar("stripeInvoiceId", { length: 255 }),
+  /** Stripe subscription ID for new recurring failures */
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
   /** Amount that failed (in cents) */
   amountCents: int("amountCents"),
   /** Processor decline reason / message */
@@ -1559,8 +1567,12 @@ export const introOfferPurchases = mysqlTable("introOfferPurchases", {
   classesIncluded: int("classesIncluded").notNull(),
   /** Classes remaining (decremented on each check-in) */
   classesRemaining: int("classesRemaining").notNull(),
-  /** FluidPay transaction ID */
+  /** Legacy payment processor transaction ID */
   fpTransactionId: varchar("fpTransactionId", { length: 255 }),
+  /** Stripe Checkout session ID for new intro-offer purchases */
+  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 255 }),
+  /** Stripe PaymentIntent ID for new intro-offer purchases */
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   /** Payment status */
   status: mysqlEnum("status", ["pending", "paid", "failed"]).default("pending").notNull(),
   /** Expiry date (30 days from purchase) */
@@ -1638,8 +1650,12 @@ export const familyGroups = mysqlTable("familyGroups", {
   primaryContactPhone: varchar("primaryContactPhone", { length: 20 }),
   /** Whether the one-time $99 family registration fee has been paid */
   registrationFeePaid: int("registrationFeePaid").default(0).notNull(),
-  /** FluidPay transaction ID for the $99 family registration fee */
+  /** Legacy payment transaction ID for the $99 family registration fee */
   registrationFeeTransactionId: varchar("registrationFeeTransactionId", { length: 255 }),
+  /** Stripe Checkout session ID for new family registrations */
+  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 255 }),
+  /** Stripe payment intent ID for new family registrations */
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   /** Amount charged for registration */
   registrationFeeAmount: decimal("registrationFeeAmount", { precision: 10, scale: 2 }).default('99.00'),
   /** Date registration fee was paid */
@@ -1734,6 +1750,12 @@ export const familyKickboxingAddOns = mysqlTable("familyKickboxingAddOns", {
   fluidpaySubscriptionId: varchar("fluidpaySubscriptionId", { length: 255 }),
   /** FluidPay transaction ID for the first month's charge */
   firstChargeTransactionId: varchar("firstChargeTransactionId", { length: 255 }),
+  /** Stripe customer ID for current hosted add-on billing */
+  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
+  /** Stripe subscription ID for current hosted add-on billing */
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
+  /** Stripe Checkout session that authorized the current add-on */
+  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 255 }),
   /** Status of this add-on subscription */
   status: mysqlEnum("status", ["active", "cancelled", "paused"]).default("active").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -1788,7 +1810,7 @@ export type InsertVisitorSmsSent = typeof visitorSmsSent.$inferInsert;
 
 // ─── Summer Camp Enrollments ───────────────────────────────────────────────
 /**
- * Tracks paid Summer Camp enrollments processed via FluidPay.
+ * Tracks paid Summer Camp enrollments across legacy and current secure checkout flows.
  * One row per enrollment transaction (one parent + one or more students).
  */
 export const summerCampEnrollments = mysqlTable("summerCampEnrollments", {
@@ -1811,8 +1833,12 @@ export const summerCampEnrollments = mysqlTable("summerCampEnrollments", {
   isFullSummer: int("isFullSummer").notNull().default(0),
   /** Total amount charged in cents */
   amountCents: int("amountCents").notNull(),
-  /** FluidPay transaction ID */
-  fpTransactionId: varchar("fpTransactionId", { length: 255 }).notNull(),
+  /** Legacy payment transaction ID */
+  fpTransactionId: varchar("fpTransactionId", { length: 255 }),
+  /** Stripe Checkout session ID for current camp enrollments */
+  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 255 }),
+  /** Stripe payment intent ID for current camp enrollments */
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   /** Payment status: approved | declined | error */
   status: mysqlEnum("status", ["approved", "declined", "error"]).notNull().default("approved"),
   /** JSON array of { studentName, size } t-shirt size selections (YS/YM/YL/AS/AM/AL/AXL) */
@@ -2017,6 +2043,12 @@ export const customPaymentLinkPayments = mysqlTable("customPaymentLinkPayments",
   fluidpayCustomerId: varchar("fluidpayCustomerId", { length: 64 }),
   /** FluidPay subscription ID (for recurring) */
   fluidpaySubscriptionId: varchar("fluidpaySubscriptionId", { length: 64 }),
+  /** Stripe PaymentIntent ID for new one-time link payments */
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
+  /** Stripe Customer ID for new link payments */
+  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
+  /** Stripe Subscription ID for new recurring link payments */
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
   /** Card last 4 digits */
   cardLast4: varchar("cardLast4", { length: 4 }),
   /** Card type */
@@ -2280,6 +2312,14 @@ export const scheduledPayments = mysqlTable("scheduledPayments", {
   cardLast4: varchar("cardLast4", { length: 4 }),
   /** Card brand (Visa, Mastercard, etc.) */
   cardBrand: varchar("cardBrand", { length: 30 }),
+  /** Stripe customer reference for new scheduled charges */
+  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
+  /** Stripe payment method authorized for the future off-session charge */
+  stripePaymentMethodId: varchar("stripePaymentMethodId", { length: 255 }),
+  /** Stripe setup intent that recorded future-use consent */
+  stripeSetupIntentId: varchar("stripeSetupIntentId", { length: 255 }),
+  /** Stripe payment intent created when the future charge is executed */
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
 
   // ── Status ─────────────────────────────────────────────────────────────────
   /**

@@ -5,13 +5,12 @@
  *
  * Flow:
  *  1. Staff fills in customer info, amount, description, and scheduled date
- *  2. Staff enters card details via the FluidPay tokenizer iframe
- *  3. On submit: backend vaults the card, runs a $1 auth to keep the token alive,
- *     voids the auth, and stores the record
- *  4. On the scheduled date the heartbeat job auto-charges the card
+ *  2. Customer authorizes a reusable payment method through secure hosted setup
+ *  3. The webhook stores a pending scheduled charge after setup completes
+ *  4. On the scheduled date the heartbeat job executes the saved payment method
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,7 +74,6 @@ function CreatePaymentModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
-  const [step, setStep] = useState<"info" | "card">("info");
   const [form, setForm] = useState({
     customerName: "",
     customerEmail: "",
@@ -84,18 +82,12 @@ function CreatePaymentModal({
     description: "",
     scheduledDate: "",
   });
-  const [tokenizerReady, setTokenizerReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const tokenizerRef = useRef<{ submit: (amount?: string) => void } | null>(null);
-  const tokenizerInitRef = useRef(false);
-  const scriptLoadedRef = useRef(false);
 
-  const createMutation = trpc.scheduledPayments.create.useMutation({
-    onSuccess: () => {
-      toast.success(`Payment scheduled — $${parseFloat(form.amount).toFixed(2)} will be charged on ${form.scheduledDate}.`);
-      onCreated();
-      handleClose();
+  const setupMutation = trpc.scheduledPayments.createSetupCheckout.useMutation({
+    onSuccess: ({ checkoutUrl }) => {
+      window.location.assign(checkoutUrl);
     },
     onError: (err) => {
       setError(err.message);
@@ -103,79 +95,10 @@ function CreatePaymentModal({
     },
   });
 
-  // Load FluidPay tokenizer script
-  useEffect(() => {
-    if (!open || scriptLoadedRef.current) return;
-    scriptLoadedRef.current = true;
-    if (window.Tokenizer) { setTokenizerReady(true); return; }
-    const script = document.createElement("script");
-    script.src = "https://app.fluidpay.com/tokenizer/tokenizer.js";
-    script.async = true;
-    script.onload = () => setTokenizerReady(true);
-    script.onerror = () => setError("Failed to load payment form. Please check your connection and try again.");
-    document.head.appendChild(script);
-  }, [open]);
-
-  // Initialize tokenizer when card step is shown
-  useEffect(() => {
-    if (step !== "card") return;
-    if (!tokenizerReady || tokenizerInitRef.current) return;
-    if (!window.Tokenizer) return;
-    tokenizerInitRef.current = true;
-    try {
-      const instance = new window.Tokenizer({
-        apikey: import.meta.env.VITE_FLUIDPAY_PUBLIC_KEY || "",
-        container: "#scheduled-payment-tokenizer",
-        submission: (resp: any) => {
-          if (!resp.token || resp.status === "error") {
-            setError(resp.error || "Card tokenization failed. Please check your card details.");
-            setIsSubmitting(false);
-            return;
-          }
-          // Submit to backend
-          createMutation.mutate({
-            customerName: form.customerName,
-            customerEmail: form.customerEmail || undefined,
-            customerPhone: form.customerPhone || undefined,
-            amount: parseFloat(form.amount),
-            description: form.description,
-            scheduledDate: form.scheduledDate,
-            paymentNonce: resp.token,
-          });
-        },
-        settings: {
-          payment: { types: ["card"] },
-          styles: {
-            body: { "font-family": "inherit", "background-color": "transparent" },
-            inputs: {
-              "border-radius": "8px",
-              border: "2px solid #e2e8f0",
-              padding: "12px 14px",
-              "font-size": "16px",
-              height: "50px",
-            },
-            labels: {
-              "font-size": "14px",
-              "font-weight": "600",
-              color: "#374151",
-              "margin-bottom": "4px",
-            },
-          },
-        },
-      });
-      tokenizerRef.current = instance;
-    } catch (err: any) {
-      setError(`Payment form error: ${err?.message || "Unknown error"}. Please refresh and try again.`);
-    }
-  }, [step, tokenizerReady]);
-
   function handleClose() {
-    setStep("info");
     setForm({ customerName: "", customerEmail: "", customerPhone: "", amount: "", description: "", scheduledDate: "" });
     setError(null);
     setIsSubmitting(false);
-    tokenizerRef.current = null;
-    tokenizerInitRef.current = false;
     onClose();
   }
 
@@ -187,18 +110,16 @@ function CreatePaymentModal({
     const today = new Date().toISOString().split("T")[0];
     if (form.scheduledDate <= today) { setError("Scheduled date must be in the future."); return; }
     setError(null);
-    setStep("card");
-  }
-
-  function handleCardSubmit() {
-    setError(null);
     setIsSubmitting(true);
-    if (tokenizerRef.current) {
-      tokenizerRef.current.submit(parseFloat(form.amount).toFixed(2));
-    } else {
-      setError("Payment form not ready. Please refresh and try again.");
-      setIsSubmitting(false);
-    }
+    setupMutation.mutate({
+      customerName: form.customerName,
+      customerEmail: form.customerEmail || undefined,
+      customerPhone: form.customerPhone || undefined,
+      amount: parseFloat(form.amount),
+      description: form.description,
+      scheduledDate: form.scheduledDate,
+      origin: window.location.origin,
+    });
   }
 
   const field = (key: keyof typeof form) => ({
@@ -215,14 +136,11 @@ function CreatePaymentModal({
             Schedule a Future Payment
           </DialogTitle>
           <DialogDescription>
-            {step === "info"
-              ? "Enter the customer and payment details."
-              : "Enter the card to be charged on the scheduled date. A $1 authorization will be run now to keep the card token active, then immediately voided."}
+            Enter the customer and future payment details. The customer will securely authorize a saved payment method; no payment is collected today.
           </DialogDescription>
         </DialogHeader>
 
-        {step === "info" && (
-          <div className="space-y-4 pt-2">
+        <div className="space-y-4 pt-2">
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label>Customer Name *</Label>
@@ -255,45 +173,11 @@ function CreatePaymentModal({
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={handleClose}>Cancel</Button>
               <Button onClick={handleInfoNext}>
-                Next: Enter Card <CreditCard className="ml-2 h-4 w-4" />
+                {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Opening secure setup...</> : <>Continue to Secure Setup <CreditCard className="ml-2 h-4 w-4" /></>}
               </Button>
             </div>
-          </div>
-        )}
+        </div>
 
-        {step === "card" && (
-          <div className="space-y-4 pt-2">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
-              <strong>Note:</strong> A $1 authorization will be run on this card to keep the token active, then immediately voided. The customer will <strong>not</strong> be charged today.
-            </div>
-
-            <div className="border rounded-lg p-4 bg-white min-h-[200px] flex items-center justify-center">
-              {!tokenizerReady ? (
-                <div className="flex items-center gap-2 text-gray-500">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading payment form…
-                </div>
-              ) : (
-                <div id="scheduled-payment-tokenizer" className="w-full" />
-              )}
-            </div>
-
-            {error && <p className="text-sm text-red-600">{error}</p>}
-
-            <div className="flex justify-between gap-2 pt-2">
-              <Button variant="outline" onClick={() => { setStep("info"); setError(null); tokenizerRef.current = null; tokenizerInitRef.current = false; }}>
-                Back
-              </Button>
-              <Button onClick={handleCardSubmit} disabled={isSubmitting || !tokenizerReady}>
-                {isSubmitting ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing…</>
-                ) : (
-                  <>Schedule Payment — {fmt(form.amount || "0")}</>
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );
@@ -340,7 +224,7 @@ export default function AdminScheduledPayments() {
             Scheduled Payments
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Schedule a charge for a future date. A $1 auth keeps the card token active until the charge date.
+            Schedule a charge for a future date after securely collecting a reusable payment authorization.
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)}>

@@ -512,6 +512,48 @@
       "when": 1786657457078,
       "tag": "0072_round_bloodaxe",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "5",
+      "when": 1786715116530,
+      "tag": "0073_high_thunderball",
+      "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "5",
+      "when": 1786715678301,
+      "tag": "0074_polite_korvac",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "5",
+      "when": 1786715870540,
+      "tag": "0075_oval_thaddeus_ross",
+      "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "5",
+      "when": 1786716213344,
+      "tag": "0076_milky_lizard",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "5",
+      "when": 1786716792580,
+      "tag": "0077_round_echo",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "5",
+      "when": 1786716956867,
+      "tag": "0078_solid_nebula",
+      "breakpoints": true
     }
   ]
 }
