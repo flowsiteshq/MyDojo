@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { calculateFamilyRecurringTuition, receivesFamilyRecurringDiscount, STANDARD_NEW_MEMBER_DOWN_PAYMENT } from "./membershipPricingPolicy";
+import { calculateFamilyRecurringTuition, calculateInitialEnrollmentDue, receivesFamilyRecurringDiscount, STANDARD_ENROLLMENT_FEE } from "./membershipPricingPolicy";
 
 describe("membership pricing policy", () => {
-  it("sets the standard new-member down payment to $99", () => {
-    expect(STANDARD_NEW_MEMBER_DOWN_PAYMENT).toBe(99);
+  it("charges first-month tuition plus the standard $99 enrollment fee", () => {
+    expect(STANDARD_ENROLLMENT_FEE).toBe(99);
+    expect(calculateInitialEnrollmentDue(149)).toBe(248);
+    expect(calculateInitialEnrollmentDue(199)).toBe(298);
+    expect(calculateInitialEnrollmentDue(99)).toBe(198);
   });
 
   it("applies 50% only to the second and third family members", () => {

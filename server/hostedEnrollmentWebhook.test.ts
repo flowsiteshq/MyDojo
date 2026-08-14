@@ -47,7 +47,7 @@ describe("hosted enrollment checkout webhook fulfillment", () => {
       data: { object: {
         metadata: { type: "membership_enrollment_checkout", enrollmentId: "900001" },
         payment_intent: "pi_hosted",
-        amount_total: 14900,
+        amount_total: 24800,
       } },
     });
     retrievePaymentIntent.mockResolvedValue({ status: "succeeded", customer: "cus_hosted", payment_method: "pm_hosted" });
@@ -56,7 +56,7 @@ describe("hosted enrollment checkout webhook fulfillment", () => {
     createSubscription.mockResolvedValue({ id: "sub_hosted" });
   });
 
-  it("activates only the pending signed enrollment after its hosted checkout payment succeeds", async () => {
+  it("activates only the pending signed enrollment after its $149 first-month plus $99 fee checkout succeeds", async () => {
     const response = { json: vi.fn(), status: vi.fn().mockReturnThis(), send: vi.fn() };
     await handleStripeWebhook({ headers: { "stripe-signature": "sig" }, body: Buffer.from("payload") } as any, response as any);
 
@@ -69,7 +69,7 @@ describe("hosted enrollment checkout webhook fulfillment", () => {
       status: "active",
       stripePaymentIntentId: "pi_hosted",
       stripeSubscriptionId: "sub_hosted",
-      downPaymentAmount: "149.00",
+      downPaymentAmount: "248.00",
     }));
     expect(response.json).toHaveBeenCalledWith({ received: true });
   });

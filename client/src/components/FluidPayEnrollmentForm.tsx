@@ -259,7 +259,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
           packageName={isSummerCamp ? `Summer Camp — ${enrollmentData.weekLabel}` : enrollmentData.packageName}
           monthlyPrice={enrollmentData.monthlyPrice || 0}
           totalDueToday={totalAmount}
-          enrollmentFeeWaived={waiveEnrollmentFee}
+          enrollmentFeeWaived={waiveEnrollmentFee || appliedPromo?.discountType === "waive_down_payment"}
           onAccepted={handleAgreementAccepted}
         />
       )}
@@ -341,16 +341,25 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
                 <div className="flex justify-between text-sm text-gray-600">
                   <span className="flex items-center gap-1.5">
                     New-member down payment
-                    {totalAmount === 0 && (
+                    {(waiveEnrollmentFee || appliedPromo?.discountType === "waive_down_payment") && (
                       <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50 text-xs px-1.5 py-0 h-auto">
                         <Tag className="h-2.5 w-2.5 mr-0.5" />WAIVED
                       </Badge>
                     )}
                   </span>
                   <span className={totalAmount === 0 ? "line-through text-gray-400" : ""}>
-                    ${baseAmount.toFixed(2)}
+                    ${(enrollmentData.monthlyPrice || 0).toFixed(2)}
                   </span>
                 </div>
+                <div className="flex justify-between items-center text-sm text-gray-600">
+                  <span className="flex items-center gap-1.5">One-time enrollment fee</span>
+                  <span className={(waiveEnrollmentFee || appliedPromo?.discountType === "waive_down_payment") ? "line-through text-gray-400" : ""}>${enrollmentFee.toFixed(2)}</span>
+                </div>
+                {(waiveEnrollmentFee || appliedPromo?.discountType === "waive_down_payment") && (
+                  <div className="flex justify-between text-sm text-green-700 font-medium">
+                    <span>Enrollment fee waived</span><span>-${enrollmentFee.toFixed(2)}</span>
+                  </div>
+                )}
               </>
             )}
             {appliedPromo && promoDiscount > 0 && (

@@ -22,6 +22,10 @@
 - [x] Create a controlled promo code that waives the $99 new-member down payment
 - [x] Add regression coverage for new-member pricing, family discounts, promo waiver, and recurring charge amounts
 - [x] Automatically detect eligible second and third family members during enrollment checkout
+- [x] Restore first-month tuition plus the $99 enrollment fee as the new-member amount due today
+- [x] Change WAIVE99 to waive only the $99 enrollment fee, not the first month of tuition
+- [x] Update automatic family-member checkout and subscription tests for corrected initial charges
+- [x] Assert first-month tuition plus the $99 enrollment fee in hosted enrollment webhook activation tests
 
 - [ ] Verify a published live Stripe enrollment payment after the user completes the agreed end-to-end test
 

@@ -23,9 +23,9 @@ const testPackage = {
   isActive: 1,
   invitationOnly: 0,
   monthlyPrice: "149.00",
-  downPayment: "99.00",
+  downPayment: "248.00",
   enrollmentFee: "99.00",
-  totalPrice: "1887.00",
+  totalPrice: "2339.00",
   durationMonths: 12,
 };
 
@@ -71,14 +71,14 @@ describe("hosted enrollment checkout runtime", () => {
     expect(result).toMatchObject({
       checkoutUrl: "https://checkout.stripe.com/c/pay/cs_hosted_test",
       enrollmentId: 900001,
-      amountCents: 9900,
+      amountCents: 24800,
     });
     expect(checkoutCreate).toHaveBeenCalledWith(expect.objectContaining({
       mode: "payment",
       customer: "cus_hosted_test",
       payment_intent_data: expect.objectContaining({ setup_future_usage: "off_session" }),
       line_items: [expect.objectContaining({
-        price_data: expect.objectContaining({ unit_amount: 9900 }),
+        price_data: expect.objectContaining({ unit_amount: 24800 }),
       })],
     }));
   });

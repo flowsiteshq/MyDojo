@@ -29,7 +29,7 @@ describe("down-payment waiver checkout", () => {
     storagePut.mockReset();
     renderEnrollmentAgreementPdf.mockReset();
     selectedRows.queue = [
-      [{ id: 1, name: "Foundation", isActive: 1, invitationOnly: 0, monthlyPrice: "149.00", downPayment: "99.00", enrollmentFee: "99.00", totalPrice: "1887.00", durationMonths: 12 }],
+      [{ id: 1, name: "Foundation", isActive: 1, invitationOnly: 0, monthlyPrice: "149.00", downPayment: "248.00", enrollmentFee: "99.00", totalPrice: "2339.00", durationMonths: 12 }],
       [{ id: 1, code: "WAIVE99", active: 1, expiresAt: null, maxUses: null, usedCount: 0, discountType: "waive_down_payment", discountValue: "99.00" }],
     ];
     getOrCreateStripeCustomer.mockResolvedValue({ id: "cus_waive_test" });
@@ -38,7 +38,7 @@ describe("down-payment waiver checkout", () => {
     checkoutCreate.mockResolvedValue({ url: "https://checkout.stripe.com/c/pay/cs_waive_test" });
   });
 
-  it("waives the $99 down payment but opens setup checkout to save a payment method for recurring tuition", async () => {
+  it("waives only the $99 enrollment fee while charging the first month and saving the method for recurring tuition", async () => {
     const caller = appRouter.createCaller({ req: { headers: { origin: "https://mydojoma.com" } } } as any);
     const result = await caller.member.createStripeEnrollmentCheckout({
       packageId: 1,
@@ -51,11 +51,12 @@ describe("down-payment waiver checkout", () => {
       promoCode: "waive99",
     });
 
-    expect(result).toMatchObject({ amountCents: 0, enrollmentId: 900002 });
+    expect(result).toMatchObject({ amountCents: 14900, enrollmentId: 900002 });
     expect(checkoutCreate).toHaveBeenCalledWith(expect.objectContaining({
-      mode: "setup",
+      mode: "payment",
       customer: "cus_waive_test",
-      setup_intent_data: expect.objectContaining({ metadata: expect.objectContaining({ type: "membership_enrollment_checkout" }) }),
+      payment_intent_data: expect.objectContaining({ setup_future_usage: "off_session" }),
+      line_items: [expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 14900 }) })],
     }));
   });
 });

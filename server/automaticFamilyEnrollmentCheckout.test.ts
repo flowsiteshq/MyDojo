@@ -25,7 +25,7 @@ import { appRouter } from "./routers";
 describe("automatic family enrollment recurring price", () => {
   beforeEach(() => {
     selectedRows.queue = [
-      [{ id: 1, name: "Foundation", isActive: 1, invitationOnly: 0, monthlyPrice: "149.00", downPayment: "99.00", enrollmentFee: "99.00", totalPrice: "1887.00", durationMonths: 12 }],
+      [{ id: 1, name: "Foundation", isActive: 1, invitationOnly: 0, monthlyPrice: "149.00", downPayment: "248.00", enrollmentFee: "99.00", totalPrice: "2339.00", durationMonths: 12 }],
       [{ id: 44, primaryContactEmail: "family@example.com", registrationFeePaid: 1 }],
       [{ id: 10, enrollmentId: 700001, memberOrder: 1 }],
     ];
@@ -39,7 +39,7 @@ describe("automatic family enrollment recurring price", () => {
     renderEnrollmentAgreementPdf.mockResolvedValue(Buffer.from("pdf"));
   });
 
-  it("keeps the $99 initial down payment and sets the second member's recurring tuition to 50%", async () => {
+  it("charges first-month tuition plus the $99 fee and sets the second member's recurring tuition to 50%", async () => {
     const caller = appRouter.createCaller({ req: { headers: { origin: "https://mydojoma.com" } } } as any);
     const result = await caller.member.createStripeEnrollmentCheckout({
       packageId: 1,
@@ -51,7 +51,7 @@ describe("automatic family enrollment recurring price", () => {
       agreementSignatureDataUrl: "data:image/png;base64,iVBORw0KGgo=",
     });
 
-    expect(result).toMatchObject({ amountCents: 9900, familyMemberOrder: 2, recurringMonthlyAmount: 74.5, hasFamilyDiscount: true });
+    expect(result).toMatchObject({ amountCents: 24800, familyMemberOrder: 2, recurringMonthlyAmount: 74.5, hasFamilyDiscount: true });
     expect(checkoutCreate).toHaveBeenCalledWith(expect.objectContaining({
       metadata: expect.objectContaining({ familyGroupId: "44", familyMemberOrder: "2", recurringMonthlyAmount: "74.50", familyDiscount: "50_percent" }),
     }));

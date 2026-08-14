@@ -3271,7 +3271,7 @@ Please enter your card details below to complete your registration securely. Tot
           ? Math.max(0, Number(pkg.downPayment) - enrollmentFee)
           : Number(pkg.downPayment);
         const dueToday = promo?.discountType === "waive_down_payment"
-          ? 0
+          ? Math.max(0, undiscountedDueToday - enrollmentFee)
           : promo?.discountType === "percent"
             ? Math.max(0, undiscountedDueToday * (1 - Number(promo.discountValue) / 100))
             : promo?.discountType === "fixed"

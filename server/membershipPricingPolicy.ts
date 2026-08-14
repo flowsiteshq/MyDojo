@@ -1,4 +1,12 @@
-export const STANDARD_NEW_MEMBER_DOWN_PAYMENT = 99;
+export const STANDARD_ENROLLMENT_FEE = 99;
+
+/** The standard first charge combines the first month of tuition and the one-time enrollment fee. */
+export function calculateInitialEnrollmentDue(monthlyTuition: number): number {
+  if (!Number.isFinite(monthlyTuition) || monthlyTuition < 0) {
+    throw new Error("A valid monthly tuition amount is required");
+  }
+  return Math.round((monthlyTuition + STANDARD_ENROLLMENT_FEE) * 100) / 100;
+}
 
 /** Only the second and third enrolled members receive the family recurring-tuition rate. */
 export function receivesFamilyRecurringDiscount(memberOrder: number): boolean {
