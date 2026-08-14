@@ -65,6 +65,8 @@ export async function handleStripeWebhook(req: Request, res: Response) {
           await handleFamilyKickboxingAddOn(session);
         } else if (session.metadata?.type === "scheduled_payment_setup") {
           await handleScheduledPaymentSetup(session);
+        } else if (session.metadata?.type === "membership_enrollment_checkout") {
+          await handleHostedMembershipEnrollment(session);
         } else {
           await handleCheckoutSessionCompleted(session);
         }
@@ -100,6 +102,77 @@ export async function handleStripeWebhook(req: Request, res: Response) {
     console.error(`[Stripe Webhook] Error processing ${event.type}:`, error);
     res.status(500).send(`Webhook processing error: ${error.message}`);
   }
+}
+
+/** Records a paid Pro Shop order for staff fulfillment. */
+async function handleHostedMembershipEnrollment(session: Stripe.Checkout.Session) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const enrollmentId = Number(session.metadata?.enrollmentId);
+  if (!Number.isInteger(enrollmentId) || enrollmentId <= 0) {
+    throw new Error("Hosted membership checkout is missing its pending enrollment reference");
+  }
+
+  const [enrollment] = await db.select().from(enrollments).where(eq(enrollments.id, enrollmentId)).limit(1);
+  if (!enrollment) throw new Error(`Pending enrollment ${enrollmentId} was not found`);
+  if (enrollment.status === "active" && enrollment.stripeSubscriptionId) return;
+
+  const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : null;
+  if (!paymentIntentId) throw new Error("Hosted membership checkout is missing its payment intent");
+  const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ["payment_method"] });
+  if (paymentIntent.status !== "succeeded") throw new Error("Hosted membership checkout payment is not complete");
+  const paymentMethod = typeof paymentIntent.payment_method === "string"
+    ? await stripe.paymentMethods.retrieve(paymentIntent.payment_method)
+    : paymentIntent.payment_method;
+  const customerId = typeof paymentIntent.customer === "string" ? paymentIntent.customer : paymentIntent.customer?.id;
+  if (!customerId || !paymentMethod || paymentMethod.type !== "card") {
+    throw new Error("Hosted membership checkout did not provide a reusable payment method");
+  }
+
+  const [pkg] = await db.select().from(membershipPackages).where(eq(membershipPackages.id, enrollment.membershipPackageId)).limit(1);
+  if (!pkg) throw new Error(`Membership package for pending enrollment ${enrollmentId} was not found`);
+  await stripe.customers.update(customerId, { invoice_settings: { default_payment_method: paymentMethod.id } });
+  let priceId = pkg.stripePriceId;
+  if (!priceId) {
+    const price = await stripe.prices.create({
+      unit_amount: Math.round(Number(pkg.monthlyPrice) * 100),
+      currency: "usd",
+      recurring: { interval: "month" },
+      product_data: { name: `MyDojo ${pkg.name} Membership` },
+    });
+    priceId = price.id;
+  }
+  const { getNextBillingDateStr } = await import("../shared/billingUtils.js");
+  const nextBillingDate = new Date(`${getNextBillingDateStr(new Date())}T12:00:00`);
+  const subscription = await stripe.subscriptions.create({
+    customer: customerId,
+    items: [{ price: priceId }],
+    default_payment_method: paymentMethod.id,
+    trial_end: Math.floor(nextBillingDate.getTime() / 1000),
+    payment_settings: { save_default_payment_method: "on_subscription" },
+    metadata: { type: "membership", packageId: String(pkg.id), billingAnchor: getNextBillingDateStr(new Date()) },
+  });
+
+  const amountTotal = (session.amount_total ?? 0) / 100;
+  const card = paymentMethod.card;
+  await db.update(enrollments).set({
+    stripeCustomerId: customerId,
+    stripeSubscriptionId: subscription.id,
+    stripePaymentIntentId: paymentIntentId,
+    stripePaymentMethodId: paymentMethod.id,
+    paymentMethodBrand: card?.brand ?? null,
+    paymentMethodLast4: card?.last4 ?? null,
+    paymentMethodExpMonth: card?.exp_month ?? null,
+    paymentMethodExpYear: card?.exp_year ?? null,
+    paymentMethodWallet: card?.wallet?.type ?? null,
+    paymentMethodUpdatedAt: new Date(),
+    downPaymentAmount: amountTotal.toFixed(2),
+    paidFirstMonth: 1,
+    remainingBalance: Math.max(0, Number(pkg.totalPrice) - amountTotal).toFixed(2),
+    monthlyPaymentsRemaining: Math.max(0, pkg.durationMonths - 1),
+    status: "active",
+    startDate: new Date(),
+  }).where(eq(enrollments.id, enrollmentId));
 }
 
 /** Records a paid Pro Shop order for staff fulfillment. */

@@ -3228,6 +3228,120 @@ Please enter your card details below to complete your registration securely. Tot
         return { clientSecret: intent.client_secret!, paymentIntentId: intent.id, amountCents: Math.round(dueToday * 100) };
       }),
 
+    // Start a hosted recurring enrollment checkout. This path avoids browser-side
+    // key mismatches and preserves signed agreement evidence before redirecting.
+    createStripeEnrollmentCheckout: publicProcedure
+      .input(z.object({
+        packageId: z.number().int().positive(),
+        customerName: z.string().min(1).max(255),
+        customerEmail: z.string().email(),
+        customerPhone: z.string().min(7).max(20),
+        studentName: z.string().max(255).optional(),
+        waiveEnrollmentFee: z.boolean().optional(),
+        waiverReason: z.string().max(200).optional(),
+        agreementSignature: z.string().min(1).max(255),
+        agreementSignedAt: z.string().datetime(),
+        agreementSignatureDataUrl: z.string().max(1_500_000).regex(/^data:image\/png;base64,/),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+        const [pkg] = await db.select().from(schema.membershipPackages)
+          .where(eq(schema.membershipPackages.id, input.packageId))
+          .limit(1);
+        if (!pkg || !pkg.isActive) throw new TRPCError({ code: "NOT_FOUND", message: "Selected membership is unavailable" });
+        if (pkg.invitationOnly) throw new TRPCError({ code: "FORBIDDEN", message: "This membership is available by staff invitation only" });
+
+        const monthlyPrice = Number(pkg.monthlyPrice);
+        const enrollmentFee = Number(pkg.enrollmentFee);
+        const dueToday = input.waiveEnrollmentFee
+          ? Math.max(0, Number(pkg.downPayment) - enrollmentFee)
+          : Number(pkg.downPayment);
+        const customer = await getOrCreateStripeCustomer({
+          name: input.customerName,
+          email: input.customerEmail,
+          phone: input.customerPhone,
+          metadata: { mydojoEnrollment: "true" },
+        });
+
+        const insertResult = await db.insert(schema.enrollments).values({
+          membershipPackageId: pkg.id,
+          customerName: input.customerName,
+          customerEmail: input.customerEmail,
+          customerPhone: input.customerPhone,
+          studentName: input.studentName || input.customerName,
+          stripeCustomerId: customer.id,
+          downPaymentAmount: dueToday.toFixed(2),
+          paidFirstMonth: 0,
+          remainingBalance: Number(pkg.totalPrice).toFixed(2),
+          monthlyPaymentsRemaining: pkg.durationMonths,
+          status: "pending",
+          discountApplied: input.waiverReason || null,
+          agreementSignature: input.agreementSignature,
+          agreementSignedAt: new Date(input.agreementSignedAt),
+          startDate: new Date(),
+        });
+        const enrollmentId = (insertResult as any).insertId as number;
+
+        try {
+          const signatureBuffer = Buffer.from(input.agreementSignatureDataUrl.split(",")[1], "base64");
+          const storedSignature = await storagePut(`enrollment-agreements/${enrollmentId}/signature-${Date.now()}.png`, signatureBuffer, "image/png");
+          const agreementPdf = await renderEnrollmentAgreementPdf({
+            memberName: input.customerName,
+            studentName: input.studentName || input.customerName,
+            packageName: pkg.name,
+            monthlyPrice,
+            totalDueToday: dueToday,
+            signedAt: new Date(input.agreementSignedAt),
+            signatureName: input.agreementSignature,
+            signatureImage: signatureBuffer,
+          });
+          const storedPdf = await storagePut(`enrollment-agreements/${enrollmentId}/signed-agreement-${Date.now()}.pdf`, agreementPdf, "application/pdf");
+          await db.update(schema.enrollments).set({
+            agreementSignatureImageUrl: storedSignature.url,
+            agreementPdfUrl: storedPdf.url,
+            agreementVersion: getEnrollmentAgreementVersion(),
+          }).where(eq(schema.enrollments.id, enrollmentId));
+        } catch (artifactError) {
+          console.error("[Enrollment Agreement] Failed to store pending checkout agreement artifacts", { enrollmentId, artifactError });
+        }
+
+        const origin = (ctx.req.headers.origin as string) || "https://mydojoma.com";
+        const stripe = getStripe();
+        const session = await stripe.checkout.sessions.create({
+          mode: "payment",
+          customer: customer.id,
+          line_items: [{
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: `MyDojo ${pkg.name} Enrollment`,
+                description: "Initial membership enrollment payment",
+              },
+              unit_amount: Math.round(dueToday * 100),
+            },
+            quantity: 1,
+          }],
+          payment_intent_data: {
+            setup_future_usage: "off_session",
+            metadata: {
+              type: "membership_enrollment_checkout",
+              enrollmentId: String(enrollmentId),
+            },
+          },
+          metadata: {
+            type: "membership_enrollment_checkout",
+            enrollmentId: String(enrollmentId),
+          },
+          success_url: `${origin}/enrollment/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}/enroll?package=${pkg.id}&checkout=cancelled`,
+          allow_promotion_codes: false,
+        });
+        if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create secure checkout" });
+        return { checkoutUrl: session.url, enrollmentId, amountCents: Math.round(dueToday * 100), enrollmentFee };
+      }),
+
     // Finish an approved enrollment payment, create the recurring subscription, and retain
     // only safe Stripe payment metadata plus the signed-agreement evidence.
     completeStripeEnrollmentPayment: publicProcedure

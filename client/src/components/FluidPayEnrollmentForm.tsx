@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, AlertCircle, Lock, Tag, ChevronLeft, CreditCard, FileCheck } from "lucide-react";
 import { toast } from "sonner";
 import { EnrollmentAgreement, type AgreementSignature } from "@/components/EnrollmentAgreement";
-import { StripePaymentForm } from "@/components/StripePaymentForm";
 
 interface EnrollmentData {
   packageId?: number;
@@ -112,8 +111,6 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
   const [step, setStep] = useState<"agreement" | "payment">("agreement");
   const [agreementSig, setAgreementSig] = useState<AgreementSignature | null>(null);
 
-  const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
-  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -215,34 +212,12 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
     },
   });
 
-  const createStripePaymentMutation = trpc.member.createStripeEnrollmentPayment.useMutation({
-    onSuccess: (result) => {
-      setPaymentIntentId(result.paymentIntentId);
-      setPaymentClientSecret(result.clientSecret);
-      setErrorMessage(null);
+  const createStripeCheckoutMutation = trpc.member.createStripeEnrollmentCheckout.useMutation({
+    onSuccess: ({ checkoutUrl }) => {
+      window.location.assign(checkoutUrl);
     },
-    onError: (error) => setErrorMessage(error.message || "Unable to prepare secure payment. Please try again."),
+    onError: (error) => setErrorMessage(error.message || "Unable to prepare secure checkout. Please try again."),
   });
-
-  // Prepare a PaymentIntent only after the member has signed. It is configured for
-  // future off-session use so eligible Apple Pay or card methods can be billed monthly.
-  useEffect(() => {
-    if (step !== "payment" || !agreementSig || totalAmount <= 0 || paymentClientSecret || createStripePaymentMutation.isPending) return;
-    createStripePaymentMutation.mutate({
-      packageId: enrollmentData.packageId || 0,
-      customerName: enrollmentData.customerName,
-      customerEmail: enrollmentData.customerEmail,
-      customerPhone: enrollmentData.customerPhone,
-      studentName: enrollmentData.studentName || enrollmentData.childName || enrollmentData.customerName,
-      isSummerCamp,
-      summerCampWeek: enrollmentData.weekLabel,
-      waiveEnrollmentFee: waiveEnrollmentFee || undefined,
-      waiverReason: enrollmentData.waiverReason || undefined,
-      agreementSignature: agreementSig.signedName,
-      agreementSignedAt: agreementSig.signedAt.toISOString(),
-      agreementSignatureDataUrl: agreementSig.signatureDataUrl,
-    });
-  }, [step, agreementSig, totalAmount, paymentClientSecret, enrollmentData, waiveEnrollmentFee]);
 
   const handleAgreementAccepted = (sig: AgreementSignature) => {
     setAgreementSig(sig);
@@ -253,8 +228,6 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
 
   const handleBackToAgreement = () => {
     setStep("agreement");
-    setPaymentClientSecret(null);
-    setPaymentIntentId(null);
   };
 
   // ── Success screen ────────────────────────────────────────────────────────
@@ -407,45 +380,36 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
             )}
           </div>
 
-          {/* Secure payment form — cards and eligible wallet methods are saved for recurring tuition. */}
+          {/* Hosted checkout uses the configured live payment account and saves the payment method for recurring tuition. */}
           <div className="border-2 border-gray-200 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-4">
               <CreditCard className="w-5 h-5 text-gray-600" />
               <p className="font-semibold text-gray-900 text-base">Payment Details</p>
             </div>
-            {!paymentClientSecret && !errorMessage && totalAmount > 0 && (
-              <div className="flex items-center justify-center py-10 gap-3 text-gray-500">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span className="text-base">Loading secure payment form…</span>
-              </div>
-            )}
-            {paymentClientSecret && paymentIntentId && agreementSig && (
-              <StripePaymentForm
-                clientSecret={paymentClientSecret}
-                mode="payment"
-                submitLabel={`Complete Enrollment — $${totalAmount.toFixed(2)}`}
-                loading={isSubmitting || completeStripeEnrollmentMutation.isPending}
-                onError={setErrorMessage}
-                onSuccess={(result) => {
-                  if (!result.paymentIntentId) return;
-                  setIsSubmitting(true);
-                  completeStripeEnrollmentMutation.mutate({
-                    paymentIntentId: result.paymentIntentId,
+            {totalAmount > 0 && agreementSig && (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600">Continue to a secure payment page to complete enrollment. Eligible wallet payment options are available there.</p>
+                <Button
+                  type="button"
+                  onClick={() => createStripeCheckoutMutation.mutate({
                     packageId: enrollmentData.packageId || 0,
                     customerName: enrollmentData.customerName,
                     customerEmail: enrollmentData.customerEmail,
                     customerPhone: enrollmentData.customerPhone,
                     studentName: enrollmentData.studentName || enrollmentData.childName || enrollmentData.customerName,
-                    isSummerCamp,
-                    summerCampWeek: enrollmentData.weekLabel,
                     waiveEnrollmentFee: waiveEnrollmentFee || undefined,
                     waiverReason: enrollmentData.waiverReason || undefined,
                     agreementSignature: agreementSig.signedName,
                     agreementSignedAt: agreementSig.signedAt.toISOString(),
                     agreementSignatureDataUrl: agreementSig.signatureDataUrl,
-                  });
-                }}
-              />
+                  })}
+                  disabled={createStripeCheckoutMutation.isPending || isSubmitting}
+                  className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-lg"
+                  style={{ minHeight: 60 }}
+                >
+                  {createStripeCheckoutMutation.isPending ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Preparing secure checkout…</> : <><Lock className="w-5 h-5 mr-2" /> Continue to Secure Checkout — ${totalAmount.toFixed(2)}</>}
+                </Button>
+              </div>
             )}
           </div>
 
