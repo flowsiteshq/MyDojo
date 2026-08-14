@@ -11,6 +11,8 @@
 - [x] Build a protected administrator checkout-session action for the private $1 recurring test plan
 - [x] Document staff access and subscription-cancellation cleanup for the live $1 test plan
 - [x] Add runtime coverage for authorized recurring-test checkout creation and staff/admin access
+- [x] Fix the enrollment agreement acknowledgement checkbox so signed enrollments can advance to payment
+- [x] Add regression coverage for clickable acknowledgement and agreement-to-payment readiness
 
 - [ ] Verify a published live Stripe enrollment payment after the user completes the agreed end-to-end test
 

@@ -375,7 +375,6 @@ export function EnrollmentAgreement({
                 ? 'bg-primary/5 border-primary animate-pulse'
                 : 'bg-gray-50 border-gray-200'
             }`}
-            onClick={() => setAccepted((a) => !a)}
             style={{ minHeight: 64 }}
           >
             <Checkbox
