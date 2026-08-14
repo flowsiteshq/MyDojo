@@ -3,7 +3,7 @@ import { postToFacebook, postToInstagram, getFacebookPostStats, isFacebookConfig
 import { getCalendarTasksForMonth, getCalendarTasksForUser, createCalendarTask, updateCalendarTask, deleteCalendarTask, createTimeOffRequest, getTimeOffRequestsForUser, getAllTimeOffRequests, updateTimeOffRequest, getApprovedTimeOffForMonth } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
+import { publicProcedure, router, protectedProcedure, adminProcedure, staffOrAdminProcedure } from "./_core/trpc";
 import { 
   getNotificationPreferences, 
   upsertNotificationPreferences,
@@ -4926,6 +4926,47 @@ Please enter your card details below to complete your registration securely. Tot
           .where(eq(schema.enrollments.id, enrollment.id));
 
         return { success: true, billingUpdated, studentName: enrollment.studentName || enrollment.customerName };
+      }),
+
+    createPrivateRecurringTestCheckout: staffOrAdminProcedure
+      .mutation(async () => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+
+        const [testPackage] = await db.select()
+          .from(schema.membershipPackages)
+          .where(and(
+            eq(schema.membershipPackages.name, 'Private $1 Recurring Test'),
+            eq(schema.membershipPackages.invitationOnly, 1),
+            eq(schema.membershipPackages.isActive, 1),
+          ))
+          .limit(1);
+        if (!testPackage?.stripePriceId) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'The private recurring test plan is not configured' });
+        }
+
+        const stripe = getStripe();
+        const session = await stripe.checkout.sessions.create({
+          mode: 'subscription',
+          line_items: [{ price: testPackage.stripePriceId, quantity: 1 }],
+          success_url: 'https://www.mydojoma.com/admin/packages?recurring_test=success',
+          cancel_url: 'https://www.mydojoma.com/admin/packages?recurring_test=cancelled',
+          allow_promotion_codes: false,
+          metadata: {
+            type: 'recurring_test',
+            package_id: String(testPackage.id),
+            staff_only: 'true',
+          },
+          subscription_data: {
+            metadata: {
+              type: 'recurring_test',
+              package_id: String(testPackage.id),
+              staff_only: 'true',
+            },
+          },
+        });
+        if (!session.url) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Unable to create the private test checkout' });
+        return { checkoutUrl: session.url, amount: 1, interval: 'month' as const };
       }),
 
     getAllIntroAppointments: protectedProcedure.query(async () => {

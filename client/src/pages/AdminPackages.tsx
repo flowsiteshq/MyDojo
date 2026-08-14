@@ -447,6 +447,13 @@ export default function AdminPackages() {
     },
   });
 
+  const createPrivateRecurringTestCheckout = trpc.admin.createPrivateRecurringTestCheckout.useMutation({
+    onSuccess: ({ checkoutUrl }) => {
+      window.location.assign(checkoutUrl);
+    },
+    onError: (err) => toast.error(err.message || "Unable to create the private test checkout"),
+  });
+
   const handleEdit = (pkg: NonNullable<typeof packages>[0]) => {
     setEditingId(pkg.id);
     setDialogForm(formFromPackage({
@@ -487,6 +494,16 @@ export default function AdminPackages() {
             <Button variant="outline" size="sm" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4 mr-1" />
               Refresh
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-amber-400 text-amber-800 hover:bg-amber-50"
+              onClick={() => createPrivateRecurringTestCheckout.mutate()}
+              disabled={createPrivateRecurringTestCheckout.isPending}
+            >
+              {createPrivateRecurringTestCheckout.isPending ? <RefreshCw className="h-4 w-4 mr-1 animate-spin" /> : <DollarSign className="h-4 w-4 mr-1" />}
+              $1 Recurring Test
             </Button>
             <Button size="sm" onClick={handleNew}>
               <Plus className="h-4 w-4 mr-1" />

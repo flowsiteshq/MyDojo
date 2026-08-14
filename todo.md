@@ -6,6 +6,11 @@
 - [x] Remove the remaining public Leadership enrollment card or selector path reported on the live enrollment page
 - [x] Enforce administrator authorization on the Leadership assignment procedure
 - [x] Add runtime tests proving every public enrollment procedure rejects Leadership with FORBIDDEN
+- [x] Create a private $1-per-month recurring payment test program that is hidden from public enrollment
+- [x] Add a staff-only checkout path and verification coverage for the $1 recurring test program
+- [x] Build a protected administrator checkout-session action for the private $1 recurring test plan
+- [x] Document staff access and subscription-cancellation cleanup for the live $1 test plan
+- [x] Add runtime coverage for authorized recurring-test checkout creation and staff/admin access
 
 - [ ] Verify a published live Stripe enrollment payment after the user completes the agreed end-to-end test
 
