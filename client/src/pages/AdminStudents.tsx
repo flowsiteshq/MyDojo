@@ -171,6 +171,7 @@ export default function AdminStudents() {
   const [promoteStudent, setPromoteStudent] = useState<Student | null>(null);
   const [promoteNotes, setPromoteNotes] = useState("");
   const [showPromotionHistory, setShowPromotionHistory] = useState<Student | null>(null);
+  const [leadershipCandidate, setLeadershipCandidate] = useState<Student | null>(null);
 
   // Book Appointment dialog state
   const [bookAptStudent, setBookAptStudent] = useState<Student | null>(null);
@@ -217,6 +218,15 @@ export default function AdminStudents() {
       setEditStudent(null);
       setPhotoPreview(null);
       setPhotoFile(null);
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const assignLeadership = trpc.admin.assignLeadershipMembership.useMutation({
+    onSuccess: (data) => {
+      toast.success(`${data.studentName} is now enrolled in Leadership${data.billingUpdated ? "; their recurring plan will update at the next billing period." : "."}`);
+      setLeadershipCandidate(null);
       refetch();
     },
     onError: (err) => toast.error(err.message),
@@ -532,6 +542,15 @@ export default function AdminStudents() {
                               <CalendarPlus className="h-4 w-4 mr-2 text-blue-600" />
                               Book Appointment
                             </DropdownMenuItem>
+                            {student.status === "active" && student.program !== "Leadership" && (student as any).source !== "manual" && (
+                              <DropdownMenuItem
+                                onClick={() => setLeadershipCandidate(student as Student)}
+                                className="text-violet-700 focus:text-violet-800 focus:bg-violet-50"
+                              >
+                                <Award className="h-4 w-4 mr-2 text-violet-600" />
+                                Invite to Leadership
+                              </DropdownMenuItem>
+                            )}
                             {/* Promote Belt — only shown if there's a next belt */}
                             {nextBelt && (
                               <>
@@ -602,6 +621,27 @@ export default function AdminStudents() {
 
       {/* ── Parent-Submitted Child Profiles ─────────────────────────────────────────── */}
       <ParentChildProfilesSection />
+
+      <Dialog open={!!leadershipCandidate} onOpenChange={open => { if (!open && !assignLeadership.isPending) setLeadershipCandidate(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Invite to Leadership</DialogTitle>
+            <DialogDescription>
+              Confirm that {leadershipCandidate?.studentName || leadershipCandidate?.name || "this active student"} has been approved for Leadership. Their recurring plan will change at the next billing period; no immediate prorated charge will be created.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLeadershipCandidate(null)} disabled={assignLeadership.isPending}>Cancel</Button>
+            <Button
+              className="bg-violet-700 hover:bg-violet-800"
+              onClick={() => leadershipCandidate && assignLeadership.mutate({ enrollmentId: leadershipCandidate.id })}
+              disabled={assignLeadership.isPending}
+            >
+              {assignLeadership.isPending ? "Assigning…" : "Confirm Leadership Invitation"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Edit Student Modal ─────────────────────────────────────────────────── */}
       <Dialog open={!!editStudent} onOpenChange={open => { if (!open) { setEditStudent(null); setPhotoPreview(null); setPhotoFile(null); } }}>

@@ -3,7 +3,7 @@ import { postToFacebook, postToInstagram, getFacebookPostStats, isFacebookConfig
 import { getCalendarTasksForMonth, getCalendarTasksForUser, createCalendarTask, updateCalendarTask, deleteCalendarTask, createTimeOffRequest, getTimeOffRequestsForUser, getAllTimeOffRequests, updateTimeOffRequest, getApprovedTimeOffForMonth } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
 import { 
   getNotificationPreferences, 
   upsertNotificationPreferences,
@@ -3101,7 +3101,10 @@ Please enter your card details below to complete your registration securely. Tot
       const pkgs = await db
         .select()
         .from(schema.membershipPackages)
-        .where(eq(schema.membershipPackages.isActive, 1))
+        .where(and(
+          eq(schema.membershipPackages.isActive, 1),
+          eq(schema.membershipPackages.invitationOnly, 0),
+        ))
         .orderBy(schema.membershipPackages.id);
       return pkgs;
     }),
@@ -3126,6 +3129,7 @@ Please enter your card details below to complete your registration securely. Tot
         const [pkg] = await db.select().from(schema.membershipPackages)
           .where(eq(schema.membershipPackages.id, input.packageId)).limit(1);
         if (!pkg || !pkg.isActive) throw new TRPCError({ code: "NOT_FOUND", message: "Selected membership is unavailable" });
+        if (pkg.invitationOnly) throw new TRPCError({ code: "FORBIDDEN", message: "This membership is available by staff invitation only" });
 
         const insertResult = await db.insert(schema.enrollments).values({
           membershipPackageId: pkg.id,
@@ -3193,6 +3197,7 @@ Please enter your card details below to complete your registration securely. Tot
           if (!input.packageId) throw new TRPCError({ code: "BAD_REQUEST", message: "Select a membership before continuing" });
           const [foundPackage] = await db.select().from(schema.membershipPackages).where(eq(schema.membershipPackages.id, input.packageId)).limit(1);
           if (!foundPackage || !foundPackage.isActive) throw new TRPCError({ code: "NOT_FOUND", message: "Selected membership is unavailable" });
+          if (foundPackage.invitationOnly) throw new TRPCError({ code: "FORBIDDEN", message: "This membership is available by staff invitation only" });
           pkg = foundPackage;
         }
 
@@ -3249,6 +3254,7 @@ Please enter your card details below to complete your registration securely. Tot
           if (!input.packageId) throw new TRPCError({ code: "BAD_REQUEST", message: "Select a membership before continuing" });
           const [foundPackage] = await db.select().from(schema.membershipPackages).where(eq(schema.membershipPackages.id, input.packageId)).limit(1);
           if (!foundPackage || !foundPackage.isActive) throw new TRPCError({ code: "NOT_FOUND", message: "Selected membership is unavailable" });
+          if (foundPackage.invitationOnly) throw new TRPCError({ code: "FORBIDDEN", message: "This membership is available by staff invitation only" });
           pkg = foundPackage;
         }
         const stripe = getStripe();
@@ -4882,6 +4888,46 @@ Please enter your card details below to complete your registration securely. Tot
   }),
   // Admin router for management dashboard
   admin: router({    // Get all intro appointments
+    assignLeadershipMembership: adminProcedure
+      .input(z.object({ enrollmentId: z.number().int().positive() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+
+        const [enrollment] = await db.select()
+          .from(schema.enrollments)
+          .where(eq(schema.enrollments.id, input.enrollmentId))
+          .limit(1);
+        if (!enrollment || enrollment.status !== 'active') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Leadership may only be assigned to an active existing student' });
+        }
+
+        const [leadership] = await db.select()
+          .from(schema.membershipPackages)
+          .where(and(eq(schema.membershipPackages.name, 'Leadership'), eq(schema.membershipPackages.invitationOnly, 1), eq(schema.membershipPackages.isActive, 1)))
+          .limit(1);
+        if (!leadership) throw new TRPCError({ code: 'NOT_FOUND', message: 'Leadership membership is not configured' });
+
+        let billingUpdated = false;
+        if (enrollment.stripeSubscriptionId?.startsWith('sub_') && leadership.stripePriceId) {
+          const stripe = getStripe();
+          const subscription = await stripe.subscriptions.retrieve(enrollment.stripeSubscriptionId);
+          const itemId = subscription.items.data[0]?.id;
+          if (!itemId) throw new TRPCError({ code: 'BAD_REQUEST', message: 'The active billing plan could not be updated' });
+          await stripe.subscriptions.update(enrollment.stripeSubscriptionId, {
+            items: [{ id: itemId, price: leadership.stripePriceId }],
+            proration_behavior: 'none',
+          });
+          billingUpdated = true;
+        }
+
+        await db.update(schema.enrollments)
+          .set({ membershipPackageId: leadership.id, updatedAt: new Date() })
+          .where(eq(schema.enrollments.id, enrollment.id));
+
+        return { success: true, billingUpdated, studentName: enrollment.studentName || enrollment.customerName };
+      }),
+
     getAllIntroAppointments: protectedProcedure.query(async () => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });

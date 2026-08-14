@@ -1,5 +1,14 @@
 # MyDojo Website TODO
 
+- [x] Make Leadership invitation-only, remove Foundation No Down Payment, and convert Plus to the $99 three-class kickboxing plan
+- [x] Add an admin-only Leadership invitation or assignment action for existing students
+- [x] Add direct regression coverage rejecting forged public Leadership enrollment submissions
+- [x] Remove the remaining public Leadership enrollment card or selector path reported on the live enrollment page
+- [x] Enforce administrator authorization on the Leadership assignment procedure
+- [x] Add runtime tests proving every public enrollment procedure rejects Leadership with FORBIDDEN
+
+- [ ] Verify a published live Stripe enrollment payment after the user completes the agreed end-to-end test
+
 - [x] Audit and rebuild every MyDojo customer payment, enrollment, event, shop, and recurring-billing flow into one reliable Stripe-based system
 - [x] Remove or hard-disable remaining legacy FluidPay payment-creation mutations and fallbacks after confirming no active route depends on them
 - [x] Verify safe Stripe Checkout/session creation for every active payment entry point, including custom links, day pass, family registration, camp, enrollment, kickboxing, scheduled setup, shop, and events
