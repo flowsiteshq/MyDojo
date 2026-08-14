@@ -30,6 +30,15 @@ interface EnrollmentData {
   deferredTuitionDate?: string; // YYYY-MM-DD within same calendar month
   // Full down payment waiver: $0 today, recurring starts immediately
   waiveDownPayment?: boolean;
+  familyMembers?: Array<{
+    packageId: number;
+    packageName: string;
+    monthlyPrice: number;
+    downPayment: number;
+    enrollmentFee: number;
+    durationMonths?: number | null;
+    studentName: string;
+  }>;
 }
 
 interface FluidPayEnrollmentFormProps {
@@ -156,10 +165,15 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
   };
 
   const isSummerCamp = enrollmentData.type === "summer_camp";
+  const familyMembers = enrollmentData.familyMembers || [];
+  const isFamilyEnrollment = familyMembers.length >= 2;
   const waiveEnrollmentFee = !isSummerCamp && (enrollmentData.waiveEnrollmentFee ?? false);
-  const enrollmentFee = enrollmentData.enrollmentFee ?? 149;
+  const enrollmentFee = enrollmentData.enrollmentFee ?? 99;
+  const familyEnrollmentFee = isFamilyEnrollment ? familyMembers.reduce((sum, member) => sum + member.enrollmentFee, 0) : enrollmentFee;
   const baseAmount = isSummerCamp
     ? (enrollmentData.totalAmount || 298)
+    : isFamilyEnrollment
+      ? familyMembers.reduce((sum, member) => sum + member.downPayment, 0)
     : waiveEnrollmentFee
       ? Math.max(0, (enrollmentData.downPayment || 0) - enrollmentFee)
       : (enrollmentData.downPayment || 0);
@@ -167,12 +181,15 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
   // NOT the first month's tuition — so the student still pays their first month.
   const promoDiscount = appliedPromo
     ? appliedPromo.discountType === "waive_down_payment"
-      ? enrollmentFee  // only waive the $99 registration fee
+      ? familyEnrollmentFee  // waive only the enrollment fee(s), not first-month tuition
       : appliedPromo.discountType === "percent"
         ? baseAmount * (appliedPromo.discountValue / 100)
         : Math.min(appliedPromo.discountValue, baseAmount)
     : 0;
   const totalAmount = Math.max(0, baseAmount - promoDiscount);
+  const familyRecurringMonthlyTotal = isFamilyEnrollment
+    ? familyMembers.reduce((sum, member, index) => sum + member.monthlyPrice * (index === 0 ? 1 : 0.5), 0)
+    : (enrollmentData.monthlyPrice || 0);
 
   const completeStripeEnrollmentMutation = trpc.member.completeStripeEnrollmentPayment.useMutation({
     onSuccess: () => {
@@ -217,6 +234,10 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
     },
     onError: (error) => setErrorMessage(error.message || "Unable to prepare secure checkout. Please try again."),
   });
+  const createFamilyCheckoutMutation = trpc.member.createFamilyEnrollmentCheckout.useMutation({
+    onSuccess: ({ checkoutUrl }) => window.location.assign(checkoutUrl),
+    onError: (error) => setErrorMessage(error.message || "Unable to prepare secure family checkout. Please try again."),
+  });
 
   const handleAgreementAccepted = (sig: AgreementSignature) => {
     setAgreementSig(sig);
@@ -255,9 +276,9 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
       {step === "agreement" && (
         <EnrollmentAgreement
           customerName={enrollmentData.customerName}
-          studentName={enrollmentData.studentName || enrollmentData.childName}
-          packageName={isSummerCamp ? `Summer Camp — ${enrollmentData.weekLabel}` : enrollmentData.packageName}
-          monthlyPrice={enrollmentData.monthlyPrice || 0}
+          studentName={isFamilyEnrollment ? familyMembers.map(member => member.studentName).join(", ") : enrollmentData.studentName || enrollmentData.childName}
+          packageName={isFamilyEnrollment ? `Family Enrollment — ${familyMembers.length} Members` : isSummerCamp ? `Summer Camp — ${enrollmentData.weekLabel}` : enrollmentData.packageName}
+          monthlyPrice={familyRecurringMonthlyTotal}
           totalDueToday={totalAmount}
           enrollmentFeeWaived={waiveEnrollmentFee || appliedPromo?.discountType === "waive_down_payment"}
           onAccepted={handleAgreementAccepted}
@@ -336,6 +357,19 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
                   <span>Registration fee</span><span>$149.00</span>
                 </div>
               </>
+            ) : isFamilyEnrollment ? (
+              <div className="space-y-3">
+                {familyMembers.map((member, index) => {
+                  const feeWaived = waiveEnrollmentFee || appliedPromo?.discountType === "waive_down_payment";
+                  const recurring = member.monthlyPrice * (index === 0 ? 1 : 0.5);
+                  return (
+                    <div key={`${member.studentName}-${index}`} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                      <div className="flex justify-between gap-3 text-sm font-semibold text-slate-800"><span>{member.studentName}</span><span>${(member.downPayment - (feeWaived ? member.enrollmentFee : 0)).toFixed(2)} today</span></div>
+                      <p className="mt-1 text-xs text-slate-500">First month ${member.monthlyPrice.toFixed(2)} {feeWaived ? "· enrollment fee waived" : `+ $${member.enrollmentFee.toFixed(2)} enrollment fee`} · Then ${recurring.toFixed(2)}/mo {index > 0 ? "(50% family rate)" : ""}</p>
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
               <>
                 <div className="flex justify-between text-sm text-gray-600">
@@ -374,7 +408,7 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
             </div>
             {!isSummerCamp && (
               <p className="text-xs text-gray-400">
-                Then ${(enrollmentData.monthlyPrice || 0).toFixed(2)}/mo recurring
+                Then ${familyRecurringMonthlyTotal.toFixed(2)}/mo recurring{isFamilyEnrollment ? " across your family memberships" : ""}
               </p>
             )}
           </div>
@@ -390,24 +424,39 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
                 <p className="text-sm text-gray-600">Continue to a secure payment page to complete enrollment. Eligible wallet payment options are available there.</p>
                 <Button
                   type="button"
-                  onClick={() => createStripeCheckoutMutation.mutate({
-                    packageId: enrollmentData.packageId || 0,
-                    customerName: enrollmentData.customerName,
-                    customerEmail: enrollmentData.customerEmail,
-                    customerPhone: enrollmentData.customerPhone,
-                    studentName: enrollmentData.studentName || enrollmentData.childName || enrollmentData.customerName,
-                    waiveEnrollmentFee: waiveEnrollmentFee || undefined,
-                    waiverReason: enrollmentData.waiverReason || undefined,
-                    promoCode: appliedPromo?.code,
-                    agreementSignature: agreementSig.signedName,
-                    agreementSignedAt: agreementSig.signedAt.toISOString(),
-                    agreementSignatureDataUrl: agreementSig.signatureDataUrl,
-                  })}
-                  disabled={createStripeCheckoutMutation.isPending || isSubmitting}
+                  onClick={() => {
+                    if (isFamilyEnrollment) {
+                      createFamilyCheckoutMutation.mutate({
+                        customerName: enrollmentData.customerName,
+                        customerEmail: enrollmentData.customerEmail,
+                        customerPhone: enrollmentData.customerPhone,
+                        members: familyMembers.map(member => ({ packageId: member.packageId, studentName: member.studentName })),
+                        promoCode: appliedPromo?.code,
+                        agreementSignature: agreementSig.signedName,
+                        agreementSignedAt: agreementSig.signedAt.toISOString(),
+                        agreementSignatureDataUrl: agreementSig.signatureDataUrl,
+                      });
+                      return;
+                    }
+                    createStripeCheckoutMutation.mutate({
+                      packageId: enrollmentData.packageId || 0,
+                      customerName: enrollmentData.customerName,
+                      customerEmail: enrollmentData.customerEmail,
+                      customerPhone: enrollmentData.customerPhone,
+                      studentName: enrollmentData.studentName || enrollmentData.childName || enrollmentData.customerName,
+                      waiveEnrollmentFee: waiveEnrollmentFee || undefined,
+                      waiverReason: enrollmentData.waiverReason || undefined,
+                      promoCode: appliedPromo?.code,
+                      agreementSignature: agreementSig.signedName,
+                      agreementSignedAt: agreementSig.signedAt.toISOString(),
+                      agreementSignatureDataUrl: agreementSig.signatureDataUrl,
+                    });
+                  }}
+                  disabled={createStripeCheckoutMutation.isPending || createFamilyCheckoutMutation.isPending || isSubmitting}
                   className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-lg"
                   style={{ minHeight: 60 }}
                 >
-                  {createStripeCheckoutMutation.isPending ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Preparing secure checkout…</> : <><Lock className="w-5 h-5 mr-2" /> Continue to Secure Checkout — ${totalAmount.toFixed(2)}</>}
+                  {createStripeCheckoutMutation.isPending || createFamilyCheckoutMutation.isPending ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Preparing secure checkout…</> : <><Lock className="w-5 h-5 mr-2" /> Continue to Secure Checkout — ${totalAmount.toFixed(2)}</>}
                 </Button>
               </div>
             )}

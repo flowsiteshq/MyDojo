@@ -3396,6 +3396,120 @@ Please enter your card details below to complete your registration securely. Tot
         };
       }),
 
+    /** Creates one hosted checkout for two or three new members under the same family account. */
+    createFamilyEnrollmentCheckout: publicProcedure
+      .input(z.object({
+        customerName: z.string().min(1).max(255),
+        customerEmail: z.string().email(),
+        customerPhone: z.string().min(7).max(30),
+        members: z.array(z.object({ packageId: z.number().int().positive(), studentName: z.string().min(1).max(255) })).min(2).max(3),
+        promoCode: z.string().min(3).max(50).optional(),
+        agreementSignature: z.string().min(1).max(255),
+        agreementSignedAt: z.string().datetime(),
+        agreementSignatureDataUrl: z.string().max(1_500_000).regex(/^data:image\/png;base64,/),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        if (new Set(input.members.map(member => member.studentName.trim().toLowerCase())).size !== input.members.length) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Each family member must have a different name" });
+        }
+        let promo: typeof schema.promoCodes.$inferSelect | undefined;
+        if (input.promoCode) {
+          const [foundPromo] = await db.select().from(schema.promoCodes).where(eq(schema.promoCodes.code, input.promoCode.trim().toUpperCase())).limit(1);
+          if (!foundPromo || !foundPromo.active || (foundPromo.expiresAt && Date.now() > foundPromo.expiresAt) || (foundPromo.maxUses !== null && foundPromo.usedCount >= foundPromo.maxUses)) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "This promo code is no longer available" });
+          }
+          promo = foundPromo;
+        }
+        const packages = await Promise.all(input.members.map(async member => {
+          const [pkg] = await db.select().from(schema.membershipPackages).where(eq(schema.membershipPackages.id, member.packageId)).limit(1);
+          if (!pkg || !pkg.isActive) throw new TRPCError({ code: "NOT_FOUND", message: "A selected membership is unavailable" });
+          if (pkg.invitationOnly) throw new TRPCError({ code: "FORBIDDEN", message: "An invitation-only membership cannot be selected" });
+          return pkg;
+        }));
+        const customer = await getOrCreateStripeCustomer({ name: input.customerName, email: input.customerEmail, phone: input.customerPhone, metadata: { mydojoFamilyEnrollment: "true" } });
+        let [familyGroup] = await db.select().from(schema.familyGroups).where(eq(schema.familyGroups.primaryContactEmail, input.customerEmail)).limit(1);
+        if (!familyGroup) {
+          const created = await db.insert(schema.familyGroups).values({
+            primaryContactName: input.customerName,
+            primaryContactEmail: input.customerEmail,
+            primaryContactPhone: input.customerPhone,
+            registrationFeePaid: 1,
+            registrationFeeAmount: "0.00",
+          });
+          const familyGroupId = Number((created as any).insertId ?? (created as any)[0]?.insertId);
+          [familyGroup] = await db.select().from(schema.familyGroups).where(eq(schema.familyGroups.id, familyGroupId)).limit(1);
+        }
+        if (!familyGroup) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create the family account" });
+        const existingMembers = await db.select().from(schema.familyGroupMembers).where(eq(schema.familyGroupMembers.familyGroupId, familyGroup.id));
+        const { calculateFamilyRecurringTuition, receivesFamilyRecurringDiscount } = await import("./membershipPricingPolicy");
+        const signatureBuffer = Buffer.from(input.agreementSignatureDataUrl.split(",")[1], "base64");
+        const signedAt = new Date(input.agreementSignedAt);
+        const enrollmentDetails: Array<{ enrollmentId: number; pkg: typeof packages[number]; studentName: string; memberOrder: number; hasDiscount: boolean; recurringMonthlyAmount: number; dueToday: number }> = [];
+        for (let index = 0; index < input.members.length; index += 1) {
+          const member = input.members[index];
+          const pkg = packages[index];
+          const memberOrder = existingMembers.length + index + 1;
+          const hasDiscount = receivesFamilyRecurringDiscount(memberOrder);
+          const monthlyPrice = Number(pkg.monthlyPrice);
+          const enrollmentFee = Number(pkg.enrollmentFee);
+          const dueToday = Math.max(0, Number(pkg.downPayment) - (promo?.discountType === "waive_down_payment" ? enrollmentFee : 0));
+          const recurringMonthlyAmount = calculateFamilyRecurringTuition(monthlyPrice, memberOrder);
+          const insertResult = await db.insert(schema.enrollments).values({
+            membershipPackageId: pkg.id,
+            customerName: input.customerName,
+            customerEmail: input.customerEmail,
+            customerPhone: input.customerPhone,
+            studentName: member.studentName.trim(),
+            stripeCustomerId: customer.id,
+            downPaymentAmount: dueToday.toFixed(2),
+            paidFirstMonth: 0,
+            remainingBalance: Number(pkg.totalPrice).toFixed(2),
+            monthlyPaymentsRemaining: pkg.durationMonths,
+            status: "pending",
+            discountApplied: promo ? `promo:${promo.code}` : null,
+            agreementSignature: input.agreementSignature,
+            agreementSignedAt: signedAt,
+            startDate: new Date(),
+          });
+          const enrollmentId = Number((insertResult as any).insertId);
+          try {
+            const storedSignature = await storagePut(`enrollment-agreements/${enrollmentId}/signature-${Date.now()}.png`, signatureBuffer, "image/png");
+            const agreementPdf = await renderEnrollmentAgreementPdf({ memberName: input.customerName, studentName: member.studentName.trim(), packageName: pkg.name, monthlyPrice, totalDueToday: dueToday, signedAt, signatureName: input.agreementSignature, signatureImage: signatureBuffer });
+            const storedPdf = await storagePut(`enrollment-agreements/${enrollmentId}/signed-agreement-${Date.now()}.pdf`, agreementPdf, "application/pdf");
+            await db.update(schema.enrollments).set({ agreementSignatureImageUrl: storedSignature.url, agreementPdfUrl: storedPdf.url, agreementVersion: getEnrollmentAgreementVersion() }).where(eq(schema.enrollments.id, enrollmentId));
+          } catch (artifactError) {
+            console.error("[Family Enrollment] Failed to store agreement artifacts", { enrollmentId, artifactError });
+          }
+          enrollmentDetails.push({ enrollmentId, pkg, studentName: member.studentName.trim(), memberOrder, hasDiscount, recurringMonthlyAmount, dueToday });
+        }
+        const totalDueToday = enrollmentDetails.reduce((sum, detail) => sum + detail.dueToday, 0);
+        const origin = (ctx.req.headers.origin as string) || "https://mydojoma.com";
+        const session = await getStripe().checkout.sessions.create({
+          mode: "payment",
+          customer: customer.id,
+          line_items: enrollmentDetails.map(detail => ({
+            price_data: { currency: "usd", product_data: { name: `MyDojo ${detail.pkg.name} Enrollment — ${detail.studentName}` }, unit_amount: Math.round(detail.dueToday * 100) },
+            quantity: 1,
+          })),
+          payment_intent_data: { setup_future_usage: "off_session", metadata: { type: "family_membership_enrollment_checkout", enrollmentIds: enrollmentDetails.map(detail => detail.enrollmentId).join(",") } },
+          metadata: {
+            type: "family_membership_enrollment_checkout",
+            enrollmentIds: enrollmentDetails.map(detail => detail.enrollmentId).join(","),
+            familyGroupId: String(familyGroup.id),
+            memberOrders: enrollmentDetails.map(detail => detail.memberOrder).join(","),
+            recurringMonthlyAmounts: enrollmentDetails.map(detail => detail.recurringMonthlyAmount.toFixed(2)).join(","),
+            promoCode: promo?.code || "",
+          },
+          success_url: `${origin}/enrollment/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}/enroll?checkout=cancelled`,
+          allow_promotion_codes: false,
+        });
+        if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create secure family checkout" });
+        return { checkoutUrl: session.url, totalDueToday, members: enrollmentDetails.map(detail => ({ studentName: detail.studentName, memberOrder: detail.memberOrder, hasDiscount: detail.hasDiscount, recurringMonthlyAmount: detail.recurringMonthlyAmount })) };
+      }),
+
     // Finish an approved enrollment payment, create the recurring subscription, and retain
     // only safe Stripe payment metadata plus the signed-agreement evidence.
     completeStripeEnrollmentPayment: publicProcedure

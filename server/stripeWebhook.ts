@@ -65,6 +65,8 @@ export async function handleStripeWebhook(req: Request, res: Response) {
           await handleFamilyKickboxingAddOn(session);
         } else if (session.metadata?.type === "scheduled_payment_setup") {
           await handleScheduledPaymentSetup(session);
+        } else if (session.metadata?.type === "family_membership_enrollment_checkout") {
+          await handleHostedFamilyMembershipEnrollment(session);
         } else if (session.metadata?.type === "membership_enrollment_checkout") {
           await handleHostedMembershipEnrollment(session);
         } else {
@@ -206,6 +208,44 @@ async function handleHostedMembershipEnrollment(session: Stripe.Checkout.Session
         originalMonthlyAmount: Number(pkg.monthlyPrice).toFixed(2),
       });
     }
+  }
+  if (session.metadata?.promoCode) {
+    await db.update(promoCodes).set({ usedCount: sql`usedCount + 1`, updatedAt: Date.now() })
+      .where(eq(promoCodes.code, session.metadata.promoCode));
+  }
+}
+
+/** Activates every pending enrollment created in one two- or three-member hosted checkout. */
+async function handleHostedFamilyMembershipEnrollment(session: Stripe.Checkout.Session) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const enrollmentIds = (session.metadata?.enrollmentIds || "").split(",").map(value => Number(value)).filter(Number.isInteger);
+  const memberOrders = (session.metadata?.memberOrders || "").split(",").map(value => Number(value));
+  const recurringMonthlyAmounts = (session.metadata?.recurringMonthlyAmounts || "").split(",").map(value => Number(value));
+  const familyGroupId = Number(session.metadata?.familyGroupId || 0);
+  if (enrollmentIds.length < 2 || enrollmentIds.length > 3 || memberOrders.length !== enrollmentIds.length || recurringMonthlyAmounts.length !== enrollmentIds.length || familyGroupId <= 0) {
+    throw new Error("Hosted family checkout is missing member enrollment details");
+  }
+  for (let index = 0; index < enrollmentIds.length; index += 1) {
+    const enrollmentId = enrollmentIds[index];
+    const [enrollment] = await db.select().from(enrollments).where(eq(enrollments.id, enrollmentId)).limit(1);
+    if (!enrollment) throw new Error(`Pending family enrollment ${enrollmentId} was not found`);
+    const memberOrder = memberOrders[index];
+    const memberSession = {
+      ...session,
+      amount_total: Math.round(Number(enrollment.downPaymentAmount) * 100),
+      metadata: {
+        ...session.metadata,
+        type: "membership_enrollment_checkout",
+        enrollmentId: String(enrollmentId),
+        familyGroupId: String(familyGroupId),
+        familyMemberOrder: String(memberOrder),
+        recurringMonthlyAmount: recurringMonthlyAmounts[index].toFixed(2),
+        familyDiscount: memberOrder === 2 || memberOrder === 3 ? "50_percent" : "",
+        promoCode: "",
+      },
+    } as Stripe.Checkout.Session;
+    await handleHostedMembershipEnrollment(memberSession);
   }
   if (session.metadata?.promoCode) {
     await db.update(promoCodes).set({ usedCount: sql`usedCount + 1`, updatedAt: Date.now() })

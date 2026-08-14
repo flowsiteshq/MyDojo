@@ -26,6 +26,11 @@
 - [x] Change WAIVE99 to waive only the $99 enrollment fee, not the first month of tuition
 - [x] Update automatic family-member checkout and subscription tests for corrected initial charges
 - [x] Assert first-month tuition plus the $99 enrollment fee in hosted enrollment webhook activation tests
+- [x] Add an enrollment option for a parent to enter multiple family members in one journey
+- [x] Calculate each new member's due-today amount and set second/third members to 50% recurring tuition
+- [x] Fulfill multi-member checkout with separate active enrollments and family-group membership records
+- [x] Add regression coverage for two- and three-member family enrollments
+- [x] Add explicit third-family-member checkout and webhook fulfillment coverage
 
 - [ ] Verify a published live Stripe enrollment payment after the user completes the agreed end-to-end test
 

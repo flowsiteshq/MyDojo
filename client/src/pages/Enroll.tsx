@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ChevronRight, ChevronLeft, User, Phone, Mail, Star } from "lucide-react";
+import { Loader2, ChevronRight, ChevronLeft, User, Phone, Mail, Star, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 
 type Step = "package" | "info" | "payment";
@@ -23,6 +23,12 @@ interface PersonalInfo {
   customerEmail: string;
   customerPhone: string;
   studentName: string;
+}
+
+interface AdditionalFamilyMember {
+  id: string;
+  studentName: string;
+  packageId: number | null;
 }
 
 export default function Enroll() {
@@ -36,6 +42,7 @@ export default function Enroll() {
     studentName: "",
   });
   const [enrollmentData, setEnrollmentData] = useState<any | null>(null);
+  const [additionalFamilyMembers, setAdditionalFamilyMembers] = useState<AdditionalFamilyMember[]>([]);
 
   // Read ?program= and ?promo= from URL
   const programParam = new URLSearchParams(window.location.search).get("program") || "";
@@ -73,8 +80,37 @@ export default function Enroll() {
       return toast.error("Please enter a valid 10-digit phone number.");
     if (info.customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(info.customerEmail))
       return toast.error("Please enter a valid email address.");
+    if (additionalFamilyMembers.length > 0 && !info.customerEmail.trim())
+      return toast.error("An email address is required for a family enrollment.");
 
     if (!selectedPkg) return;
+
+    const incompleteMember = additionalFamilyMembers.find(member => !member.studentName.trim() || !member.packageId);
+    if (incompleteMember) return toast.error("Enter a name and membership plan for every family member.");
+    const primaryStudentName = info.studentName.trim() || info.customerName.trim();
+    const familyMembers = [
+      {
+        packageId: selectedPkg.id,
+        packageName: selectedPkg.name,
+        monthlyPrice: parseFloat(selectedPkg.monthlyPrice as string),
+        downPayment: noDownPayment ? 0 : parseFloat(selectedPkg.downPayment as string),
+        enrollmentFee: noDownPayment ? 0 : parseFloat(selectedPkg.enrollmentFee as string),
+        durationMonths: selectedPkg.durationMonths,
+        studentName: primaryStudentName,
+      },
+      ...additionalFamilyMembers.map(member => {
+        const pkg = packages?.find(candidate => candidate.id === member.packageId)!;
+        return {
+          packageId: pkg.id,
+          packageName: pkg.name,
+          monthlyPrice: parseFloat(pkg.monthlyPrice as string),
+          downPayment: noDownPayment ? 0 : parseFloat(pkg.downPayment as string),
+          enrollmentFee: noDownPayment ? 0 : parseFloat(pkg.enrollmentFee as string),
+          durationMonths: pkg.durationMonths,
+          studentName: member.studentName.trim(),
+        };
+      }),
+    ];
 
     setEnrollmentData({
       packageId: selectedPkg.id,
@@ -86,10 +122,20 @@ export default function Enroll() {
       customerName: info.customerName.trim(),
       customerEmail: info.customerEmail.trim(),
       customerPhone: info.customerPhone.trim(),
-      studentName: info.studentName.trim() || info.customerName.trim(),
+      studentName: primaryStudentName,
       waiveDownPayment: noDownPayment || undefined,
+      familyMembers: familyMembers.length > 1 ? familyMembers : undefined,
     });
     setStep("payment");
+  }
+
+  function addFamilyMember() {
+    if (additionalFamilyMembers.length >= 2) return;
+    setAdditionalFamilyMembers(current => [...current, { id: crypto.randomUUID(), studentName: "", packageId: selectedPackageId }]);
+  }
+
+  function updateFamilyMember(id: string, patch: Partial<AdditionalFamilyMember>) {
+    setAdditionalFamilyMembers(current => current.map(member => member.id === id ? { ...member, ...patch } : member));
   }
 
   function handleEnrollmentSuccess(message: string) {
@@ -269,6 +315,36 @@ export default function Enroll() {
                   value={info.studentName}
                   onChange={(e) => setInfo({ ...info, studentName: e.target.value })}
                 />
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">Enrolling more family members?</p>
+                    <p className="mt-1 text-sm text-slate-600">Add up to two more students in this same secure checkout. The second and third members receive 50% off their recurring monthly tuition.</p>
+                  </div>
+                  {additionalFamilyMembers.length < 2 && (
+                    <Button type="button" variant="outline" size="sm" onClick={addFamilyMember} className="shrink-0">
+                      <UserPlus className="mr-1 h-4 w-4" /> Add member
+                    </Button>
+                  )}
+                </div>
+                {additionalFamilyMembers.map((member, index) => (
+                  <div key={member.id} className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                    <label className="text-sm font-medium text-slate-700">Family member {index + 2}
+                      <Input value={member.studentName} onChange={(event) => updateFamilyMember(member.id, { studentName: event.target.value })} placeholder="Student full name" className="mt-1" />
+                    </label>
+                    <label className="text-sm font-medium text-slate-700">Membership plan
+                      <select value={member.packageId ?? ""} onChange={(event) => updateFamilyMember(member.id, { packageId: Number(event.target.value) || null })} className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                        <option value="">Choose a plan</option>
+                        {packages?.map(pkg => <option key={pkg.id} value={pkg.id}>{pkg.name} — ${parseFloat(pkg.monthlyPrice as string).toFixed(0)}/mo</option>)}
+                      </select>
+                    </label>
+                    <Button type="button" variant="ghost" size="icon" aria-label={`Remove family member ${index + 2}`} onClick={() => setAdditionalFamilyMembers(current => current.filter(candidate => candidate.id !== member.id))}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
 
               <Button type="submit" className="w-full mt-2" size="lg">
