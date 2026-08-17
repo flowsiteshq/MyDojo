@@ -31,6 +31,20 @@
 - [x] Fulfill multi-member checkout with separate active enrollments and family-group membership records
 - [x] Add regression coverage for two- and three-member family enrollments
 - [x] Add explicit third-family-member checkout and webhook fulfillment coverage
+- [x] Check the seven named students for completed and paid Belt Test Intent submissions before sending any reminder
+- [x] Send the Belt Test Intent to Promote form and tomorrow 11:00 AM completion reminder only to outstanding recipients
+- [x] Record confirmed deliveries and any unmatched student contacts for the Belt Test reminder
+- [ ] Send the Belt Test reminder to Gulia Gozzo after receiving a verified contact or name correction
+- [x] Replace page 7 of the curriculum manual with the supplied belt-tying instruction page
+- [x] Remove page 10 from the updated curriculum manual without changing any other page
+- [x] Replace the Advanced Brown Belt page in the revised curriculum manual with the supplied artwork
+- [x] Create a public Back-to-School enrollment link with $1 due today and a 14-day tuition start
+- [x] Present Basic and Black Belt program benefits on the Back-to-School enrollment page without exposing WAIVE99
+- [x] Collect a reusable payment method and schedule the selected recurring tuition 14 days after Back-to-School enrollment
+- [x] Add regression coverage for $1 initial charge, 14-day billing, plan selection, and no-public-waiver behavior
+- [x] Add up to three family members to the Back-to-School offer with one $1 initial checkout
+- [x] Start each selected family member plan at the 14-day tuition date and verify family-offer fulfillment
+- [x] Add runtime webhook coverage for two- and three-member Back-to-School subscription activation at the stored 14-day date
 
 - [ ] Verify a published live Stripe enrollment payment after the user completes the agreed end-to-end test
 

@@ -154,6 +154,11 @@ async function handleHostedMembershipEnrollment(session: Stripe.Checkout.Session
   if (!Number.isFinite(recurringMonthlyAmount) || recurringMonthlyAmount < 0) {
     throw new Error("Hosted membership checkout has an invalid recurring tuition amount");
   }
+  const isBackToSchool = session.metadata?.backToSchool === "true";
+  const specifiedBillingStart = session.metadata?.billingStartAt ? new Date(session.metadata.billingStartAt) : null;
+  const hasValidBackToSchoolStart = Boolean(
+    isBackToSchool && specifiedBillingStart && Number.isFinite(specifiedBillingStart.getTime()) && specifiedBillingStart.getTime() > Date.now(),
+  );
   let priceId = pkg.stripePriceId;
   if (hasFamilyDiscount || !priceId) {
     const price = await stripe.prices.create({
@@ -167,13 +172,15 @@ async function handleHostedMembershipEnrollment(session: Stripe.Checkout.Session
   }
   const { getNextBillingDateStr } = await import("../shared/billingUtils.js");
   const nextBillingDate = new Date(`${getNextBillingDateStr(new Date())}T12:00:00`);
+  const tuitionStartDate = hasValidBackToSchoolStart ? specifiedBillingStart! : nextBillingDate;
+  const firstMonthPrepaid = session.metadata?.firstMonthPrepaid === "false" ? false : Boolean(paymentIntentId);
   const subscription = await stripe.subscriptions.create({
     customer: customerId,
     items: [{ price: priceId }],
     default_payment_method: paymentMethod.id,
-    trial_end: Math.floor(nextBillingDate.getTime() / 1000),
+    trial_end: Math.floor(tuitionStartDate.getTime() / 1000),
     payment_settings: { save_default_payment_method: "on_subscription" },
-    metadata: { type: "membership", packageId: String(pkg.id), billingAnchor: getNextBillingDateStr(new Date()), ...(hasFamilyDiscount ? { familyGroupId: String(familyGroupId), familyMemberOrder: String(familyMemberOrder), familyDiscount: "50_percent" } : {}) },
+    metadata: { type: "membership", packageId: String(pkg.id), billingAnchor: hasValidBackToSchoolStart ? tuitionStartDate.toISOString() : getNextBillingDateStr(new Date()), ...(isBackToSchool ? { backToSchool: "true", tuitionStartsAt: tuitionStartDate.toISOString() } : {}), ...(hasFamilyDiscount ? { familyGroupId: String(familyGroupId), familyMemberOrder: String(familyMemberOrder), familyDiscount: "50_percent" } : {}) },
   });
 
   const amountTotal = (session.amount_total ?? 0) / 100;
@@ -190,7 +197,7 @@ async function handleHostedMembershipEnrollment(session: Stripe.Checkout.Session
     paymentMethodWallet: card?.wallet?.type ?? null,
     paymentMethodUpdatedAt: new Date(),
     downPaymentAmount: amountTotal.toFixed(2),
-    paidFirstMonth: paymentIntentId ? 1 : 0,
+    paidFirstMonth: firstMonthPrepaid ? 1 : 0,
     remainingBalance: Math.max(0, Number(pkg.totalPrice) - amountTotal).toFixed(2),
     monthlyPaymentsRemaining: Math.max(0, pkg.durationMonths - 1),
     status: "active",

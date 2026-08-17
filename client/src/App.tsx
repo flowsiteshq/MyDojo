@@ -43,6 +43,7 @@ const InstructorDashboard = lazy(() => import("./pages/InstructorDashboard"));
 const AdminMembershipRequests = lazy(() => import("./pages/AdminMembershipRequests"));
 const AdminEnrollments = lazy(() => import("./pages/AdminEnrollments"));
 const EnrollmentSuccess = lazy(() => import("./pages/EnrollmentSuccess"));
+const BackToSchool = lazy(() => import("./pages/BackToSchool"));
 const CheckIn = lazy(() => import("./pages/CheckIn"));
 const KioskCheckIn = lazy(() => import("./pages/KioskCheckIn"));
 const KioskArcade = lazy(() => import("./pages/KioskArcade"));
@@ -153,6 +154,7 @@ function Router() {
         {/* Separate routes without Layout */}
         <Route path="/join" component={Join} />
         <Route path="/enroll" component={Enroll} />
+        <Route path="/back-to-school" component={BackToSchool} />
         <Route path="/summer-camp/enroll" component={SummerCampEnroll} />
         <Route path="/summer-camp/forms" component={SummerCampForms} />
         <Route path="/buy-day-pass" component={BuyDayPass} />

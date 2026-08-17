@@ -3396,6 +3396,224 @@ Please enter your card details below to complete your registration securely. Tot
         };
       }),
 
+    /** Public Back-to-School promotion: $1 today, selected tuition begins exactly 14 days later. */
+    createBackToSchoolCheckout: publicProcedure
+      .input(z.object({
+        plan: z.enum(["basic", "black_belt"]),
+        customerName: z.string().min(1).max(255),
+        customerEmail: z.string().email(),
+        customerPhone: z.string().min(7).max(20),
+        studentName: z.string().min(1).max(255),
+        termsAccepted: z.literal(true),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+        const packageName = input.plan === "basic" ? "Foundation" : "Black Belt";
+        const [pkg] = await db.select().from(schema.membershipPackages)
+          .where(and(
+            eq(schema.membershipPackages.name, packageName),
+            eq(schema.membershipPackages.isActive, 1),
+            eq(schema.membershipPackages.invitationOnly, 0),
+          ))
+          .limit(1);
+        if (!pkg) throw new TRPCError({ code: "NOT_FOUND", message: "This Back-to-School plan is unavailable" });
+
+        const monthlyTuition = Number(pkg.monthlyPrice);
+        const billingStartsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+        const customer = await getOrCreateStripeCustomer({
+          name: input.customerName,
+          email: input.customerEmail,
+          phone: input.customerPhone,
+          metadata: { mydojoBackToSchool: "true" },
+        });
+        const insertResult = await db.insert(schema.enrollments).values({
+          membershipPackageId: pkg.id,
+          customerName: input.customerName.trim(),
+          customerEmail: input.customerEmail.trim().toLowerCase(),
+          customerPhone: input.customerPhone.trim(),
+          studentName: input.studentName.trim(),
+          stripeCustomerId: customer.id,
+          downPaymentAmount: "1.00",
+          paidFirstMonth: 0,
+          remainingBalance: Number(pkg.totalPrice).toFixed(2),
+          monthlyPaymentsRemaining: pkg.durationMonths,
+          status: "pending",
+          discountApplied: "back_to_school:$1_today:tuition_starts_in_14_days",
+          startDate: new Date(),
+        });
+        const enrollmentId = Number((insertResult as any).insertId);
+        const origin = (ctx.req.headers.origin as string) || "https://mydojoma.com";
+        const session = await getStripe().checkout.sessions.create({
+          mode: "payment",
+          customer: customer.id,
+          line_items: [{
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: `MyDojo Back-to-School — ${pkg.name}`,
+                description: `$1 enrollment today. ${pkg.name} tuition begins in 14 days.`,
+              },
+              unit_amount: 100,
+            },
+            quantity: 1,
+          }],
+          payment_intent_data: {
+            setup_future_usage: "off_session",
+            metadata: { type: "membership_enrollment_checkout", enrollmentId: String(enrollmentId) },
+          },
+          metadata: {
+            type: "membership_enrollment_checkout",
+            enrollmentId: String(enrollmentId),
+            backToSchool: "true",
+            firstMonthPrepaid: "false",
+            billingStartAt: billingStartsAt.toISOString(),
+            recurringMonthlyAmount: monthlyTuition.toFixed(2),
+          },
+          success_url: `${origin}/enrollment/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}/back-to-school?checkout=cancelled`,
+          allow_promotion_codes: false,
+        });
+        if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create secure checkout" });
+        return {
+          checkoutUrl: session.url,
+          enrollmentId,
+          amountCents: 100,
+          monthlyTuition,
+          billingStartsAt: billingStartsAt.toISOString(),
+        };
+      }),
+
+    /** Public Back-to-School family promotion: one $1 checkout for up to three students. */
+    createBackToSchoolFamilyCheckout: publicProcedure
+      .input(z.object({
+        customerName: z.string().min(1).max(255),
+        customerEmail: z.string().email(),
+        customerPhone: z.string().min(7).max(20),
+        members: z.array(z.object({
+          plan: z.enum(["basic", "black_belt"]),
+          studentName: z.string().min(1).max(255),
+        })).min(2).max(3),
+        termsAccepted: z.literal(true),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        if (new Set(input.members.map((member) => member.studentName.trim().toLowerCase())).size !== input.members.length) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Each family member must have a different name" });
+        }
+        const customer = await getOrCreateStripeCustomer({
+          name: input.customerName,
+          email: input.customerEmail,
+          phone: input.customerPhone,
+          metadata: { mydojoBackToSchoolFamily: "true" },
+        });
+        let [familyGroup] = await db.select().from(schema.familyGroups)
+          .where(eq(schema.familyGroups.primaryContactEmail, input.customerEmail.trim().toLowerCase()))
+          .limit(1);
+        if (!familyGroup) {
+          const created = await db.insert(schema.familyGroups).values({
+            primaryContactName: input.customerName.trim(),
+            primaryContactEmail: input.customerEmail.trim().toLowerCase(),
+            primaryContactPhone: input.customerPhone.trim(),
+            registrationFeePaid: 1,
+            registrationFeeAmount: "1.00",
+          });
+          const familyGroupId = Number((created as any).insertId ?? (created as any)[0]?.insertId);
+          [familyGroup] = await db.select().from(schema.familyGroups).where(eq(schema.familyGroups.id, familyGroupId)).limit(1);
+        }
+        if (!familyGroup) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create the family account" });
+        const existingMembers = await db.select().from(schema.familyGroupMembers).where(eq(schema.familyGroupMembers.familyGroupId, familyGroup.id));
+        const { calculateFamilyRecurringTuition, receivesFamilyRecurringDiscount } = await import("./membershipPricingPolicy");
+        const billingStartsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+        const enrollmentDetails: Array<{ enrollmentId: number; pkg: typeof schema.membershipPackages.$inferSelect; studentName: string; memberOrder: number; hasDiscount: boolean; recurringMonthlyAmount: number }> = [];
+        for (let index = 0; index < input.members.length; index += 1) {
+          const member = input.members[index];
+          const packageName = member.plan === "basic" ? "Foundation" : "Black Belt";
+          const [pkg] = await db.select().from(schema.membershipPackages)
+            .where(and(
+              eq(schema.membershipPackages.name, packageName),
+              eq(schema.membershipPackages.isActive, 1),
+              eq(schema.membershipPackages.invitationOnly, 0),
+            ))
+            .limit(1);
+          if (!pkg) throw new TRPCError({ code: "NOT_FOUND", message: "A selected Back-to-School plan is unavailable" });
+          const memberOrder = existingMembers.length + index + 1;
+          const hasDiscount = receivesFamilyRecurringDiscount(memberOrder);
+          const recurringMonthlyAmount = calculateFamilyRecurringTuition(Number(pkg.monthlyPrice), memberOrder);
+          const insertResult = await db.insert(schema.enrollments).values({
+            membershipPackageId: pkg.id,
+            customerName: input.customerName.trim(),
+            customerEmail: input.customerEmail.trim().toLowerCase(),
+            customerPhone: input.customerPhone.trim(),
+            studentName: member.studentName.trim(),
+            stripeCustomerId: customer.id,
+            downPaymentAmount: index === 0 ? "1.00" : "0.00",
+            paidFirstMonth: 0,
+            remainingBalance: Number(pkg.totalPrice).toFixed(2),
+            monthlyPaymentsRemaining: pkg.durationMonths,
+            status: "pending",
+            discountApplied: "back_to_school:$1_family_checkout:tuition_starts_in_14_days",
+            startDate: new Date(),
+          });
+          enrollmentDetails.push({
+            enrollmentId: Number((insertResult as any).insertId),
+            pkg,
+            studentName: member.studentName.trim(),
+            memberOrder,
+            hasDiscount,
+            recurringMonthlyAmount,
+          });
+        }
+        const origin = (ctx.req.headers.origin as string) || "https://mydojoma.com";
+        const session = await getStripe().checkout.sessions.create({
+          mode: "payment",
+          customer: customer.id,
+          line_items: [{
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "MyDojo Back-to-School Family Enrollment",
+                description: "$1 enrollment today. Each selected plan begins tuition in 14 days.",
+              },
+              unit_amount: 100,
+            },
+            quantity: 1,
+          }],
+          payment_intent_data: {
+            setup_future_usage: "off_session",
+            metadata: { type: "family_membership_enrollment_checkout", enrollmentIds: enrollmentDetails.map((detail) => detail.enrollmentId).join(",") },
+          },
+          metadata: {
+            type: "family_membership_enrollment_checkout",
+            enrollmentIds: enrollmentDetails.map((detail) => detail.enrollmentId).join(","),
+            familyGroupId: String(familyGroup.id),
+            memberOrders: enrollmentDetails.map((detail) => detail.memberOrder).join(","),
+            recurringMonthlyAmounts: enrollmentDetails.map((detail) => detail.recurringMonthlyAmount.toFixed(2)).join(","),
+            promoCode: "",
+            backToSchool: "true",
+            firstMonthPrepaid: "false",
+            billingStartAt: billingStartsAt.toISOString(),
+          },
+          success_url: `${origin}/enrollment/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}/back-to-school?checkout=cancelled`,
+          allow_promotion_codes: false,
+        });
+        if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create secure family checkout" });
+        return {
+          checkoutUrl: session.url,
+          amountCents: 100,
+          billingStartsAt: billingStartsAt.toISOString(),
+          members: enrollmentDetails.map((detail) => ({
+            studentName: detail.studentName,
+            memberOrder: detail.memberOrder,
+            monthlyTuition: detail.recurringMonthlyAmount,
+            hasFamilyDiscount: detail.hasDiscount,
+          })),
+        };
+      }),
+
     /** Creates one hosted checkout for two or three new members under the same family account. */
     createFamilyEnrollmentCheckout: publicProcedure
       .input(z.object({
