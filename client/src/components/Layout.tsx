@@ -120,6 +120,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const navLinks: { name: string; path: string; external?: boolean }[] = [
     { name: "Kids Martial Arts", path: "/kids-martial-arts" },
     { name: "Adult Kickboxing", path: "/adult-kickboxing" },
+    { name: "Birthday Parties", path: "/birthday-parties" },
     { name: "About Us", path: "/about" },
     { name: "Shop", path: "/shop" },
   ];

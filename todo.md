@@ -45,6 +45,8 @@
 - [x] Add up to three family members to the Back-to-School offer with one $1 initial checkout
 - [x] Start each selected family member plan at the 14-day tuition date and verify family-offer fulfillment
 - [x] Add runtime webhook coverage for two- and three-member Back-to-School subscription activation at the stored 14-day date
+- [x] Restore the public birthday party page and a visible navigation or call-to-action entry point
+- [x] Add regression coverage for the birthday party route and public page link
 
 - [ ] Verify a published live Stripe enrollment payment after the user completes the agreed end-to-end test
 
