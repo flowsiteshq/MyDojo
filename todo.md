@@ -35,6 +35,16 @@
 - [x] Send the Belt Test Intent to Promote form and tomorrow 11:00 AM completion reminder only to outstanding recipients
 - [x] Record confirmed deliveries and any unmatched student contacts for the Belt Test reminder
 - [ ] Send the Belt Test reminder to Gulia Gozzo after receiving a verified contact or name correction
+- [ ] Identify the previously attempted student signup that could not be located and confirm the correct student name
+- [ ] Find Nayeli Machado's phone number in 800.com messaging records and verify the match
+- [x] Connect Facebook Ads / Ads Manager through an authorized Meta browser session
+- [x] Verify access to the selected MyDojo ad account and campaign data
+- [ ] Add a server-side Meta Marketing API integration if automated campaign data sync is requested
+- [ ] Build a Back-to-School Facebook lead intake that transfers name, phone, and email into MyDojo
+- [ ] Create scheduling handoff and immediate appointment-text automation for new Back-to-School leads
+- [ ] Create a reviewable Back-to-School $1 Facebook lead-ad draft connected to the new flow
+- [ ] Test the lead-to-scheduling-to-text journey and obtain approval before publishing the ad
+- [ ] Configure the approved Facebook instant-form Back-to-School lead flow with immediate appointment text and draft-only ad status
 - [x] Replace page 7 of the curriculum manual with the supplied belt-tying instruction page
 - [x] Remove page 10 from the updated curriculum manual without changing any other page
 - [x] Replace the Advanced Brown Belt page in the revised curriculum manual with the supplied artwork

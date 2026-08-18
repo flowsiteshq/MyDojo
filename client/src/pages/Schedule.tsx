@@ -1,5 +1,5 @@
 import { AddToCalendarButton } from "@/components/AddToCalendarButton";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CalendarEvent } from "@/lib/calendar";
 import { motion } from "framer-motion";
@@ -11,6 +11,14 @@ import { openBookFreeClassGate } from "@/lib/chatbot";
 
 export default function Schedule() {
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("book") === "true") {
+      openBookFreeClassGate();
+    }
+  }, []);
+
   const scheduleData = [
     { program: "Little Ninjas (Ages 3-5)", mon: "5:00PM", tue: "5:00PM", wed: "5:00PM", thu: "5:00PM", fri: "N/A", sat: "10:00AM" },
     { program: "Little Ninjas & Me", mon: "N/A", tue: "N/A", wed: "2:00PM", thu: "N/A", fri: "2:00PM", sat: "N/A" },

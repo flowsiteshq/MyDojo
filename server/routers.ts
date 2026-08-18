@@ -8360,6 +8360,29 @@ Please enter your card details below to complete your registration securely. Tot
 
   // ─── Website Popup Lead Capture ─────────────────────────────────────────────
   popup: router({
+    getFacebookLeadSchedulingPrefill: publicProcedure
+      .input(z.object({ token: z.string().uuid() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+        const [lead] = await db
+          .select({
+            name: schema.trialSignups.name,
+            email: schema.trialSignups.email,
+            phone: schema.trialSignups.phone,
+            program: schema.trialSignups.program,
+          })
+          .from(schema.trialSignups)
+          .where(and(
+            eq(schema.trialSignups.bookingRequestId, input.token),
+            eq(schema.trialSignups.source, "facebook")
+          ))
+          .limit(1);
+
+        if (!lead) throw new TRPCError({ code: "NOT_FOUND", message: "Scheduling link not found" });
+        return lead;
+      }),
     submitLead: publicProcedure
       .input(z.object({
         campaign: z.enum(['summer_camp', 'kickboxing', 'online_special']),

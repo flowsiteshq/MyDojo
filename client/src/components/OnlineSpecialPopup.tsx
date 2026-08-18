@@ -114,6 +114,7 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
   const urlName = urlParams?.get("name") ?? "";
   const urlPhone = urlParams?.get("phone") ?? "";
   const urlEmail = urlParams?.get("email") ?? "";
+  const leadToken = urlParams?.get("lead") ?? "";
   const hasPrefilledData = !!(urlName || urlPhone || urlEmail);
 
   const [open, setOpen] = useState(false);
@@ -160,6 +161,18 @@ export default function OnlineSpecialPopup({ forceOpen, defaultProgram, onClose 
     },
     { enabled: open && step === "schedule", staleTime: 5 * 60 * 1000 }
   );
+
+  const { data: facebookLead } = trpc.popup.getFacebookLeadSchedulingPrefill.useQuery(
+    { token: leadToken || "00000000-0000-0000-0000-000000000000" },
+    { enabled: Boolean(leadToken), retry: false, staleTime: 5 * 60 * 1000 }
+  );
+
+  useEffect(() => {
+    if (!facebookLead) return;
+    setName(facebookLead.name || "");
+    setPhone(facebookLead.phone || "");
+    setEmail(facebookLead.email || "");
+  }, [facebookLead]);
 
   const submitLead = trpc.popup.submitLead.useMutation();
   const checkoutMutation = trpc.popup.createIntroOfferCheckout.useMutation();

@@ -17,11 +17,13 @@
  */
 
 import { Request, Response } from "express";
+import { randomUUID } from "crypto";
 import { getDb } from "./db";
 import { trialSignups } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { notifyOwner } from "./_core/notification";
 import { notifyStaffNewLead } from "./notifyStaffNewLead";
+import { sendProactiveSms } from "./aiSms";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -95,6 +97,16 @@ function inferProgramFromFacebook(
   if (combined.includes("adult karate") || combined.includes("karate")) return "Adult Karate";
 
   return "Not Sure";
+}
+
+function isBackToSchoolLead(adName: string = "", campaignName: string = "", adsetName: string = ""): boolean {
+  const source = [adName, campaignName, adsetName].join(" ").toLowerCase();
+  return source.includes("back to school") || source.includes("back-to-school") || source.includes("$1");
+}
+
+function getBackToSchoolSchedulingUrl(schedulingToken: string): string {
+  const siteUrl = (process.env.PUBLIC_SITE_URL || "https://mydojoma.com").replace(/\/$/, "");
+  return `${siteUrl}/schedule?book=true&source=facebook_back_to_school&lead=${encodeURIComponent(schedulingToken)}`;
 }
 
 // ─── Fetch full lead data from Facebook Graph API ─────────────────────────────
@@ -220,6 +232,8 @@ export async function handleFacebookWebhook(req: Request, res: Response) {
         }
 
         const program = inferProgramFromFacebook(ad_name, campaign_name, adset_name, programField);
+        const backToSchoolOffer = isBackToSchoolLead(ad_name, campaign_name, adset_name);
+        const schedulingToken = backToSchoolOffer ? randomUUID() : undefined;
 
         await db.insert(trialSignups).values({
           name: fullName,
@@ -236,13 +250,25 @@ export async function handleFacebookWebhook(req: Request, res: Response) {
           introCountCompleted: 0,
           dojoFlowSyncStatus: "pending",
           dojoFlowSyncAttempts: 0,
-          notes: `Facebook Lead ID: ${leadgen_id}\nAd: ${ad_name || "unknown"}\nCampaign: ${campaign_name || "unknown"}`,
+          bookingRequestId: schedulingToken,
+          notes: `Facebook Lead ID: ${leadgen_id}\nAd: ${ad_name || "unknown"}\nCampaign: ${campaign_name || "unknown"}${backToSchoolOffer ? "\nOffer: Back-to-School $1 Special" : ""}`,
         });
 
         console.log(`[Facebook Webhook] Lead created: ${fullName} (${phone}) — program: ${program} — ad: ${ad_name || "unknown"}`);
 
         // Notify staff via SMS (fire-and-forget)
         notifyStaffNewLead({ name: fullName, phone: phone || undefined, program, source: 'Facebook' }).catch(() => {});
+
+        // Back-to-School instant-form leads explicitly opt in to appointment follow-up
+        // in the matching Meta lead form. Give them a direct class-scheduling handoff.
+        if (backToSchoolOffer && phone) {
+          const firstNameForText = firstName || fullName.split(" ")[0] || "there";
+          const schedulingUrl = getBackToSchoolSchedulingUrl(schedulingToken!);
+          const appointmentText = `Hi ${firstNameForText}, thanks for your interest in MyDojo’s $1 Back-to-School Special. Schedule your first class here: ${schedulingUrl}. Reply HELP for help or STOP to opt out.`;
+          sendProactiveSms(phone, appointmentText, "campaign", fullName).catch((error) => {
+            console.error("[Facebook Webhook] Back-to-School appointment SMS failed:", error);
+          });
+        }
 
         // Notify the owner so the admin dashboard can show a confirmation
         await notifyOwner({
