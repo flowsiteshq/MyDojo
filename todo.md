@@ -56,7 +56,7 @@
 - [ ] Diagnose why the published shop does not visibly show the $195 sparring gear package after deployment
 - [x] Prepare a Railway deployment handoff that preserves MyDojo’s secure environment variables, database access, storage, and payment webhooks
 - [ ] Deploy the Railway service after securely configuring its production variables, asset hosting, database access, and payment/webhook callbacks
-- [ ] Push the verified sparring gear package and Railway deployment handoff to the MyDojo GitHub repository
+- [x] Push the verified sparring gear package and Railway deployment handoff to the MyDojo GitHub repository
 - [x] Replace page 7 of the curriculum manual with the supplied belt-tying instruction page
 - [x] Remove page 10 from the updated curriculum manual without changing any other page
 - [x] Replace the Advanced Brown Belt page in the revised curriculum manual with the supplied artwork
