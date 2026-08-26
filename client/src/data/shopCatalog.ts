@@ -7,6 +7,23 @@ export type ShopCatalogProduct = ShopProduct & {
 
 export const STUDENT_SHOP_PRODUCTS: ShopCatalogProduct[] = [
   {
+    id: "mydojo-sparring-gear-package",
+    name: "MyDojo Sparring Gear Package",
+    subtitle: "Complete protection for confident sparring",
+    price: 195,
+    category: "Fight Gear",
+    badge: "Complete Set",
+    image: "/manus-storage/mydojo-sparring-gear-red-black_e9baacd1.png",
+    colors: ["Red", "Black", "White", "Pink"],
+    colorImages: {
+      Red: "/manus-storage/mydojo-sparring-gear-red-black_e9baacd1.png",
+      Black: "/manus-storage/mydojo-sparring-gear-black_90fedb76.png",
+      White: "/manus-storage/mydojo-sparring-gear-white_3abe0ba8.png",
+      Pink: "/manus-storage/mydojo-sparring-gear-pink_300c4514.png",
+    },
+    sizes: ["Youth S", "Youth M", "Youth L", "Adult S", "Adult M", "Adult L", "Adult XL"],
+  },
+  {
     id: "kihon-gi",
     name: "Kihon Gi",
     subtitle: "The foundation of every martial artist",

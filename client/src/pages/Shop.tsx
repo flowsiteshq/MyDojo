@@ -14,6 +14,32 @@ type Product = ShopProduct & {
 
 const products: Product[] = [
   {
+    id: "mydojo-sparring-gear-package",
+    name: "MyDojo Sparring Gear Package",
+    subtitle: "Fully Equipped. Ready to Spar.",
+    price: 195.0,
+    category: "Fight Gear",
+    badge: "Complete Set",
+    image: "/manus-storage/mydojo-sparring-gear-red-black_e9baacd1.png",
+    colors: ["Red", "Black", "White", "Pink"],
+    colorImages: {
+      Red: "/manus-storage/mydojo-sparring-gear-red-black_e9baacd1.png",
+      Black: "/manus-storage/mydojo-sparring-gear-black_90fedb76.png",
+      White: "/manus-storage/mydojo-sparring-gear-white_3abe0ba8.png",
+      Pink: "/manus-storage/mydojo-sparring-gear-pink_300c4514.png",
+    },
+    sizes: ["Youth S", "Youth M", "Youth L", "Adult S", "Adult M", "Adult L", "Adult XL"],
+    description:
+      "One complete MyDojo-ready sparring package with the protective gear students need to train with confidence.",
+    features: [
+      "Padded open-face headgear",
+      "Hand pads, shin pads, and foot pads",
+      "Mouthpiece and breathable mesh gear bag",
+      "Choose Red, Black, White, or Pink",
+      "Coordinated MyDojo-branded protective gear",
+    ],
+  },
+  {
     id: "kihon-gi",
     name: "Kihon Gi",
     subtitle: "The Foundation of Every Martial Artist",
@@ -189,6 +215,7 @@ const badgeColors: Record<string, string> = {
   "Leadership Team": "bg-red-100 text-red-800",
   "Black Belt Program": "bg-gray-900 text-white",
   Premium: "bg-yellow-100 text-yellow-800",
+  "Complete Set": "bg-red-100 text-red-800",
 };
 
 export default function Shop() {
@@ -196,15 +223,35 @@ export default function Shop() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [checkoutProduct, setCheckoutProduct] = useState<ShopProduct | null>(null);
+  const [checkoutDefaultColor, setCheckoutDefaultColor] = useState("");
   const [showBack, setShowBack] = useState<Record<string, boolean>>({});
   const [modalShowBack, setModalShowBack] = useState(false);
   const [checkoutStatus, setCheckoutStatus] = useState<"success" | "cancelled" | null>(null);
 
   useEffect(() => {
-    const status = new URLSearchParams(window.location.search).get("shop");
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("shop");
     if (status === "success" || status === "cancelled") {
       setCheckoutStatus(status);
       window.history.replaceState({}, "", window.location.pathname);
+    }
+    const requestedProduct = params.get("product");
+    const requestedColor = params.get("color") ?? "";
+    const product = products.find((candidate) => candidate.id === requestedProduct);
+    if (product && params.get("checkout") === "1") {
+      setCheckoutDefaultColor(product.colors?.includes(requestedColor) ? requestedColor : "");
+      setCheckoutProduct({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        sizes: product.sizes,
+        colors: product.colors,
+        colorImages: product.colorImages,
+        category: product.category,
+      });
+    } else if (product) {
+      setSelectedProduct(product);
     }
   }, []);
 
@@ -221,12 +268,15 @@ export default function Shop() {
   const openCheckout = (product: Product, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setSelectedProduct(null);
+    setCheckoutDefaultColor("");
     setCheckoutProduct({
       id: product.id,
       name: product.name,
       price: product.price,
       image: product.image,
       sizes: product.sizes,
+      colors: product.colors,
+      colorImages: product.colorImages,
       category: product.category,
     });
   };
@@ -429,6 +479,7 @@ export default function Shop() {
         product={checkoutProduct}
         open={!!checkoutProduct}
         onClose={() => setCheckoutProduct(null)}
+        defaultColor={checkoutDefaultColor}
       />
     </div>
   );

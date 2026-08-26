@@ -2,7 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, router } from "./_core/trpc";
 
-const SHOP_CATALOG: Record<string, { name: string; amountCents: number; category: string }> = {
+const SHOP_CATALOG: Record<string, { name: string; amountCents: number; category: string; colors?: string[] }> = {
   "kihon-gi": { name: "Kihon Gi", amountCents: 4900, category: "Uniforms & Gis" },
   "mydojo-classic-tshirt": { name: "MyDojo Classic T-Shirt", amountCents: 2900, category: "Apparel" },
   "kickboxing-gloves": { name: "Kickboxing Gloves", amountCents: 6900, category: "Fight Gear" },
@@ -11,6 +11,12 @@ const SHOP_CATALOG: Record<string, { name: string; amountCents: number; category
   "shinobi-gi-middle": { name: "Shinobi Gi — Middle Weight", amountCents: 6850, category: "Uniforms & Gis" },
   "shinobi-gi-heavy": { name: "Shinobi Gi — Heavy Weight", amountCents: 9900, category: "Uniforms & Gis" },
   "tetsujin-gi": { name: "Tetsujin Gi", amountCents: 22500, category: "Uniforms & Gis" },
+  "mydojo-sparring-gear-package": {
+    name: "MyDojo Sparring Gear Package",
+    amountCents: 19500,
+    category: "Fight Gear",
+    colors: ["Red", "Black", "White", "Pink"],
+  },
 };
 
 export const shopRouter = router({
@@ -18,6 +24,7 @@ export const shopRouter = router({
     .input(z.object({
       productId: z.string().min(1),
       size: z.string().max(32).optional(),
+      color: z.string().max(32).optional(),
       customerName: z.string().min(1).max(120),
       customerEmail: z.string().email(),
       customerPhone: z.string().max(40).optional(),
@@ -26,6 +33,9 @@ export const shopRouter = router({
     .mutation(async ({ input, ctx }) => {
       const product = SHOP_CATALOG[input.productId];
       if (!product) throw new TRPCError({ code: "BAD_REQUEST", message: "This shop item is unavailable." });
+      if (product.colors && !product.colors.includes(input.color ?? "")) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Please select an available gear color." });
+      }
 
       const secretKey = process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
       if (!secretKey) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Stripe checkout is not configured." });
@@ -33,7 +43,8 @@ export const shopRouter = router({
       const Stripe = (await import("stripe")).default;
       const stripe = new Stripe(secretKey, { apiVersion: "2026-01-28.clover" as any });
       const origin = (ctx.req.headers.origin as string) || "https://mydojoma.com";
-      const description = input.size ? `${product.category} · Size: ${input.size}` : product.category;
+      const options = [input.size ? `Size: ${input.size}` : null, input.color ? `Color: ${input.color}` : null].filter(Boolean).join(" · ");
+      const description = options ? `${product.category} · ${options}` : product.category;
 
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
@@ -55,6 +66,7 @@ export const shopRouter = router({
           customer_name: input.customerName,
           customer_phone: input.customerPhone || "",
           size: input.size || "",
+          color: input.color || "",
         },
         success_url: `${origin}${input.returnTo}?shop=success&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}${input.returnTo}?shop=cancelled`,

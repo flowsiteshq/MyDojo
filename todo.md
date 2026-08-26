@@ -45,6 +45,14 @@
 - [ ] Create a reviewable Back-to-School $1 Facebook lead-ad draft connected to the new flow
 - [ ] Test the lead-to-scheduling-to-text journey and obtain approval before publishing the ad
 - [ ] Configure the approved Facebook instant-form Back-to-School lead flow with immediate appointment text and draft-only ad status
+- [x] Create a MyDojo-branded sparring gear package visual with headgear, mouthpiece, hand pads, shin pads, foot pads, and mesh gear bag
+- [x] Add the sparring gear package to the secure shop purchase flow at an approved campaign price
+- [ ] Prepare the parent SMS audience, purchase link, and exact message for approval before sending
+- [x] Add red, black, white, and pink color selection to the MyDojo sparring gear package
+- [x] Publish the MyDojo sparring gear package at the approved $195 price for every color option
+- [x] Verify the final red, black, white, and pink gear images match the supplied protective-gear reference and render in the shop
+- [x] Interact with each sparring package color in the shop and record that the correct image and $195 checkout option appear
+- [ ] Checkpoint and push the $195 sparring gear package update, then verify its published shop purchase flow
 - [x] Replace page 7 of the curriculum manual with the supplied belt-tying instruction page
 - [x] Remove page 10 from the updated curriculum manual without changing any other page
 - [x] Replace the Advanced Brown Belt page in the revised curriculum manual with the supplied artwork

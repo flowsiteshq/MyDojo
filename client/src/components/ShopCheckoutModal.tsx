@@ -13,6 +13,8 @@ export interface ShopProduct {
   price: number;
   image: string;
   sizes?: string[];
+  colors?: string[];
+  colorImages?: Record<string, string>;
   category: string;
 }
 
@@ -22,13 +24,15 @@ interface Props {
   onClose: () => void;
   defaultName?: string;
   defaultEmail?: string;
+  defaultColor?: string;
 }
 
-export function ShopCheckoutModal({ product, open, onClose, defaultName = "", defaultEmail = "" }: Props) {
+export function ShopCheckoutModal({ product, open, onClose, defaultName = "", defaultEmail = "", defaultColor = "" }: Props) {
   const [name, setName] = useState(defaultName);
   const [email, setEmail] = useState(defaultEmail);
   const [phone, setPhone] = useState("");
   const [size, setSize] = useState("");
+  const [color, setColor] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const checkoutMutation = trpc.shop.createCheckout.useMutation();
 
@@ -38,8 +42,9 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
     setEmail(defaultEmail);
     setPhone("");
     setSize("");
+    setColor(product?.colors?.includes(defaultColor) ? defaultColor : "");
     setFormError(null);
-  }, [open, defaultName, defaultEmail]);
+  }, [open, defaultName, defaultEmail, defaultColor, product]);
 
   if (!product) return null;
 
@@ -48,11 +53,13 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
     if (!name.trim()) return setFormError("Please enter your full name.");
     if (!email.trim() || !email.includes("@")) return setFormError("Please enter a valid email address.");
     if (product.sizes?.length && !size) return setFormError("Please select a size.");
+    if (product.colors?.length && !color) return setFormError("Please select a color.");
 
     try {
       const { checkoutUrl } = await checkoutMutation.mutateAsync({
         productId: product.id,
         size: size || undefined,
+        color: color || undefined,
         customerName: name.trim(),
         customerEmail: email.trim(),
         customerPhone: phone.trim() || undefined,
@@ -76,11 +83,12 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
         </DialogHeader>
 
         <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <img src={product.image} alt={product.name} className="h-16 w-16 rounded-lg object-contain" />
+          <img src={product.colorImages?.[color] ?? product.image} alt={product.name} className="h-16 w-16 rounded-lg object-contain" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold text-slate-900">{product.name}</p>
             <p className="text-xs text-slate-500">{product.category}</p>
             {size ? <p className="mt-1 text-xs font-semibold text-[#E11D2A]">Size: {size}</p> : null}
+            {color ? <p className="mt-1 text-xs font-semibold text-[#E11D2A]">Color: {color}</p> : null}
           </div>
           <p className="text-lg font-black text-slate-900">${product.price.toFixed(2)}</p>
         </div>
@@ -104,6 +112,15 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
               <Select value={size} onValueChange={setSize}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Select a size" /></SelectTrigger>
                 <SelectContent>{product.sizes.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          ) : null}
+          {product.colors?.length ? (
+            <div>
+              <Label>Color *</Label>
+              <Select value={color} onValueChange={setColor}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select a color" /></SelectTrigger>
+                <SelectContent>{product.colors.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent>
               </Select>
             </div>
           ) : null}

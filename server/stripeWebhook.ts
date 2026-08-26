@@ -279,6 +279,7 @@ async function handleShopPurchase(session: Stripe.Checkout.Session) {
   const customerEmail = session.customer_details?.email || session.customer_email || "";
   const productName = metadata.product_name || "MyDojo Pro Shop Item";
   const amountCents = session.amount_total ?? 0;
+  const selectedOptions = [metadata.size ? `size ${metadata.size}` : null, metadata.color ? `color ${metadata.color}` : null].filter(Boolean).join(" · ");
 
   await db.insert(shopOrders).values({
     stripeSessionId: session.id,
@@ -289,7 +290,7 @@ async function handleShopPurchase(session: Stripe.Checkout.Session) {
     productId: metadata.product_id || "unknown",
     productName,
     productCategory: metadata.product_category || "Pro Shop",
-    size: metadata.size || null,
+    size: selectedOptions || null,
     amountCents,
     paymentStatus: "paid",
     fulfillmentStatus: "pending",
@@ -297,7 +298,7 @@ async function handleShopPurchase(session: Stripe.Checkout.Session) {
 
   await notifyOwner({
     title: `Pro Shop Order — ${productName}`,
-    content: `${customerName} purchased ${productName}${metadata.size ? ` (size ${metadata.size})` : ""} for $${(amountCents / 100).toFixed(2)}. Order is ready for fulfillment. Stripe session: ${session.id}`,
+    content: `${customerName} purchased ${productName}${selectedOptions ? ` (${selectedOptions})` : ""} for $${(amountCents / 100).toFixed(2)}. Order is ready for fulfillment. Stripe session: ${session.id}`,
   });
   console.log("[Stripe Webhook] Recorded shop order:", session.id);
 }
