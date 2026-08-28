@@ -94,6 +94,25 @@
 - [ ] Redeploy the Railway customer-domain service from GitHub commit 29d5dce so the already-corrected family pricing reaches mydojoma.com
 - [ ] Push the latest MyDojo task-tracking changes and family-pricing release state to GitHub
 - [x] Add a visible Enroll Now link to the public desktop and mobile website menu that routes to /enroll
+- [ ] Prepare a deduplicated, opt-out-aware current-student and lead SMS audience for tonight’s free Parents’ Night Out Sports Night, 6:00–9:30 PM
+- [ ] Obtain final approval of the exact Parents’ Night Out Sports Night SMS and recipient scope before any delivery
+- [ ] Send the approved Parents’ Night Out Sports Night SMS once and record delivery results
+- [ ] Dispatch the user-approved exact Parents’ Night Out Sports Night SMS once to 463 deduplicated eligible contacts and persist each outcome
+- [ ] Reconfirm the unchanged Parents’ Night Out SMS against the current 459-contact eligible audience after the 463-contact safety stop sent zero messages
+- [ ] Update the Parents’ Night Out campaign safety guard to the user-approved 459-contact audience before delivery
+- [x] Dispatch the approved Parents’ Night Out Sports Night SMS once to the 459-contact audience and record provider delivery outcomes
+- [ ] Prepare a failed-recipient-only retry for the 219 Parents’ Night Out SMS sends blocked by the provider rate limit, without duplicating the 240 successful sends
+- [x] Suspend the pending Parents’ Night Out SMS retry with a durable manual-resume guard while the recurring-membership activation failure is audited
+- [x] Audit every successfully paid August enrollment for missing active status, recurring subscription, or recurring schedule without creating a charge
+- [x] Prepare an exact no-charge membership recovery list for user approval before changing any paid enrollment status or recurring billing setup
+- [x] Recover exactly 11 confirmed paid August enrollments by activating memberships and creating original recurring schedules without charging today or touching Naomi Musa
+- [x] Prevent future paid enrollment checkouts from storing undefined or NaN enrollment references in webhook metadata
+- [x] Dry-run and verify the 11-record no-charge recurring-membership recovery before execution
+- [x] Create a recurring price for any approved recovery package missing one, then resume only the six remaining pending memberships without an immediate charge
+- [x] Verify all 11 recovered memberships are active, trialing to a future billing date, and have no recovery-day charge
+- [x] Restore the 11 confirmed paid August members to active recurring memberships without charging anyone on the recovery date
+- [x] Verify the future checkout path accepts reusable Link payment methods and prevents invalid enrollment identifiers from blocking activation
+- [ ] Checkpoint and push the recurring-membership recovery and preventative checkout activation fix to GitHub
 
 - [x] Audit and rebuild every MyDojo customer payment, enrollment, event, shop, and recurring-billing flow into one reliable Stripe-based system
 - [x] Remove or hard-disable remaining legacy FluidPay payment-creation mutations and fallbacks after confirming no active route depends on them

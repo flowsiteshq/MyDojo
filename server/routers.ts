@@ -72,6 +72,17 @@ import { sendLeadConfirmationSms } from "./leadConfirmationSms";
 import { getEnrollmentAgreementVersion, renderEnrollmentAgreementPdf } from "./enrollmentAgreementPdf";
 import { getOrCreateStripeCustomer, getStripe } from "./stripeHelper";
 
+function getInsertedRecordId(result: unknown, recordName: string): number {
+  const candidateValues = [
+    (result as { insertId?: unknown })?.insertId,
+    Array.isArray(result) ? (result[0] as { id?: unknown; insertId?: unknown } | undefined)?.id : undefined,
+    Array.isArray(result) ? (result[0] as { id?: unknown; insertId?: unknown } | undefined)?.insertId : undefined,
+  ];
+  const id = candidateValues.map(value => Number(value)).find(value => Number.isInteger(value) && value > 0);
+  if (!id) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Unable to create ${recordName}` });
+  return id;
+}
+
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
@@ -3315,7 +3326,7 @@ Please enter your card details below to complete your registration securely. Tot
           agreementSignedAt: new Date(input.agreementSignedAt),
           startDate: new Date(),
         });
-        const enrollmentId = Number((insertResult as any).insertId);
+        const enrollmentId = getInsertedRecordId(insertResult, "pending enrollment");
 
         try {
           const signatureBuffer = Buffer.from(input.agreementSignatureDataUrl.split(",")[1], "base64");
@@ -3444,7 +3455,7 @@ Please enter your card details below to complete your registration securely. Tot
           discountApplied: "back_to_school:$1_today:tuition_starts_in_14_days",
           startDate: new Date(),
         });
-        const enrollmentId = Number((insertResult as any).insertId);
+        const enrollmentId = getInsertedRecordId(insertResult, "Back-to-School enrollment");
         const origin = (ctx.req.headers.origin as string) || "https://mydojoma.com";
         const session = await getStripe().checkout.sessions.create({
           mode: "payment",
@@ -3521,7 +3532,7 @@ Please enter your card details below to complete your registration securely. Tot
             registrationFeePaid: 1,
             registrationFeeAmount: "1.00",
           });
-          const familyGroupId = Number((created as any).insertId ?? (created as any)[0]?.insertId);
+          const familyGroupId = getInsertedRecordId(created, "family account");
           [familyGroup] = await db.select().from(schema.familyGroups).where(eq(schema.familyGroups.id, familyGroupId)).limit(1);
         }
         if (!familyGroup) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create the family account" });
@@ -3559,7 +3570,7 @@ Please enter your card details below to complete your registration securely. Tot
             startDate: new Date(),
           });
           enrollmentDetails.push({
-            enrollmentId: Number((insertResult as any).insertId),
+            enrollmentId: getInsertedRecordId(insertResult, "Back-to-School family enrollment"),
             pkg,
             studentName: member.studentName.trim(),
             memberOrder,
@@ -3657,7 +3668,7 @@ Please enter your card details below to complete your registration securely. Tot
             registrationFeePaid: 1,
             registrationFeeAmount: "0.00",
           });
-          const familyGroupId = Number((created as any).insertId ?? (created as any)[0]?.insertId);
+          const familyGroupId = getInsertedRecordId(created, "family account");
           [familyGroup] = await db.select().from(schema.familyGroups).where(eq(schema.familyGroups.id, familyGroupId)).limit(1);
         }
         if (!familyGroup) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create the family account" });
@@ -3697,7 +3708,7 @@ Please enter your card details below to complete your registration securely. Tot
           agreementSignedAt: signedAt,
           startDate: new Date(),
         });
-          const enrollmentId = Number((insertResult as any).insertId);
+          const enrollmentId = getInsertedRecordId(insertResult, "family enrollment");
           try {
             const storedSignature = await storagePut(`enrollment-agreements/${enrollmentId}/signature-${Date.now()}.png`, signatureBuffer, "image/png");
             const agreementPdf = await renderEnrollmentAgreementPdf({ memberName: input.customerName, studentName: member.studentName.trim(), packageName: pkg.name, monthlyPrice, totalDueToday: dueToday, signedAt, signatureName: input.agreementSignature, signatureImage: signatureBuffer });

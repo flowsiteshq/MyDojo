@@ -138,7 +138,7 @@ async function handleHostedMembershipEnrollment(session: Stripe.Checkout.Session
       : setupIntent.payment_method;
     customerId = typeof setupIntent.customer === "string" ? setupIntent.customer : setupIntent.customer?.id ?? null;
   }
-  if (!customerId || !paymentMethod || paymentMethod.type !== "card") {
+  if (!customerId || !paymentMethod || !["card", "link"].includes(paymentMethod.type)) {
     throw new Error("Hosted membership checkout did not provide a reusable payment method");
   }
 
@@ -194,7 +194,7 @@ async function handleHostedMembershipEnrollment(session: Stripe.Checkout.Session
     paymentMethodLast4: card?.last4 ?? null,
     paymentMethodExpMonth: card?.exp_month ?? null,
     paymentMethodExpYear: card?.exp_year ?? null,
-    paymentMethodWallet: card?.wallet?.type ?? null,
+    paymentMethodWallet: card?.wallet?.type ?? (paymentMethod.type === "link" ? "link" : null),
     paymentMethodUpdatedAt: new Date(),
     downPaymentAmount: amountTotal.toFixed(2),
     paidFirstMonth: firstMonthPrepaid ? 1 : 0,
