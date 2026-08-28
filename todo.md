@@ -47,7 +47,13 @@
 - [ ] Configure the approved Facebook instant-form Back-to-School lead flow with immediate appointment text and draft-only ad status
 - [x] Create a MyDojo-branded sparring gear package visual with headgear, mouthpiece, hand pads, shin pads, foot pads, and mesh gear bag
 - [x] Add the sparring gear package to the secure shop purchase flow at an approved campaign price
-- [ ] Prepare the parent SMS audience, purchase link, and exact message for approval before sending
+- [ ] Establish a verified parent-or-guardian data source before treating active enrollment household contacts as a parent-only SMS audience
+- [x] Add the approved bulk-order deadline and $249 regular price to the sparring gear parent SMS before approval
+- [x] Audit the completed sparring gear SMS delivery against active enrollment household billing contacts and document the limitation
+- [ ] Audit the sent sparring gear SMS recipients against a verified parent-or-guardian source after the production contact data is remediated
+- [ ] Rebuild the campaign audience query to use verified parent-or-guardian contacts, exclude Brenda Galvez, and honor opt-outs
+- [ ] Identify any verified parent contacts missed by the completed household-contact selection after contact-data remediation
+- [ ] Obtain approval before contacting any missed verified parent recipients or addressing any misdirected non-parent SMS
 - [x] Add red, black, white, and pink color selection to the MyDojo sparring gear package
 - [x] Publish the MyDojo sparring gear package at the approved $195 price for every color option
 - [x] Verify the final red, black, white, and pink gear images match the supplied protective-gear reference and render in the shop
@@ -71,6 +77,18 @@
 - [x] Add regression coverage for the birthday party route and public page link
 
 - [ ] Verify a published live Stripe enrollment payment after the user completes the agreed end-to-end test
+- [x] Produce the current-month recurring billing roster with each member’s scheduled billing date and recorded status
+- [x] Repair or backfill broken August enrollment checkout linkage data for the 11 high-confidence enrollment records
+- [x] Re-run the full August 2026 payment reconciliation after the 11-record backfill with separate verified unique student and household counts
+- [x] Classify or explicitly exclude all remaining non-tuition and unclassified August successful payments in the final reconciliation output
+- [ ] Resolve the two unmatched successful August membership checkouts for Cintia Garza and Jissel Lindley, which lack matching enrollment records
+- [ ] Review and remediate paid August enrollments that remain pending because their original checkout metadata could not activate them through the webhook
+- [x] Reproduce the reported three-member WAIVE99 enrollment calculation and determine why the due-today amount does not reflect the intended family discount
+- [x] Confirm and implement the approved due-today family-discount rule across the enrollment page and hosted checkout
+- [x] Apply a 50% discount to both the due-today and recurring tuition for second and third family members, including the WAIVE99 three-member $298 total
+- [x] Verify the scoped family pricing release affects only new checkout calculations and makes no further enrollment, subscription, or billing record changes
+- [x] Record that the earlier 11-record payment-link backfill preceded the pricing-only scope clarification and is intentionally retained without further data changes
+- [ ] Save and verify a clean release checkpoint containing only the family pricing code, UI, regression tests, and task history
 
 - [x] Audit and rebuild every MyDojo customer payment, enrollment, event, shop, and recurring-billing flow into one reliable Stripe-based system
 - [x] Remove or hard-disable remaining legacy FluidPay payment-creation mutations and fallbacks after confirming no active route depends on them

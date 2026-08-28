@@ -39,7 +39,7 @@ describe("automatic family enrollment recurring price", () => {
     renderEnrollmentAgreementPdf.mockResolvedValue(Buffer.from("pdf"));
   });
 
-  it("charges first-month tuition plus the $99 fee and sets the second member's recurring tuition to 50%", async () => {
+  it("discounts the second member's first-month and recurring tuition by 50% while retaining the enrollment fee", async () => {
     const caller = appRouter.createCaller({ req: { headers: { origin: "https://mydojoma.com" } } } as any);
     const result = await caller.member.createStripeEnrollmentCheckout({
       packageId: 1,
@@ -51,9 +51,10 @@ describe("automatic family enrollment recurring price", () => {
       agreementSignatureDataUrl: "data:image/png;base64,iVBORw0KGgo=",
     });
 
-    expect(result).toMatchObject({ amountCents: 24800, familyMemberOrder: 2, recurringMonthlyAmount: 74.5, hasFamilyDiscount: true });
+    expect(result).toMatchObject({ amountCents: 17350, familyMemberOrder: 2, recurringMonthlyAmount: 74.5, hasFamilyDiscount: true });
     expect(checkoutCreate).toHaveBeenCalledWith(expect.objectContaining({
       metadata: expect.objectContaining({ familyGroupId: "44", familyMemberOrder: "2", recurringMonthlyAmount: "74.50", familyDiscount: "50_percent" }),
+      line_items: [expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 17350 }) })],
     }));
   });
 });

@@ -170,10 +170,15 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
   const waiveEnrollmentFee = !isSummerCamp && (enrollmentData.waiveEnrollmentFee ?? false);
   const enrollmentFee = enrollmentData.enrollmentFee ?? 99;
   const familyEnrollmentFee = isFamilyEnrollment ? familyMembers.reduce((sum, member) => sum + member.enrollmentFee, 0) : enrollmentFee;
+  const familyMemberDueToday = (member: NonNullable<EnrollmentData["familyMembers"]>[number], index: number) => {
+    if (member.downPayment <= 0) return 0;
+    const familyTuition = member.monthlyPrice * (index === 0 ? 1 : 0.5);
+    return familyTuition + member.enrollmentFee;
+  };
   const baseAmount = isSummerCamp
     ? (enrollmentData.totalAmount || 298)
     : isFamilyEnrollment
-      ? familyMembers.reduce((sum, member) => sum + member.downPayment, 0)
+      ? familyMembers.reduce((sum, member, index) => sum + familyMemberDueToday(member, index), 0)
     : waiveEnrollmentFee
       ? Math.max(0, (enrollmentData.downPayment || 0) - enrollmentFee)
       : (enrollmentData.downPayment || 0);
@@ -362,10 +367,11 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
                 {familyMembers.map((member, index) => {
                   const feeWaived = waiveEnrollmentFee || appliedPromo?.discountType === "waive_down_payment";
                   const recurring = member.monthlyPrice * (index === 0 ? 1 : 0.5);
+                  const dueToday = familyMemberDueToday(member, index) - (feeWaived ? member.enrollmentFee : 0);
                   return (
                     <div key={`${member.studentName}-${index}`} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                      <div className="flex justify-between gap-3 text-sm font-semibold text-slate-800"><span>{member.studentName}</span><span>${(member.downPayment - (feeWaived ? member.enrollmentFee : 0)).toFixed(2)} today</span></div>
-                      <p className="mt-1 text-xs text-slate-500">First month ${member.monthlyPrice.toFixed(2)} {feeWaived ? "· enrollment fee waived" : `+ $${member.enrollmentFee.toFixed(2)} enrollment fee`} · Then ${recurring.toFixed(2)}/mo {index > 0 ? "(50% family rate)" : ""}</p>
+                      <div className="flex justify-between gap-3 text-sm font-semibold text-slate-800"><span>{member.studentName}</span><span>${dueToday.toFixed(2)} today</span></div>
+                    <p className="mt-1 text-xs text-slate-500">First month ${recurring.toFixed(2)} {feeWaived ? "· enrollment fee waived" : `+ $${member.enrollmentFee.toFixed(2)} enrollment fee`} · Then ${recurring.toFixed(2)}/mo {index > 0 ? "(50% family rate)" : ""}</p>
                     </div>
                   );
                 })}

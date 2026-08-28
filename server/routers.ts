@@ -3147,7 +3147,7 @@ Please enter your card details below to complete your registration securely. Tot
           agreementSignedAt: new Date(input.agreementSignedAt),
           startDate: new Date(),
         });
-        const enrollmentId = (insertResult as any).insertId as number;
+        const enrollmentId = Number((insertResult as any).insertId);
         try {
           const signatureBuffer = Buffer.from(input.agreementSignatureDataUrl.split(",")[1], "base64");
           const storedSignature = await storagePut(`enrollment-agreements/${enrollmentId}/signature-${Date.now()}.png`, signatureBuffer, "image/png");
@@ -3267,16 +3267,6 @@ Please enter your card details below to complete your registration securely. Tot
 
         const monthlyPrice = Number(pkg.monthlyPrice);
         const enrollmentFee = Number(pkg.enrollmentFee);
-        const undiscountedDueToday = input.waiveEnrollmentFee
-          ? Math.max(0, Number(pkg.downPayment) - enrollmentFee)
-          : Number(pkg.downPayment);
-        const dueToday = promo?.discountType === "waive_down_payment"
-          ? Math.max(0, undiscountedDueToday - enrollmentFee)
-          : promo?.discountType === "percent"
-            ? Math.max(0, undiscountedDueToday * (1 - Number(promo.discountValue) / 100))
-            : promo?.discountType === "fixed"
-              ? Math.max(0, undiscountedDueToday - Number(promo.discountValue))
-              : undiscountedDueToday;
         const customer = await getOrCreateStripeCustomer({
           name: input.customerName,
           email: input.customerEmail,
@@ -3293,9 +3283,20 @@ Please enter your card details below to complete your registration securely. Tot
           ? await db.select().from(schema.familyGroupMembers).where(eq(schema.familyGroupMembers.familyGroupId, familyGroup.id))
           : [];
         const familyMemberOrder = familyGroup ? existingFamilyMembers.length + 1 : 1;
-        const { calculateFamilyRecurringTuition, receivesFamilyRecurringDiscount } = await import("./membershipPricingPolicy");
+        const { calculateFamilyInitialEnrollmentDue, calculateFamilyRecurringTuition, receivesFamilyRecurringDiscount } = await import("./membershipPricingPolicy");
         const hasFamilyDiscount = Boolean(familyGroup) && receivesFamilyRecurringDiscount(familyMemberOrder);
         const recurringMonthlyAmount = calculateFamilyRecurringTuition(monthlyPrice, familyMemberOrder);
+        const familyAdjustedDueToday = calculateFamilyInitialEnrollmentDue(
+          monthlyPrice,
+          enrollmentFee,
+          familyMemberOrder,
+          Boolean(input.waiveEnrollmentFee) || promo?.discountType === "waive_down_payment"
+        );
+        const dueToday = promo?.discountType === "percent"
+          ? Math.max(0, familyAdjustedDueToday * (1 - Number(promo.discountValue) / 100))
+          : promo?.discountType === "fixed"
+            ? Math.max(0, familyAdjustedDueToday - Number(promo.discountValue))
+            : familyAdjustedDueToday;
 
         const insertResult = await db.insert(schema.enrollments).values({
           membershipPackageId: pkg.id,
@@ -3314,7 +3315,7 @@ Please enter your card details below to complete your registration securely. Tot
           agreementSignedAt: new Date(input.agreementSignedAt),
           startDate: new Date(),
         });
-        const enrollmentId = (insertResult as any).insertId as number;
+        const enrollmentId = Number((insertResult as any).insertId);
 
         try {
           const signatureBuffer = Buffer.from(input.agreementSignatureDataUrl.split(",")[1], "base64");
@@ -3661,7 +3662,7 @@ Please enter your card details below to complete your registration securely. Tot
         }
         if (!familyGroup) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create the family account" });
         const existingMembers = await db.select().from(schema.familyGroupMembers).where(eq(schema.familyGroupMembers.familyGroupId, familyGroup.id));
-        const { calculateFamilyRecurringTuition, receivesFamilyRecurringDiscount } = await import("./membershipPricingPolicy");
+        const { calculateFamilyInitialEnrollmentDue, calculateFamilyRecurringTuition, receivesFamilyRecurringDiscount } = await import("./membershipPricingPolicy");
         const signatureBuffer = Buffer.from(input.agreementSignatureDataUrl.split(",")[1], "base64");
         const signedAt = new Date(input.agreementSignedAt);
         const enrollmentDetails: Array<{ enrollmentId: number; pkg: typeof packages[number]; studentName: string; memberOrder: number; hasDiscount: boolean; recurringMonthlyAmount: number; dueToday: number }> = [];
@@ -3672,8 +3673,13 @@ Please enter your card details below to complete your registration securely. Tot
           const hasDiscount = receivesFamilyRecurringDiscount(memberOrder);
           const monthlyPrice = Number(pkg.monthlyPrice);
           const enrollmentFee = Number(pkg.enrollmentFee);
-          const dueToday = Math.max(0, Number(pkg.downPayment) - (promo?.discountType === "waive_down_payment" ? enrollmentFee : 0));
           const recurringMonthlyAmount = calculateFamilyRecurringTuition(monthlyPrice, memberOrder);
+          const dueToday = calculateFamilyInitialEnrollmentDue(
+            monthlyPrice,
+            enrollmentFee,
+            memberOrder,
+            promo?.discountType === "waive_down_payment"
+          );
           const insertResult = await db.insert(schema.enrollments).values({
             membershipPackageId: pkg.id,
             customerName: input.customerName,
@@ -3688,9 +3694,9 @@ Please enter your card details below to complete your registration securely. Tot
             status: "pending",
             discountApplied: promo ? `promo:${promo.code}` : null,
             agreementSignature: input.agreementSignature,
-            agreementSignedAt: signedAt,
-            startDate: new Date(),
-          });
+          agreementSignedAt: signedAt,
+          startDate: new Date(),
+        });
           const enrollmentId = Number((insertResult as any).insertId);
           try {
             const storedSignature = await storagePut(`enrollment-agreements/${enrollmentId}/signature-${Date.now()}.png`, signatureBuffer, "image/png");
@@ -3718,6 +3724,7 @@ Please enter your card details below to complete your registration securely. Tot
             familyGroupId: String(familyGroup.id),
             memberOrders: enrollmentDetails.map(detail => detail.memberOrder).join(","),
             recurringMonthlyAmounts: enrollmentDetails.map(detail => detail.recurringMonthlyAmount.toFixed(2)).join(","),
+            dueTodayAmounts: enrollmentDetails.map(detail => detail.dueToday.toFixed(2)).join(","),
             promoCode: promo?.code || "",
           },
           success_url: `${origin}/enrollment/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -3725,7 +3732,7 @@ Please enter your card details below to complete your registration securely. Tot
           allow_promotion_codes: false,
         });
         if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create secure family checkout" });
-        return { checkoutUrl: session.url, totalDueToday, members: enrollmentDetails.map(detail => ({ studentName: detail.studentName, memberOrder: detail.memberOrder, hasDiscount: detail.hasDiscount, recurringMonthlyAmount: detail.recurringMonthlyAmount })) };
+        return { checkoutUrl: session.url, totalDueToday, members: enrollmentDetails.map(detail => ({ studentName: detail.studentName, memberOrder: detail.memberOrder, hasDiscount: detail.hasDiscount, recurringMonthlyAmount: detail.recurringMonthlyAmount, dueToday: detail.dueToday })) };
       }),
 
     // Finish an approved enrollment payment, create the recurring subscription, and retain

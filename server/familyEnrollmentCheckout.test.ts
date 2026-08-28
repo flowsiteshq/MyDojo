@@ -26,87 +26,71 @@ vi.mock("./db", () => ({
 
 import { appRouter } from "./routers";
 
+const foundation = { id: 1, name: "Foundation", isActive: 1, invitationOnly: 0, monthlyPrice: "149.00", downPayment: "248.00", enrollmentFee: "99.00", totalPrice: "2339.00", durationMonths: 12 };
+const blackBelt = { id: 2, name: "Black Belt", isActive: 1, invitationOnly: 0, monthlyPrice: "199.00", downPayment: "298.00", enrollmentFee: "99.00", totalPrice: "8700.00", durationMonths: 36 };
+const plus = { id: 30001, name: "Plus", isActive: 1, invitationOnly: 0, monthlyPrice: "99.00", downPayment: "198.00", enrollmentFee: "99.00", totalPrice: "1287.00", durationMonths: 12 };
+const agreement = { agreementSignature: "Family Parent", agreementSignedAt: "2026-08-14T21:00:00.000Z", agreementSignatureDataUrl: "data:image/png;base64,iVBORw0KGgo=" };
+
 describe("family enrollment checkout", () => {
   beforeEach(() => {
-    selectedRows.queue = [
-      [{ id: 1, name: "Foundation", isActive: 1, invitationOnly: 0, monthlyPrice: "149.00", downPayment: "248.00", enrollmentFee: "99.00", totalPrice: "2339.00", durationMonths: 12 }],
-      [{ id: 2, name: "Black Belt", isActive: 1, invitationOnly: 0, monthlyPrice: "199.00", downPayment: "298.00", enrollmentFee: "99.00", totalPrice: "8700.00", durationMonths: 36 }],
-      [],
-      [{ id: 44, primaryContactEmail: "family@example.com", registrationFeePaid: 1 }],
-      [],
-    ];
     inserted.count = 0;
     checkoutCreate.mockReset(); getOrCreateStripeCustomer.mockReset(); storagePut.mockReset(); renderEnrollmentAgreementPdf.mockReset();
+    checkoutCreate.mockResolvedValue({ url: "https://checkout.stripe.com/c/pay/cs_family_enroll" });
     getOrCreateStripeCustomer.mockResolvedValue({ id: "cus_family_checkout" });
     storagePut.mockResolvedValue({ url: "https://storage.example.test/agreement" });
     renderEnrollmentAgreementPdf.mockResolvedValue(Buffer.from("pdf"));
-    checkoutCreate.mockResolvedValue({ url: "https://checkout.stripe.com/c/pay/cs_family_enroll" });
   });
 
-  it("collects all initial charges together and sets the second member to half-price recurring tuition", async () => {
+  it("discounts the second member's first month and recurring tuition by 50%", async () => {
+    selectedRows.queue = [[foundation], [blackBelt], [], [{ id: 44, primaryContactEmail: "family@example.com", registrationFeePaid: 1 }], []];
     const caller = appRouter.createCaller({ req: { headers: { origin: "https://mydojoma.com" } } } as any);
-    const result = await caller.member.createFamilyEnrollmentCheckout({
-      customerName: "Family Parent",
-      customerEmail: "family@example.com",
-      customerPhone: "2815550101",
-      members: [{ packageId: 1, studentName: "First Student" }, { packageId: 2, studentName: "Second Student" }],
-      agreementSignature: "Family Parent",
-      agreementSignedAt: "2026-08-14T21:00:00.000Z",
-      agreementSignatureDataUrl: "data:image/png;base64,iVBORw0KGgo=",
-    });
+    const result = await caller.member.createFamilyEnrollmentCheckout({ customerName: "Family Parent", customerEmail: "family@example.com", customerPhone: "2815550101", members: [{ packageId: 1, studentName: "First Student" }, { packageId: 2, studentName: "Second Student" }], ...agreement });
 
-    expect(result).toMatchObject({ totalDueToday: 546, members: [
-      { studentName: "First Student", memberOrder: 1, hasDiscount: false, recurringMonthlyAmount: 149 },
-      { studentName: "Second Student", memberOrder: 2, hasDiscount: true, recurringMonthlyAmount: 99.5 },
+    expect(result).toMatchObject({ totalDueToday: 446.5, members: [
+      { studentName: "First Student", memberOrder: 1, hasDiscount: false, recurringMonthlyAmount: 149, dueToday: 248 },
+      { studentName: "Second Student", memberOrder: 2, hasDiscount: true, recurringMonthlyAmount: 99.5, dueToday: 198.5 },
     ] });
     expect(checkoutCreate).toHaveBeenCalledWith(expect.objectContaining({
-      mode: "payment",
-      line_items: [
-        expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 24800 }) }),
-        expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 29800 }) }),
-      ],
-      metadata: expect.objectContaining({ familyGroupId: "44", memberOrders: "1,2", recurringMonthlyAmounts: "149.00,99.50" }),
+      line_items: [expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 24800 }) }), expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 19850 }) })],
+      metadata: expect.objectContaining({ familyGroupId: "44", memberOrders: "1,2", dueTodayAmounts: "248.00,198.50" }),
     }));
   });
 
-  it("enrolls a third family member in the same checkout and applies the half-price recurring rate", async () => {
-    selectedRows.queue = [
-      [{ id: 1, name: "Foundation", isActive: 1, invitationOnly: 0, monthlyPrice: "149.00", downPayment: "248.00", enrollmentFee: "99.00", totalPrice: "2339.00", durationMonths: 12 }],
-      [{ id: 30001, name: "Plus", isActive: 1, invitationOnly: 0, monthlyPrice: "99.00", downPayment: "198.00", enrollmentFee: "99.00", totalPrice: "1287.00", durationMonths: 12 }],
-      [{ id: 2, name: "Black Belt", isActive: 1, invitationOnly: 0, monthlyPrice: "199.00", downPayment: "298.00", enrollmentFee: "99.00", totalPrice: "8700.00", durationMonths: 36 }],
-      [],
-      [{ id: 55, primaryContactEmail: "three@example.com", registrationFeePaid: 1 }],
-      [],
-    ];
-    inserted.count = 0;
-    checkoutCreate.mockClear();
+  it("discounts the second and third members' first month and recurring tuition", async () => {
+    selectedRows.queue = [[foundation], [plus], [blackBelt], [], [{ id: 55, primaryContactEmail: "three@example.com", registrationFeePaid: 1 }], []];
     const caller = appRouter.createCaller({ req: { headers: { origin: "https://mydojoma.com" } } } as any);
-    const result = await caller.member.createFamilyEnrollmentCheckout({
-      customerName: "Three Parent",
-      customerEmail: "three@example.com",
-      customerPhone: "2815550102",
-      members: [
-        { packageId: 1, studentName: "First Student" },
-        { packageId: 30001, studentName: "Second Student" },
-        { packageId: 2, studentName: "Third Student" },
-      ],
-      agreementSignature: "Three Parent",
-      agreementSignedAt: "2026-08-14T21:00:00.000Z",
-      agreementSignatureDataUrl: "data:image/png;base64,iVBORw0KGgo=",
-    });
+    const result = await caller.member.createFamilyEnrollmentCheckout({ customerName: "Three Parent", customerEmail: "three@example.com", customerPhone: "2815550102", members: [{ packageId: 1, studentName: "First" }, { packageId: 30001, studentName: "Second" }, { packageId: 2, studentName: "Third" }], ...agreement });
 
-    expect(result).toMatchObject({ totalDueToday: 744, members: [
-      { memberOrder: 1, hasDiscount: false, recurringMonthlyAmount: 149 },
-      { memberOrder: 2, hasDiscount: true, recurringMonthlyAmount: 49.5 },
-      { memberOrder: 3, hasDiscount: true, recurringMonthlyAmount: 99.5 },
+    expect(result).toMatchObject({ totalDueToday: 595, members: [
+      { memberOrder: 1, hasDiscount: false, recurringMonthlyAmount: 149, dueToday: 248 },
+      { memberOrder: 2, hasDiscount: true, recurringMonthlyAmount: 49.5, dueToday: 148.5 },
+      { memberOrder: 3, hasDiscount: true, recurringMonthlyAmount: 99.5, dueToday: 198.5 },
     ] });
     expect(checkoutCreate).toHaveBeenCalledWith(expect.objectContaining({
       line_items: [
         expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 24800 }) }),
-        expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 19800 }) }),
-        expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 29800 }) }),
+        expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 14850 }) }),
+        expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 19850 }) }),
       ],
-      metadata: expect.objectContaining({ familyGroupId: "55", memberOrders: "1,2,3", recurringMonthlyAmounts: "149.00,49.50,99.50" }),
+    }));
+  });
+
+  it("charges $298 today when WAIVE99 is used for three Foundation family members", async () => {
+    selectedRows.queue = [
+      [{ code: "WAIVE99", active: 1, discountType: "waive_down_payment", discountValue: "0", expiresAt: null, maxUses: null, usedCount: 0 }],
+      [foundation], [foundation], [foundation], [], [{ id: 66, primaryContactEmail: "waive@example.com", registrationFeePaid: 1 }], [],
+    ];
+    const caller = appRouter.createCaller({ req: { headers: { origin: "https://mydojoma.com" } } } as any);
+    const result = await caller.member.createFamilyEnrollmentCheckout({ customerName: "Waive Parent", customerEmail: "waive@example.com", customerPhone: "2815550103", members: [{ packageId: 1, studentName: "One" }, { packageId: 1, studentName: "Two" }, { packageId: 1, studentName: "Three" }], promoCode: "WAIVE99", ...agreement });
+
+    expect(result).toMatchObject({ totalDueToday: 298, members: [{ dueToday: 149 }, { dueToday: 74.5 }, { dueToday: 74.5 }] });
+    expect(checkoutCreate).toHaveBeenCalledWith(expect.objectContaining({
+      line_items: [
+        expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 14900 }) }),
+        expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 7450 }) }),
+        expect.objectContaining({ price_data: expect.objectContaining({ unit_amount: 7450 }) }),
+      ],
+      metadata: expect.objectContaining({ dueTodayAmounts: "149.00,74.50,74.50", promoCode: "WAIVE99" }),
     }));
   });
 });

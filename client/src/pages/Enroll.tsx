@@ -321,7 +321,7 @@ export default function Enroll() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-slate-900">Enrolling more family members?</p>
-                    <p className="mt-1 text-sm text-slate-600">Add up to two more students in this same secure checkout. The second and third members receive 50% off their recurring monthly tuition.</p>
+                    <p className="mt-1 text-sm text-slate-600">Add up to two more students in this same secure checkout. The second and third members receive 50% off their first-month and recurring monthly tuition.</p>
                   </div>
                   {additionalFamilyMembers.length < 2 && (
                     <Button type="button" variant="outline" size="sm" onClick={addFamilyMember} className="shrink-0">

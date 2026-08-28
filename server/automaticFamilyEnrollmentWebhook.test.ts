@@ -45,7 +45,7 @@ describe("automatic family discount webhook fulfillment", () => {
     ];
     constructEvent.mockReturnValue({ type: "checkout.session.completed", data: { object: {
       metadata: { type: "membership_enrollment_checkout", enrollmentId: "900003", familyGroupId: "44", familyMemberOrder: "2", recurringMonthlyAmount: "74.50", familyDiscount: "50_percent" },
-      payment_intent: "pi_family", amount_total: 24800,
+      payment_intent: "pi_family", amount_total: 17350,
     } } });
     retrievePaymentIntent.mockResolvedValue({ status: "succeeded", customer: "cus_family", payment_method: "pm_family" });
     retrievePaymentMethod.mockResolvedValue({ id: "pm_family", type: "card", card: { brand: "visa", last4: "4242", exp_month: 12, exp_year: 2030, wallet: null } });
@@ -59,7 +59,7 @@ describe("automatic family discount webhook fulfillment", () => {
 
     expect(createPrice).toHaveBeenCalledWith(expect.objectContaining({ unit_amount: 7450, recurring: { interval: "month" } }));
     expect(createSubscription).toHaveBeenCalledWith(expect.objectContaining({ items: [{ price: "price_family_half" }], metadata: expect.objectContaining({ familyDiscount: "50_percent", familyMemberOrder: "2" }) }));
-    expect(updateValues).toHaveBeenCalledWith(expect.objectContaining({ downPaymentAmount: "248.00", paidFirstMonth: 1 }));
+    expect(updateValues).toHaveBeenCalledWith(expect.objectContaining({ downPaymentAmount: "173.50", paidFirstMonth: 1 }));
     expect(insertedValues).toHaveBeenCalledWith(expect.objectContaining({ familyGroupId: 44, enrollmentId: 900003, memberOrder: 2, hasDiscount: 1, discountedMonthlyAmount: "74.50" }));
   });
 });
