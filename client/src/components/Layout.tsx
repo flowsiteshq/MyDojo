@@ -267,12 +267,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </PhoneChooser>
 
             <Button
-              onClick={openBookFreeClassGate}
+              asChild
               className={cn(
                 "h-11 bg-primary px-6 text-xs font-heading uppercase tracking-wider text-white shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90"
               )}
             >
-              <span className="skew-x-[10deg]">I'm Interested</span>
+              <Link href="/enroll"><span className="skew-x-[10deg]">Enroll Now</span></Link>
             </Button>
           </nav>
 
@@ -479,13 +479,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </Link>
 
             <Button
+              asChild
+              className="w-full bg-primary text-white font-heading uppercase mt-4 py-6 text-lg"
+            >
+              <Link href="/enroll" onClick={() => setIsMobileMenuOpen(false)}>Enroll Now</Link>
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => {
                 openBookFreeClassGate();
                 setIsMobileMenuOpen(false);
               }}
-              className="w-full bg-primary text-white font-heading uppercase mt-4 py-6 text-lg"
+              className="w-full border-primary text-primary font-heading uppercase mt-2 py-5 text-base"
             >
-              I'm Interested
+              Book a Free Class
             </Button>
             <Button
               variant="ghost"

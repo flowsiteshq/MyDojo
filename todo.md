@@ -89,6 +89,11 @@
 - [x] Verify the scoped family pricing release affects only new checkout calculations and makes no further enrollment, subscription, or billing record changes
 - [x] Record that the earlier 11-record payment-link backfill preceded the pricing-only scope clarification and is intentionally retained without further data changes
 - [ ] Save and verify a clean release checkpoint containing only the family pricing code, UI, regression tests, and task history
+- [ ] Diagnose why the published family enrollment route still displays the pre-discount second- and third-member due-today total
+- [ ] Correct the two-member WAIVE99 payment summary from $298.00 to the approved $223.50 by discounting the second member’s first-month tuition
+- [ ] Redeploy the Railway customer-domain service from GitHub commit 29d5dce so the already-corrected family pricing reaches mydojoma.com
+- [ ] Push the latest MyDojo task-tracking changes and family-pricing release state to GitHub
+- [x] Add a visible Enroll Now link to the public desktop and mobile website menu that routes to /enroll
 
 - [x] Audit and rebuild every MyDojo customer payment, enrollment, event, shop, and recurring-billing flow into one reliable Stripe-based system
 - [x] Remove or hard-disable remaining legacy FluidPay payment-creation mutations and fallbacks after confirming no active route depends on them
