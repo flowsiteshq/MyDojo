@@ -112,7 +112,26 @@
 - [x] Verify all 11 recovered memberships are active, trialing to a future billing date, and have no recovery-day charge
 - [x] Restore the 11 confirmed paid August members to active recurring memberships without charging anyone on the recovery date
 - [x] Verify the future checkout path accepts reusable Link payment methods and prevents invalid enrollment identifiers from blocking activation
-- [ ] Checkpoint and push the recurring-membership recovery and preventative checkout activation fix to GitHub
+- [x] Checkpoint and push the recurring-membership recovery and preventative checkout activation fix to GitHub
+- [ ] Redeploy the Railway service from GitHub commit 1b164c0 so future public enrollment checkouts use the preventative activation fix
+- [ ] Verify the 11 recovered subscriptions’ live Stripe state and dashboard filter visibility before changing any subscription state
+- [ ] Prepare an opt-out-aware final reminder for current student households that the $195 sparring gear bulk order closes Monday
+- [ ] Obtain approval of the exact Monday bulk-order reminder text and eligible student-household scope before sending
+- [ ] Send the approved final sparring gear reminder once and record delivery results
+- [x] Verify the Debbie contact at 2812369283 and prepare a personalized MyDojo login-assistance SMS for approval
+- [x] Send the approved Debbie Gregory login-assistance SMS once to 2812369283 and record its delivery outcome
+- [ ] Verify why the visible MyDojo login screen lacks the password-recovery control for Debbie and correct the live recovery path
+- [ ] Diagnose and correct Debbie Gregory’s password-reset email non-delivery without changing membership or billing data
+- [ ] Complete the online-special lead SMS repair by verifying the full team roster and a live provider delivery after deployment
+- [x] Add tested auditable staff SMS delivery records for all configured online-special lead notification recipients
+- [ ] Validate the repaired staff lead-alert path in production with the intended roster after deployment
+- [ ] Verify intended staff recipients, opt-in settings, and provider delivery before any lead-notification test send
+- [x] Persist a per-recipient staff SMS delivery audit for each new online-special lead instead of using unlogged direct sends
+- [x] Complete the designated staff lead-alert roster by confirming Clover Dojo is Sensei Kamil Ahmed’s verified contact and assigning canonical labels for shared staff phone numbers
+- [x] Label the existing Clover Dojo lead-alert contact as Sensei Kamil Ahmed and verify the final recipient roster
+- [x] Explicitly resolve shared staff lead-alert assignments in code by sending once per phone under the designated canonical staff label
+- [ ] Obtain approval before retrying Mary Galyen’s lead alert only to confirmed staff recipients
+- [ ] Push and deploy the staff lead-alert audit fix before verifying the next online-special lead notification in production
 
 - [x] Audit and rebuild every MyDojo customer payment, enrollment, event, shop, and recurring-billing flow into one reliable Stripe-based system
 - [x] Remove or hard-disable remaining legacy FluidPay payment-creation mutations and fallbacks after confirming no active route depends on them

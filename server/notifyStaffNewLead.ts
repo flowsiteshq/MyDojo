@@ -13,7 +13,8 @@
  */
 
 import { getDb } from "./db";
-import { sendSms } from "./sms800";
+import { normalizePhone, sendSms } from "./sms800";
+import { getOrCreateConversation, saveMessage } from "./aiSms";
 import * as schema from "../drizzle/schema";
 import { sql } from "drizzle-orm";
 
@@ -31,6 +32,20 @@ export interface StaffLeadNotificationResult {
   errors: string[];
 }
 
+const CANONICAL_LEAD_ALERT_NAMES: Record<string, string> = {
+  "+12818189288": "Master Vincent Holmes",
+  "+17034997761": "Sensei Kamil Ahmed",
+  "+18187454612": "Sensei Hector Diosdado",
+  "+12406011818": "Sensei Dominique Griggs",
+};
+
+function getLeadAlertRecipientName(staff: { name: string | null; email: string | null; phone?: string | null }) {
+  const normalizedPhone = staff.phone ? normalizePhone(staff.phone) : "";
+  if (CANONICAL_LEAD_ALERT_NAMES[normalizedPhone]) return CANONICAL_LEAD_ALERT_NAMES[normalizedPhone];
+  if (staff.email?.toLowerCase() === "cloverdojo@gmail.com") return "Sensei Kamil Ahmed";
+  return staff.name ?? "Staff";
+}
+
 /**
  * Notify all staff/admin members who have a phone + leadSmsNotify=1.
  * Returns an operational summary. Callers can await it without allowing an
@@ -46,6 +61,7 @@ export async function notifyStaffNewLead(lead: NewLeadInfo): Promise<StaffLeadNo
       .select({
         id: schema.users.id,
         name: schema.users.name,
+        email: schema.users.email,
         phone: schema.users.phone,
         leadSmsNotify: schema.users.leadSmsNotify,
       })
@@ -60,8 +76,10 @@ export async function notifyStaffNewLead(lead: NewLeadInfo): Promise<StaffLeadNo
     // Deduplicate by phone number — only send one SMS per unique phone
     const seenPhones = new Set<string>();
     const uniqueStaff = staffList.filter((s) => {
-      if (!s.phone || seenPhones.has(s.phone)) return false;
-      seenPhones.add(s.phone);
+      if (!s.phone) return false;
+      const normalizedPhone = normalizePhone(s.phone);
+      if (seenPhones.has(normalizedPhone)) return false;
+      seenPhones.add(normalizedPhone);
       return true;
     });
     console.log(`[LeadNotify] Sending to ${uniqueStaff.length} unique phone(s) (${staffList.length} staff records total)`);
@@ -75,22 +93,41 @@ export async function notifyStaffNewLead(lead: NewLeadInfo): Promise<StaffLeadNo
       `Log in to MyDojo admin to follow up.`;
 
     const results = await Promise.allSettled(
-      uniqueStaff.map((staff) =>
-        sendSms({ to: staff.phone!, message }).then((res) => {
-          if (res.success) {
-            console.log(`[LeadNotify] SMS sent to ${staff.name} (${staff.phone})`);
-          } else {
-            console.warn(`[LeadNotify] SMS failed for ${staff.name}: ${res.error}`);
-          }
-          return res;
-        })
-      )
+      uniqueStaff.map(async (staff) => {
+        const normalizedPhone = normalizePhone(staff.phone!);
+        const recipientName = getLeadAlertRecipientName(staff);
+        const result = await sendSms({ to: normalizedPhone, message });
+
+        // Persist every attempted lead alert, including a provider-side failure.
+        // This makes staff notification failures visible in the MyDojo SMS history.
+        try {
+          const conversation = await getOrCreateConversation(normalizedPhone, recipientName);
+          await saveMessage(
+            conversation.id,
+            "outbound",
+            "campaign",
+            message,
+            result.messageId,
+            result.success ? "sent" : "failed"
+          );
+        } catch (auditError) {
+          console.error(`[LeadNotify] Could not persist alert audit for ${recipientName}:`, auditError);
+        }
+
+        if (result.success) {
+          console.log(`[LeadNotify] SMS sent to ${recipientName} (${normalizedPhone})`);
+        } else {
+          console.warn(`[LeadNotify] SMS failed for ${recipientName}: ${result.error}`);
+        }
+        return result;
+      })
     );
 
     const sent = results.filter((r) => r.status === "fulfilled" && (r.value as any).success).length;
     const errors = results.flatMap((result, index) => {
-      if (result.status === "rejected") return [`${uniqueStaff[index]?.name ?? "Staff"}: ${String(result.reason)}`];
-      return result.value.success ? [] : [`${uniqueStaff[index]?.name ?? "Staff"}: ${result.value.error ?? "SMS delivery failed"}`];
+      const recipientName = uniqueStaff[index] ? getLeadAlertRecipientName(uniqueStaff[index]) : "Staff";
+      if (result.status === "rejected") return [`${recipientName}: ${String(result.reason)}`];
+      return result.value.success ? [] : [`${recipientName}: ${result.value.error ?? "SMS delivery failed"}`];
     });
     console.log(`[LeadNotify] Notified ${sent}/${uniqueStaff.length} unique phone(s) about new lead: ${lead.name}`);
     return { recipients: uniqueStaff.length, sent, failed: uniqueStaff.length - sent, errors };

@@ -10,6 +10,12 @@ vi.mock("./db", () => ({
 
 vi.mock("./sms800", () => ({
   sendSms: vi.fn(),
+  normalizePhone: (phone: string) => phone,
+}));
+
+vi.mock("./aiSms", () => ({
+  getOrCreateConversation: vi.fn().mockResolvedValue({ id: 101 }),
+  saveMessage: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("../drizzle/schema", () => ({
@@ -18,6 +24,7 @@ vi.mock("../drizzle/schema", () => ({
 
 import { getDb } from "./db";
 import { sendSms } from "./sms800";
+import { saveMessage } from "./aiSms";
 import { notifyStaffNewLead } from "./notifyStaffNewLead";
 
 describe("notifyStaffNewLead", () => {
@@ -118,5 +125,64 @@ describe("notifyStaffNewLead", () => {
     expect(call.message).toContain("+18325550001");
     expect(call.message).toContain("Little Ninjas");
     expect(call.message).toContain("Facebook");
+  });
+
+  it("persists failed provider outcomes for staff follow-up", async () => {
+    const mockDb = {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue([
+        { id: 1, name: "Alice", phone: "+18325551234", leadSmsNotify: 1 },
+      ]),
+    };
+    (getDb as any).mockResolvedValue(mockDb);
+    (sendSms as any).mockResolvedValue({ success: false, error: "Provider unavailable" });
+
+    await notifyStaffNewLead({ name: "Test Lead" });
+
+    expect(saveMessage).toHaveBeenCalledWith(
+      101,
+      "outbound",
+      "campaign",
+      expect.stringContaining("Test Lead"),
+      undefined,
+      "failed"
+    );
+  });
+
+  it("labels the configured Clover Dojo recipient as Sensei Kamil Ahmed in the alert audit", async () => {
+    const mockDb = {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue([
+        { id: 1, name: "Clover Dojo", email: "cloverdojo@gmail.com", phone: "+17034997761", leadSmsNotify: 1 },
+      ]),
+    };
+    (getDb as any).mockResolvedValue(mockDb);
+    (sendSms as any).mockResolvedValue({ success: true, messageId: "msg_kamil" });
+
+    const { getOrCreateConversation } = await import("./aiSms");
+    await notifyStaffNewLead({ name: "Test Lead" });
+
+    expect(getOrCreateConversation).toHaveBeenCalledWith("+17034997761", "Sensei Kamil Ahmed");
+  });
+
+  it("uses the canonical Dominique label when duplicate staff accounts share her alert phone", async () => {
+    const mockDb = {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockResolvedValue([
+        { id: 1, name: "Dominique", email: "dominique@mydojo.internal", phone: "+12406011818", leadSmsNotify: 1 },
+        { id: 2, name: "Vincent Holmes", email: "vincent.holmes00@gmail.com", phone: "+12406011818", leadSmsNotify: 1 },
+      ]),
+    };
+    (getDb as any).mockResolvedValue(mockDb);
+    (sendSms as any).mockResolvedValue({ success: true, messageId: "msg_dominique" });
+
+    const { getOrCreateConversation } = await import("./aiSms");
+    await notifyStaffNewLead({ name: "Test Lead" });
+
+    expect(sendSms).toHaveBeenCalledTimes(1);
+    expect(getOrCreateConversation).toHaveBeenCalledWith("+12406011818", "Sensei Dominique Griggs");
   });
 });
