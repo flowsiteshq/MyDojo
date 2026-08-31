@@ -150,6 +150,14 @@
 - [x] Verify Lauren Craig’s existing recurring payment records, confirmed amount, and tomorrow’s scheduled bills before any charge-date change
 - [x] On explicit amount confirmation, move Lauren Craig’s existing recurring payments from tomorrow to today without creating a second charge or subscription
 - [x] Process the approved $298.00 immediate billing for Lauren Craig’s existing Emerson, Hadley, and Kenna subscriptions only, then verify all outcomes and new dates
+- [x] Verify Hiramy Cernuda’s existing recurring payment record, confirmed amount, and scheduled bill before any charge-date change
+- [x] On explicit amount confirmation, move Hiramy Cernuda’s existing recurring payment to today without creating a second charge or subscription; the resulting invoice remains unpaid
+- [x] Attempt the approved $149.00 immediate billing for Hiramy Cernuda’s existing Foundation subscription only; no money was collected
+- [x] Diagnose the unpaid $149.00 Hiramy Cernuda invoice and past-due subscription state created by the approved early-billing attempt before making any additional collection attempt
+- [x] Attach Hiramy Cernuda’s existing assigned payment method to the existing open $149.00 invoice and make one approved retry without creating another invoice; the payment failed
+- [x] Correct the non-payment validation mismatch that blocked the approved Hiramy invoice retry before the one approved retry of that same invoice
+- [x] Document the failed final Hiramy invoice retry: the required payment method is unavailable and the existing invoice remains open
+- [ ] Obtain an approved customer payment-method update path for Hiramy Cernuda’s existing open $149.00 invoice before attempting collection again
 
 - [x] Audit and rebuild every MyDojo customer payment, enrollment, event, shop, and recurring-billing flow into one reliable Stripe-based system
 - [x] Remove or hard-disable remaining legacy FluidPay payment-creation mutations and fallbacks after confirming no active route depends on them
