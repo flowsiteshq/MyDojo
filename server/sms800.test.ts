@@ -103,6 +103,18 @@ describe("sendSms", () => {
     expect(result.success).toBe(false);
     expect(result.error).toContain("Network error");
   });
+
+  it("returns a bounded timeout error when the provider request is aborted", async () => {
+    vi.stubEnv("EIGHT_HUNDRED_API_KEY", "test-key");
+    vi.stubEnv("EIGHT_HUNDRED_FROM_NUMBER", "+18775555555");
+    const abortError = Object.assign(new Error("The operation was aborted"), { name: "AbortError" });
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(abortError));
+
+    const result = await sendSms({ to: "+12815551234", message: "Test" });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("timed out after 20 seconds");
+  });
 });
 
 // ─── validate800Credentials ──────────────────────────────────────────────────

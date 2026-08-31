@@ -118,6 +118,9 @@
 - [ ] Prepare an opt-out-aware final reminder for current student households that the $195 sparring gear bulk order closes Monday
 - [ ] Obtain approval of the exact Monday bulk-order reminder text and eligible student-household scope before sending
 - [ ] Send the approved final sparring gear reminder once and record delivery results
+- [x] Prepare a final-day sparring-gear bulk-order SMS reminder, excluding Brenda Galvez and honoring all opt-outs, for approval before delivery
+- [x] Send the explicitly approved final-day $195 sparring-gear reminder once to the 28 eligible active-enrollment households and record recipient-level outcomes
+- [x] Fix the stalled provider-request handling after confirming the first final-day gear reminder attempt created zero delivery records
 - [x] Verify the Debbie contact at 2812369283 and prepare a personalized MyDojo login-assistance SMS for approval
 - [x] Send the approved Debbie Gregory login-assistance SMS once to 2812369283 and record its delivery outcome
 - [ ] Verify why the visible MyDojo login screen lacks the password-recovery control for Debbie and correct the live recovery path

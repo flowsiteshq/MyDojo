@@ -8,6 +8,7 @@
  */
 
 const API_BASE = "https://api.800.com";
+const REQUEST_TIMEOUT_MS = 20_000;
 
 export interface SmsSendOptions {
   /** Recipient phone number in E.164 format, e.g. +12815551234 */
@@ -61,6 +62,8 @@ export async function sendSms(opts: SmsSendOptions): Promise<SmsSendResult> {
 
   // Determine if we need multipart (MMS with image) or JSON (SMS only)
   const hasMedia = !!(opts.mediaBuffer || opts.mediaUrl);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
     let requestBody: BodyInit;
@@ -107,6 +110,7 @@ export async function sendSms(opts: SmsSendOptions): Promise<SmsSendResult> {
       method: 'POST',
       headers: requestHeaders,
       body: requestBody,
+      signal: controller.signal,
     });
 
     const data = (await response.json()) as {
@@ -127,9 +131,13 @@ export async function sendSms(opts: SmsSendOptions): Promise<SmsSendResult> {
     );
     return { success: true, messageId };
   } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
+    const errMsg = err instanceof Error && err.name === "AbortError"
+      ? `SMS request timed out after ${REQUEST_TIMEOUT_MS / 1000} seconds`
+      : err instanceof Error ? err.message : String(err);
     console.error("[800.com SMS] Network error:", errMsg);
     return { success: false, error: errMsg };
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -140,6 +148,8 @@ export async function sendSms(opts: SmsSendOptions): Promise<SmsSendResult> {
 export async function validate800Credentials(): Promise<boolean> {
   const apiKey = process.env.EIGHT_HUNDRED_API_KEY;
   if (!apiKey) return false;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
     const response = await fetch(`${API_BASE}/users`, {
@@ -148,9 +158,12 @@ export async function validate800Credentials(): Promise<boolean> {
         Accept: "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
+      signal: controller.signal,
     });
     return response.status === 200 || response.status === 422; // 422 = valid auth, bad params
   } catch {
     return false;
+  } finally {
+    clearTimeout(timeout);
   }
 }
