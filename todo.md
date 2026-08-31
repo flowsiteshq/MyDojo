@@ -147,6 +147,9 @@
 - [x] Attempt the explicitly authorized amount that anticipated a $8.92 legacy service fee; the gateway instead created a $223.50 pending-settlement payment with no service fee added
 - [x] Correct the rejected pre-charge request by using a provider-valid order identifier, then retry the still-uncreated authorized charge exactly once
 - [x] Verify the Pham payment is pending settlement and the existing subscription remains active at $223.50 with a September 30, 2026 next bill date
+- [x] Verify Lauren Craig’s existing recurring payment records, confirmed amount, and tomorrow’s scheduled bills before any charge-date change
+- [x] On explicit amount confirmation, move Lauren Craig’s existing recurring payments from tomorrow to today without creating a second charge or subscription
+- [x] Process the approved $298.00 immediate billing for Lauren Craig’s existing Emerson, Hadley, and Kenna subscriptions only, then verify all outcomes and new dates
 
 - [x] Audit and rebuild every MyDojo customer payment, enrollment, event, shop, and recurring-billing flow into one reliable Stripe-based system
 - [x] Remove or hard-disable remaining legacy FluidPay payment-creation mutations and fallbacks after confirming no active route depends on them
