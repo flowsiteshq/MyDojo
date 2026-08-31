@@ -132,6 +132,17 @@
 - [x] Explicitly resolve shared staff lead-alert assignments in code by sending once per phone under the designated canonical staff label
 - [ ] Obtain approval before retrying Mary Galyen’s lead alert only to confirmed staff recipients
 - [ ] Push and deploy the staff lead-alert audit fix before verifying the next online-special lead notification in production
+- [ ] Push the checkpointed staff lead-alert repair to GitHub and trigger the external deployment so new online-special leads use the audited SMS path
+- [ ] Reconcile verified MyDojo collections through August 30, 2026 and report new successful collections from August 27–30
+- [ ] Reconcile active-student growth against collections and identify verified revenue leakage without making billing changes
+- [ ] Audit every active MyDojo enrollment against live recurring subscriptions and billing schedules to identify members missing recurring setup
+- [ ] Produce a read-only active-enrollment versus live-subscription audit that separates valid active, future-trialing, legacy, and missing recurring setups
+- [ ] Verify whether the Pham family had any successful MyDojo charge during August 2026
+- [ ] Execute the user-approved $223.50 charge for Logan and Lucas Pham and create their combined $223.50 monthly recurring membership without duplicate billing
+- [ ] Obtain a valid current payment method for Lynn Nguyen before collecting the approved $223.50 and creating Pham family recurring memberships
+- [ ] Send the supported $223.50 secure payment link to Lynn Nguyen only after explicit authorization, because no current payment method is stored
+- [x] Trace the Pham family’s existing legacy recurring reference and payment history to determine why prior recurring billing stopped
+- [ ] On explicit approval, update only the existing Pham legacy subscription to the approved $223.50 amount and a confirmed next billing date; do not create a second subscription or a separate charge
 
 - [x] Audit and rebuild every MyDojo customer payment, enrollment, event, shop, and recurring-billing flow into one reliable Stripe-based system
 - [x] Remove or hard-disable remaining legacy FluidPay payment-creation mutations and fallbacks after confirming no active route depends on them
