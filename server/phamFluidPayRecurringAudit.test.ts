@@ -11,7 +11,8 @@ describe("Pham legacy recurring audit", () => {
     const source = fs.readFileSync(auditScriptPath, "utf8");
 
     expect(source).toContain('method: "GET"');
-    expect(source).toContain("/api/recurring/subscription/${subscriptionId}");
+    expect(source).toContain('/api/recurring/subscription/${subscriptionId}');
+    expect(source).toContain('/api/recurring/plan/${planId}');
     expect(source).toContain("auditOnly: true");
     expect(source).toContain("/api/transaction/search");
     expect(source).toContain('method: "POST"');
@@ -26,6 +27,8 @@ describe("Pham legacy recurring audit", () => {
     expect(source).toContain("allowedSubscriptionFields");
     expect(source).toContain("pickSubscriptionFields(subscriptionRecord)");
     expect(source).toContain("summarizeEvents(subscriptionRecord.events)");
+    expect(source).toContain("serviceFee");
+    expect(source).toContain("surcharge");
     expect(source).not.toContain("console.log(rawText)");
   });
 });

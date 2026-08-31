@@ -142,7 +142,11 @@
 - [ ] Obtain a valid current payment method for Lynn Nguyen before collecting the approved $223.50 and creating Pham family recurring memberships
 - [ ] Send the supported $223.50 secure payment link to Lynn Nguyen only after explicit authorization, because no current payment method is stored
 - [x] Trace the Pham family’s existing legacy recurring reference and payment history to determine why prior recurring billing stopped
-- [ ] On explicit approval, update only the existing Pham legacy subscription to the approved $223.50 amount and a confirmed next billing date; do not create a second subscription or a separate charge
+- [x] Update only the existing Pham legacy subscription to the approved $223.50 amount and September 30, 2026 next billing date; no second subscription was created
+- [x] Execute one approved immediate $223.50 billing attempt through the existing Pham legacy payment method with duplicate-billing checks and live verification
+- [x] Attempt the explicitly authorized amount that anticipated a $8.92 legacy service fee; the gateway instead created a $223.50 pending-settlement payment with no service fee added
+- [x] Correct the rejected pre-charge request by using a provider-valid order identifier, then retry the still-uncreated authorized charge exactly once
+- [x] Verify the Pham payment is pending settlement and the existing subscription remains active at $223.50 with a September 30, 2026 next bill date
 
 - [x] Audit and rebuild every MyDojo customer payment, enrollment, event, shop, and recurring-billing flow into one reliable Stripe-based system
 - [x] Remove or hard-disable remaining legacy FluidPay payment-creation mutations and fallbacks after confirming no active route depends on them
