@@ -158,6 +158,8 @@
 - [x] Correct the non-payment validation mismatch that blocked the approved Hiramy invoice retry before the one approved retry of that same invoice
 - [x] Document the failed final Hiramy invoice retry: the required payment method is unavailable and the existing invoice remains open
 - [ ] Obtain an approved customer payment-method update path for Hiramy Cernuda’s existing open $149.00 invoice before attempting collection again
+- [x] Audit each person named in the uploaded active-enrollment exception list against current payment and recurring records without changing billing data
+- [x] Classify uploaded-list payment matches by tuition versus unrelated one-time payment before reporting billing status
 
 - [x] Audit and rebuild every MyDojo customer payment, enrollment, event, shop, and recurring-billing flow into one reliable Stripe-based system
 - [x] Remove or hard-disable remaining legacy FluidPay payment-creation mutations and fallbacks after confirming no active route depends on them
