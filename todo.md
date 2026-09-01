@@ -129,6 +129,13 @@
 - [x] Send the explicitly approved weather-closure notice once to the current verified 27-household audience and record every provider outcome
 - [ ] Build or import a verified production adult-class contact audience so future weather closures can be sent only to adult members
 - [ ] Obtain approval before any adult-only weather-closure follow-up; prevent duplicates for the 27 households already messaged today
+- [x] Locate a Stripe customer match for Jissel Lindley and identify the stored phone suffix ending in 0285; no text was sent
+- [ ] Verify Jissel Lindley’s exact reachable phone number through an authorized messaging or production contact record before sending any test text
+- [ ] Confirm the verified Jissel number’s current SMS opt-out status and document the exact number used before requesting send approval
+- [ ] Retrieve Jissel Lindley’s saved paid-checkout phone number and send exactly one user-authorized test message, then record the provider result
+- [x] Retrieve Jissel Lindley’s saved paid-checkout phone number and send exactly one user-authorized test message, then record the provider result
+- [x] Record the already provider-accepted Jissel test message locally after correcting the unsupported audit sender type; do not send a second test
+- [ ] Obtain approval of the exact single Jissel test text and send it only to the verified eligible number
 - [x] Verify the Debbie contact at 2812369283 and prepare a personalized MyDojo login-assistance SMS for approval
 - [x] Send the approved Debbie Gregory login-assistance SMS once to 2812369283 and record its delivery outcome
 - [ ] Verify why the visible MyDojo login screen lacks the password-recovery control for Debbie and correct the live recovery path
