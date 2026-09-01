@@ -121,6 +121,14 @@
 - [x] Prepare a final-day sparring-gear bulk-order SMS reminder, excluding Brenda Galvez and honoring all opt-outs, for approval before delivery
 - [x] Send the explicitly approved final-day $195 sparring-gear reminder once to the 28 eligible active-enrollment households and record recipient-level outcomes
 - [x] Fix the stalled provider-request handling after confirming the first final-day gear reminder attempt created zero delivery records
+- [x] Prepare an opt-out-aware urgent SMS audience for active adult-class members affected by this afternoon’s weather closure
+- [x] Obtain approval of the exact adult-class weather-closure SMS and final audience count before sending
+- [x] Send the approved adult-class weather-closure SMS once and record recipient-level delivery outcomes
+- [x] Attempt the approved 28-household weather-closure campaign; the pre-send safety check stopped delivery because the live eligible audience had changed to 27, with zero messages sent
+- [x] Reconfirm approval for the unchanged weather-closure text after the pre-send audience safety check changed from 28 to 27 eligible households; no messages were sent
+- [x] Send the explicitly approved weather-closure notice once to the current verified 27-household audience and record every provider outcome
+- [ ] Build or import a verified production adult-class contact audience so future weather closures can be sent only to adult members
+- [ ] Obtain approval before any adult-only weather-closure follow-up; prevent duplicates for the 27 households already messaged today
 - [x] Verify the Debbie contact at 2812369283 and prepare a personalized MyDojo login-assistance SMS for approval
 - [x] Send the approved Debbie Gregory login-assistance SMS once to 2812369283 and record its delivery outcome
 - [ ] Verify why the visible MyDojo login screen lacks the password-recovery control for Debbie and correct the live recovery path
