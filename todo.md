@@ -135,6 +135,9 @@
 - [ ] Retrieve Jissel Lindley’s saved paid-checkout phone number and send exactly one user-authorized test message, then record the provider result
 - [x] Retrieve Jissel Lindley’s saved paid-checkout phone number and send exactly one user-authorized test message, then record the provider result
 - [x] Record the already provider-accepted Jissel test message locally after correcting the unsupported audit sender type; do not send a second test
+- [x] Locate and reconcile Skylar’s current contact details from active enrollment, messaging, lead, and payment records without sending a message
+- [x] Search the payment account for Skylar Jasper and the linked Jasper household to complete the read-only contact reconciliation
+- [x] Document the final Skylar contact result across enrollment, lead, messaging, and payment sources, including which phone and email are current
 - [ ] Obtain approval of the exact single Jissel test text and send it only to the verified eligible number
 - [x] Verify the Debbie contact at 2812369283 and prepare a personalized MyDojo login-assistance SMS for approval
 - [x] Send the approved Debbie Gregory login-assistance SMS once to 2812369283 and record its delivery outcome
