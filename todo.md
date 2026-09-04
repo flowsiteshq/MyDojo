@@ -149,6 +149,12 @@
 - [ ] On explicit approval, stop Wilfredo Negron’s still-active legacy subscription and resolve the new pending $154.95 charge without affecting prior settled payments
 - [x] Diagnose the reported Birthday Parties website payment failure: the public form only sent a request and never created a payment checkout
 - [x] Correct the Birthday Parties payment path with a server-priced 50% deposit checkout, webhook notification, regression coverage, and preview verification
+- [x] Push the verified Birthday Parties payment checkout correction to the configured MyDojo GitHub repository and confirm remote commit 890abde
+- [x] Resolve the invalid configured GitHub authorization by using user-provided temporary authorization only for the requested push
+- [x] Use the user-provided temporary GitHub authorization solely to push the verified Birthday Parties payment fix, then remove local authentication material
+- [x] Use an isolated temporary GitHub authentication fallback after the standard credential session failed to persist, then remove it immediately after push verification
+- [x] Verify Femi Alabi-Isama’s September 6 Champion Party request and confirm no $299 payment link or completed charge already exists
+- [x] Create and text the user-authorized one-time $299 Birthday Party payment link to Femi Alabi-Isama at 8326517131, without recurring billing
 - [ ] Obtain approval of the exact single Jissel test text and send it only to the verified eligible number
 - [x] Verify the Debbie contact at 2812369283 and prepare a personalized MyDojo login-assistance SMS for approval
 - [x] Send the approved Debbie Gregory login-assistance SMS once to 2812369283 and record its delivery outcome
