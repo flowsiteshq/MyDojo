@@ -138,6 +138,17 @@
 - [x] Locate and reconcile Skylar’s current contact details from active enrollment, messaging, lead, and payment records without sending a message
 - [x] Search the payment account for Skylar Jasper and the linked Jasper household to complete the read-only contact reconciliation
 - [x] Document the final Skylar contact result across enrollment, lead, messaging, and payment sources, including which phone and email are current
+- [ ] Verify the existing appointment and scheduled-reminder capabilities for Hannah Zhang’s requested September 9, 2026 6:00 PM Central appointment
+- [ ] Prepare Hannah Zhang’s appointment, one welcome text, and timed reminders for September 8 and September 9 after exact-message approval
+- [ ] Verify Debbie Gregory’s current staff account and direct-login configuration before updating her email to debbie@debbiegregory.com
+- [ ] Update only Debbie Gregory’s staff-account email to the approved real address and provide a direct access/setup path without “forgot password” wording
+- [ ] Create and send Debbie Gregory a one-time direct staff-access setup email that avoids “forgot password” wording and does not expose a credential in logs
+- [ ] Resolve the rejected Debbie staff-access email delivery after the sender domain verification failure, without creating a second setup token or resending prematurely
+- [x] Reconcile Wilfredo Negron’s screenshot-reported pending $154.95 MyDojo entry with live payment and recurring records without changing billing data
+- [x] Inspect Wilfredo Negron’s cancelled legacy recurring subscription and transaction history in read-only mode to identify the source and status of the reported $154.95 pending entry
+- [ ] On explicit approval, stop Wilfredo Negron’s still-active legacy subscription and resolve the new pending $154.95 charge without affecting prior settled payments
+- [x] Diagnose the reported Birthday Parties website payment failure: the public form only sent a request and never created a payment checkout
+- [x] Correct the Birthday Parties payment path with a server-priced 50% deposit checkout, webhook notification, regression coverage, and preview verification
 - [ ] Obtain approval of the exact single Jissel test text and send it only to the verified eligible number
 - [x] Verify the Debbie contact at 2812369283 and prepare a personalized MyDojo login-assistance SMS for approval
 - [x] Send the approved Debbie Gregory login-assistance SMS once to 2812369283 and record its delivery outcome

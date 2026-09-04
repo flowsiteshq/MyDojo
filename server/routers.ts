@@ -10746,6 +10746,78 @@ Please enter your card details below to complete your registration securely. Tot
   }),
 
   birthday: router({
+    createCheckout: publicProcedure
+      .input(z.object({
+        packageId: z.enum(['ninja', 'champion', 'blackbelt']),
+        parentName: z.string().min(1).max(255),
+        phone: z.string().min(7).max(20),
+        email: z.string().email().max(320),
+        childName: z.string().min(1).max(255),
+        childAge: z.string().max(2).optional(),
+        partyDate: z.string().min(1).max(10),
+        guestCount: z.string().max(3).optional(),
+        message: z.string().max(2000).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const packages = {
+          ninja: { name: 'Ninja Party', totalCents: 19_900, depositCents: 9_950 },
+          champion: { name: 'Champion Party', totalCents: 29_900, depositCents: 14_950 },
+          blackbelt: { name: 'Black Belt VIP Party', totalCents: 44_900, depositCents: 22_450 },
+        } as const;
+        const selectedPackage = packages[input.packageId];
+
+        const Stripe = (await import('stripe')).default;
+        const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '', {
+          apiVersion: '2026-01-28.clover' as any,
+        });
+        const origin = (ctx.req.headers.origin as string) || 'https://www.mydojoma.com';
+        const requestSummary = [
+          `Party date: ${input.partyDate}`,
+          input.guestCount ? `Guests: ${input.guestCount}` : null,
+          input.childAge ? `Child age: ${input.childAge}` : null,
+          input.message ? `Notes: ${input.message.slice(0, 500)}` : null,
+        ].filter(Boolean).join(' · ');
+
+        const session = await stripe.checkout.sessions.create({
+          mode: 'payment',
+          payment_method_types: ['card'],
+          customer_email: input.email,
+          billing_address_collection: 'auto',
+          line_items: [{
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `${selectedPackage.name} — 50% Deposit`,
+                description: `50% deposit toward the $${(selectedPackage.totalCents / 100).toFixed(2)} party package. ${requestSummary}`,
+              },
+              unit_amount: selectedPackage.depositCents,
+            },
+            quantity: 1,
+          }],
+          metadata: {
+            type: 'birthday_party_deposit',
+            birthday_package: input.packageId,
+            party_date: input.partyDate,
+            child_name: input.childName,
+            parent_name: input.parentName,
+            parent_phone: input.phone,
+          },
+          payment_intent_data: {
+            metadata: {
+              type: 'birthday_party_deposit',
+              birthday_package: input.packageId,
+              party_date: input.partyDate,
+              child_name: input.childName,
+              parent_name: input.parentName,
+              parent_phone: input.phone,
+            },
+          },
+          success_url: `${origin}/birthday-parties?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}/birthday-parties?payment=cancelled`,
+        });
+        if (!session.url) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Unable to start secure payment.' });
+        return { checkoutUrl: session.url, depositAmount: selectedPackage.depositCents / 100 };
+      }),
     requestBooking: publicProcedure
       .input(z.object({
         packageId: z.string(),

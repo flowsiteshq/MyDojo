@@ -47,6 +47,8 @@ export async function handleStripeWebhook(req: Request, res: Response) {
         // Route based on metadata type
         if (session.metadata?.type === "belt_exam") {
           await handleBeltExamPayment(session);
+        } else if (session.metadata?.type === "birthday_party_deposit") {
+          await handleBirthdayPartyDeposit(session);
         } else if (session.metadata?.type === "belt_test_intent") {
           await handleBeltTestIntentPayment(session);
         } else if (session.metadata?.type === "event_registration") {
@@ -104,6 +106,34 @@ export async function handleStripeWebhook(req: Request, res: Response) {
     console.error(`[Stripe Webhook] Error processing ${event.type}:`, error);
     res.status(500).send(`Webhook processing error: ${error.message}`);
   }
+}
+
+/** Alerts the owner after a customer has paid the published 50% party deposit. */
+async function handleBirthdayPartyDeposit(session: Stripe.Checkout.Session) {
+  if (session.payment_status !== "paid") {
+    throw new Error("Birthday party checkout completed without a paid deposit");
+  }
+  const metadata = session.metadata ?? {};
+  const packageLabels: Record<string, string> = {
+    ninja: "Ninja Party",
+    champion: "Champion Party",
+    blackbelt: "Black Belt VIP Party",
+  };
+  const partyPackage = packageLabels[metadata.birthday_package ?? ""] ?? "Birthday Party";
+  const deposit = ((session.amount_total ?? 0) / 100).toFixed(2);
+  await notifyOwner({
+    title: `Birthday Deposit Paid — ${partyPackage}`,
+    content: [
+      `Parent: ${metadata.parent_name ?? session.customer_details?.name ?? "Not provided"}`,
+      `Phone: ${metadata.parent_phone ?? "Not provided"}`,
+      `Email: ${session.customer_details?.email ?? session.customer_email ?? "Not provided"}`,
+      `Birthday child: ${metadata.child_name ?? "Not provided"}`,
+      `Party date requested: ${metadata.party_date ?? "Not provided"}`,
+      `Package: ${partyPackage}`,
+      `Deposit paid: $${deposit}`,
+      `Checkout: ${session.id}`,
+    ].join("\n"),
+  });
 }
 
 /** Records a paid Pro Shop order for staff fulfillment. */

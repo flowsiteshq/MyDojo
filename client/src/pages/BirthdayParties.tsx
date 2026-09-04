@@ -84,6 +84,8 @@ const PACKAGES = [
   },
 ];
 
+type BirthdayPackageId = "ninja" | "champion" | "blackbelt";
+
 const PERKS = [
   { icon: Clock, label: "90 Min–2.5 Hrs of Fun", color: "#7c3aed" },
   { icon: Users, label: "All Ages Welcome", color: "#d97706" },
@@ -93,7 +95,7 @@ const PERKS = [
 
 export default function BirthdayParties() {
   const { t } = useTranslation();
-  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<BirthdayPackageId | null>(null);
   const [form, setForm] = useState({
     parentName: "",
     phone: "",
@@ -105,11 +107,15 @@ export default function BirthdayParties() {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const paymentComplete = new URLSearchParams(window.location.search).get("payment") === "success";
 
-  const bookingMutation = trpc.birthday.requestBooking.useMutation({
-    onSuccess: () => {
-      setSubmitted(true);
-      toast.success("🎉 Party request sent! We'll contact you within 24 hours.");
+  const bookingMutation = trpc.birthday.createCheckout.useMutation({
+    onSuccess: ({ checkoutUrl }) => {
+      if (!checkoutUrl) {
+        toast.error("We could not open the secure payment page. Please try again.");
+        return;
+      }
+      window.location.assign(checkoutUrl);
     },
     onError: (err: { message?: string }) => {
       toast.error(err.message || "Something went wrong. Please call us directly.");
@@ -216,7 +222,7 @@ export default function BirthdayParties() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15, duration: 0.5 }}
                 onClick={() => {
-                  setSelectedPackage(pkg.id);
+                  setSelectedPackage(pkg.id as BirthdayPackageId);
                   document.getElementById("book")?.scrollIntoView({ behavior: "smooth" });
                 }}
                 className="relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03]"
@@ -295,7 +301,7 @@ export default function BirthdayParties() {
             </p>
           </div>
 
-          {submitted ? (
+          {submitted || paymentComplete ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -303,9 +309,9 @@ export default function BirthdayParties() {
               style={{ background: "rgba(124,58,237,0.1)", border: "2px solid #7c3aed" }}
             >
               <div className="text-6xl mb-4">🎉</div>
-              <h3 className="font-black uppercase text-white text-2xl mb-3">Party Request Sent!</h3>
+              <h3 className="font-black uppercase text-white text-2xl mb-3">Deposit Received!</h3>
               <p style={{ color: "rgba(255,255,255,0.6)" }}>
-                We'll contact you within 24 hours to confirm your date and answer any questions. Get ready for the BEST party ever!
+                Your party deposit is received. We’ll contact you within 24 hours to confirm your date and answer any questions. Get ready for the BEST party ever!
               </p>
               <p className="mt-4 font-bold" style={{ color: "#fbbf24" }}>
                 Questions? Call us: (877) 469-3656
@@ -320,7 +326,7 @@ export default function BirthdayParties() {
                 <div className="rounded-xl px-4 py-3 text-sm font-bold flex items-center gap-2"
                   style={{ background: "rgba(124,58,237,0.15)", border: "1px solid #7c3aed", color: "#a78bfa" }}>
                   <Crown className="w-4 h-4" />
-                  Package selected: {PACKAGES.find(p => p.id === selectedPackage)?.name} — ${PACKAGES.find(p => p.id === selectedPackage)?.price}
+                  Package selected: {PACKAGES.find(p => p.id === selectedPackage)?.name} — ${PACKAGES.find(p => p.id === selectedPackage)?.price} total · 50% deposit due today
                 </div>
               )}
               {!selectedPackage && (
@@ -397,7 +403,7 @@ export default function BirthdayParties() {
               <Button type="submit" disabled={bookingMutation.isPending}
                 className="w-full py-6 h-auto font-black uppercase tracking-wider text-lg rounded-xl text-black hover:scale-[1.02] transition-transform"
                 style={{ background: "linear-gradient(135deg, #fbbf24, #f59e0b)" }}>
-                {bookingMutation.isPending ? "Sending…" : "🎉 REQUEST MY PARTY DATE →"}
+                {bookingMutation.isPending ? "Opening Secure Payment…" : "🎉 PAY 50% DEPOSIT & REQUEST DATE →"}
               </Button>
 
               <p className="text-center text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
