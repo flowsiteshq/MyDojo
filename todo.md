@@ -155,6 +155,20 @@
 - [x] Use an isolated temporary GitHub authentication fallback after the standard credential session failed to persist, then remove it immediately after push verification
 - [x] Verify Femi Alabi-Isama’s September 6 Champion Party request and confirm no $299 payment link or completed charge already exists
 - [x] Create and text the user-authorized one-time $299 Birthday Party payment link to Femi Alabi-Isama at 8326517131, without recurring billing
+- [x] Verify the Femi Birthday Party $299 checkout session: it was paid and complete, so no replacement link is permitted
+- [x] Prevent a replacement $299 Birthday Party link from being created after the existing payment completed, avoiding duplicate billing
+- [ ] Verify Hiramy Cernuda’s and Jissel Lindley’s current open invoices, recurring statuses, and saved payment-method availability before any same-day charge
+- [ ] Obtain exact-amount confirmation and process only safe existing-invoice payment attempts for Hiramy Cernuda and Jissel Lindley
+- [x] Verify the two Jissel Lindley daughters and the requested $149 Karate, $74 second Karate, and $49 Kickboxing charge components before collection
+- [x] Verify Jissel Lindley’s usable paid-enrollment payment method and recover it for the approved $272.00 family charge without a payment link
+- [x] Reconcile Jissel Lindley’s completed $397.00 checkout against the requested $272.00 family charge before collecting any additional payment
+- [x] Reconfirm Jissel Lindley’s payment-method availability and duplicate-charge state before the requested $272.00 account charge and monthly fifth-of-month recurring setup
+- [x] Charge Jissel Lindley’s existing account $272.00 once and establish one monthly recurring subscription dated the 5th
+- [x] Inspect Jissel Lindley’s completed $397 payment intent and payment-method attachment before any direct account charge or recurring setup
+- [x] Determine that Jissel Lindley’s completed $397 Stripe enrollment payment method was safely reusable for the approved $272.00 recovery
+- [ ] Diagnose and prevent the enrollment activation failure that omitted recurring setup for Jissel Lindley’s paid family enrollment
+- [x] Verify the status of the existing Jissel $272.00 payment intent after the recurring-subscription configuration error; it succeeded and no second charge was created
+- [x] Correct the recurring configuration and create only the missing fifth-of-month Jissel family subscription after the existing $272.00 payment succeeded
 - [ ] Obtain approval of the exact single Jissel test text and send it only to the verified eligible number
 - [x] Verify the Debbie contact at 2812369283 and prepare a personalized MyDojo login-assistance SMS for approval
 - [x] Send the approved Debbie Gregory login-assistance SMS once to 2812369283 and record its delivery outcome
