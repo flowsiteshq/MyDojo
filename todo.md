@@ -174,6 +174,16 @@
 - [x] Obtain approval of the exact Rose Birthday Party attendee reminder and final recipient count before delivery
 - [x] Send the approved Rose Birthday Party reminder once and record recipient-level delivery outcomes
 - [x] Send the user-approved Rose Birthday Party reminder today at noon to the 12 verified guest-list phone numbers, with incomplete or invalid phone entries excluded
+- [x] Create a print-ready US Letter front sheet containing four Rose Birthday Party two-week free-training gift certificates
+- [x] Create a coordinating print-ready US Letter back sheet containing four matching certificate redemption panels
+- [x] Locate and use the authoritative MyDojo logo on the updated girl-focused Rose Birthday Party certificate front and back
+- [x] Confirm the MyDojo /redeem route as the QR destination and add a scannable code to the updated certificate
+- [x] Verify JT Jasper’s current balance, active enrollment status, saved payment method, and duplicate-charge risk before any same-day charge
+- [x] Obtain authorization for the $149.00 early-renewal payment that replaces, rather than adds to, the September 23 cycle
+- [x] Identify the configured live payment account as the owner of JT Jasper’s historical customer and subscription references
+- [x] Reconfirm the $149.00 JT Jasper subscription and absence of an early-renewal invoice before replacing the September 23 cycle
+- [x] Process the authorized $149.00 JT Jasper early renewal and move the next recurring billing date to October 6 without a duplicate charge
+- [x] Create and collect one approved $149.00 JT Jasper early-renewal invoice on the existing subscription after the billing-date move created no payment
 - [ ] Obtain approval of the exact single Jissel test text and send it only to the verified eligible number
 - [x] Verify the Debbie contact at 2812369283 and prepare a personalized MyDojo login-assistance SMS for approval
 - [x] Send the approved Debbie Gregory login-assistance SMS once to 2812369283 and record its delivery outcome
