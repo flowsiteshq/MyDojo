@@ -169,6 +169,11 @@
 - [ ] Diagnose and prevent the enrollment activation failure that omitted recurring setup for Jissel Lindley’s paid family enrollment
 - [x] Verify the status of the existing Jissel $272.00 payment intent after the recurring-subscription configuration error; it succeeded and no second charge was created
 - [x] Correct the recurring configuration and create only the missing fifth-of-month Jissel family subscription after the existing $272.00 payment succeeded
+- [ ] Verify Jissel Lindley’s completed $272.00 payment and confirm no duplicate invoice or payment exists after the instruction not to charge again
+- [x] Extract and deduplicate eligible text contacts from Rose Alabi-Isama’s uploaded Birthday Party guest list for the September 6 noon event reminder
+- [x] Obtain approval of the exact Rose Birthday Party attendee reminder and final recipient count before delivery
+- [x] Send the approved Rose Birthday Party reminder once and record recipient-level delivery outcomes
+- [x] Send the user-approved Rose Birthday Party reminder today at noon to the 12 verified guest-list phone numbers, with incomplete or invalid phone entries excluded
 - [ ] Obtain approval of the exact single Jissel test text and send it only to the verified eligible number
 - [x] Verify the Debbie contact at 2812369283 and prepare a personalized MyDojo login-assistance SMS for approval
 - [x] Send the approved Debbie Gregory login-assistance SMS once to 2812369283 and record its delivery outcome
