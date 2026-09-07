@@ -184,6 +184,12 @@
 - [x] Reconfirm the $149.00 JT Jasper subscription and absence of an early-renewal invoice before replacing the September 23 cycle
 - [x] Process the authorized $149.00 JT Jasper early renewal and move the next recurring billing date to October 6 without a duplicate charge
 - [x] Create and collect one approved $149.00 JT Jasper early-renewal invoice on the existing subscription after the billing-date move created no payment
+- [x] Build a deduplicated, opt-out-aware Labor Day closure SMS audience for eligible student households and staff
+- [x] Obtain approval of the exact Labor Day closure text and final recipient count before delivery
+- [x] Send the approved Labor Day no-class-today notice once and record all provider outcomes
+- [x] Recalculate the Labor Day SMS audience with Brenda Galvez excluded: 32 eligible contacts remain, not the preliminary count of 33
+- [x] Stop the initial 32-contact campaign before delivery when the live eligible audience changed; no text was sent in that attempt
+- [x] Send the user-authorized Labor Day closure message immediately to the live 31-contact eligible audience after the final pre-send audience change
 - [ ] Obtain approval of the exact single Jissel test text and send it only to the verified eligible number
 - [x] Verify the Debbie contact at 2812369283 and prepare a personalized MyDojo login-assistance SMS for approval
 - [x] Send the approved Debbie Gregory login-assistance SMS once to 2812369283 and record its delivery outcome
