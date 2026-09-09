@@ -2322,3 +2322,18 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 ### SMS Text Reminders
 - [ ] Admin page to schedule/send SMS reminders for events
 - [ ] Reminder templates: belt test intent deadline, belt test day, parents night out, seminar
+- [ ] Trace the September 7, 2026 online-special lead notification from public intake through staff SMS audit records and provider submission logs without replaying the alert
+- [ ] Repair and deploy the production staff SMS notification path for new website/online-special leads, preserving canonical staff labels, phone deduplication, opt-out safeguards, bounded delivery timeouts, and per-recipient audit outcomes
+- [ ] Verify that the screenshot lead produced no duplicated staff SMS and document the precise delivery state for each intended staff recipient
+- [x] Audit Shirin Nounou’s exact unpaid balance, existing invoice, recurring status, saved payment method, and duplicate-charge risk before any collection
+- [x] Audit Nicolas Vega’s exact unpaid balance, existing invoice, recurring status, saved payment method, and duplicate-charge risk before any collection
+- [x] Audit Daniel Pina’s exact unpaid balance, existing invoice, recurring status, saved payment method, and duplicate-charge risk before any collection
+- [x] Audit Alma Alelaiwi’s exact unpaid balance, existing invoice, recurring status, saved payment method, and duplicate-charge risk before any collection
+- [x] Audit Arkeashia Denise Curry’s exact unpaid balance, existing invoice, recurring status, saved payment method, and duplicate-charge risk before any collection
+- [ ] Obtain exact-amount confirmation before collecting any verified overdue balance; never create a duplicate invoice or charge
+- [ ] Reconcile Shirin Nounou, Nicolas Vega, Daniel Pina, Alma Alelaiwi, and Arkeashia Denise Curry against September 2026 billing only, separating the new monthly cycle from all earlier successful or declined charges
+- [ ] Collect only user-authorized current September tuition through verified existing recurring payment paths and confirm no duplicate August or prior-month billing is created
+- [ ] Move the approved five September-member collections to Stripe-only recurring billing, obtaining new payment authorization where no reusable current method exists
+- [ ] Verify one September payment and one active Stripe monthly subscription per approved member, with no duplicate legacy or prior-month charge
+- [x] Create one guarded Stripe recurring September authorization request per approved member, with exactly one provider-accepted SMS delivery to Shirin, Nicolas, Daniel, and Arkeashia; Alma’s request is ready but a verified delivery contact is not stored
+- [ ] Obtain Alma Alelaiwi’s verified current phone or email before delivering her already-created $49.00 September Stripe recurring authorization request
