@@ -2330,10 +2330,16 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 - [x] Audit Daniel Pina’s exact unpaid balance, existing invoice, recurring status, saved payment method, and duplicate-charge risk before any collection
 - [x] Audit Alma Alelaiwi’s exact unpaid balance, existing invoice, recurring status, saved payment method, and duplicate-charge risk before any collection
 - [x] Audit Arkeashia Denise Curry’s exact unpaid balance, existing invoice, recurring status, saved payment method, and duplicate-charge risk before any collection
-- [ ] Obtain exact-amount confirmation before collecting any verified overdue balance; never create a duplicate invoice or charge
-- [ ] Reconcile Shirin Nounou, Nicolas Vega, Daniel Pina, Alma Alelaiwi, and Arkeashia Denise Curry against September 2026 billing only, separating the new monthly cycle from all earlier successful or declined charges
+- [x] Obtain exact-amount confirmation before collecting any verified overdue balance; never create a duplicate invoice or charge
+- [x] Reconcile Shirin Nounou, Nicolas Vega, Daniel Pina, Alma Alelaiwi, and Arkeashia Denise Curry against September 2026 billing only, separating the new monthly cycle from all earlier successful or declined charges
 - [ ] Collect only user-authorized current September tuition through verified existing recurring payment paths and confirm no duplicate August or prior-month billing is created
 - [ ] Move the approved five September-member collections to Stripe-only recurring billing, obtaining new payment authorization where no reusable current method exists
 - [ ] Verify one September payment and one active Stripe monthly subscription per approved member, with no duplicate legacy or prior-month charge
 - [x] Create one guarded Stripe recurring September authorization request per approved member, with exactly one provider-accepted SMS delivery to Shirin, Nicolas, Daniel, and Arkeashia; Alma’s request is ready but a verified delivery contact is not stored
 - [ ] Obtain Alma Alelaiwi’s verified current phone or email before delivering her already-created $49.00 September Stripe recurring authorization request
+- [x] Reconcile missing recurring setup for Shirin Nounou, Nicolas Vega, Daniel Pina, Alma Alelaiwi, and Arkeashia Denise Curry: no reusable Stripe customer, payment method, or Stripe subscription exists; active Stripe authorization requests are the required safe recovery path
+- [x] Verify which of the five named members has an existing FluidPay recurring membership that can be safely recovered for September without creating a second subscription: Alma Alelaiwi ($49) and Arkeashia Denise Curry ($149) have failed legacy subscriptions; Shirin, Nicolas, and Daniel have no legacy subscription
+- [ ] Recover only verified existing FluidPay recurring memberships after confirming exact September amount and chargeable authorization; retain Stripe authorization for all others
+- [x] Verify existing FluidPay payment authorization and duplicate safeguards for Shirin Nounou $149, Nicolas Vega $99, and Daniel Pina $149 before the user-authorized September recovery collection
+- [x] Execute and verify the approved one-time September FluidPay recovery collections: Nicolas $99 and Daniel $149 were accepted pending settlement; Shirin $149 was declined; no duplicate payment or subscription was created
+- [ ] Obtain a payment-method update from Shirin Nounou before any new collection attempt; do not retry the declined $149 recovery without separate approval
