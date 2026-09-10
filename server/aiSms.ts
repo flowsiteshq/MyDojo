@@ -332,7 +332,56 @@ export interface InboundSmsPayload {
   media?: string[];
 }
 
-export async function handleInboundSms(payload: InboundSmsPayload): Promise<void> {
+export interface InboundSmsWebhookEnvelope {
+  type?: string;
+  data?: InboundSmsPayload;
+}
+
+/**
+ * 800.com delivers SMS events inside `{ type, data }`, while earlier local
+ * probes and direct callers use the data object itself. Normalize both forms
+ * before any database write or reply attempt.
+ */
+export function extractInboundSmsPayload(
+  payload: InboundSmsPayload | InboundSmsWebhookEnvelope | unknown
+): InboundSmsPayload | null {
+  if (!payload || typeof payload !== "object") return null;
+
+  const candidate = "data" in payload && payload.data && typeof payload.data === "object"
+    ? payload.data
+    : payload;
+
+  if (!candidate || typeof candidate !== "object") return null;
+  const value = candidate as Partial<InboundSmsPayload>;
+  if (typeof value.sender !== "string" || typeof value.recipient !== "string") return null;
+
+  return {
+    id: typeof value.id === "number" ? value.id : undefined,
+    sender: value.sender,
+    recipient: value.recipient,
+    inbound: value.inbound === true,
+    message: typeof value.message === "string" ? value.message : null,
+    media: Array.isArray(value.media) ? value.media.filter((item): item is string => typeof item === "string") : [],
+  };
+}
+
+export async function handleInboundSms(
+  rawPayload: InboundSmsPayload | InboundSmsWebhookEnvelope | unknown
+): Promise<void> {
+  const payload = extractInboundSmsPayload(rawPayload);
+  if (!payload) {
+    console.warn("[AI SMS] Ignoring malformed inbound webhook payload");
+    return;
+  }
+
+  // 800.com sends the same webhook feature for both directions. Only customer
+  // replies may enter the AI conversation flow; outgoing delivery events must
+  // never prompt the assistant to reply to its own messages.
+  if (!payload.inbound) {
+    console.log(`[AI SMS] Ignoring outbound provider event ${payload.id ?? "unknown"}`);
+    return;
+  }
+
   const { sender, message, id: externalId } = payload;
   const body = (message ?? "").trim();
 
@@ -353,6 +402,25 @@ export async function handleInboundSms(payload: InboundSmsPayload): Promise<void
   const conv = await getOrCreateConversation(sender);
   const db = await getDb();
   if (!db) { console.error("[AI SMS] DB not available"); return; }
+
+  // Provider retries must not create duplicate conversations, AI replies, or
+  // booking records. The 800.com event id is stable across retry deliveries.
+  if (externalId !== undefined) {
+    const existing = await db
+      .select({ id: smsMessages.id })
+      .from(smsMessages)
+      .where(and(
+        eq(smsMessages.conversationId, conv.id),
+        eq(smsMessages.direction, "inbound"),
+        eq(smsMessages.externalId, String(externalId))
+      ))
+      .limit(1);
+
+    if (existing.length > 0) {
+      console.log(`[AI SMS] Ignoring duplicate inbound provider event ${externalId}`);
+      return;
+    }
+  }
 
   // Save inbound message
   await saveMessage(
