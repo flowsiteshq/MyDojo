@@ -321,6 +321,40 @@ export function isHumanRequest(message: string): boolean {
   );
 }
 
+/**
+ * Existing-member account questions must never enter the prospective-student
+ * trial state machine just because the customer says "sign up" or "enroll".
+ * They receive one accurate handoff acknowledgement instead.
+ */
+export function isAccountSupportRequest(message: string): boolean {
+  const lower = message.toLowerCase();
+  const accountSignals = [
+    "my account",
+    "member portal",
+    "portal",
+    "login",
+    "log in",
+    "logged in",
+    "not showing",
+    "doesn't show",
+    "does not show",
+    "not appearing",
+    "can't see",
+    "cannot see",
+    "missing from",
+    "payment history",
+    "billing",
+    "charged",
+    "refund",
+  ];
+  const enrollmentSignals = ["enrollment", "membership", "program", "class", "schedule", "sign up", "signed up", "enroll"];
+
+  return accountSignals.some((signal) => lower.includes(signal)) && enrollmentSignals.some((signal) => lower.includes(signal));
+}
+
+export const ACCOUNT_SUPPORT_HANDOFF_REPLY =
+  "Thanks for letting us know. A MyDojo team member is checking your account and will follow up shortly.";
+
 // ─── Main inbound handler ─────────────────────────────────────────────────────
 
 export interface InboundSmsPayload {
@@ -469,6 +503,34 @@ export async function handleInboundSms(
     const humanReply = "Of course! I'll have a staff member reach out to you shortly. You can also call us directly at (877) 4-MYDOJO.";
     const result = await sendSms({ to: sender, message: humanReply });
     await saveMessage(conv.id, "outbound", "ai", humanReply, result.messageId, result.success ? "sent" : "failed");
+    return;
+  }
+
+  // Existing-member account support takes precedence over booking keywords.
+  // This resets any accidental trial state and pauses automated replies so a
+  // staff member can resolve the account safely.
+  if (isAccountSupportRequest(body)) {
+    await db
+      .update(smsConversations)
+      .set({
+        aiEnabled: false,
+        bookingState: "idle",
+        bookingName: null,
+        bookingProgram: null,
+        bookingPreferredTime: null,
+      } as Partial<typeof smsConversations.$inferInsert>)
+      .where(eq(smsConversations.id, conv.id));
+
+    const result = await sendSms({ to: sender, message: ACCOUNT_SUPPORT_HANDOFF_REPLY });
+    await saveMessage(
+      conv.id,
+      "outbound",
+      "ai",
+      ACCOUNT_SUPPORT_HANDOFF_REPLY,
+      result.messageId,
+      result.success ? "sent" : "failed",
+    );
+    console.log(`[AI SMS] Account-support handoff for ${sender}; AI paused for staff follow-up.`);
     return;
   }
 

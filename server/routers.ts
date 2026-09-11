@@ -2430,8 +2430,15 @@ Please enter your card details below to complete your registration securely. Tot
         subscription = await getMemberSubscription(enrollment.enrollment.stripeSubscriptionId);
       }
 
+      const portalProgram = enrollment.package?.name === "One Day Per Week — $74 (Staff Authorized)"
+        ? "Dragon Kids — Wednesdays 6:00–6:45 PM"
+        : enrollment.package?.name ?? "MyDojo Membership";
+
       return {
-        enrollment: enrollment.enrollment,
+        enrollment: {
+          ...enrollment.enrollment,
+          program: portalProgram,
+        },
         package: enrollment.package,
         subscription,
       };
@@ -4100,6 +4107,7 @@ Please enter your card details below to complete your registration securely. Tot
           id: schema.enrollments.id,
           customerName: schema.enrollments.customerName,
           customerEmail: schema.enrollments.customerEmail,
+          studentName: schema.enrollments.studentName,
           status: schema.enrollments.status,
           beltRank: schema.enrollments.beltRank,
           downPaymentAmount: schema.enrollments.downPaymentAmount,
@@ -4125,7 +4133,14 @@ Please enter your card details below to complete your registration securely. Tot
         .orderBy(schema.enrollments.createdAt)
         .limit(1);
 
-      return enrollment || null;
+      if (!enrollment) return null;
+
+      return {
+        ...enrollment,
+        packageName: enrollment.packageName === "One Day Per Week — $74 (Staff Authorized)"
+          ? "Dragon Kids — Wednesdays 6:00–6:45 PM"
+          : enrollment.packageName,
+      };
     }),
     // Upload the logged-in member's own profile photo
     uploadSelfPhoto: protectedProcedure

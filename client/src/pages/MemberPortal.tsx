@@ -31,7 +31,7 @@ function HomeTab({ enrollment }: { enrollment: any }) {
   const { data: events } = trpc.admin.getScreensaverEvents.useQuery();
   const belt = enrollment?.beltRank || "White Belt";
   const beltColor = BELT_COLORS[belt] || BELT_COLORS["White Belt"];
-  const name = enrollment?.customerName || "Member";
+  const name = enrollment?.studentName || enrollment?.customerName || "Member";
   const firstName = name.split(" ")[0];
 
   const augustEvents = [

@@ -54,19 +54,31 @@ export async function getMemberClassSchedules(packageName: string, location: str
     "Leadership": ["Little Ninjas", "Dragon Kids", "Teens", "Adult Karate", "Kickboxing"],
   };
 
-  const programs = programMapping[packageName] || [];
-  
-  if (programs.length === 0) {
-    return [];
-  }
-
   const schedules = await db
     .select()
     .from(classSchedule)
     .where(eq(classSchedule.location, location));
 
+  // Private staff-authorized one-day membership created for Hannah Zhang.
+  // It is invitation-only, but the enrolled family must still see the exact
+  // scheduled program in the authenticated member portal.
+  if (packageName === "One Day Per Week — $74 (Staff Authorized)") {
+    return schedules.filter(
+      (schedule) =>
+        schedule.isActive === 1 &&
+        schedule.program === "Dragon Kids" &&
+        schedule.dayOfWeek === "Wednesday" &&
+        schedule.startTime === "6:00 PM",
+    );
+  }
+
+  const programs = programMapping[packageName] || [];
+  if (programs.length === 0) {
+    return [];
+  }
+
   // Filter by programs available in the package
-  return schedules.filter(schedule => programs.includes(schedule.program));
+  return schedules.filter(schedule => schedule.isActive === 1 && programs.includes(schedule.program));
 }
 
 export type PaymentHistoryItem = {
