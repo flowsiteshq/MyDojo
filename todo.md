@@ -2425,3 +2425,14 @@ Build deterministic 7-step booking-only flow with 100% reliability. No enrollmen
 - [x] Reconfirm Hiramy Cernuda $149 and Lauren Craig’s Emerson $149, Hadley $74.50, and Kenna $74.50 subscriptions have no paid September invoice and no conflicting open invoice before approved early collection
 - [x] Advance only those four existing September 30 Stripe subscriptions to collect the approved $447 once, without new subscriptions or retrying a failed payment
 - [x] Verify individual outcomes, one subscription per member, and future renewal dates after the approved early collection: all four exact invoices are paid once, all four subscriptions remain active, and each next billing date is October 15, 2026; Cintia has zero September paid invoices
+- [x] Reconcile all charges, declines, refunds, invoices, and settlement states recorded today across Stripe and historical provider records without creating new transactions: eight approved Stripe tuition collections are paid, one Karin $149 invoice is open after a decline, and no historical-provider payment was recorded today
+- [x] Map the verified today-only billing events to members and report the complete ledger without changing billing
+- [x] Inspect Hiramy Cernuda and Lauren Craig’s three September 14 invoice records for payment intent, collection method, paid-out-of-band, credit-balance, and status-transition evidence
+- [x] Determine whether the four September 14 invoice records represent collected funds or non-payment invoice state, without creating another charge: all four invoice payments are historical payment intents; no new September 14 collection occurred
+- [x] Correct the Stripe-ledger report and obtain approval before any new action on an unpaid invoice
+- [x] Retrieve and reconcile the complete Stripe payment activity for the exact September 14, 2026 dashboard business-day interval without creating any transaction
+- [x] Match every September 14 Stripe payment to its member, student, amount, status, and source action, including successful and failed payment attempts
+- [x] Correct the prior same-day billing report against the Stripe dashboard screenshot and explain the timestamp/filter mismatch without further billing action
+- [x] Retire the unsafe four-member early-collection script’s payment path so it can no longer reset billing-cycle anchors or misreport historical invoices as a new collection
+- [x] Verify the four September 30 subscriptions’ actual invoice coverage and anchor side effect without modifying them: each historical paid invoice covers through September 30, while the September 14 anchor update changed the current billing period to September 15–October 15 without a new payment
+- [ ] Obtain explicit approval for a precise four-subscription corrective action before changing any billing date or collecting any amount: Hiramy/Luis $149, Lauren/Emerson $149, Lauren/Hadley $74.50, and Lauren/Kenna $74.50; do not duplicate the historical payments
