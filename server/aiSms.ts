@@ -4,8 +4,8 @@
  * and manages conversation state in the database.
  */
 import { getDb } from "./db";
-import { smsConversations, smsMessages, trialSignups, classSchedule, membershipPackages } from "../drizzle/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { smsConversations, smsMessages, trialSignups, classSchedule, membershipPackages, enrollments } from "../drizzle/schema";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { sendSms } from "./sms800";
 import { invokeLLM } from "./_core/llm";
 import { handleBookingFlow } from "./smsTrialBooking";
@@ -349,11 +349,42 @@ export function isAccountSupportRequest(message: string): boolean {
   ];
   const enrollmentSignals = ["enrollment", "membership", "program", "class", "schedule", "sign up", "signed up", "enroll"];
 
-  return accountSignals.some((signal) => lower.includes(signal)) && enrollmentSignals.some((signal) => lower.includes(signal));
+  return (accountSignals.some((signal) => lower.includes(signal)) && enrollmentSignals.some((signal) => lower.includes(signal)))
+    || isTrialBillingQuestion(message);
+}
+
+export function isTrialBillingQuestion(message: string): boolean {
+  const lower = message.toLowerCase();
+  return lower.includes("free trial")
+    && ["payment", "paid", "charge", "charged", "billing", "bill", "next month", "expected on"].some((signal) => lower.includes(signal));
 }
 
 export const ACCOUNT_SUPPORT_HANDOFF_REPLY =
   "Thanks for letting us know. A MyDojo team member is checking your account and will follow up shortly.";
+
+export const PAID_ENROLLMENT_TRIAL_LABEL_REPLY =
+  "Your enrollment payment was received. The Free trial label shows a future monthly billing period; it does not mean your enrollment payment was missed. A MyDojo team member will confirm your class schedule shortly.";
+
+function normalizedLastTen(phone: string): string | null {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length >= 10 ? digits.slice(-10) : null;
+}
+
+async function hasPaidActiveEnrollmentForPhone(phone: string): Promise<boolean> {
+  const db = await getDb();
+  const lastTen = normalizedLastTen(phone);
+  if (!db || !lastTen) return false;
+  const records = await db
+    .select({ id: enrollments.id })
+    .from(enrollments)
+    .where(and(
+      eq(enrollments.status, "active"),
+      eq(enrollments.paidFirstMonth, 1),
+      sql`RIGHT(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(${enrollments.customerPhone}, '+', ''), '-', ''), ' ', ''), '(', ''), ')', ''), 10) = ${lastTen}`,
+    ))
+    .limit(1);
+  return records.length > 0;
+}
 
 // ─── Main inbound handler ─────────────────────────────────────────────────────
 
@@ -510,6 +541,10 @@ export async function handleInboundSms(
   // This resets any accidental trial state and pauses automated replies so a
   // staff member can resolve the account safely.
   if (isAccountSupportRequest(body)) {
+    const paidEnrollmentTrialQuestion = isTrialBillingQuestion(body) && await hasPaidActiveEnrollmentForPhone(sender);
+    const accountReply = paidEnrollmentTrialQuestion
+      ? PAID_ENROLLMENT_TRIAL_LABEL_REPLY
+      : ACCOUNT_SUPPORT_HANDOFF_REPLY;
     await db
       .update(smsConversations)
       .set({
@@ -521,12 +556,12 @@ export async function handleInboundSms(
       } as Partial<typeof smsConversations.$inferInsert>)
       .where(eq(smsConversations.id, conv.id));
 
-    const result = await sendSms({ to: sender, message: ACCOUNT_SUPPORT_HANDOFF_REPLY });
+    const result = await sendSms({ to: sender, message: accountReply });
     await saveMessage(
       conv.id,
       "outbound",
       "ai",
-      ACCOUNT_SUPPORT_HANDOFF_REPLY,
+      accountReply,
       result.messageId,
       result.success ? "sent" : "failed",
     );
