@@ -14,6 +14,7 @@ describe("FluidPay gap recovery safeguards", () => {
     expect(gapAudit).toContain("blocked_local_amount_mismatch");
     expect(gapAudit).toContain("totalActiveMonthlyAmountCents !== subscription.amountCents");
     expect(gapAudit).toContain("blocked_local_price_missing");
+    expect(gapAudit).toContain("Brenda Galvez — exclude from FluidPay collection list by staff direction");
   });
 
   it("keeps customer-only records blocked unless a payment method, exact monthly amount, and separate recurring decision are available", () => {
@@ -30,6 +31,8 @@ describe("FluidPay gap recovery safeguards", () => {
     expect(brendaCollection).toContain('idempotency_time: 3_600');
     expect(brendaCollection).toContain("existingSeptemberTransactions.length > 0");
     expect(brendaCollection).toContain("totalActiveMonthlyAmountCents !== TARGET.amountCents");
+    expect(brendaCollection).toContain("COLLECTION_HOLD");
+    expect(brendaCollection).toContain("no further charge or retry is permitted");
     expect(brendaCollection).not.toContain("/status/active");
     expect(brendaCollection).not.toContain("next_bill_date=");
   });
