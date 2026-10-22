@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getPayPalAccessToken, verifyPayPalWebhookSignature, createPayPalOrder, createMonthlySubscription } from "./paypalHelper";
+import { getPayPalAccessToken, verifyPayPalWebhookSignature, createPayPalOrder, capturePayPalOrder, createMonthlySubscription } from "./paypalHelper";
 
 export const paypalRouter = Router();
 
@@ -79,5 +79,23 @@ paypalRouter.post("/party-checkout", async (req, res) => {
   } catch (error) {
     console.error("[PayPal party checkout]", error);
     return res.status(502).json({ error: "Party checkout unavailable" });
+  }
+});
+
+paypalRouter.get("/party-complete", async (req, res) => {
+  const token = String(req.query.token || "");
+  if (!/^[A-Za-z0-9]{8,32}$/.test(token)) return res.redirect(303, "/birthday-parties?payment=cancelled");
+  try {
+    const capture = await capturePayPalOrder(token);
+    if (capture.status !== "COMPLETED") return res.redirect(303, "/birthday-parties?payment=pending");
+    const { notifyOwner } = await import("./_core/notification");
+    await notifyOwner({
+      title: "Birthday Party Payment Completed",
+      content: "PayPal order: " + capture.orderId + "\nStatus: COMPLETED. Match with the booking request and confirm the party date.",
+    });
+    return res.redirect(303, "/birthday-parties?payment=success");
+  } catch (error) {
+    console.error("[PayPal party capture]", error);
+    return res.redirect(303, "/birthday-parties?payment=pending");
   }
 });
