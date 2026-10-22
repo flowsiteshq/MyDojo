@@ -10771,7 +10771,7 @@ Please enter your card details below to complete your registration securely. Tot
         const result = await createPayPalOrder({
           amountCents: selectedPackage.totalCents,
           referenceId: 'party-' + bookingId,
-          returnUrl: 'https://www.mydojoma.com/birthday-parties?payment=approved',
+          returnUrl: 'https://www.mydojoma.com/api/paypal/party-complete',
           cancelUrl: 'https://www.mydojoma.com/birthday-parties?payment=cancelled',
         });
         const { notifyOwner } = await import('./_core/notification');
