@@ -423,7 +423,7 @@ export default function BirthdayParties() {
             { q: "How far in advance should I book?", a: "We recommend booking at least 2–3 weeks in advance, especially for weekend dates. Popular dates fill up fast!" },
             { q: "Can I bring my own cake?", a: "Absolutely! You're welcome to bring your own cake or order one from us. Just let us know in the notes." },
             { q: "What do guests need to wear?", a: "Comfortable athletic clothes are perfect. We provide all martial arts equipment. No need for special gear!" },
-            { q: "Is a deposit required?", a: "Yes, a 50% deposit is required to hold your date. The balance is due on the day of the party." },
+            { q: "Is a deposit required?", a: "Yes, a full payment is required to hold your date. The balance is due on the day of the party." },
           ].map((item) => (
             <div key={item.q} className="rounded-xl p-5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
               <p className="font-bold text-white mb-2 flex items-start gap-2"><Star className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#fbbf24" }} />{item.q}</p>
