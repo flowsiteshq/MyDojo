@@ -81,6 +81,14 @@ paypalRouter.post("/webhook", async (req, res) => {
     }
     const orderId = event.resource?.supplementary_data?.related_ids?.order_id
       ?? (event.event_type.startsWith("CHECKOUT.ORDER.") ? event.resource?.id : undefined);
+    const customId = String(event.resource?.custom_id ?? "");
+    if (event.event_type === "BILLING.SUBSCRIPTION.ACTIVATED" && customId.startsWith("enrollment-")) {
+      const enrollmentId = Number(customId.slice("enrollment-".length));
+      if (!Number.isInteger(enrollmentId) || enrollmentId <= 0) throw new Error("Invalid PayPal enrollment reference");
+      await db.update(schema.enrollments).set({ status: "active", paypalSubscriptionId: String(event.resource?.id ?? "") }).where(eq(schema.enrollments.id, enrollmentId));
+      await db.update(schema.paypalEvents).set({ processingStatus: "processed", processedAt: new Date() }).where(eq(schema.paypalEvents.paypalEventId, event.id));
+      return res.status(200).json({ received: true });
+    }
     if (["CHECKOUT.ORDER.COMPLETED", "PAYMENT.CAPTURE.COMPLETED"].includes(event.event_type) && orderId) {
       await markPartyOrderPaid(String(orderId), event.event_type === "PAYMENT.CAPTURE.COMPLETED" ? String(event.resource?.id ?? "") : undefined);
       await db.update(schema.paypalEvents).set({ processingStatus: "processed", processedAt: new Date() }).where(eq(schema.paypalEvents.paypalEventId, event.id));

@@ -462,6 +462,10 @@ export const enrollments = mysqlTable("enrollments", {
   stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   /** Stripe Subscription ID (if recurring billing) */
   stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
+  /** PayPal billing plan ID for recurring membership */
+  paypalPlanId: varchar("paypalPlanId", { length: 255 }),
+  /** PayPal subscription ID for recurring membership */
+  paypalSubscriptionId: varchar("paypalSubscriptionId", { length: 255 }),
   /** Stripe PaymentMethod ID — tokenized reference only, never a raw card number */
   stripePaymentMethodId: varchar("stripePaymentMethodId", { length: 255 }),
   /** Safe display metadata for the saved recurring payment method */

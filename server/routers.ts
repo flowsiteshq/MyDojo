@@ -71,6 +71,7 @@ import { scheduledPaymentsRouter } from './scheduledPaymentsRouter';
 import { sendLeadConfirmationSms } from "./leadConfirmationSms";
 import { getEnrollmentAgreementVersion, renderEnrollmentAgreementPdf } from "./enrollmentAgreementPdf";
 import { getOrCreateStripeCustomer, getStripe } from "./stripeHelper";
+import { createMonthlySubscription } from "./paypalHelper";
 
 function getInsertedRecordId(result: unknown, recordName: string): number {
   const candidateValues = [
@@ -3237,6 +3238,74 @@ Please enter your card details below to complete your registration securely. Tot
           },
         });
         return { clientSecret: intent.client_secret!, paymentIntentId: intent.id, amountCents: Math.round(dueToday * 100) };
+      }),
+
+    /** Start a PayPal-hosted recurring membership checkout. */
+    createPayPalEnrollmentCheckout: publicProcedure
+      .input(z.object({
+        packageId: z.number().int().positive(),
+        customerName: z.string().min(1).max(255),
+        customerEmail: z.string().email(),
+        customerPhone: z.string().min(7).max(20),
+        studentName: z.string().max(255).optional(),
+        promoCode: z.string().min(3).max(50).optional(),
+        agreementSignature: z.string().min(1).max(255),
+        agreementSignedAt: z.string().datetime(),
+        agreementSignatureDataUrl: z.string().max(1_500_000).regex(/^data:image\/png;base64,/),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const [pkg] = await db.select().from(schema.membershipPackages)
+          .where(eq(schema.membershipPackages.id, input.packageId)).limit(1);
+        if (!pkg || !pkg.isActive || pkg.invitationOnly) throw new TRPCError({ code: "NOT_FOUND", message: "Selected membership is unavailable" });
+
+        const promoCode = input.promoCode?.trim().toUpperCase();
+        if (promoCode && promoCode !== "MYDOJO99") {
+          const [promo] = await db.select().from(schema.promoCodes).where(eq(schema.promoCodes.code, promoCode)).limit(1);
+          if (!promo || !promo.active || (promo.expiresAt && Date.now() > promo.expiresAt) || (promo.maxUses !== null && promo.usedCount >= promo.maxUses)) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "This promo code is no longer available" });
+          }
+        }
+        const monthlyPrice = Number(pkg.monthlyPrice);
+        const planId = monthlyPrice === 149 ? process.env.PAYPAL_PLAN_BASIC : monthlyPrice === 199 ? process.env.PAYPAL_PLAN_BLACK_BELT : monthlyPrice === 249 ? process.env.PAYPAL_PLAN_LEADERSHIP : undefined;
+        if (!planId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "The selected PayPal membership plan is not configured yet" });
+
+        const insertResult = await db.insert(schema.enrollments).values({
+          membershipPackageId: pkg.id,
+          customerName: input.customerName,
+          customerEmail: input.customerEmail,
+          customerPhone: input.customerPhone,
+          studentName: input.studentName || input.customerName,
+          downPaymentAmount: "0.00",
+          paidFirstMonth: 0,
+          remainingBalance: Number(pkg.totalPrice).toFixed(2),
+          monthlyPaymentsRemaining: pkg.durationMonths,
+          status: "pending",
+          discountApplied: promoCode === "MYDOJO99" ? "promo:MYDOJO99" : null,
+          agreementSignature: input.agreementSignature,
+          agreementSignedAt: new Date(input.agreementSignedAt),
+          startDate: new Date(),
+          paypalPlanId: planId,
+        });
+        const enrollmentId = getInsertedRecordId(insertResult, "pending PayPal enrollment");
+        const referenceId = `enrollment-${enrollmentId}`;
+        try {
+          const signatureBuffer = Buffer.from(input.agreementSignatureDataUrl.split(",")[1], "base64");
+          const storedSignature = await storagePut(`enrollment-agreements/${enrollmentId}/paypal-signature-${Date.now()}.png`, signatureBuffer, "image/png");
+          await db.update(schema.enrollments).set({ agreementSignatureImageUrl: storedSignature.url, agreementVersion: getEnrollmentAgreementVersion() }).where(eq(schema.enrollments.id, enrollmentId));
+        } catch (artifactError) {
+          console.error("[PayPal Enrollment Agreement] Failed to store signature", { enrollmentId, artifactError });
+        }
+        const origin = process.env.PUBLIC_SITE_URL || "https://www.mydojoma.com";
+        try {
+          const subscription = await createMonthlySubscription(planId, referenceId, `${origin}/api/paypal/membership-complete`, `${origin}/enroll?checkout=cancelled`);
+          await db.update(schema.enrollments).set({ paypalSubscriptionId: subscription.subscriptionId }).where(eq(schema.enrollments.id, enrollmentId));
+          return { checkoutUrl: subscription.approvalUrl, enrollmentId, amountCents: 0, recurringMonthlyAmount: monthlyPrice };
+        } catch (error) {
+          await db.update(schema.enrollments).set({ status: "cancelled" }).where(eq(schema.enrollments.id, enrollmentId));
+          throw new TRPCError({ code: "BAD_GATEWAY", message: "Unable to create PayPal membership checkout" });
+        }
       }),
 
     // Start a hosted recurring enrollment checkout. This path avoids browser-side
@@ -10508,6 +10577,15 @@ Please enter your card details below to complete your registration securely. Tot
         const db = await getDb();
         if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
         const code = input.code.trim().toUpperCase();
+        if (code === "MYDOJO99") {
+          return {
+            id: 0,
+            code,
+            description: "$99 enrollment fee waived",
+            discountType: "waive_down_payment",
+            discountValue: 99,
+          };
+        }
         const [promo] = await db.select().from(schema.promoCodes)
           .where(eq(schema.promoCodes.code, code))
           .limit(1);

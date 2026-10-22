@@ -239,6 +239,10 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
     },
     onError: (error) => setErrorMessage(error.message || "Unable to prepare secure checkout. Please try again."),
   });
+  const createPayPalEnrollmentMutation = trpc.member.createPayPalEnrollmentCheckout.useMutation({
+    onSuccess: ({ checkoutUrl }) => window.location.assign(checkoutUrl),
+    onError: (error) => setErrorMessage(error.message || "Unable to prepare secure PayPal checkout. Please try again."),
+  });
   const createFamilyCheckoutMutation = trpc.member.createFamilyEnrollmentCheckout.useMutation({
     onSuccess: ({ checkoutUrl }) => window.location.assign(checkoutUrl),
     onError: (error) => setErrorMessage(error.message || "Unable to prepare secure family checkout. Please try again."),
@@ -444,25 +448,23 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
                       });
                       return;
                     }
-                    createStripeCheckoutMutation.mutate({
+                    createPayPalEnrollmentMutation.mutate({
                       packageId: enrollmentData.packageId || 0,
                       customerName: enrollmentData.customerName,
                       customerEmail: enrollmentData.customerEmail,
                       customerPhone: enrollmentData.customerPhone,
                       studentName: enrollmentData.studentName || enrollmentData.childName || enrollmentData.customerName,
-                      waiveEnrollmentFee: waiveEnrollmentFee || undefined,
-                      waiverReason: enrollmentData.waiverReason || undefined,
                       promoCode: appliedPromo?.code,
                       agreementSignature: agreementSig.signedName,
                       agreementSignedAt: agreementSig.signedAt.toISOString(),
                       agreementSignatureDataUrl: agreementSig.signatureDataUrl,
                     });
                   }}
-                  disabled={createStripeCheckoutMutation.isPending || createFamilyCheckoutMutation.isPending || isSubmitting}
+                  disabled={createPayPalEnrollmentMutation.isPending || createFamilyCheckoutMutation.isPending || isSubmitting}
                   className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-lg"
                   style={{ minHeight: 60 }}
                 >
-                  {createStripeCheckoutMutation.isPending || createFamilyCheckoutMutation.isPending ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Preparing secure checkout…</> : <><Lock className="w-5 h-5 mr-2" /> Continue to Secure Checkout — ${totalAmount.toFixed(2)}</>}
+                  {createPayPalEnrollmentMutation.isPending || createFamilyCheckoutMutation.isPending ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Preparing PayPal checkout…</> : <><Lock className="w-5 h-5 mr-2" /> Continue with PayPal</>}
                 </Button>
               </div>
             )}
