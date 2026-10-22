@@ -54,3 +54,30 @@ paypalRouter.post("/subscribe", async (req, res) => {
     return res.status(502).json({ error: "PayPal subscription unavailable" });
   }
 });
+
+const partyDeposits: Record<string, number> = {
+  ninja: 9950,
+  champion: 14950,
+  black_belt_vip: 22450,
+};
+
+paypalRouter.post("/party-deposit", async (req, res) => {
+  const packageId = String(req.body?.packageId || "");
+  const amountCents = partyDeposits[packageId];
+  const bookingId = String(req.body?.bookingId || "");
+  if (!amountCents || !/^[A-Za-z0-9_-]{4,80}$/.test(bookingId)) {
+    return res.status(400).json({ error: "Invalid party booking" });
+  }
+  try {
+    const result = await createPayPalOrder({
+      amountCents,
+      referenceId: "party-" + bookingId,
+      returnUrl: "https://www.mydojoma.com/birthday-parties?payment=approved",
+      cancelUrl: "https://www.mydojoma.com/birthday-parties?payment=cancelled",
+    });
+    return res.json({ ...result, amountCents });
+  } catch (error) {
+    console.error("[PayPal party deposit]", error);
+    return res.status(502).json({ error: "Party checkout unavailable" });
+  }
+});
