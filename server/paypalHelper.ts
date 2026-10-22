@@ -154,3 +154,33 @@ export async function createMonthlySubscription(planId: string, referenceId: str
   if (!data.id || !approvalUrl) throw new Error("PayPal subscription approval missing");
   return { subscriptionId: data.id, approvalUrl };
 }
+
+export async function verifyPayPalWebhookSignature(
+  webhookId: string,
+  headers: Record<string, string | string[] | undefined>,
+  event: unknown,
+): Promise<boolean> {
+  const getHeader = (key: string) => {
+    const v = headers[key];
+    return Array.isArray(v) ? v[0] : v;
+  };
+  const transmissionId = getHeader("paypal-transmission-id");
+  const transmissionTime = getHeader("paypal-transmission-time");
+  const transmissionSig = getHeader("paypal-transmission-sig");
+  const certUrl = getHeader("paypal-cert-url");
+  const authAlgo = getHeader("paypal-auth-algo");
+  if (!transmissionId || !transmissionTime || !transmissionSig || !certUrl || !authAlgo) return false;
+  const token = await getPayPalAccessToken();
+  const response = await fetch(`${PAYPAL_API_BASE}/v1/notifications/verify-webhook-signature`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      auth_algo: authAlgo, cert_url: certUrl, transmission_id: transmissionId,
+      transmission_sig: transmissionSig, transmission_time: transmissionTime,
+      webhook_id: webhookId, webhook_event: event,
+    }),
+  });
+  if (!response.ok) return false;
+  const data = await response.json() as { verification_status?: string };
+  return data.verification_status === "SUCCESS";
+}
