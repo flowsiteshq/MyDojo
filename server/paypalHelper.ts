@@ -1,6 +1,5 @@
 /**
  * PayPal integration foundation for MyDojo.
- * Read-only token validation only. No payments or subscriptions are created.
  * Store PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET securely in Railway.
  */
 const PAYPAL_API_BASE = process.env.PAYPAL_ENVIRONMENT === "live"
@@ -89,6 +88,7 @@ export async function createPayPalOrder(params: {
 export async function capturePayPalOrder(orderId: string): Promise<{
   orderId: string;
   status: string;
+  captureId?: string;
 }> {
   if (!/^[A-Z0-9]{8,32}$/i.test(orderId)) throw new Error("Invalid PayPal order ID");
   const token = await getPayPalAccessToken();
@@ -104,9 +104,25 @@ export async function capturePayPalOrder(orderId: string): Promise<{
     },
   );
   if (!response.ok) throw new Error(`PayPal capture failed (${response.status})`);
-  const data = await response.json() as { id?: string; status?: string };
+  const data = await response.json() as { id?: string; status?: string; purchase_units?: Array<{ payments?: { captures?: Array<{ id?: string }> } }> };
   if (!data.id || !data.status) throw new Error("Invalid PayPal capture response");
-  return { orderId: data.id, status: data.status };
+  return { orderId: data.id, status: data.status, captureId: data.purchase_units?.[0]?.payments?.captures?.[0]?.id };
+}
+
+export async function getPayPalOrder(orderId: string): Promise<{
+  id: string;
+  status?: string;
+  purchase_units?: Array<{ reference_id?: string; amount?: { currency_code?: string; value?: string }; payments?: { captures?: Array<{ id?: string; status?: string; amount?: { currency_code?: string; value?: string } }> } }>;
+}> {
+  if (!/^[A-Z0-9]{8,32}$/i.test(orderId)) throw new Error("Invalid PayPal order ID");
+  const token = await getPayPalAccessToken();
+  const response = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders/${encodeURIComponent(orderId)}`, {
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+  });
+  if (!response.ok) throw new Error(`PayPal order lookup failed (${response.status})`);
+  const data = await response.json() as Awaited<ReturnType<typeof getPayPalOrder>>;
+  if (!data.id) throw new Error("Invalid PayPal order response");
+  return data;
 }
 
 export async function createMonthlyPlan(productId: string, name: string, amountCents: number): Promise<string> {

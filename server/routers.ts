@@ -10768,12 +10768,36 @@ Please enter your card details below to complete your registration securely. Tot
         const { createPayPalOrder } = await import('./paypalHelper');
         const { randomUUID } = await import('crypto');
         const bookingId = randomUUID();
-        const result = await createPayPalOrder({
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        await db.insert(schema.partyBookings).values({
+          bookingReference: bookingId,
+          packageId: input.packageId,
+          packageName: selectedPackage.name,
           amountCents: selectedPackage.totalCents,
-          referenceId: 'party-' + bookingId,
-          returnUrl: 'https://www.mydojoma.com/api/paypal/party-complete',
-          cancelUrl: 'https://www.mydojoma.com/birthday-parties?payment=cancelled',
+          parentName: input.parentName,
+          phone: input.phone,
+          email: input.email,
+          childName: input.childName,
+          childAge: input.childAge,
+          partyDate: input.partyDate,
+          guestCount: input.guestCount,
+          message: input.message,
+          status: 'pending',
         });
+        let result;
+        try {
+          result = await createPayPalOrder({
+            amountCents: selectedPackage.totalCents,
+            referenceId: 'party-' + bookingId,
+            returnUrl: (process.env.PUBLIC_SITE_URL || 'https://www.mydojoma.com') + '/api/paypal/party-complete',
+            cancelUrl: (process.env.PUBLIC_SITE_URL || 'https://www.mydojoma.com') + '/birthday-parties?payment=cancelled',
+          });
+          await db.update(schema.partyBookings).set({ paypalOrderId: result.orderId, status: 'approved' }).where(eq(schema.partyBookings.bookingReference, bookingId));
+        } catch (error) {
+          await db.update(schema.partyBookings).set({ status: 'failed', lastError: String(error).slice(0, 500) }).where(eq(schema.partyBookings.bookingReference, bookingId));
+          throw error;
+        }
         const { notifyOwner } = await import('./_core/notification');
         await notifyOwner({
           title: 'Birthday Party Checkout Started — ' + selectedPackage.name,
@@ -10789,7 +10813,7 @@ Please enter your card details below to complete your registration securely. Tot
             'Status: Awaiting customer payment approval',
           ].join('\n'),
         });
-        return { checkoutUrl: result.approvalUrl, depositAmount: selectedPackage.totalCents / 100 };
+        return { checkoutUrl: result.approvalUrl, amount: selectedPackage.totalCents / 100, bookingReference: bookingId };
       }),
     requestBooking: publicProcedure
       .input(z.object({

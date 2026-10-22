@@ -1105,6 +1105,54 @@ export const webhookEvents = mysqlTable("webhookEvents", {
 export type WebhookEvent = typeof webhookEvents.$inferSelect;
 export type InsertWebhookEvent = typeof webhookEvents.$inferInsert;
 
+// ─── PayPal party bookings ────────────────────────────────────────────────────
+/** Durable record linking a birthday-party request to one PayPal order. */
+export const partyBookings = mysqlTable("partyBookings", {
+  id: int("id").autoincrement().primaryKey(),
+  bookingReference: varchar("bookingReference", { length: 64 }).notNull().unique(),
+  packageId: varchar("packageId", { length: 32 }).notNull(),
+  packageName: varchar("packageName", { length: 100 }).notNull(),
+  amountCents: int("amountCents").notNull(),
+  currency: varchar("currency", { length: 3 }).default("USD").notNull(),
+  parentName: varchar("parentName", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  childName: varchar("childName", { length: 255 }).notNull(),
+  childAge: varchar("childAge", { length: 2 }),
+  partyDate: varchar("partyDate", { length: 10 }).notNull(),
+  guestCount: varchar("guestCount", { length: 3 }),
+  message: text("message"),
+  paypalOrderId: varchar("paypalOrderId", { length: 64 }).unique(),
+  paypalCaptureId: varchar("paypalCaptureId", { length: 64 }).unique(),
+  payerId: varchar("payerId", { length: 64 }),
+  status: mysqlEnum("status", ["pending", "approved", "paid", "failed", "cancelled"]).default("pending").notNull(),
+  paidAt: timestamp("paidAt"),
+  lastError: text("lastError"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PartyBooking = typeof partyBookings.$inferSelect;
+export type InsertPartyBooking = typeof partyBookings.$inferInsert;
+
+// ─── PayPal webhook events ───────────────────────────────────────────────────
+/** Idempotency ledger for verified PayPal webhook deliveries. */
+export const paypalEvents = mysqlTable("paypalEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  paypalEventId: varchar("paypalEventId", { length: 64 }).notNull().unique(),
+  eventType: varchar("eventType", { length: 150 }).notNull(),
+  resourceId: varchar("resourceId", { length: 128 }),
+  rawPayload: json("rawPayload").notNull(),
+  signatureValid: boolean("signatureValid").default(false).notNull(),
+  processingStatus: mysqlEnum("processingStatus", ["pending", "processed", "ignored", "error"]).default("pending").notNull(),
+  processingError: text("processingError"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  processedAt: timestamp("processedAt"),
+});
+
+export type PayPalEvent = typeof paypalEvents.$inferSelect;
+export type InsertPayPalEvent = typeof paypalEvents.$inferInsert;
+
 // ─── Payment Failures ─────────────────────────────────────────────────────────
 /**
  * Tracks individual payment failures for recurring subscriptions.
