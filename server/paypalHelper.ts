@@ -108,3 +108,49 @@ export async function capturePayPalOrder(orderId: string): Promise<{
   if (!data.id || !data.status) throw new Error("Invalid PayPal capture response");
   return { orderId: data.id, status: data.status };
 }
+
+export async function createMonthlyPlan(productId: string, name: string, amountCents: number): Promise<string> {
+  if (!/^PROD-[A-Za-z0-9]+$/.test(productId) || !Number.isSafeInteger(amountCents) || amountCents <= 0) throw new Error("Invalid plan input");
+  const token = await getPayPalAccessToken();
+  const res = await fetch(`${PAYPAL_API_BASE}/v1/billing/plans`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      product_id: productId, name, status: "ACTIVE",
+      billing_cycles: [{
+        frequency: { interval_unit: "MONTH", interval_count: 1 },
+        tenure_type: "REGULAR", sequence: 1, total_cycles: 0,
+        pricing_scheme: { fixed_price: { currency_code: "USD", value: (amountCents / 100).toFixed(2) } },
+      }],
+      payment_preferences: { auto_bill_outstanding: false, payment_failure_threshold: 3 },
+    }),
+  });
+  if (!res.ok) throw new Error(`PayPal plan creation failed: ${res.status}`);
+  const data = await res.json() as { id?: string };
+  if (!data.id) throw new Error("PayPal plan ID missing");
+  return data.id;
+}
+
+export async function createMonthlySubscription(planId: string, referenceId: string, returnUrl: string, cancelUrl: string) {
+  if (!/^P-[A-Z0-9]+$/i.test(planId)) throw new Error("Invalid plan ID");
+  const token = await getPayPalAccessToken();
+  const res = await fetch(`${PAYPAL_API_BASE}/v1/billing/subscriptions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`, "Content-Type": "application/json",
+      "PayPal-Request-Id": `mydojo-sub-${referenceId}`,
+    },
+    body: JSON.stringify({
+      plan_id: planId, custom_id: referenceId,
+      application_context: {
+        brand_name: "MyDojo Martial Arts & Fitness",
+        user_action: "SUBSCRIBE_NOW", return_url: returnUrl, cancel_url: cancelUrl,
+      },
+    }),
+  });
+  if (!res.ok) throw new Error(`PayPal subscription creation failed: ${res.status}`);
+  const data = await res.json() as { id?: string; links?: Array<{ rel: string; href: string }> };
+  const approvalUrl = data.links?.find(link => link.rel === "approve")?.href;
+  if (!data.id || !approvalUrl) throw new Error("PayPal subscription approval missing");
+  return { subscriptionId: data.id, approvalUrl };
+}
