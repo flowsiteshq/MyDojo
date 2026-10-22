@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getPayPalAccessToken, verifyPayPalWebhookSignature } from "./paypalHelper";
+import { getPayPalAccessToken, verifyPayPalWebhookSignature, createPayPalOrder, createMonthlySubscription } from "./paypalHelper";
 
 export const paypalRouter = Router();
 
@@ -22,5 +22,35 @@ paypalRouter.post("/webhook", async (req, res) => {
     return res.status(503).json({ error: "Event processing not configured" });
   } catch {
     return res.status(500).json({ error: "Webhook verification failed" });
+  }
+});
+
+/**
+ * Subscription initiation requires a configured server-side plan ID.
+ * Buyer must approve the subscription at PayPal.
+ */
+paypalRouter.post("/subscribe", async (req, res) => {
+  const plan = String(req.body?.plan || "");
+  const plans: Record<string, string | undefined> = {
+    basic: process.env.PAYPAL_PLAN_BASIC,
+    black_belt: process.env.PAYPAL_PLAN_BLACK_BELT,
+    leadership: process.env.PAYPAL_PLAN_LEADERSHIP,
+  };
+  const planId = plans[plan];
+  const referenceId = String(req.body?.referenceId || "");
+  if (!planId || !/^[a-zA-Z0-9_-]{4,100}$/.test(referenceId)) {
+    return res.status(400).json({ error: "Unknown plan or invalid reference" });
+  }
+  const origin = "https://www.mydojoma.com";
+  try {
+    const result = await createMonthlySubscription(
+      planId, referenceId,
+      origin + "/?paypal=approved",
+      origin + "/?paypal=cancelled",
+    );
+    return res.json(result);
+  } catch (error) {
+    console.error("[PayPal subscribe]", error);
+    return res.status(502).json({ error: "PayPal subscription unavailable" });
   }
 });
