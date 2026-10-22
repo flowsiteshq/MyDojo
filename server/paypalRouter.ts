@@ -58,29 +58,8 @@ paypalRouter.post("/subscribe", async (req, res) => {
 const partyPrices: Record<string, number> = {
   ninja: 19900,
   champion: 29900,
-  black_belt_vip: 44900,
+  blackbelt: 44900,
 };
-
-paypalRouter.post("/party-checkout", async (req, res) => {
-  const packageId = String(req.body?.packageId || "");
-  const amountCents = partyPrices[packageId];
-  const bookingId = String(req.body?.bookingId || "");
-  if (!amountCents || !/^[A-Za-z0-9_-]{4,80}$/.test(bookingId)) {
-    return res.status(400).json({ error: "Invalid party booking" });
-  }
-  try {
-    const result = await createPayPalOrder({
-      amountCents,
-      referenceId: "party-" + bookingId,
-      returnUrl: "https://www.mydojoma.com/birthday-parties?payment=approved",
-      cancelUrl: "https://www.mydojoma.com/birthday-parties?payment=cancelled",
-    });
-    return res.json({ ...result, amountCents });
-  } catch (error) {
-    console.error("[PayPal party checkout]", error);
-    return res.status(502).json({ error: "Party checkout unavailable" });
-  }
-});
 
 paypalRouter.get("/party-complete", async (req, res) => {
   const token = String(req.query.token || "");
