@@ -29,6 +29,7 @@ import { handleSummerCampTrialActivation } from "../summerCampTrialActivation";
 import { handleBirthdayReminder } from "../birthdayReminderHandler";
 import { handleBillingHealthCheck } from "../billingHealthCheckJob";
 import { handleBillingRetry } from "../billingRetryJob";
+import { paypalRouter } from "../paypalRouter";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -90,6 +91,8 @@ async function startServer() {
     express.raw({ type: "application/json" }),
     handleStripeWebhook
   );
+
+  app.use("/api/paypal", express.json({ limit: "1mb" }), paypalRouter);
 
   // GoHighLevel webhook endpoint - receives lead/contact events from GHL
   // Needs its own json() parser because it's registered before the global express.json() middleware
