@@ -1,0 +1,43 @@
+CREATE TABLE `partyBookings` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`bookingReference` varchar(64) NOT NULL,
+	`packageId` varchar(32) NOT NULL,
+	`packageName` varchar(100) NOT NULL,
+	`amountCents` int NOT NULL,
+	`currency` varchar(3) NOT NULL DEFAULT 'USD',
+	`parentName` varchar(255) NOT NULL,
+	`phone` varchar(20) NOT NULL,
+	`email` varchar(320) NOT NULL,
+	`childName` varchar(255) NOT NULL,
+	`childAge` varchar(2),
+	`partyDate` varchar(10) NOT NULL,
+	`guestCount` varchar(3),
+	`message` text,
+	`paypalOrderId` varchar(64),
+	`paypalCaptureId` varchar(64),
+	`payerId` varchar(64),
+	`status` enum('pending','approved','paid','failed','cancelled') NOT NULL DEFAULT 'pending',
+	`paidAt` timestamp,
+	`lastError` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `partyBookings_id` PRIMARY KEY(`id`),
+	CONSTRAINT `partyBookings_bookingReference_unique` UNIQUE(`bookingReference`),
+	CONSTRAINT `partyBookings_paypalOrderId_unique` UNIQUE(`paypalOrderId`),
+	CONSTRAINT `partyBookings_paypalCaptureId_unique` UNIQUE(`paypalCaptureId`)
+);
+--> statement-breakpoint
+CREATE TABLE `paypalEvents` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`paypalEventId` varchar(64) NOT NULL,
+	`eventType` varchar(150) NOT NULL,
+	`resourceId` varchar(128),
+	`rawPayload` json NOT NULL,
+	`signatureValid` boolean NOT NULL DEFAULT false,
+	`processingStatus` enum('pending','processed','ignored','error') NOT NULL DEFAULT 'pending',
+	`processingError` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`processedAt` timestamp,
+	CONSTRAINT `paypalEvents_id` PRIMARY KEY(`id`),
+	CONSTRAINT `paypalEvents_paypalEventId_unique` UNIQUE(`paypalEventId`)
+);

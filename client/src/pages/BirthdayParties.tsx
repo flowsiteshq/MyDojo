@@ -309,9 +309,9 @@ export default function BirthdayParties() {
               style={{ background: "rgba(124,58,237,0.1)", border: "2px solid #7c3aed" }}
             >
               <div className="text-6xl mb-4">🎉</div>
-              <h3 className="font-black uppercase text-white text-2xl mb-3">Deposit Received!</h3>
+              <h3 className="font-black uppercase text-white text-2xl mb-3">Payment Processing</h3>
               <p style={{ color: "rgba(255,255,255,0.6)" }}>
-                Your party deposit is received. We’ll contact you within 24 hours to confirm your date and answer any questions. Get ready for the BEST party ever!
+                If you completed PayPal checkout, we’ll confirm your payment and contact you within 24 hours about your requested date.
               </p>
               <p className="mt-4 font-bold" style={{ color: "#fbbf24" }}>
                 Questions? Call us: (877) 469-3656
@@ -326,7 +326,7 @@ export default function BirthdayParties() {
                 <div className="rounded-xl px-4 py-3 text-sm font-bold flex items-center gap-2"
                   style={{ background: "rgba(124,58,237,0.15)", border: "1px solid #7c3aed", color: "#a78bfa" }}>
                   <Crown className="w-4 h-4" />
-                  Package selected: {PACKAGES.find(p => p.id === selectedPackage)?.name} — ${PACKAGES.find(p => p.id === selectedPackage)?.price} total · 50% deposit due today
+                  Package selected: {PACKAGES.find(p => p.id === selectedPackage)?.name} — ${PACKAGES.find(p => p.id === selectedPackage)?.price} total · full payment due today
                 </div>
               )}
               {!selectedPackage && (
@@ -403,7 +403,7 @@ export default function BirthdayParties() {
               <Button type="submit" disabled={bookingMutation.isPending}
                 className="w-full py-6 h-auto font-black uppercase tracking-wider text-lg rounded-xl text-black hover:scale-[1.02] transition-transform"
                 style={{ background: "linear-gradient(135deg, #fbbf24, #f59e0b)" }}>
-                {bookingMutation.isPending ? "Opening Secure Payment…" : "🎉 PAY 50% DEPOSIT & REQUEST DATE →"}
+                {bookingMutation.isPending ? "Opening Secure Payment…" : "🎉 PAY IN FULL & REQUEST DATE →"}
               </Button>
 
               <p className="text-center text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
@@ -423,7 +423,7 @@ export default function BirthdayParties() {
             { q: "How far in advance should I book?", a: "We recommend booking at least 2–3 weeks in advance, especially for weekend dates. Popular dates fill up fast!" },
             { q: "Can I bring my own cake?", a: "Absolutely! You're welcome to bring your own cake or order one from us. Just let us know in the notes." },
             { q: "What do guests need to wear?", a: "Comfortable athletic clothes are perfect. We provide all martial arts equipment. No need for special gear!" },
-            { q: "Is a deposit required?", a: "Yes, a 50% deposit is required to hold your date. The balance is due on the day of the party." },
+            { q: "Is payment required to book?", a: "Yes, the full package price is paid upfront. We will contact you to confirm your requested date." },
           ].map((item) => (
             <div key={item.q} className="rounded-xl p-5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
               <p className="font-bold text-white mb-2 flex items-start gap-2"><Star className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#fbbf24" }} />{item.q}</p>

@@ -554,6 +554,20 @@
       "when": 1786716956867,
       "tag": "0078_solid_nebula",
       "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "5",
+      "when": 1792712718132,
+      "tag": "0079_slimy_guardsmen",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "5",
+      "when": 1792713245590,
+      "tag": "0080_closed_frank_castle",
+      "breakpoints": true
     }
   ]
 }

@@ -71,6 +71,7 @@ import { scheduledPaymentsRouter } from './scheduledPaymentsRouter';
 import { sendLeadConfirmationSms } from "./leadConfirmationSms";
 import { getEnrollmentAgreementVersion, renderEnrollmentAgreementPdf } from "./enrollmentAgreementPdf";
 import { getOrCreateStripeCustomer, getStripe } from "./stripeHelper";
+import { createMonthlySubscription } from "./paypalHelper";
 
 function getInsertedRecordId(result: unknown, recordName: string): number {
   const candidateValues = [
@@ -3237,6 +3238,81 @@ Please enter your card details below to complete your registration securely. Tot
           },
         });
         return { clientSecret: intent.client_secret!, paymentIntentId: intent.id, amountCents: Math.round(dueToday * 100) };
+      }),
+
+    /** Start a PayPal-hosted recurring membership checkout. */
+    createPayPalEnrollmentCheckout: publicProcedure
+      .input(z.object({
+        packageId: z.number().int().positive(),
+        customerName: z.string().min(1).max(255),
+        customerEmail: z.string().email(),
+        customerPhone: z.string().min(7).max(20),
+        studentName: z.string().max(255).optional(),
+        promoCode: z.string().min(3).max(50).optional(),
+        agreementSignature: z.string().min(1).max(255),
+        agreementSignedAt: z.string().datetime(),
+        agreementSignatureDataUrl: z.string().max(1_500_000).regex(/^data:image\/png;base64,/),
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const [pkg] = await db.select().from(schema.membershipPackages)
+          .where(eq(schema.membershipPackages.id, input.packageId)).limit(1);
+        if (!pkg || !pkg.isActive || pkg.invitationOnly) throw new TRPCError({ code: "NOT_FOUND", message: "Selected membership is unavailable" });
+
+        const promoCode = input.promoCode?.trim().toUpperCase();
+        if (promoCode && promoCode !== "MYDOJO99") {
+          const [promo] = await db.select().from(schema.promoCodes).where(eq(schema.promoCodes.code, promoCode)).limit(1);
+          if (!promo || !promo.active || (promo.expiresAt && Date.now() > promo.expiresAt) || (promo.maxUses !== null && promo.usedCount >= promo.maxUses)) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "This promo code is no longer available" });
+          }
+        }
+        const monthlyPrice = Number(pkg.monthlyPrice);
+        const noEnrollmentFee = promoCode === "MYDOJO99";
+        const planId = monthlyPrice === 149
+          ? (noEnrollmentFee ? process.env.PAYPAL_PLAN_BASIC_NO_FEE : process.env.PAYPAL_PLAN_BASIC)
+          : monthlyPrice === 199
+            ? (noEnrollmentFee ? process.env.PAYPAL_PLAN_BLACK_BELT_NO_FEE : process.env.PAYPAL_PLAN_BLACK_BELT)
+            : monthlyPrice === 249
+              ? (noEnrollmentFee ? process.env.PAYPAL_PLAN_LEADERSHIP_NO_FEE : process.env.PAYPAL_PLAN_LEADERSHIP)
+              : undefined;
+        if (!planId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "The selected PayPal membership plan is not configured yet" });
+
+        const insertResult = await db.insert(schema.enrollments).values({
+          membershipPackageId: pkg.id,
+          customerName: input.customerName,
+          customerEmail: input.customerEmail,
+          customerPhone: input.customerPhone,
+          studentName: input.studentName || input.customerName,
+          downPaymentAmount: "0.00",
+          paidFirstMonth: 0,
+          remainingBalance: Number(pkg.totalPrice).toFixed(2),
+          monthlyPaymentsRemaining: pkg.durationMonths,
+          status: "pending",
+          discountApplied: promoCode === "MYDOJO99" ? "promo:MYDOJO99" : null,
+          agreementSignature: input.agreementSignature,
+          agreementSignedAt: new Date(input.agreementSignedAt),
+          startDate: new Date(),
+          paypalPlanId: planId,
+        });
+        const enrollmentId = getInsertedRecordId(insertResult, "pending PayPal enrollment");
+        const referenceId = `enrollment-${enrollmentId}`;
+        try {
+          const signatureBuffer = Buffer.from(input.agreementSignatureDataUrl.split(",")[1], "base64");
+          const storedSignature = await storagePut(`enrollment-agreements/${enrollmentId}/paypal-signature-${Date.now()}.png`, signatureBuffer, "image/png");
+          await db.update(schema.enrollments).set({ agreementSignatureImageUrl: storedSignature.url, agreementVersion: getEnrollmentAgreementVersion() }).where(eq(schema.enrollments.id, enrollmentId));
+        } catch (artifactError) {
+          console.error("[PayPal Enrollment Agreement] Failed to store signature", { enrollmentId, artifactError });
+        }
+        const origin = process.env.PUBLIC_SITE_URL || "https://www.mydojoma.com";
+        try {
+          const subscription = await createMonthlySubscription(planId, referenceId, `${origin}/api/paypal/membership-complete`, `${origin}/enroll?checkout=cancelled`);
+          await db.update(schema.enrollments).set({ paypalSubscriptionId: subscription.subscriptionId }).where(eq(schema.enrollments.id, enrollmentId));
+          return { checkoutUrl: subscription.approvalUrl, enrollmentId, amountCents: 0, recurringMonthlyAmount: monthlyPrice };
+        } catch (error) {
+          await db.update(schema.enrollments).set({ status: "cancelled" }).where(eq(schema.enrollments.id, enrollmentId));
+          throw new TRPCError({ code: "BAD_GATEWAY", message: "Unable to create PayPal membership checkout" });
+        }
       }),
 
     // Start a hosted recurring enrollment checkout. This path avoids browser-side
@@ -10508,6 +10584,15 @@ Please enter your card details below to complete your registration securely. Tot
         const db = await getDb();
         if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
         const code = input.code.trim().toUpperCase();
+        if (code === "MYDOJO99") {
+          return {
+            id: 0,
+            code,
+            description: "$99 enrollment fee waived",
+            discountType: "waive_down_payment",
+            discountValue: 99,
+          };
+        }
         const [promo] = await db.select().from(schema.promoCodes)
           .where(eq(schema.promoCodes.code, code))
           .limit(1);
@@ -10760,63 +10845,60 @@ Please enter your card details below to complete your registration securely. Tot
       }))
       .mutation(async ({ input, ctx }) => {
         const packages = {
-          ninja: { name: 'Ninja Party', totalCents: 19_900, depositCents: 9_950 },
-          champion: { name: 'Champion Party', totalCents: 29_900, depositCents: 14_950 },
-          blackbelt: { name: 'Black Belt VIP Party', totalCents: 44_900, depositCents: 22_450 },
+          ninja: { name: 'Ninja Party', totalCents: 19_900 },
+          champion: { name: 'Champion Party', totalCents: 29_900 },
+          blackbelt: { name: 'Black Belt VIP Party', totalCents: 44_900 },
         } as const;
         const selectedPackage = packages[input.packageId];
-
-        const Stripe = (await import('stripe')).default;
-        const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '', {
-          apiVersion: '2026-01-28.clover' as any,
+        const { createPayPalOrder } = await import('./paypalHelper');
+        const { randomUUID } = await import('crypto');
+        const bookingId = randomUUID();
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        await db.insert(schema.partyBookings).values({
+          bookingReference: bookingId,
+          packageId: input.packageId,
+          packageName: selectedPackage.name,
+          amountCents: selectedPackage.totalCents,
+          parentName: input.parentName,
+          phone: input.phone,
+          email: input.email,
+          childName: input.childName,
+          childAge: input.childAge,
+          partyDate: input.partyDate,
+          guestCount: input.guestCount,
+          message: input.message,
+          status: 'pending',
         });
-        const origin = (ctx.req.headers.origin as string) || 'https://www.mydojoma.com';
-        const requestSummary = [
-          `Party date: ${input.partyDate}`,
-          input.guestCount ? `Guests: ${input.guestCount}` : null,
-          input.childAge ? `Child age: ${input.childAge}` : null,
-          input.message ? `Notes: ${input.message.slice(0, 500)}` : null,
-        ].filter(Boolean).join(' · ');
-
-        const session = await stripe.checkout.sessions.create({
-          mode: 'payment',
-          payment_method_types: ['card'],
-          customer_email: input.email,
-          billing_address_collection: 'auto',
-          line_items: [{
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: `${selectedPackage.name} — 50% Deposit`,
-                description: `50% deposit toward the $${(selectedPackage.totalCents / 100).toFixed(2)} party package. ${requestSummary}`,
-              },
-              unit_amount: selectedPackage.depositCents,
-            },
-            quantity: 1,
-          }],
-          metadata: {
-            type: 'birthday_party_deposit',
-            birthday_package: input.packageId,
-            party_date: input.partyDate,
-            child_name: input.childName,
-            parent_name: input.parentName,
-            parent_phone: input.phone,
-          },
-          payment_intent_data: {
-            metadata: {
-              type: 'birthday_party_deposit',
-              birthday_package: input.packageId,
-              party_date: input.partyDate,
-              child_name: input.childName,
-              parent_name: input.parentName,
-              parent_phone: input.phone,
-            },
-          },
-          success_url: `${origin}/birthday-parties?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${origin}/birthday-parties?payment=cancelled`,
+        let result;
+        try {
+          result = await createPayPalOrder({
+            amountCents: selectedPackage.totalCents,
+            referenceId: 'party-' + bookingId,
+            returnUrl: (process.env.PUBLIC_SITE_URL || 'https://www.mydojoma.com') + '/api/paypal/party-complete',
+            cancelUrl: (process.env.PUBLIC_SITE_URL || 'https://www.mydojoma.com') + '/birthday-parties?payment=cancelled',
+          });
+          await db.update(schema.partyBookings).set({ paypalOrderId: result.orderId, status: 'approved' }).where(eq(schema.partyBookings.bookingReference, bookingId));
+        } catch (error) {
+          await db.update(schema.partyBookings).set({ status: 'failed', lastError: String(error).slice(0, 500) }).where(eq(schema.partyBookings.bookingReference, bookingId));
+          throw error;
+        }
+        const { notifyOwner } = await import('./_core/notification');
+        await notifyOwner({
+          title: 'Birthday Party Checkout Started — ' + selectedPackage.name,
+          content: [
+            'Booking ID: ' + bookingId,
+            'Parent: ' + input.parentName,
+            'Phone: ' + input.phone,
+            'Email: ' + input.email,
+            'Child: ' + input.childName,
+            'Party date: ' + input.partyDate,
+            'Amount: $' + (selectedPackage.totalCents / 100).toFixed(2),
+            'PayPal order: ' + result.orderId,
+            'Status: Awaiting customer payment approval',
+          ].join('\n'),
         });
-        if (!session.url) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Unable to start secure payment.' });
-        return { checkoutUrl: session.url, depositAmount: selectedPackage.depositCents / 100 };
+        return { checkoutUrl: result.approvalUrl, amount: selectedPackage.totalCents / 100, bookingReference: bookingId };
       }),
     requestBooking: publicProcedure
       .input(z.object({
