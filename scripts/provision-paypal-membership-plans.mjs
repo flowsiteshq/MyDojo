@@ -37,7 +37,18 @@ async function paypal(path, options = {}) {
     },
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`PayPal ${options.method || 'GET'} ${path} failed: ${response.status}`);
+  if (!response.ok) {
+    const details = Array.isArray(body.details)
+      ? body.details.map((detail) => {
+          const issue = detail.issue || 'UNKNOWN_ISSUE';
+          const description = detail.description || 'No description provided';
+          return `${issue}: ${description}`;
+        }).join(' | ')
+      : '';
+    const name = body.name || 'UNKNOWN_ERROR';
+    const message = details || body.message || 'No error description provided';
+    throw new Error(`PayPal ${options.method || 'GET'} ${path} failed: ${response.status} ${name}${details ? ` — ${message}` : ` — ${message}`}`);
+  }
   return body;
 }
 
@@ -78,7 +89,7 @@ async function ensureProduct(name) {
   if (matches.length === 1) return matches[0].id;
   return (await paypal('/v1/catalogs/products', {
     method: 'POST',
-    body: JSON.stringify({ name, type: 'SERVICE', category: 'EDUCATIONAL_SERVICES' }),
+    body: JSON.stringify({ name, type: 'SERVICE', category: 'MEMBERSHIP_CLUBS_AND_ORGANIZATIONS' }),
   })).id;
 }
 
