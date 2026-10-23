@@ -6,7 +6,6 @@ import {
   getPayPalAccessToken,
   verifyPayPalWebhookSignature,
   createPayPalOrder,
-  capturePayPalOrder,
   getPayPalOrder,
   createMonthlySubscription,
 } from "./paypalHelper";
@@ -134,23 +133,7 @@ paypalRouter.post("/subscribe", async (req, res) => {
 });
 
 paypalRouter.get("/party-complete", async (req, res) => {
-  const token = String(req.query.token || "");
-  if (!/^[A-Za-z0-9]{8,32}$/.test(token)) return res.redirect(303, "/birthday-parties?payment=cancelled");
-  try {
-    const db = await getDb();
-    if (!db) throw new Error("Database unavailable");
-    const [booking] = await db.select().from(schema.partyBookings).where(eq(schema.partyBookings.paypalOrderId, token)).limit(1);
-    if (!booking) throw new Error("Booking not found");
-    if (booking.status !== "paid") {
-      const capture = await capturePayPalOrder(token);
-      if (capture.status !== "COMPLETED") return res.redirect(303, "/birthday-parties?payment=pending");
-      await markPartyOrderPaid(token, capture.captureId);
-      const { notifyOwner } = await import("./_core/notification");
-      await notifyOwner({ title: "Birthday Party Payment Completed", content: `Booking ${booking.bookingReference} paid via PayPal. Parent: ${booking.parentName}; date: ${booking.partyDate}; amount: $${(booking.amountCents / 100).toFixed(2)}.` });
-    }
-    return res.redirect(303, "/birthday-parties?payment=success");
-  } catch (error) {
-    console.error("[PayPal party capture]", error);
-    return res.redirect(303, "/birthday-parties?payment=pending");
-  }
+  // Hosted Payment Links do not return a trusted booking identifier to this app.
+  // Never capture or mark a booking paid because a browser reached this route.
+  return res.redirect(303, "/birthday-parties?payment=pending");
 });

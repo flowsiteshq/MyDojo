@@ -10845,12 +10845,11 @@ Please enter your card details below to complete your registration securely. Tot
       }))
       .mutation(async ({ input, ctx }) => {
         const packages = {
-          ninja: { name: 'Ninja Party', totalCents: 19_900 },
-          champion: { name: 'Champion Party', totalCents: 29_900 },
-          blackbelt: { name: 'Black Belt VIP Party', totalCents: 44_900 },
+          ninja: { name: 'Ninja Party', totalCents: 19_900, hostedLinkId: 'EVND7A9LEDEUS', checkoutUrl: 'https://www.paypal.com/ncp/payment/EVND7A9LEDEUS' },
+          champion: { name: 'Champion Party', totalCents: 29_900, hostedLinkId: 'E4MN36FR8R4MC', checkoutUrl: 'https://www.paypal.com/ncp/payment/E4MN36FR8R4MC' },
+          blackbelt: { name: 'Black Belt VIP Party', totalCents: 44_900, hostedLinkId: 'HM98SSWBUBGNY', checkoutUrl: 'https://www.paypal.com/ncp/payment/HM98SSWBUBGNY' },
         } as const;
         const selectedPackage = packages[input.packageId];
-        const { createPayPalOrder } = await import('./paypalHelper');
         const { randomUUID } = await import('crypto');
         const bookingId = randomUUID();
         const db = await getDb();
@@ -10868,21 +10867,9 @@ Please enter your card details below to complete your registration securely. Tot
           partyDate: input.partyDate,
           guestCount: input.guestCount,
           message: input.message,
+          paypalHostedLinkId: selectedPackage.hostedLinkId,
           status: 'pending',
         });
-        let result;
-        try {
-          result = await createPayPalOrder({
-            amountCents: selectedPackage.totalCents,
-            referenceId: 'party-' + bookingId,
-            returnUrl: (process.env.PUBLIC_SITE_URL || 'https://www.mydojoma.com') + '/api/paypal/party-complete',
-            cancelUrl: (process.env.PUBLIC_SITE_URL || 'https://www.mydojoma.com') + '/birthday-parties?payment=cancelled',
-          });
-          await db.update(schema.partyBookings).set({ paypalOrderId: result.orderId, status: 'approved' }).where(eq(schema.partyBookings.bookingReference, bookingId));
-        } catch (error) {
-          await db.update(schema.partyBookings).set({ status: 'failed', lastError: String(error).slice(0, 500) }).where(eq(schema.partyBookings.bookingReference, bookingId));
-          throw error;
-        }
         const { notifyOwner } = await import('./_core/notification');
         await notifyOwner({
           title: 'Birthday Party Checkout Started — ' + selectedPackage.name,
@@ -10894,11 +10881,51 @@ Please enter your card details below to complete your registration securely. Tot
             'Child: ' + input.childName,
             'Party date: ' + input.partyDate,
             'Amount: $' + (selectedPackage.totalCents / 100).toFixed(2),
-            'PayPal order: ' + result.orderId,
-            'Status: Awaiting customer payment approval',
+            'Booking status: Pending Payment',
+            'Payment method: PayPal hosted link',
           ].join('\n'),
         });
-        return { checkoutUrl: result.approvalUrl, amount: selectedPackage.totalCents / 100, bookingReference: bookingId };
+        return { checkoutUrl: selectedPackage.checkoutUrl, amount: selectedPackage.totalCents / 100, bookingReference: bookingId, status: 'pending' as const };
+      }),
+    listPending: adminProcedure
+      .query(async () => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        return db.select().from(schema.partyBookings)
+          .where(eq(schema.partyBookings.status, 'pending'))
+          .orderBy(desc(schema.partyBookings.createdAt));
+      }),
+    reconcileHostedPayment: adminProcedure
+      .input(z.object({
+        bookingReference: z.string().min(8).max(64),
+        paypalTransactionReference: z.string().min(3).max(128),
+        amountCents: z.number().int().positive(),
+        confirmationNote: z.string().max(500).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        const [booking] = await db.select().from(schema.partyBookings)
+          .where(eq(schema.partyBookings.bookingReference, input.bookingReference)).limit(1);
+        if (!booking) throw new TRPCError({ code: 'NOT_FOUND', message: 'Birthday booking not found' });
+        if (booking.status === 'paid') throw new TRPCError({ code: 'CONFLICT', message: 'This booking is already marked paid' });
+        if (booking.status !== 'pending') throw new TRPCError({ code: 'CONFLICT', message: `Booking is not pending payment (status: ${booking.status})` });
+        if (booking.amountCents !== input.amountCents) throw new TRPCError({ code: 'BAD_REQUEST', message: 'PayPal amount does not match the booking amount' });
+        await db.update(schema.partyBookings).set({
+          status: 'paid',
+          paypalCaptureId: input.paypalTransactionReference,
+          paymentConfirmationMethod: 'paypal_manual',
+          paymentConfirmedBy: ctx.user.id,
+          paymentConfirmationReference: input.paypalTransactionReference,
+          paidAt: new Date(),
+          lastError: input.confirmationNote ?? null,
+        }).where(and(eq(schema.partyBookings.id, booking.id), eq(schema.partyBookings.status, 'pending')));
+        const { notifyOwner } = await import('./_core/notification');
+        await notifyOwner({
+          title: `Birthday Payment Manually Confirmed — ${booking.packageName}`,
+          content: `Booking ${booking.bookingReference} was manually reconciled as paid by ${ctx.user.name || ctx.user.email}. PayPal reference: ${input.paypalTransactionReference}. Amount: $${(booking.amountCents / 100).toFixed(2)}. Parent: ${booking.parentName}; date: ${booking.partyDate}.`,
+        });
+        return { success: true, bookingReference: booking.bookingReference, status: 'paid' as const };
       }),
     requestBooking: publicProcedure
       .input(z.object({
