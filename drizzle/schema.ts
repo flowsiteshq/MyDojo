@@ -1199,6 +1199,70 @@ export const paymentFailures = mysqlTable("paymentFailures", {
 export type PaymentFailure = typeof paymentFailures.$inferSelect;
 export type InsertPaymentFailure = typeof paymentFailures.$inferInsert;
 
+// ─── Billing Recovery Audit ───────────────────────────────────────────────────
+/** Immutable/read-only source evidence grouped for staff review. No processor
+ * mutation is performed by this table or its associated procedures. */
+export const billingReconciliationCases = mysqlTable("billingReconciliationCases", {
+  id: int("id").autoincrement().primaryKey(),
+  caseKey: varchar("caseKey", { length: 255 }).notNull().unique(),
+  familyKey: varchar("familyKey", { length: 255 }).notNull(),
+  enrollmentIds: json("enrollmentIds").notNull(),
+  sourceRecords: json("sourceRecords").notNull(),
+  totalSettledCents: int("totalSettledCents").notNull().default(0),
+  duplicateOverageCents: int("duplicateOverageCents").notNull().default(0),
+  classification: mysqlEnum("classification", ["matched", "duplicate_candidate", "authorized_family_charge", "refund_pending", "disputed", "retry_failure", "unmatched", "no_double_collection"]).notNull(),
+  proposedAction: mysqlEnum("proposedAction", ["none", "review_refund", "review_credit", "review_retry", "identity_match"]).notNull().default("none"),
+  reviewStatus: mysqlEnum("reviewStatus", ["unreviewed", "approved", "rejected", "resolved"]).notNull().default("unreviewed"),
+  reviewerUserId: int("reviewerUserId"),
+  reviewedAt: timestamp("reviewedAt"),
+  reviewNotes: text("reviewNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type BillingReconciliationCase = typeof billingReconciliationCases.$inferSelect;
+export type InsertBillingReconciliationCase = typeof billingReconciliationCases.$inferInsert;
+
+/** One-time prepaid quote/intent; it never implies recurring renewal. */
+export const prepaidTuitionIntents = mysqlTable("prepaidTuitionIntents", {
+  id: int("id").autoincrement().primaryKey(),
+  familyKey: varchar("familyKey", { length: 255 }).notNull(),
+  enrollmentIds: json("enrollmentIds").notNull(),
+  plan: mysqlEnum("plan", ["basic", "blackBelt", "leadership"]).notNull(),
+  monthlyChargeableCents: int("monthlyChargeableCents").notNull(),
+  grossCents: int("grossCents").notNull(),
+  creditAppliedCents: int("creditAppliedCents").notNull().default(0),
+  totalDueCents: int("totalDueCents").notNull(),
+  startsAfter: date("startsAfter"),
+  status: mysqlEnum("status", ["quoted", "pending", "paid", "cancelled", "expired"]).notNull().default("quoted"),
+  paypalOrderId: varchar("paypalOrderId", { length: 128 }).unique(),
+  paidAt: timestamp("paidAt"),
+  createdByUserId: int("createdByUserId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type PrepaidTuitionIntent = typeof prepaidTuitionIntents.$inferSelect;
+export type InsertPrepaidTuitionIntent = typeof prepaidTuitionIntents.$inferInsert;
+
+/** Draft-only SMS review records. Raw balances are intentionally excluded. */
+export const billingSmsDrafts = mysqlTable("billingSmsDrafts", {
+  id: int("id").autoincrement().primaryKey(),
+  segment: mysqlEnum("segment", ["processor_failure", "confirmed_past_due", "migrating", "duplicate_review"]).notNull(),
+  recipientUserId: int("recipientUserId"),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  message: text("message").notNull(),
+  secureLoginPath: varchar("secureLoginPath", { length: 255 }).notNull(),
+  status: mysqlEnum("status", ["draft", "suppressed", "approved", "sent", "cancelled"]).notNull().default("draft"),
+  suppressionReason: varchar("suppressionReason", { length: 100 }),
+  optedOut: boolean("optedOut").notNull().default(false),
+  quietHours: boolean("quietHours").notNull().default(false),
+  approvedByUserId: int("approvedByUserId"),
+  approvedAt: timestamp("approvedAt"),
+  sentAt: timestamp("sentAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type BillingSmsDraft = typeof billingSmsDrafts.$inferSelect;
+export type InsertBillingSmsDraft = typeof billingSmsDrafts.$inferInsert;
+
 // ─── Belt Promotions Audit Log ────────────────────────────────────────────────
 /**
  * Records every belt promotion performed by an admin/instructor.

@@ -72,6 +72,11 @@ import { sendLeadConfirmationSms } from "./leadConfirmationSms";
 import { getEnrollmentAgreementVersion, renderEnrollmentAgreementPdf } from "./enrollmentAgreementPdf";
 import { getOrCreateStripeCustomer, getStripe } from "./stripeHelper";
 import { createMonthlySubscription } from "./paypalHelper";
+import {
+  createSmsDraft,
+  quoteSixMonthPrepaid,
+  PREPAID_PLANS,
+} from "./billingRecovery";
 
 function getInsertedRecordId(result: unknown, recordName: string): number {
   const candidateValues = [
@@ -10830,6 +10835,113 @@ Please enter your card details below to complete your registration securely. Tot
       }),
   }),
 
+  billingRecovery: router({
+    /** Authenticated family statement. It exposes safe billing metadata only. */
+    familyStatement: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const rows = await db.select({
+        enrollmentId: schema.enrollments.id,
+        studentName: schema.enrollments.studentName,
+        status: schema.enrollments.status,
+        monthlyAmount: schema.membershipPackages.monthlyPrice,
+        downPaymentAmount: schema.enrollments.downPaymentAmount,
+        remainingBalance: schema.enrollments.remainingBalance,
+        discountApplied: schema.enrollments.discountApplied,
+        stripeSubscriptionId: schema.enrollments.stripeSubscriptionId,
+        fluidpaySubscriptionId: schema.enrollments.fluidpaySubscriptionId,
+        paypalSubscriptionId: schema.enrollments.paypalSubscriptionId,
+        startDate: schema.enrollments.startDate,
+      }).from(schema.enrollments)
+        .leftJoin(schema.membershipPackages, eq(schema.enrollments.membershipPackageId, schema.membershipPackages.id))
+        .where(eq(schema.enrollments.customerEmail, ctx.user.email));
+      return rows.map((row) => ({
+        ...row,
+        processor: row.paypalSubscriptionId ? "paypal" : row.stripeSubscriptionId ? "stripe" : row.fluidpaySubscriptionId ? "fluidpay" : "none",
+        recurringStatus: row.status === "active" ? "active" : row.status,
+        // This release intentionally does not infer paid-through dates from incomplete legacy data.
+        paidThrough: null,
+        creditsCents: 0,
+        disputeStatus: "unknown",
+      }));
+    }),
+    /** Read-only quote; it does not create a checkout or a payment intent. */
+    quotePrepaid: protectedProcedure
+      .input(z.object({
+        plan: z.enum(["basic", "blackBelt", "leadership"]),
+        requestedStart: z.string().date().optional(),
+      }))
+      .query(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const rows = await db.select({
+          id: schema.enrollments.id,
+          status: schema.enrollments.status,
+          monthlyPrice: schema.membershipPackages.monthlyPrice,
+          discountApplied: schema.enrollments.discountApplied,
+          startDate: schema.enrollments.startDate,
+        }).from(schema.enrollments)
+          .leftJoin(schema.membershipPackages, eq(schema.enrollments.membershipPackageId, schema.membershipPackages.id))
+          .where(eq(schema.enrollments.customerEmail, ctx.user.email));
+        const active = rows.filter((row) => row.status === "active");
+        if (active.length === 0) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "An active existing membership is required" });
+        const first = active[0];
+        const monthlyCents = Math.round(Number(first.monthlyPrice ?? 0) * 100);
+        const plan = PREPAID_PLANS[input.plan];
+        if (monthlyCents !== plan.monthlyCents && monthlyCents !== Math.round(plan.monthlyCents / 2)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Selected plan does not match the verified membership price" });
+        }
+        return quoteSixMonthPrepaid({
+          plan: input.plan,
+          familyDiscountedMonthlyCents: monthlyCents,
+          existingMember: true,
+          requestedStart: input.requestedStart,
+        });
+      }),
+    /** Admin read-only review queue. Decisions never call a processor. */
+    listCases: adminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      return db.select().from(schema.billingReconciliationCases).orderBy(desc(schema.billingReconciliationCases.createdAt));
+    }),
+    recordReviewDecision: adminProcedure
+      .input(z.object({
+        id: z.number().int().positive(),
+        reviewStatus: z.enum(["approved", "rejected", "resolved"]),
+        reviewNotes: z.string().max(2000).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const [existing] = await db.select({ id: schema.billingReconciliationCases.id })
+          .from(schema.billingReconciliationCases)
+          .where(eq(schema.billingReconciliationCases.id, input.id)).limit(1);
+        if (!existing) throw new TRPCError({ code: "NOT_FOUND", message: "Reconciliation case not found" });
+        await db.update(schema.billingReconciliationCases).set({
+          reviewStatus: input.reviewStatus,
+          reviewNotes: input.reviewNotes ?? null,
+          reviewerUserId: ctx.user.id,
+          reviewedAt: new Date(),
+        }).where(eq(schema.billingReconciliationCases.id, input.id));
+        return { success: true, id: input.id, reviewStatus: input.reviewStatus };
+      }),
+    /** Dry-run SMS preview. It never persists or sends a message. */
+    previewSms: adminProcedure
+      .input(z.object({
+        segment: z.enum(["processor_failure", "confirmed_past_due", "migrating", "duplicate_review"]),
+        firstName: z.string().min(1).max(80),
+        secureLoginPath: z.string().min(1).max(255),
+        optedOut: z.boolean().default(false),
+        quietHours: z.boolean().default(false),
+      }))
+      .query(({ input }) => createSmsDraft({
+        segment: input.segment,
+        firstName: input.firstName,
+        secureLoginPath: input.secureLoginPath,
+        optOut: input.optedOut,
+        quietHours: input.quietHours,
+      })),
+  }),
   birthday: router({
     createCheckout: publicProcedure
       .input(z.object({

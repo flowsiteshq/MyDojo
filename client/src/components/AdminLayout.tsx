@@ -198,6 +198,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/packages", label: "Packages", icon: PackageIcon },
     { href: "/admin/audit-log", label: "Audit Log", icon: ShieldAlert },
     { href: "/admin/billing", label: "Billing & Webhooks", icon: Webhook },
+    { href: "/admin/billing-recovery", label: "Billing Recovery", icon: ShieldAlert },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
