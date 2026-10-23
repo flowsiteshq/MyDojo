@@ -96,10 +96,10 @@ async function ensureProduct(name) {
 async function listPlans() {
   const plans = [];
   for (let page = 1; page <= 100; page++) {
-    const data = await paypal(`/v1/billing/plans?status=ALL&page_size=100&page=${page}`);
+    const data = await paypal(`/v1/billing/plans?page_size=20&page=${page}`);
     const items = data.plans || [];
     plans.push(...items);
-    if (items.length < 100) return plans;
+    if (items.length < 20) return plans;
   }
   throw new Error('Plan search exceeded 100 pages; refusing to provision');
 }
