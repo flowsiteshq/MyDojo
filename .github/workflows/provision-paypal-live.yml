@@ -25,7 +25,7 @@ jobs:
       PAYPAL_CLIENT_SECRET: ${{ secrets.PAYPAL_CLIENT_SECRET }}
       PAYPAL_ENVIRONMENT: live
       PUBLIC_SITE_URL: https://www.mydojoma.com
-      PAYPAL_PROVISIONING_RESULT_PATH: ${{ runner.temp }}/paypal-provisioning-result.json
+      PAYPAL_PROVISIONING_RESULT_PATH: ${{ github.workspace }}/paypal-provisioning-result.json
 
     steps:
       - name: Check out main only
@@ -62,6 +62,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: paypal-live-provisioning-result-${{ github.run_id }}
-          path: ${{ runner.temp }}/paypal-provisioning-result.json
+          path: ${{ github.workspace }}/paypal-provisioning-result.json
           if-no-files-found: error
           retention-days: 7
