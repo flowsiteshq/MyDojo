@@ -125,8 +125,22 @@ export async function getPayPalOrder(orderId: string): Promise<{
   return data;
 }
 
-export async function createMonthlyPlan(productId: string, name: string, amountCents: number): Promise<string> {
-  if (!/^PROD-[A-Za-z0-9]+$/.test(productId) || !Number.isSafeInteger(amountCents) || amountCents <= 0) throw new Error("Invalid plan input");
+export async function createPayPalProduct(name: string): Promise<string> {
+  if (!name.trim()) throw new Error("Invalid product name");
+  const token = await getPayPalAccessToken();
+  const res = await fetch(`${PAYPAL_API_BASE}/v1/catalogs/products`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ name: name.trim(), type: "SERVICE", category: "EDUCATIONAL_SERVICES" }),
+  });
+  if (!res.ok) throw new Error(`PayPal product creation failed: ${res.status}`);
+  const data = await res.json() as { id?: string };
+  if (!data.id) throw new Error("PayPal product ID missing");
+  return data.id;
+}
+
+export async function createMonthlyPlan(productId: string, name: string, amountCents: number, setupFeeCents = 0): Promise<string> {
+  if (!/^PROD-[A-Za-z0-9]+$/.test(productId) || !Number.isSafeInteger(amountCents) || amountCents <= 0 || !Number.isSafeInteger(setupFeeCents) || setupFeeCents < 0) throw new Error("Invalid plan input");
   const token = await getPayPalAccessToken();
   const res = await fetch(`${PAYPAL_API_BASE}/v1/billing/plans`, {
     method: "POST",
@@ -138,7 +152,11 @@ export async function createMonthlyPlan(productId: string, name: string, amountC
         tenure_type: "REGULAR", sequence: 1, total_cycles: 0,
         pricing_scheme: { fixed_price: { currency_code: "USD", value: (amountCents / 100).toFixed(2) } },
       }],
-      payment_preferences: { auto_bill_outstanding: false, payment_failure_threshold: 3 },
+      payment_preferences: {
+        auto_bill_outstanding: false,
+        payment_failure_threshold: 3,
+        ...(setupFeeCents > 0 ? { setup_fee: { currency_code: "USD", value: (setupFeeCents / 100).toFixed(2) }, setup_fee_failure_action: "CANCEL" } : {}),
+      },
     }),
   });
   if (!res.ok) throw new Error(`PayPal plan creation failed: ${res.status}`);

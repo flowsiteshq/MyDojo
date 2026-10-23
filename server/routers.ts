@@ -3268,7 +3268,14 @@ Please enter your card details below to complete your registration securely. Tot
           }
         }
         const monthlyPrice = Number(pkg.monthlyPrice);
-        const planId = monthlyPrice === 149 ? process.env.PAYPAL_PLAN_BASIC : monthlyPrice === 199 ? process.env.PAYPAL_PLAN_BLACK_BELT : monthlyPrice === 249 ? process.env.PAYPAL_PLAN_LEADERSHIP : undefined;
+        const noEnrollmentFee = promoCode === "MYDOJO99";
+        const planId = monthlyPrice === 149
+          ? (noEnrollmentFee ? process.env.PAYPAL_PLAN_BASIC_NO_FEE : process.env.PAYPAL_PLAN_BASIC)
+          : monthlyPrice === 199
+            ? (noEnrollmentFee ? process.env.PAYPAL_PLAN_BLACK_BELT_NO_FEE : process.env.PAYPAL_PLAN_BLACK_BELT)
+            : monthlyPrice === 249
+              ? (noEnrollmentFee ? process.env.PAYPAL_PLAN_LEADERSHIP_NO_FEE : process.env.PAYPAL_PLAN_LEADERSHIP)
+              : undefined;
         if (!planId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "The selected PayPal membership plan is not configured yet" });
 
         const insertResult = await db.insert(schema.enrollments).values({
