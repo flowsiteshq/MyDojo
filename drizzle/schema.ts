@@ -1843,6 +1843,17 @@ export const pnoRsvps = mysqlTable("pnoRsvps", {
   friendName: varchar("friendName", { length: 255 }),
   /** Any dietary restrictions or notes */
   notes: text("notes"),
+  /** Required emergency contact for youth events */
+  emergencyContactName: varchar("emergencyContactName", { length: 255 }),
+  emergencyContactPhone: varchar("emergencyContactPhone", { length: 20 }),
+  /** Required acknowledgement of the event waiver */
+  waiverAccepted: int("waiverAccepted").notNull().default(0),
+  /** Payment state for paid event editions; historical free rows remain intact */
+  paymentStatus: varchar("paymentStatus", { length: 30 }).notNull().default("free"),
+  amountCents: int("amountCents").notNull().default(0),
+  paypalOrderId: varchar("paypalOrderId", { length: 64 }).unique(),
+  paypalCaptureId: varchar("paypalCaptureId", { length: 64 }),
+  paidAt: timestamp("paidAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type PnoRsvp = typeof pnoRsvps.$inferSelect;
@@ -2498,6 +2509,8 @@ export const beltTestIntents = mysqlTable("beltTestIntents", {
   paymentStatus: varchar("paymentStatus", { length: 30 }).notNull().default("pending"),
   stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   stripeSessionId: varchar("stripeSessionId", { length: 255 }),
+  paypalOrderId: varchar("paypalOrderId", { length: 64 }).unique(),
+  paypalCaptureId: varchar("paypalCaptureId", { length: 64 }),
   amountPaid: int("amountPaid").default(0),
   smsSent: int("smsSent").notNull().default(0),
   emailSent: int("emailSent").notNull().default(0),

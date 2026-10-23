@@ -342,19 +342,19 @@ export default function BeltTestIntent() {
       {/* Hero */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 py-10 text-center">
-          <div className="inline-flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-5">
-            <Award className="h-3 w-3" /> Saturday, August 15th, 2026
+            <div className="inline-flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-5">
+            <Award className="h-3 w-3" /> Saturday, October 31st, 2026 · 10:00 AM
           </div>
           <h1 className="text-4xl md:text-5xl font-black uppercase mb-3 text-gray-900">
             Belt Test <span className="text-red-600">Intent to Promote</span>
           </h1>
           <p className="text-gray-500 max-w-xl mx-auto mb-8">
-            Complete this form to declare your intent to test on <strong className="text-gray-900">Saturday, August 15th, 2026</strong>. The belt test fee of <span className="text-red-600 font-bold">$49.00 per student</span> is due at registration.
+            Complete this form to declare your intent to test on <strong className="text-gray-900">Saturday, October 31st, 2026 at 10:00 AM</strong>. The belt test fee of <span className="text-red-600 font-bold">$49.00 per student</span> is due at registration.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             {[
-              { icon: Calendar, label: "Belt Test Date", sub: "Saturday, August 15th, 2026" },
-              { icon: Shield, label: "Spotlight Week", sub: "Aug 10–14 Prep" },
+              { icon: Calendar, label: "Belt Test Date", sub: "Saturday, October 31st · 10:00 AM" },
+              { icon: Shield, label: "Eligibility", sub: "Orange belt and above" },
               { icon: DollarSign, label: "Test Fee", sub: "$49.00 per student" },
             ].map(({ icon: Icon, label, sub }) => (
               <div key={label} className="bg-gray-50 border border-gray-200 rounded-xl px-6 py-4 text-center min-w-[160px]">
@@ -374,9 +374,9 @@ export default function BeltTestIntent() {
             <Shield className="h-3 w-3" /> Important Reminders
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-sm text-gray-700">
-            <div className="flex gap-2"><span className="text-red-500">&rsaquo;</span> Form must be submitted <strong className="text-gray-900">prior to August 10th</strong></div>
+            <div className="flex gap-2"><span className="text-red-500">&rsaquo;</span> Eligible students must submit the form before testing day</div>
             <div className="flex gap-2"><span className="text-red-500">&rsaquo;</span> Uniforms must be ordered &mdash; Extra Black or Red Gi available</div>
-            <div className="flex gap-2"><span className="text-red-500">&rsaquo;</span> Spotlight Week (Aug 10&ndash;14): Testing Preparation classes</div>
+            <div className="flex gap-2"><span className="text-red-500">&rsaquo;</span> Testing begins Saturday, October 31st at 10:00 AM</div>
             <div className="flex gap-2"><span className="text-red-500">&rsaquo;</span> Pre-order Sparring Gear, T-Shirts &amp; Apparel available</div>
           </div>
         </div>

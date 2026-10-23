@@ -7,8 +7,9 @@ import { Mail, MessageSquare, Send, CheckCircle, AlertCircle, Loader2, Eye, Cale
 import { AdminLayout } from "@/components/AdminLayout";
 
 export default function AdminNewsletter() {
+  const [month, setMonth] = useState<"august_2026" | "october_2026">("october_2026");
   const [sendEmail, setSendEmail] = useState(true);
-  const [sendSms, setSendSms] = useState(true);
+  const [sendSms, setSendSms] = useState(false);
   const [testOnly, setTestOnly] = useState(false);
   const [result, setResult] = useState<{
     emailSuccess: number; emailFail: number;
@@ -29,7 +30,7 @@ export default function AdminNewsletter() {
       setConfirmed(true);
       return;
     }
-    sendMutation.mutate({ month: 'august_2026', sendEmail, sendSms, testOnly });
+    sendMutation.mutate({ month, sendEmail, sendSms, testOnly });
   }
 
   return (
@@ -37,7 +38,7 @@ export default function AdminNewsletter() {
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-black uppercase text-white mb-2">Parent Newsletter</h1>
-          <p className="text-gray-400">Send the August 2026 newsletter to all parents via email and/or SMS.</p>
+          <p className="text-gray-400">Prepare the selected newsletter for parent email and optional SMS delivery.</p>
         </div>
 
         {/* Preview Card */}
@@ -47,24 +48,34 @@ export default function AdminNewsletter() {
               <Calendar className="h-6 w-6 text-red-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">August 2026 Newsletter</h2>
-              <p className="text-gray-400 text-sm">Subject: 🥋 MyDojo August 2026 — Belt Test, Parents Night Out & More!</p>
+              <h2 className="text-lg font-bold text-white">{month === "october_2026" ? "October 2026 Newsletter" : "August 2026 Newsletter"}</h2>
+              <p className="text-gray-400 text-sm">
+                Subject: {month === "october_2026" ? "🎃 MyDojo October Surprise! Halloween Belt Testing, Haunted Dojo & New Class Schedule!" : "🥋 MyDojo August 2026 — Belt Test, Parents Night Out & More!"}
+              </p>
             </div>
           </div>
 
           <div className="bg-zinc-800 rounded-lg p-4 mb-4 text-sm text-gray-300 space-y-2">
-            <p className="font-semibold text-white">This newsletter covers:</p>
-            <ul className="space-y-1 text-gray-400 list-disc list-inside">
-              <li>🥋 <strong className="text-white">Belt Test – Aug 15</strong> — Intent to Promote form + $49 fee due Aug 10</li>
-              <li>📚 <strong className="text-white">Spotlight Week – Aug 10–14</strong> — Testing Preparation classes</li>
-              <li>🌟 <strong className="text-white">Parents Night Out – Aug 21</strong> — Ninja Warrior Glow Night, 6–9:30 PM</li>
-              <li>🏆 <strong className="text-white">Master Yaeger Seminar – Aug 22</strong> — 11 AM–2 PM, $29</li>
-              <li>🥢 <strong className="text-white">Bo Staff Training</strong> — Starts this month</li>
-            </ul>
+              <p className="font-semibold text-white">This newsletter covers:</p>
+              {month === "october_2026" ? (
+                <ul className="space-y-1 text-gray-400 list-disc list-inside">
+                  <li>🥋 <strong className="text-white">Belt Test – Oct 31</strong> — Intent to Promote form + $49 fee</li>
+                  <li>🎃 <strong className="text-white">Haunted Dojo – Oct 30</strong> — 6–9 PM, $15 per child</li>
+                  <li>📅 <strong className="text-white">New Weekly Schedule</strong> — Effective Oct 26</li>
+                  <li>📣 <strong className="text-white">Billing Help</strong> — Reply for assistance with a payment link</li>
+                </ul>
+              ) : (
+                <ul className="space-y-1 text-gray-400 list-disc list-inside">
+                  <li>🥋 <strong className="text-white">Belt Test – Aug 15</strong> — Intent to Promote form + $49 fee</li>
+                  <li>🌟 <strong className="text-white">Parents Night Out – Aug 21</strong> — Ninja Warrior Glow Night</li>
+                  <li>🏆 <strong className="text-white">Master Yaeger Seminar – Aug 22</strong> — 11 AM–2 PM, $29</li>
+                  <li>🥢 <strong className="text-white">Bo Staff Training</strong> — Starts this month</li>
+                </ul>
+              )}
           </div>
 
           <a
-            href="/august-2026"
+            href={month === "october_2026" ? "/parents-night-out" : "/august-2026"}
             target="_blank"
             className="inline-flex items-center gap-2 text-red-400 text-sm hover:text-red-300 transition-colors"
           >
@@ -77,6 +88,19 @@ export default function AdminNewsletter() {
           <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4">Send Options</h3>
 
           <div className="space-y-4">
+            <div className="flex items-center justify-between gap-4 p-3 bg-zinc-800 rounded-lg">
+              <Label htmlFor="newsletterMonth" className="text-white font-medium">Campaign</Label>
+              <select
+                id="newsletterMonth"
+                value={month}
+                onChange={(event) => setMonth(event.target.value as "august_2026" | "october_2026")}
+                className="rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm text-white"
+              >
+                <option value="october_2026">October 2026</option>
+                <option value="august_2026">August 2026 archive</option>
+              </select>
+            </div>
+
             <div className="flex items-center gap-3 p-3 bg-zinc-800 rounded-lg">
               <Checkbox
                 id="sendEmail"
@@ -112,7 +136,7 @@ export default function AdminNewsletter() {
               <Label htmlFor="testOnly" className="flex items-center gap-2 cursor-pointer">
                 <Users className="h-4 w-4 text-amber-400" />
                 <span className="text-amber-300 font-medium">Test Mode</span>
-                <span className="text-amber-500 text-sm">— Send only to info@mydojoma.com (no blast to all parents)</span>
+                <span className="text-gray-500 text-sm">— Send only to support@mydojomartialarts.com (no parent blast)</span>
               </Label>
             </div>
           </div>
