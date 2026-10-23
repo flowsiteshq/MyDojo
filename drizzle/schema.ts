@@ -1127,8 +1127,14 @@ export const partyBookings = mysqlTable("partyBookings", {
   guestCount: varchar("guestCount", { length: 3 }),
   message: text("message"),
   paypalOrderId: varchar("paypalOrderId", { length: 64 }).unique(),
+  /** PayPal-hosted payment link identifier used when checkout is completed outside the app. */
+  paypalHostedLinkId: varchar("paypalHostedLinkId", { length: 64 }),
   paypalCaptureId: varchar("paypalCaptureId", { length: 64 }).unique(),
   payerId: varchar("payerId", { length: 64 }),
+  /** Manual reconciliation evidence for hosted-link payments. */
+  paymentConfirmationMethod: mysqlEnum("paymentConfirmationMethod", ["paypal_webhook", "paypal_manual"]),
+  paymentConfirmedBy: int("paymentConfirmedBy"),
+  paymentConfirmationReference: varchar("paymentConfirmationReference", { length: 128 }),
   status: mysqlEnum("status", ["pending", "approved", "paid", "failed", "cancelled"]).default("pending").notNull(),
   paidAt: timestamp("paidAt"),
   lastError: text("lastError"),
