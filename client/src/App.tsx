@@ -65,6 +65,7 @@ const AdminMessages = lazy(() => import("./pages/AdminMessages"));
 const AdminAuditLog = lazy(() => import("./pages/AdminAuditLog"));
 const AdminSettings = lazy(() => import("./pages/AdminSettings"));
 const AdminBilling = lazy(() => import("./pages/AdminBilling"));
+const AdminBillingRecovery = lazy(() => import("./pages/AdminBillingRecovery"));
 const AdminPackages = lazy(() => import("./pages/AdminPackages"));
 const StaffInviteAccept = lazy(() => import("./pages/StaffInviteAccept"));
 const AdminCommissions = lazy(() => import("./pages/AdminCommissions"));
@@ -188,6 +189,7 @@ function Router() {
         <Route path="/admin/audit-log" component={AdminAuditLog} />
         <Route path="/admin/settings" component={AdminSettings} />
         <Route path="/admin/billing" component={AdminBilling} />
+        <Route path="/admin/billing-recovery" component={AdminBillingRecovery} />
         <Route path="/admin/packages" component={AdminPackages} />
         <Route path="/staff-invite" component={StaffInviteAccept} />
         <Route path="/admin/commissions" component={AdminCommissions} />
