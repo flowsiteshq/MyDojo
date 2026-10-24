@@ -321,7 +321,7 @@ export default function KioskCheckIn() {
         
         {/* DRAMATIC RED NEBULA BACKGROUND */}
         <div className="min-h-screen w-screen relative overflow-hidden">
-          {/* Background Image - Dramatic Red Nebula */}
+          {/* Background texture with a seasonal Halloween overlay */}
           <div 
             className="absolute inset-0 bg-cover bg-center"
             style={{ 
@@ -329,6 +329,13 @@ export default function KioskCheckIn() {
             }}
           />
           
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(circle at 50% 12%, rgba(255,122,24,0.32), transparent 30%), linear-gradient(145deg, rgba(9,5,18,0.86), rgba(48,10,63,0.82) 52%, rgba(12,5,20,0.94))',
+            }}
+          />
+
           {/* Floating Particles Animation */}
           <div className="absolute inset-0 pointer-events-none">
             {[...Array(20)].map((_, i) => (
@@ -351,6 +358,10 @@ export default function KioskCheckIn() {
             
             {/* HERO SECTION - Top Center */}
             <div className="flex flex-col items-center justify-center pt-8 pb-6">
+              {/* Seasonal Halloween markers */}
+              <div className="flex items-center gap-4 text-4xl mb-3" aria-hidden="true">
+                <span>🎃</span><span className="text-orange-300 text-sm font-black uppercase tracking-[0.35em]">Halloween Training Week</span><span>👻</span>
+              </div>
               {/* MyDojo Circular Logo - Prominent */}
               <img 
                 src="/images/logo-circular.webp" 
@@ -361,12 +372,12 @@ export default function KioskCheckIn() {
               {/* Headline with Intense Glow */}
               <div className="relative mb-3">
                 <h1 className="relative z-10 text-7xl font-black text-white text-center tracking-tight drop-shadow-[0_0_40px_rgba(225,6,0,0.9)]">
-                  READY TO TRAIN 👊
+                  READY TO TRAIN 🎃
                 </h1>
               </div>
               
               {/* Subtext */}
-              <p className="text-xl text-white/70 font-medium drop-shadow-lg">Tap or Scan to Begin</p>
+              <p className="text-xl text-orange-100/80 font-medium drop-shadow-lg">Tap or Scan to Begin · Spooky Season at MyDojo</p>
             </div>
 
             {/* WELCOME NEW STUDENTS BANNER */}
@@ -423,11 +434,11 @@ export default function KioskCheckIn() {
                 
                 <div className="relative bg-gradient-to-br from-[#E10600] to-[#C10500] rounded-3xl py-8 px-12">
                   <div className="flex items-center justify-center gap-4">
-                    <span className="text-5xl animate-pulse">🔥</span>
+                    <span className="text-5xl animate-pulse">🎃</span>
                     <span className="text-5xl font-black text-white uppercase tracking-wider drop-shadow-2xl">
                       TAP TO CHECK IN
                     </span>
-                    <span className="text-5xl animate-pulse">🔥</span>
+                    <span className="text-5xl animate-pulse">👻</span>
                   </div>
                 </div>
               </button>
