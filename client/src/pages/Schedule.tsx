@@ -20,22 +20,11 @@ export default function Schedule() {
   }, []);
 
   const scheduleData = [
-    { program: "Little Ninjas (Ages 3-5)", mon: "5:00PM", tue: "5:00PM", wed: "5:00PM", thu: "5:00PM", fri: "N/A", sat: "10:00AM" },
-    { program: "Little Ninjas & Me", mon: "N/A", tue: "N/A", wed: "2:00PM", thu: "N/A", fri: "2:00PM", sat: "N/A" },
-    { program: "Dragon Kids (Ages 5-12)", mon: "4:00PM", tue: "4:00PM, 6:00PM", wed: "4:00PM", thu: "4:00PM, 6:00PM", fri: "N/A", sat: "10:45AM" },
-    { program: "Dragon Kids & Teens (Noon)", mon: "12:00PM", tue: "N/A", wed: "12:00PM", thu: "N/A", fri: "12:00PM", sat: "N/A" },
-    { program: "Intro Class (New Students)", mon: "5:00PM", tue: "5:00PM", wed: "5:00PM", thu: "5:00PM", fri: "N/A", sat: "N/A" },
-    { program: "Teen Warriors (Ages 12-17)", mon: "6:00PM", tue: "N/A", wed: "6:00PM", thu: "N/A", fri: "N/A", sat: "12:15PM" },
-    { program: "Adult Karate + Kickboxing", mon: "N/A", tue: "7:00PM", wed: "N/A", thu: "7:00PM", fri: "N/A", sat: "N/A" },
-    { program: "Advanced/Black Belt + Kickboxing", mon: "N/A", tue: "N/A", wed: "7:00PM", thu: "N/A", fri: "N/A", sat: "N/A" },
-    { program: "Kickboxing (Dojo 2)", mon: "12:00PM, 7:00PM", tue: "8:00PM", wed: "12:00PM", thu: "8:00PM", fri: "12:00PM", sat: "9:00AM" },
-    { program: "Women's Self-Defense", mon: "N/A", tue: "N/A", wed: "N/A", thu: "12:00PM", fri: "N/A", sat: "N/A" },
-    { program: "Leadership (Advanced)", mon: "N/A", tue: "N/A", wed: "N/A", thu: "N/A", fri: "5:00PM", sat: "N/A" },
-    { program: "Sparring (Advanced)", mon: "N/A", tue: "N/A", wed: "N/A", thu: "N/A", fri: "6:00PM", sat: "N/A" },
-    { program: "Weapons Class (Advanced)", mon: "N/A", tue: "N/A", wed: "N/A", thu: "N/A", fri: "7:00PM", sat: "N/A" },
-    { program: "Family Class (All Ages)", mon: "N/A", tue: "N/A", wed: "N/A", thu: "N/A", fri: "N/A", sat: "11:30AM" },
-    { program: "Instructor Training", mon: "N/A", tue: "N/A", wed: "N/A", thu: "N/A", fri: "N/A", sat: "8:00AM" },
-    { program: "Demo/Competition Team", mon: "N/A", tue: "N/A", wed: "N/A", thu: "N/A", fri: "N/A", sat: "1:00PM" },
+    { program: "Little Ninjas (Ages 3-5)", mon: "4:45–5:15PM", tue: "4:45–5:15PM", wed: "4:45–5:15PM", thu: "4:45–5:15PM", fri: "N/A", sat: "N/A" },
+    { program: "Kickboxing", mon: "5:15–6:00PM", tue: "5:15–6:00PM", wed: "5:15–6:00PM", thu: "5:15–6:00PM", fri: "N/A", sat: "N/A" },
+    { program: "Kids Karate (All Ranks)", mon: "6:00–6:45PM", tue: "6:00–6:45PM", wed: "6:00–6:45PM", thu: "6:00–6:45PM", fri: "N/A", sat: "11:00–11:45AM" },
+    { program: "Teens & Adult Karate", mon: "7:00–8:00PM", tue: "7:00–8:00PM", wed: "7:00–8:00PM", thu: "7:00–8:00PM", fri: "N/A", sat: "N/A" },
+    { program: "Friday & Sunday", mon: "N/A", tue: "N/A", wed: "N/A", thu: "N/A", fri: "No regular classes", sat: "N/A" },
   ];
 
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];

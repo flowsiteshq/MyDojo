@@ -6,6 +6,7 @@ import {
   getPayPalAccessToken,
   verifyPayPalWebhookSignature,
   createPayPalOrder,
+  capturePayPalOrder,
   getPayPalOrder,
   createMonthlySubscription,
 } from "./paypalHelper";
@@ -40,6 +41,67 @@ async function markPartyOrderPaid(orderId: string, captureId?: string) {
     lastError: null,
   }).where(and(eq(schema.partyBookings.id, booking.id), eq(schema.partyBookings.status, "pending")));
   return booking;
+}
+
+async function markPnoOrderPaid(orderId: string, captureId?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const order = await getPayPalOrder(orderId);
+  const unit = order.purchase_units?.[0];
+  const [rsvp] = await db.select().from(schema.pnoRsvps)
+    .where(eq(schema.pnoRsvps.paypalOrderId, orderId)).limit(1);
+  if (!rsvp) return false;
+  const expectedReference = `pno-${rsvp.id}`;
+  const actualAmount = unit?.amount?.value;
+  const actualCurrency = unit?.amount?.currency_code;
+  if (unit?.reference_id !== expectedReference || actualCurrency !== "USD" || actualAmount !== (rsvp.amountCents / 100).toFixed(2)) {
+    throw new Error("PayPal PNO order does not match the stored registration amount or reference");
+  }
+  if (rsvp.paymentStatus === "paid") return true;
+  await db.update(schema.pnoRsvps).set({
+    paymentStatus: "paid",
+    paypalCaptureId: captureId ?? rsvp.paypalCaptureId,
+    paidAt: new Date(),
+  }).where(and(eq(schema.pnoRsvps.id, rsvp.id), eq(schema.pnoRsvps.paymentStatus, "pending")));
+  try {
+    const { notifyOwner } = await import("./_core/notification");
+    await notifyOwner({
+      title: "Haunted Dojo RSVP Paid",
+      content: `${rsvp.parentName} paid $${(rsvp.amountCents / 100).toFixed(2)} for ${rsvp.studentNames}. Emergency contact: ${rsvp.emergencyContactName} (${rsvp.emergencyContactPhone}).`,
+    });
+  } catch {}
+  return true;
+}
+
+async function markBeltOrderPaid(orderId: string, captureId?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const order = await getPayPalOrder(orderId);
+  const unit = order.purchase_units?.[0];
+  const intents = await db.select().from(schema.beltTestIntents)
+    .where(eq(schema.beltTestIntents.paypalOrderId, orderId));
+  if (!intents.length) return false;
+  const expectedAmount = intents.length * 4900;
+  const expectedReference = `belt-${intents[0].groupId || intents[0].id}`;
+  const actualAmount = unit?.amount?.value;
+  const actualCurrency = unit?.amount?.currency_code;
+  if (unit?.reference_id !== expectedReference || actualCurrency !== "USD" || actualAmount !== (expectedAmount / 100).toFixed(2)) {
+    throw new Error("PayPal belt-test order does not match the stored intent amount or reference");
+  }
+  if (intents.every((intent) => intent.paymentStatus === "paid")) return true;
+  await db.update(schema.beltTestIntents).set({
+    paymentStatus: "paid",
+    paypalCaptureId: captureId ?? null,
+    amountPaid: 4900,
+  }).where(eq(schema.beltTestIntents.paypalOrderId, orderId));
+  try {
+    const { notifyOwner } = await import("./_core/notification");
+    await notifyOwner({
+      title: "October Belt Test Paid",
+      content: `${intents.map((intent) => intent.studentName).join(", ")} — ${intents.length} intent(s) paid $${(expectedAmount / 100).toFixed(2)} via PayPal.`,
+    });
+  } catch {}
+  return true;
 }
 
 paypalRouter.get("/health", async (_req, res) => {
@@ -96,7 +158,14 @@ paypalRouter.post("/webhook", async (req, res) => {
       return res.status(200).json({ received: true });
     }
     if (["CHECKOUT.ORDER.COMPLETED", "PAYMENT.CAPTURE.COMPLETED"].includes(event.event_type) && orderId) {
-      await markPartyOrderPaid(String(orderId), event.event_type === "PAYMENT.CAPTURE.COMPLETED" ? String(event.resource?.id ?? "") : undefined);
+      const captureId = event.event_type === "PAYMENT.CAPTURE.COMPLETED" ? String(event.resource?.id ?? "") : undefined;
+      const [party] = await db.select().from(schema.partyBookings)
+        .where(eq(schema.partyBookings.paypalOrderId, String(orderId))).limit(1);
+      if (party) {
+        await markPartyOrderPaid(String(orderId), captureId);
+      } else if (!(await markPnoOrderPaid(String(orderId), captureId)) && !(await markBeltOrderPaid(String(orderId), captureId))) {
+        throw new Error("PayPal completed order is not linked to a MyDojo registration");
+      }
       await db.update(schema.paypalEvents).set({ processingStatus: "processed", processedAt: new Date() }).where(eq(schema.paypalEvents.paypalEventId, event.id));
     } else {
       await db.update(schema.paypalEvents).set({ processingStatus: "ignored", processedAt: new Date() }).where(eq(schema.paypalEvents.paypalEventId, event.id));
@@ -129,6 +198,28 @@ paypalRouter.post("/subscribe", async (req, res) => {
   } catch (error) {
     console.error("[PayPal subscribe]", error);
     return res.status(502).json({ error: "PayPal subscription unavailable" });
+  }
+});
+
+paypalRouter.post("/capture-order", async (req, res) => {
+  const orderId = String(req.body?.orderId || "");
+  if (!/^[A-Z0-9]{8,32}$/i.test(orderId)) return res.status(400).json({ error: "Invalid PayPal order" });
+  try {
+    const db = await getDb();
+    if (!db) return res.status(503).json({ error: "Database unavailable" });
+    const [party] = await db.select({ id: schema.partyBookings.id }).from(schema.partyBookings).where(eq(schema.partyBookings.paypalOrderId, orderId)).limit(1);
+    const [pno] = await db.select({ id: schema.pnoRsvps.id }).from(schema.pnoRsvps).where(eq(schema.pnoRsvps.paypalOrderId, orderId)).limit(1);
+    const [belt] = await db.select({ id: schema.beltTestIntents.id }).from(schema.beltTestIntents).where(eq(schema.beltTestIntents.paypalOrderId, orderId)).limit(1);
+    if (!party && !pno && !belt) return res.status(404).json({ error: "PayPal order is not linked to a MyDojo event" });
+    const current = await getPayPalOrder(orderId);
+    const captured = current.status === "COMPLETED" ? { captureId: undefined } : await capturePayPalOrder(orderId);
+    if (party) await markPartyOrderPaid(orderId, captured.captureId);
+    else if (pno) await markPnoOrderPaid(orderId, captured.captureId);
+    else await markBeltOrderPaid(orderId, captured.captureId);
+    return res.json({ received: true, status: "paid" });
+  } catch (error) {
+    console.error("[PayPal capture-order]", error);
+    return res.status(502).json({ error: "PayPal payment could not be verified" });
   }
 });
 

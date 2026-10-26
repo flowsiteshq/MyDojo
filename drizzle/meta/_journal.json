@@ -575,6 +575,20 @@
       "when": 1792723008567,
       "tag": "0081_wet_valeria_richards",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "5",
+      "when": 1792794925954,
+      "tag": "0082_october_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "5",
+      "when": 1793026526264,
+      "tag": "0083_stripe_party_checkout_switch",
+      "breakpoints": true
     }
   ]
 }

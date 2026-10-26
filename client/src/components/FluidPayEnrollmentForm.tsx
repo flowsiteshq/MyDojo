@@ -448,23 +448,24 @@ export function FluidPayEnrollmentForm({ enrollmentData, onSuccess, onError, ini
                       });
                       return;
                     }
-                    createPayPalEnrollmentMutation.mutate({
+                    createStripeCheckoutMutation.mutate({
                       packageId: enrollmentData.packageId || 0,
                       customerName: enrollmentData.customerName,
                       customerEmail: enrollmentData.customerEmail,
                       customerPhone: enrollmentData.customerPhone,
                       studentName: enrollmentData.studentName || enrollmentData.childName || enrollmentData.customerName,
                       promoCode: appliedPromo?.code,
+                      waiveEnrollmentFee,
                       agreementSignature: agreementSig.signedName,
                       agreementSignedAt: agreementSig.signedAt.toISOString(),
                       agreementSignatureDataUrl: agreementSig.signatureDataUrl,
                     });
                   }}
-                  disabled={createPayPalEnrollmentMutation.isPending || createFamilyCheckoutMutation.isPending || isSubmitting}
+                  disabled={createStripeCheckoutMutation.isPending || createFamilyCheckoutMutation.isPending || isSubmitting}
                   className="w-full bg-primary hover:bg-primary/90 text-white font-bold text-lg"
                   style={{ minHeight: 60 }}
                 >
-                  {createPayPalEnrollmentMutation.isPending || createFamilyCheckoutMutation.isPending ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Preparing PayPal checkout…</> : <><Lock className="w-5 h-5 mr-2" /> Continue with PayPal</>}
+                  {createStripeCheckoutMutation.isPending || createFamilyCheckoutMutation.isPending ? <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Preparing secure checkout…</> : <><Lock className="w-5 h-5 mr-2" /> Continue to secure checkout</>}
                 </Button>
               </div>
             )}

@@ -8,16 +8,17 @@ const helperSource = fs.readFileSync(path.resolve(import.meta.dirname, 'paypalHe
 const schemaSource = fs.readFileSync(path.resolve(import.meta.dirname, '../drizzle/schema.ts'), 'utf8');
 const pageSource = fs.readFileSync(path.resolve(import.meta.dirname, '../client/src/pages/BirthdayParties.tsx'), 'utf8');
 
-describe('Birthday Party PayPal full-payment checkout', () => {
+describe('Birthday Party Stripe full-payment checkout', () => {
   it('uses server-controlled full package prices and persists the booking before creating the order', () => {
     expect(routerSource).toContain("createCheckout: publicProcedure");
-    expect(routerSource).toContain("ninja: { name: 'Ninja Party', totalCents: 19_900, hostedLinkId: 'EVND7A9LEDEUS'");
-    expect(routerSource).toContain("champion: { name: 'Champion Party', totalCents: 29_900, hostedLinkId: 'E4MN36FR8R4MC'");
-    expect(routerSource).toContain("blackbelt: { name: 'Black Belt VIP Party', totalCents: 44_900, hostedLinkId: 'HM98SSWBUBGNY'");
+    expect(routerSource).toContain("ninja: { name: 'Ninja Party', totalCents: 19_900 }");
+    expect(routerSource).toContain("champion: { name: 'Champion Party', totalCents: 29_900 }");
+    expect(routerSource).toContain("blackbelt: { name: 'Black Belt VIP Party', totalCents: 44_900 }");
     expect(routerSource).toContain('schema.partyBookings).values');
-    expect(routerSource).toContain('paypalHostedLinkId: selectedPackage.hostedLinkId');
+    expect(routerSource).toContain('stripeCheckoutSessionId: session.id');
+    expect(routerSource).toContain("type: 'birthday_party_checkout'");
     expect(routerSource).toContain("status: 'pending'");
-    expect(routerSource).toContain('return { checkoutUrl: selectedPackage.checkoutUrl');
+    expect(routerSource).toContain('return { checkoutUrl: session.url');
     expect(schemaSource).toContain('export const partyBookings = mysqlTable("partyBookings"');
   });
 
@@ -41,7 +42,7 @@ describe('Birthday Party PayPal full-payment checkout', () => {
     expect(pageSource).toContain('trpc.birthday.createCheckout.useMutation');
     expect(pageSource).toContain('window.location.assign(checkoutUrl)');
     expect(pageSource).toContain('Booking Pending Payment');
-    expect(pageSource).toContain('PAY IN FULL WITH PAYPAL');
+    expect(pageSource).toContain('PAY IN FULL SECURELY');
     expect(pageSource).not.toContain('PAY 50% DEPOSIT');
   });
 

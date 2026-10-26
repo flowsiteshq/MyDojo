@@ -71,7 +71,7 @@ import { scheduledPaymentsRouter } from './scheduledPaymentsRouter';
 import { sendLeadConfirmationSms } from "./leadConfirmationSms";
 import { getEnrollmentAgreementVersion, renderEnrollmentAgreementPdf } from "./enrollmentAgreementPdf";
 import { getOrCreateStripeCustomer, getStripe } from "./stripeHelper";
-import { createMonthlySubscription } from "./paypalHelper";
+import { createMonthlySubscription, createPayPalOrder } from "./paypalHelper";
 
 function getInsertedRecordId(result: unknown, recordName: string): number {
   const candidateValues = [
@@ -6040,7 +6040,7 @@ Please enter your card details below to complete your registration securely. Tot
     // Send a promotional SMS blast to all leads and/or staff
     sendNewsletter: protectedProcedure
       .input(z.object({
-        month: z.string().default('august_2026'),
+        month: z.enum(['august_2026', 'october_2026']).default('august_2026'),
         sendEmail: z.boolean().default(true),
         sendSms: z.boolean().default(true),
         testOnly: z.boolean().default(false), // if true, only send to owner phone/email
@@ -6048,7 +6048,7 @@ Please enter your card details below to complete your registration securely. Tot
       .mutation(async ({ input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
-        const { getAugust2026NewsletterHtml, getAugust2026SmsBlast } = await import('./newsletterTemplates');
+        const { getAugust2026NewsletterHtml, getAugust2026SmsBlast, getOctober2026NewsletterHtml, getOctober2026NewsletterText } = await import('./newsletterTemplates');
         const { sendSms: sendSmsMsg } = await import('./sms800');
         const { Resend } = await import('resend');
         const resend = new Resend(ENV.RESEND_API_KEY);
@@ -6077,7 +6077,7 @@ Please enter your card details below to complete your registration securely. Tot
         const seenPhones = new Set<string>();
 
         const targets = input.testOnly
-          ? [{ name: 'Owner', email: 'info@mydojoma.com', phone: process.env.OWNER_PHONE || '', smsOptOut: false }]
+          ? [{ name: 'MyDojo billing support', email: 'support@mydojomartialarts.com', phone: '', smsOptOut: true }]
           : leads;
 
         for (const lead of targets) {
@@ -6085,11 +6085,15 @@ Please enter your card details below to complete your registration securely. Tot
           if (input.sendEmail && lead.email && !seenEmails.has(lead.email)) {
             seenEmails.add(lead.email);
             try {
-              const htmlContent = getAugust2026NewsletterHtml(baseUrl);
+              const htmlContent = input.month === 'october_2026'
+                ? getOctober2026NewsletterHtml(baseUrl)
+                : getAugust2026NewsletterHtml(baseUrl);
               await resend.emails.send({
                 from: `MyDojo <${ENV.EMAIL_FROM}>`,
                 to: lead.email,
-                subject: '🥋 MyDojo August 2026 — Belt Test, Parents Night Out & More!',
+                subject: input.month === 'october_2026'
+                  ? '🎃 MyDojo October Surprise! Halloween Belt Testing, Haunted Dojo & New Class Schedule!'
+                  : '🥋 MyDojo August 2026 — Belt Test, Parents Night Out & More!',
                 html: htmlContent,
               });
               emailSuccess++;
@@ -6102,7 +6106,9 @@ Please enter your card details below to complete your registration securely. Tot
           if (input.sendSms && lead.phone && !lead.smsOptOut && !seenPhones.has(lead.phone)) {
             seenPhones.add(lead.phone);
             try {
-              const smsText = getAugust2026SmsBlast(baseUrl);
+              const smsText = input.month === 'october_2026'
+                ? getOctober2026NewsletterText(baseUrl)
+                : getAugust2026SmsBlast(baseUrl);
               await sendSmsMsg({ to: lead.phone, message: smsText });
               smsSuccess++;
             } catch (e: any) {
@@ -6116,7 +6122,7 @@ Please enter your card details below to complete your registration securely. Tot
         try {
           const { notifyOwner } = await import('./_core/notification');
           await notifyOwner({
-            title: 'August Newsletter Sent',
+            title: `${input.month === 'october_2026' ? 'October' : 'August'} Newsletter Sent`,
             content: `Email: ${emailSuccess} sent, ${emailFail} failed. SMS: ${smsSuccess} sent, ${smsFail} failed.`,
           });
         } catch {}
@@ -10678,31 +10684,60 @@ Please enter your card details below to complete your registration securely. Tot
   pno: router({
     submitRsvp: publicProcedure
       .input(z.object({
+        eventId: z.enum(['pno-oct-2026']).default('pno-oct-2026'),
         parentName: z.string().min(2),
         phone: z.string().min(10),
         email: z.string().email().optional(),
         studentNames: z.string().min(1),
-        studentCount: z.number().int().min(1).max(10),
+        studentCount: z.number().int().min(1).max(30),
         bringingFriend: z.boolean(),
         friendName: z.string().optional(),
         notes: z.string().optional(),
+        emergencyContactName: z.string().min(2),
+        emergencyContactPhone: z.string().min(10),
+        waiverAccepted: z.literal(true),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { createPnoRsvp, checkPnoRsvpExists } = await import('./db');
-        const alreadyRsvpd = await checkPnoRsvpExists(input.phone);
+        const alreadyRsvpd = await checkPnoRsvpExists(input.phone, input.eventId);
         if (alreadyRsvpd) {
           throw new TRPCError({ code: 'CONFLICT', message: "You've already RSVP'd for this event!" });
         }
-        await createPnoRsvp({
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database unavailable' });
+        const [capacity] = await db.select({ total: sql`COALESCE(SUM(${schema.pnoRsvps.studentCount} + ${schema.pnoRsvps.bringingFriend}), 0)` })
+          .from(schema.pnoRsvps)
+          .where(eq(schema.pnoRsvps.eventId, input.eventId));
+        if (Number(capacity?.total ?? 0) + input.studentCount + (input.bringingFriend ? 1 : 0) > 30) {
+          throw new TRPCError({ code: 'CONFLICT', message: 'This event is at capacity. Please contact MyDojo for availability.' });
+        }
+        const amountCents = Math.max(0, input.studentCount * 1500);
+        const inserted = await createPnoRsvp({
           ...input,
-          eventId: 'nerf-wars-2025-04-25',
+          paymentStatus: 'pending',
+          amountCents,
         });
-        return { success: true };
+        const registrationId = Number((inserted as any).insertId);
+        const origin = (ctx.req.headers.origin as string) || 'https://www.mydojoma.com';
+        try {
+          const order = await createPayPalOrder({
+            amountCents,
+            referenceId: `pno-${registrationId}`,
+            returnUrl: `${origin}/parents-night-out?payment=pending`,
+            cancelUrl: `${origin}/parents-night-out?payment=cancelled`,
+          });
+          await db.update(schema.pnoRsvps).set({ paypalOrderId: order.orderId }).where(eq(schema.pnoRsvps.id, registrationId));
+          return { success: true, checkoutUrl: order.approvalUrl, registrationId, amountCents };
+        } catch (error) {
+          await db.update(schema.pnoRsvps).set({ paymentStatus: 'payment_unavailable' }).where(eq(schema.pnoRsvps.id, registrationId));
+          throw new TRPCError({ code: 'BAD_GATEWAY', message: 'Secure PayPal checkout is temporarily unavailable. Please try again.' });
+        }
       }),
     getRsvps: protectedProcedure
-      .query(async () => {
+      .input(z.object({ eventId: z.string().default('pno-oct-2026') }).optional())
+      .query(async ({ input }) => {
         const { getPnoRsvps } = await import('./db');
-        return getPnoRsvps();
+        return getPnoRsvps(input?.eventId);
       }),
   }),
 
@@ -10845,9 +10880,9 @@ Please enter your card details below to complete your registration securely. Tot
       }))
       .mutation(async ({ input, ctx }) => {
         const packages = {
-          ninja: { name: 'Ninja Party', totalCents: 19_900, hostedLinkId: 'EVND7A9LEDEUS', checkoutUrl: 'https://www.paypal.com/ncp/payment/EVND7A9LEDEUS' },
-          champion: { name: 'Champion Party', totalCents: 29_900, hostedLinkId: 'E4MN36FR8R4MC', checkoutUrl: 'https://www.paypal.com/ncp/payment/E4MN36FR8R4MC' },
-          blackbelt: { name: 'Black Belt VIP Party', totalCents: 44_900, hostedLinkId: 'HM98SSWBUBGNY', checkoutUrl: 'https://www.paypal.com/ncp/payment/HM98SSWBUBGNY' },
+          ninja: { name: 'Ninja Party', totalCents: 19_900 },
+          champion: { name: 'Champion Party', totalCents: 29_900 },
+          blackbelt: { name: 'Black Belt VIP Party', totalCents: 44_900 },
         } as const;
         const selectedPackage = packages[input.packageId];
         const { randomUUID } = await import('crypto');
@@ -10867,25 +10902,60 @@ Please enter your card details below to complete your registration securely. Tot
           partyDate: input.partyDate,
           guestCount: input.guestCount,
           message: input.message,
-          paypalHostedLinkId: selectedPackage.hostedLinkId,
           status: 'pending',
         });
-        const { notifyOwner } = await import('./_core/notification');
-        await notifyOwner({
-          title: 'Birthday Party Checkout Started — ' + selectedPackage.name,
-          content: [
-            'Booking ID: ' + bookingId,
-            'Parent: ' + input.parentName,
-            'Phone: ' + input.phone,
-            'Email: ' + input.email,
-            'Child: ' + input.childName,
-            'Party date: ' + input.partyDate,
-            'Amount: $' + (selectedPackage.totalCents / 100).toFixed(2),
-            'Booking status: Pending Payment',
-            'Payment method: PayPal hosted link',
-          ].join('\n'),
-        });
-        return { checkoutUrl: selectedPackage.checkoutUrl, amount: selectedPackage.totalCents / 100, bookingReference: bookingId, status: 'pending' as const };
+        try {
+          const origin = (ctx.req.headers.origin as string) || process.env.PUBLIC_SITE_URL || 'https://www.mydojoma.com';
+          const stripe = getStripe();
+          const session = await stripe.checkout.sessions.create({
+            mode: 'payment',
+            customer_email: input.email,
+            line_items: [{
+              price_data: {
+                currency: 'usd',
+                product_data: { name: selectedPackage.name, description: `MyDojo birthday party for ${input.childName}` },
+                unit_amount: selectedPackage.totalCents,
+              },
+              quantity: 1,
+            }],
+            metadata: {
+              type: 'birthday_party_checkout',
+              bookingReference: bookingId,
+              birthday_package: input.packageId,
+              parent_name: input.parentName,
+              parent_phone: input.phone,
+              child_name: input.childName,
+              party_date: input.partyDate,
+            },
+            success_url: `${origin}/birthday-parties?payment=pending&booking=${encodeURIComponent(bookingId)}`,
+            cancel_url: `${origin}/birthday-parties?payment=cancelled&booking=${encodeURIComponent(bookingId)}`,
+          });
+          if (!session.url) throw new Error('Stripe did not return a checkout URL');
+          await db.update(schema.partyBookings).set({
+            stripeCheckoutSessionId: session.id,
+            lastError: null,
+          }).where(eq(schema.partyBookings.bookingReference, bookingId));
+          const { notifyOwner } = await import('./_core/notification');
+          await notifyOwner({
+            title: 'Birthday Party Checkout Started — ' + selectedPackage.name,
+            content: [
+              'Booking ID: ' + bookingId,
+              'Parent: ' + input.parentName,
+              'Phone: ' + input.phone,
+              'Email: ' + input.email,
+              'Child: ' + input.childName,
+              'Party date: ' + input.partyDate,
+              'Amount: $' + (selectedPackage.totalCents / 100).toFixed(2),
+              'Booking status: Pending Payment',
+              'Payment method: Stripe Checkout',
+            ].join('\n'),
+          });
+          return { checkoutUrl: session.url, amount: selectedPackage.totalCents / 100, bookingReference: bookingId, status: 'pending' as const };
+        } catch (error) {
+          await db.update(schema.partyBookings).set({ status: 'failed', lastError: 'Stripe checkout creation failed' }).where(eq(schema.partyBookings.bookingReference, bookingId));
+          console.error('[Birthday Stripe Checkout]', error);
+          throw new TRPCError({ code: 'BAD_GATEWAY', message: 'Unable to create secure Stripe checkout' });
+        }
       }),
     listPending: adminProcedure
       .query(async () => {
@@ -11333,7 +11403,7 @@ Please enter your card details below to complete your registration securely. Tot
         parentRecommendation: z.string().optional(),
         parentComments: z.string().optional(),
         parentCommitmentAgreed: z.boolean().optional(),
-        eventId: z.string().default('aug-2026-belt-test'),
+        eventId: z.string().default('oct-2026-belt-test'),
         children: z.array(z.object({
           studentName: z.string().min(1),
           currentBelt: z.string().min(1),
@@ -11377,38 +11447,16 @@ Please enter your card details below to complete your registration securely. Tot
           });
           insertedIds.push((result as any).insertId);
         }
-        const Stripe = (await import('stripe')).default;
-        const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2026-01-28.clover' as any });
         const origin = (ctx.req.headers.origin as string) || 'https://mydojoma.com';
         const studentNames = input.children.map(c => c.studentName).join(', ');
-        const session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
-          mode: 'payment',
-          line_items: input.children.map(child => ({
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: `Belt Test Fee — ${child.studentName}`,
-                description: `Intent to Promote — Belt Test August 15th, 2026. Current Belt: ${child.currentBelt}`,
-              },
-              unit_amount: 4900,
-            },
-            quantity: 1,
-          })),
-          metadata: {
-            type: 'belt_test_intent_multi',
-            group_id: groupId,
-            intent_ids: insertedIds.join(','),
-            student_names: studentNames.slice(0, 500),
-            parent_name: input.parentName,
-            phone: input.phone,
-            child_count: String(input.children.length),
-          },
-          customer_email: input.email,
-          success_url: `${origin}/belt-test-intent/success?name=${encodeURIComponent(studentNames)}&count=${input.children.length}`,
-          cancel_url: `${origin}/belt-test-intent`,
+        const order = await createPayPalOrder({
+          amountCents: input.children.length * 4900,
+          referenceId: `belt-${groupId}`,
+          returnUrl: `${origin}/belt-test-intent/success?name=${encodeURIComponent(studentNames)}&count=${input.children.length}`,
+          cancelUrl: `${origin}/belt-test-intent`,
         });
-        return { checkoutUrl: session.url, groupId, intentIds: insertedIds };
+        await db.update(schema.beltTestIntents).set({ paypalOrderId: order.orderId }).where(eq(schema.beltTestIntents.groupId, groupId));
+        return { checkoutUrl: order.approvalUrl, groupId, intentIds: insertedIds };
       }),
     // Legacy single-child submit (kept for backwards compat)
     submit: publicProcedure
@@ -11421,7 +11469,7 @@ Please enter your card details below to complete your registration securely. Tot
         beltSeeking: z.string().optional(),
         instructor: z.string().optional(),
         notes: z.string().optional(),
-        eventId: z.string().default('aug-2026-belt-test'),
+        eventId: z.string().default('oct-2026-belt-test'),
         testingFor: z.string().optional(),
         selfReflectionRatings: z.string().optional(),
         writtenAnswers: z.string().optional(),
@@ -11459,36 +11507,15 @@ Please enter your card details below to complete your registration securely. Tot
           paymentStatus: 'pending',
         });
         const intentId = (result as any).insertId;
-        const Stripe = (await import('stripe')).default;
-        const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2026-01-28.clover' as any });
         const origin = (ctx.req.headers.origin as string) || 'https://mydojoma.com';
-        const session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
-          mode: 'payment',
-          line_items: [{
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: `Belt Test Fee — ${input.studentName}`,
-                description: `Intent to Promote — Belt Test August 15th, 2026. Current Belt: ${input.currentBelt}`,
-              },
-              unit_amount: 4900,
-            },
-            quantity: 1,
-          }],
-          metadata: {
-            type: 'belt_test_intent',
-            intent_id: String(intentId),
-            student_name: input.studentName,
-            parent_name: input.parentName,
-            phone: input.phone,
-            current_belt: input.currentBelt,
-          },
-          customer_email: input.email,
-          success_url: `${origin}/belt-test-intent/success?name=${encodeURIComponent(input.studentName)}`,
-          cancel_url: `${origin}/belt-test-intent`,
+        const order = await createPayPalOrder({
+          amountCents: 4900,
+          referenceId: `belt-${intentId}`,
+          returnUrl: `${origin}/belt-test-intent/success?name=${encodeURIComponent(input.studentName)}`,
+          cancelUrl: `${origin}/belt-test-intent`,
         });
-        return { checkoutUrl: session.url, intentId };
+        await db.update(schema.beltTestIntents).set({ paypalOrderId: order.orderId }).where(eq(schema.beltTestIntents.id, intentId));
+        return { checkoutUrl: order.approvalUrl, intentId };
       }),
     list: protectedProcedure
       .query(async ({ ctx }) => {

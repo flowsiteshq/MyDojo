@@ -19,7 +19,7 @@ describe("hosted enrollment checkout", () => {
 
   it("gives signed enrollment a clear secure checkout action instead of rendering the incompatible embedded payment panel", () => {
     expect(paymentFormSource).toContain("createStripeCheckoutMutation");
-    expect(paymentFormSource).toContain("Continue to Secure Checkout");
+    expect(paymentFormSource).toContain("Continue to secure checkout");
     expect(paymentFormSource).not.toContain("<StripePaymentForm");
   });
 
@@ -28,6 +28,6 @@ describe("hosted enrollment checkout", () => {
     expect(webhookSource).toContain("handleHostedMembershipEnrollment(session)");
     expect(webhookSource).toContain('status: "active"');
     expect(webhookSource).toContain("stripeSubscriptionId: subscription.id");
-    expect(webhookSource).toContain("trial_end: Math.floor(nextBillingDate.getTime() / 1000)");
+    expect(webhookSource).toContain("trial_end: Math.floor(tuitionStartDate.getTime() / 1000)");
   });
 });

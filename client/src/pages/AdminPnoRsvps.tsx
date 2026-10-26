@@ -4,7 +4,7 @@ import { PartyPopper, Phone, Users, UserPlus, StickyNote, RefreshCw } from "luci
 import { Button } from "@/components/ui/button";
 
 export default function AdminPnoRsvps() {
-  const { data: rsvps, isLoading, refetch } = trpc.pno.getRsvps.useQuery();
+  const { data: rsvps, isLoading, refetch } = trpc.pno.getRsvps.useQuery({ eventId: "pno-oct-2026" });
 
   const totalKids = rsvps?.reduce((sum, r) => sum + (r.studentCount ?? 1), 0) ?? 0;
   const bringingFriend = rsvps?.filter((r) => r.bringingFriend).length ?? 0;
@@ -19,8 +19,8 @@ export default function AdminPnoRsvps() {
               <PartyPopper className="w-6 h-6 text-yellow-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Parents Night Out — Nerf Wars 🎯</h1>
-              <p className="text-sm text-gray-500">Friday, April 25th · 6:00 PM – 9:00 PM · 11721 Spring Cypress Rd, Tomball TX</p>
+              <h1 className="text-2xl font-bold text-gray-900">Parents’ Night Out — Haunted Dojo 🎃</h1>
+              <p className="text-sm text-gray-500">Friday, October 30th · 6:00 PM – 9:00 PM · 11721 Spring Cypress Rd, Tomball TX</p>
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
@@ -71,6 +71,9 @@ export default function AdminPnoRsvps() {
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="font-semibold text-gray-900">{rsvp.parentName}</span>
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${rsvp.paymentStatus === "paid" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                      {rsvp.paymentStatus === "paid" ? "Paid" : "Payment Pending"}
+                    </span>
                     {rsvp.bringingFriend && (
                       <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
                         <UserPlus className="w-3 h-3" /> Bringing a Friend
@@ -92,6 +95,12 @@ export default function AdminPnoRsvps() {
                   {rsvp.friendName && (
                     <p className="text-sm text-green-700 mt-1">
                       Friend: <span className="font-medium">{rsvp.friendName}</span>
+                    </p>
+                  )}
+
+                  {rsvp.emergencyContactName && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      Emergency: <span className="font-medium">{rsvp.emergencyContactName}</span> · {rsvp.emergencyContactPhone}
                     </p>
                   )}
 
