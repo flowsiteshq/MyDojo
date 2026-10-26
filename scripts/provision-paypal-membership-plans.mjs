@@ -28,8 +28,7 @@ async function accessToken() {
 }
 
 async function paypal(path, options = {}) {
-  const url = path.startsWith('http') ? path : `${base}${path}`;
-  const response = await fetch(url, {
+  const response = await fetch(`${base}${path}`, {
     ...options,
     headers: {
       Authorization: `Bearer ${await accessToken()}`,
@@ -38,19 +37,19 @@ async function paypal(path, options = {}) {
     },
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`PayPal ${options.method || 'GET'} ${path} failed: ${response.status}`);
-  return body;
-}
-
-async function listAll(path, field) {
-  const items = [];
-  let next = path;
-  while (next) {
-    const page = await paypal(next);
-    items.push(...(page[field] || []));
-    next = page.links?.find((link) => link.rel === 'next')?.href || null;
+  if (!response.ok) {
+    const details = Array.isArray(body.details)
+      ? body.details.map((detail) => {
+          const issue = detail.issue || 'UNKNOWN_ISSUE';
+          const description = detail.description || 'No description provided';
+          return `${issue}: ${description}`;
+        }).join(' | ')
+      : '';
+    const name = body.name || 'UNKNOWN_ERROR';
+    const message = details || body.message || 'No error description provided';
+    throw new Error(`PayPal ${options.method || 'GET'} ${path} failed: ${response.status} ${name}${details ? ` — ${message}` : ` — ${message}`}`);
   }
-  return items;
+  return body;
 }
 
 const expectedPlans = {
@@ -74,8 +73,14 @@ const requiredWebhookEvents = new Set([
 ]);
 
 async function findProducts(name) {
-  return (await listAll('/v1/catalogs/products?page_size=100', 'products'))
-    .filter((product) => product.name === name);
+  const matches = [];
+  for (let page = 1; page <= 100; page++) {
+    const data = await paypal(`/v1/catalogs/products?page_size=100&page=${page}`);
+    const items = data.products || [];
+    matches.push(...items.filter((product) => product.name === name));
+    if (items.length < 100) return matches;
+  }
+  throw new Error('Product search exceeded 100 pages; refusing to provision');
 }
 
 async function ensureProduct(name) {
@@ -84,12 +89,19 @@ async function ensureProduct(name) {
   if (matches.length === 1) return matches[0].id;
   return (await paypal('/v1/catalogs/products', {
     method: 'POST',
-    body: JSON.stringify({ name, type: 'SERVICE', category: 'EDUCATIONAL_SERVICES' }),
+    body: JSON.stringify({ name, type: 'SERVICE', category: 'MEMBERSHIP_CLUBS_AND_ORGANIZATIONS' }),
   })).id;
 }
 
 async function listPlans() {
-  return listAll('/v1/billing/plans?status=ALL&page_size=100', 'plans');
+  const plans = [];
+  for (let page = 1; page <= 100; page++) {
+    const data = await paypal(`/v1/billing/plans?page_size=20&page=${page}`);
+    const items = data.plans || [];
+    plans.push(...items);
+    if (items.length < 20) return plans;
+  }
+  throw new Error('Plan search exceeded 100 pages; refusing to provision');
 }
 
 function normalizeMoney(value) {
@@ -150,8 +162,15 @@ async function ensurePlan({ productId, expected }) {
 
 async function ensureWebhook() {
   const expectedUrl = `${siteUrl}/api/paypal/webhook`;
-  const matches = (await listAll('/v1/notifications/webhooks?page_size=100', 'webhooks'))
-    .filter((webhook) => webhook.url === expectedUrl);
+  const webhooks = [];
+  for (let page = 1; page <= 100; page++) {
+    const data = await paypal(`/v1/notifications/webhooks?page_size=100&page=${page}`);
+    const items = data.webhooks || [];
+    webhooks.push(...items);
+    if (items.length < 100) break;
+    if (page === 100) throw new Error('Webhook search exceeded 100 pages; refusing to provision');
+  }
+  const matches = webhooks.filter((webhook) => webhook.url === expectedUrl);
   if (matches.length > 1) throw new Error(`Conflicting PayPal webhooks found for ${expectedUrl}`);
   if (matches.length === 1) {
     const actualEvents = new Set((matches[0].event_types || []).map((event) => event.name));

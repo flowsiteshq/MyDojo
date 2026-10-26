@@ -1,0 +1,66 @@
+name: Provision PayPal Live Memberships
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_live_provisioning:
+        description: "Type PROVISION-LIVE to authorize the idempotent Live provisioning run"
+        required: true
+        type: string
+
+concurrency:
+  group: paypal-live-provisioning
+  cancel-in-progress: false
+
+jobs:
+  provision:
+    if: ${{ github.ref == 'refs/heads/main' && inputs.confirm_live_provisioning == 'PROVISION-LIVE' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: paypal-live
+    permissions:
+      contents: read
+    env:
+      PAYPAL_CLIENT_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
+      PAYPAL_CLIENT_SECRET: ${{ secrets.PAYPAL_CLIENT_SECRET }}
+      PAYPAL_ENVIRONMENT: live
+      PUBLIC_SITE_URL: https://www.mydojoma.com
+      PAYPAL_PROVISIONING_RESULT_PATH: ${{ github.workspace }}/paypal-provisioning-result.json
+
+    steps:
+      - name: Check out main only
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate required secret presence without printing values
+        shell: bash
+        run: |
+          test -n "$PAYPAL_CLIENT_ID"
+          test -n "$PAYPAL_CLIENT_SECRET"
+          echo "PayPal Live secret references are present."
+
+      - name: Provision or reuse PayPal plans and webhook
+        run: node scripts/provision-paypal-membership-plans.mjs
+
+      - name: Upload access-controlled provisioning result
+        uses: actions/upload-artifact@v4
+        with:
+          name: paypal-live-provisioning-result-${{ github.run_id }}
+          path: ${{ github.workspace }}/paypal-provisioning-result.json
+          if-no-files-found: error
+          retention-days: 7
