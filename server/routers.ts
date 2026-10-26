@@ -10880,9 +10880,9 @@ Please enter your card details below to complete your registration securely. Tot
       }))
       .mutation(async ({ input, ctx }) => {
         const packages = {
-          ninja: { name: 'Ninja Party', totalCents: 19_900, hostedLinkId: 'EVND7A9LEDEUS', checkoutUrl: 'https://www.paypal.com/ncp/payment/EVND7A9LEDEUS' },
-          champion: { name: 'Champion Party', totalCents: 29_900, hostedLinkId: 'E4MN36FR8R4MC', checkoutUrl: 'https://www.paypal.com/ncp/payment/E4MN36FR8R4MC' },
-          blackbelt: { name: 'Black Belt VIP Party', totalCents: 44_900, hostedLinkId: 'HM98SSWBUBGNY', checkoutUrl: 'https://www.paypal.com/ncp/payment/HM98SSWBUBGNY' },
+          ninja: { name: 'Ninja Party', totalCents: 19_900 },
+          champion: { name: 'Champion Party', totalCents: 29_900 },
+          blackbelt: { name: 'Black Belt VIP Party', totalCents: 44_900 },
         } as const;
         const selectedPackage = packages[input.packageId];
         const { randomUUID } = await import('crypto');
@@ -10902,25 +10902,60 @@ Please enter your card details below to complete your registration securely. Tot
           partyDate: input.partyDate,
           guestCount: input.guestCount,
           message: input.message,
-          paypalHostedLinkId: selectedPackage.hostedLinkId,
           status: 'pending',
         });
-        const { notifyOwner } = await import('./_core/notification');
-        await notifyOwner({
-          title: 'Birthday Party Checkout Started — ' + selectedPackage.name,
-          content: [
-            'Booking ID: ' + bookingId,
-            'Parent: ' + input.parentName,
-            'Phone: ' + input.phone,
-            'Email: ' + input.email,
-            'Child: ' + input.childName,
-            'Party date: ' + input.partyDate,
-            'Amount: $' + (selectedPackage.totalCents / 100).toFixed(2),
-            'Booking status: Pending Payment',
-            'Payment method: PayPal hosted link',
-          ].join('\n'),
-        });
-        return { checkoutUrl: selectedPackage.checkoutUrl, amount: selectedPackage.totalCents / 100, bookingReference: bookingId, status: 'pending' as const };
+        try {
+          const origin = (ctx.req.headers.origin as string) || process.env.PUBLIC_SITE_URL || 'https://www.mydojoma.com';
+          const stripe = getStripe();
+          const session = await stripe.checkout.sessions.create({
+            mode: 'payment',
+            customer_email: input.email,
+            line_items: [{
+              price_data: {
+                currency: 'usd',
+                product_data: { name: selectedPackage.name, description: `MyDojo birthday party for ${input.childName}` },
+                unit_amount: selectedPackage.totalCents,
+              },
+              quantity: 1,
+            }],
+            metadata: {
+              type: 'birthday_party_checkout',
+              bookingReference: bookingId,
+              birthday_package: input.packageId,
+              parent_name: input.parentName,
+              parent_phone: input.phone,
+              child_name: input.childName,
+              party_date: input.partyDate,
+            },
+            success_url: `${origin}/birthday-parties?payment=pending&booking=${encodeURIComponent(bookingId)}`,
+            cancel_url: `${origin}/birthday-parties?payment=cancelled&booking=${encodeURIComponent(bookingId)}`,
+          });
+          if (!session.url) throw new Error('Stripe did not return a checkout URL');
+          await db.update(schema.partyBookings).set({
+            stripeCheckoutSessionId: session.id,
+            lastError: null,
+          }).where(eq(schema.partyBookings.bookingReference, bookingId));
+          const { notifyOwner } = await import('./_core/notification');
+          await notifyOwner({
+            title: 'Birthday Party Checkout Started — ' + selectedPackage.name,
+            content: [
+              'Booking ID: ' + bookingId,
+              'Parent: ' + input.parentName,
+              'Phone: ' + input.phone,
+              'Email: ' + input.email,
+              'Child: ' + input.childName,
+              'Party date: ' + input.partyDate,
+              'Amount: $' + (selectedPackage.totalCents / 100).toFixed(2),
+              'Booking status: Pending Payment',
+              'Payment method: Stripe Checkout',
+            ].join('\n'),
+          });
+          return { checkoutUrl: session.url, amount: selectedPackage.totalCents / 100, bookingReference: bookingId, status: 'pending' as const };
+        } catch (error) {
+          await db.update(schema.partyBookings).set({ status: 'failed', lastError: 'Stripe checkout creation failed' }).where(eq(schema.partyBookings.bookingReference, bookingId));
+          console.error('[Birthday Stripe Checkout]', error);
+          throw new TRPCError({ code: 'BAD_GATEWAY', message: 'Unable to create secure Stripe checkout' });
+        }
       }),
     listPending: adminProcedure
       .query(async () => {

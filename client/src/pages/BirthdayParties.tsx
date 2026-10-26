@@ -312,7 +312,7 @@ export default function BirthdayParties() {
               <div className="text-6xl mb-4">🎉</div>
               <h3 className="font-black uppercase text-white text-2xl mb-3">Booking Pending Payment</h3>
               <p style={{ color: "rgba(255,255,255,0.6)" }}>
-                Your booking request is recorded as <strong>Pending Payment</strong>. We will mark it paid only after the PayPal transaction is verified and matched to your booking, then contact you within 24 hours about your requested date.
+                Your booking request is recorded as <strong>Pending Payment</strong>. We will mark it paid only after the Stripe payment is verified and matched to your booking, then contact you within 24 hours about your requested date.
               </p>
               <p className="mt-4 font-bold" style={{ color: "#fbbf24" }}>
                 Questions? Call us: (877) 469-3656
@@ -404,7 +404,7 @@ export default function BirthdayParties() {
               <Button type="submit" disabled={bookingMutation.isPending}
                 className="w-full py-6 h-auto font-black uppercase tracking-wider text-lg rounded-xl text-black hover:scale-[1.02] transition-transform"
                 style={{ background: "linear-gradient(135deg, #fbbf24, #f59e0b)" }}>
-                {bookingMutation.isPending ? "Opening PayPal…" : "🎉 PAY IN FULL WITH PAYPAL →"}
+                {bookingMutation.isPending ? "Opening secure checkout…" : "🎉 PAY IN FULL SECURELY →"}
               </Button>
 
               <p className="text-center text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>

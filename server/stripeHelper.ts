@@ -9,7 +9,7 @@ import Stripe from "stripe";
 
 export function getStripe(): Stripe {
   const key =
-    process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || "";
+    process.env.STRIPE_DESTINATION_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || "";
   if (!key) throw new Error("Stripe secret key not configured");
   return new Stripe(key, { apiVersion: "2026-01-28.clover" as any });
 }

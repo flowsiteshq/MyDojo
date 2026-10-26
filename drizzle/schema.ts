@@ -1126,6 +1126,9 @@ export const partyBookings = mysqlTable("partyBookings", {
   partyDate: varchar("partyDate", { length: 10 }).notNull(),
   guestCount: varchar("guestCount", { length: 3 }),
   message: text("message"),
+  /** Stripe Checkout session created for the new destination account. */
+  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 255 }).unique(),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }).unique(),
   paypalOrderId: varchar("paypalOrderId", { length: 64 }).unique(),
   /** PayPal-hosted payment link identifier used when checkout is completed outside the app. */
   paypalHostedLinkId: varchar("paypalHostedLinkId", { length: 64 }),
