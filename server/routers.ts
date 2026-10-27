@@ -3489,9 +3489,10 @@ Please enter your card details below to complete your registration securely. Tot
             firstMonthPrepaid: "false",
             billingStartAt: billingStartsAt.toISOString(),
             recurringMonthlyAmount: monthlyTuition.toFixed(2),
+            deferredDownPaymentAmount: "1.00",
           },
           success_url: `${origin}/enrollment/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${origin}/back-to-school?checkout=cancelled`,
+          cancel_url: `${origin}/two-weeks-for-one?checkout=cancelled`,
           allow_promotion_codes: false,
         });
         if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create secure checkout" });
@@ -3614,9 +3615,10 @@ Please enter your card details below to complete your registration securely. Tot
             backToSchool: "true",
             firstMonthPrepaid: "false",
             billingStartAt: billingStartsAt.toISOString(),
+            deferredDownPaymentAmount: "1.00",
           },
           success_url: `${origin}/enrollment/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${origin}/back-to-school?checkout=cancelled`,
+          cancel_url: `${origin}/two-weeks-for-one?checkout=cancelled`,
           allow_promotion_codes: false,
         });
         if (!session.url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Unable to create secure family checkout" });

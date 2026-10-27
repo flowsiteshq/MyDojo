@@ -30,6 +30,7 @@ export default function BackToSchool() {
   const tuitionStart = useMemo(() => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), []);
   const tuitionStartLabel = tuitionStart.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   const displayedRecurringTuition = (member: FamilyMember, index: number) => PLANS[member.plan].monthly * (index === 1 || index === 2 ? 0.5 : 1);
+  const firstDeferredCharge = members.reduce((total, member, index) => total + displayedRecurringTuition(member, index), 0) + 1;
 
   const singleCheckout = trpc.member.createBackToSchoolCheckout.useMutation({
     onSuccess: ({ checkoutUrl }) => { window.location.assign(checkoutUrl); },
@@ -63,7 +64,7 @@ export default function BackToSchool() {
       return;
     }
     if (!termsAccepted) {
-      toast.error("Please confirm that you understand the $1 promotion and the 14-day tuition start.");
+      toast.error("Please confirm that you understand the $1 today offer and the first charge in 14 days.");
       return;
     }
     const common = { customerName, customerEmail, customerPhone, termsAccepted: true as const };
@@ -80,23 +81,24 @@ export default function BackToSchool() {
       <main className="mx-auto max-w-6xl px-5 py-10 md:py-16">
         <section className="grid gap-10 lg:grid-cols-[1.05fr_.95fr]">
           <div>
-            <div className="mb-5 inline-flex items-center gap-2 bg-[#e10600] px-3 py-1.5 text-xs font-bold uppercase tracking-[.18em] text-white"><CircleDollarSign className="h-4 w-4" /> Back-to-School Special</div>
-            <h1 className="font-heading text-4xl font-black uppercase leading-none md:text-6xl">Start your family for <span className="text-[#e10600]">$1</span></h1>
-            <p className="mt-5 max-w-xl text-lg leading-relaxed text-neutral-700">Enroll one, two, or three family members in a single secure checkout. Pay $1 today; the selected monthly tuition for each student begins exactly two weeks later.</p>
+            <div className="mb-5 inline-flex items-center gap-2 bg-[#e10600] px-3 py-1.5 text-xs font-bold uppercase tracking-[.18em] text-white"><CircleDollarSign className="h-4 w-4" /> Two Weeks for $1</div>
+            <h1 className="font-heading text-4xl font-black uppercase leading-none md:text-6xl">Start training for <span className="text-[#e10600]">$1</span></h1>
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-neutral-700">Pay $1 today and start your two-week karate experience. On {tuitionStartLabel}, your saved payment method will be charged the selected full monthly tuition plus the $1 down payment. Regular monthly tuition continues after that.</p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {Object.values(PLANS).map((option) => (
                 <div key={option.name} className="border border-neutral-200 bg-white p-5">
                   <h2 className="font-heading text-xl font-bold uppercase">{option.name}</h2>
                   <p className="mt-2 text-sm text-neutral-600">{option.highlight}</p>
                   <p className="mt-4 text-2xl font-black">${option.monthly}<span className="text-sm font-medium">/month</span></p>
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-[#e10600]">First charge after 14 days: ${(option.monthly + 1).toFixed(2)}</p>
                   <ul className="mt-4 space-y-2 text-sm">{option.benefits.map((benefit) => <li key={benefit} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#e10600]" />{benefit}</li>)}</ul>
                 </div>
               ))}
             </div>
-            <div className="mt-8 grid gap-3 text-sm text-neutral-700 sm:grid-cols-2"><p className="flex gap-2"><ShieldCheck className="h-5 w-5 shrink-0 text-[#e10600]" />One secure checkout saves a payment method for each selected recurring plan.</p><p className="flex gap-2"><Clock3 className="h-5 w-5 shrink-0 text-[#e10600]" />No $99 enrollment fee is charged with this special.</p><p className="flex gap-2 sm:col-span-2"><Check className="h-5 w-5 shrink-0 text-[#e10600]" />The second and third family members receive 50% off their monthly recurring tuition.</p></div>
+            <div className="mt-8 grid gap-3 text-sm text-neutral-700 sm:grid-cols-2"><p className="flex gap-2"><ShieldCheck className="h-5 w-5 shrink-0 text-[#e10600]" />One secure checkout saves a payment method for the scheduled charge.</p><p className="flex gap-2"><Clock3 className="h-5 w-5 shrink-0 text-[#e10600]" />Pay $1 today; the first tuition charge is scheduled 14 days later.</p><p className="flex gap-2 sm:col-span-2"><Check className="h-5 w-5 shrink-0 text-[#e10600]" />The $1 down payment is added once to the first scheduled tuition charge, not charged twice. No $99 enrollment fee is charged with this special.</p><p className="flex gap-2 sm:col-span-2"><Check className="h-5 w-5 shrink-0 text-[#e10600]" />The second and third family members receive 50% off their monthly recurring tuition.</p></div>
           </div>
           <form onSubmit={submit} className="bg-white p-6 shadow-sm md:p-8">
-            <h2 className="font-heading text-2xl font-bold uppercase">Claim your family offer</h2>
+            <h2 className="font-heading text-2xl font-bold uppercase">Claim the $1 offer</h2>
             <p className="mt-2 text-sm text-neutral-600">Enroll up to three students. Choose a program for each student below.</p>
             <div className="mt-6 space-y-4">
               <label className="block text-sm font-bold">Parent or guardian name<input required value={customerName} onChange={(event) => setCustomerName(event.target.value)} className="mt-1.5 w-full border border-neutral-300 px-3 py-3 font-normal" /></label>
@@ -109,16 +111,14 @@ export default function BackToSchool() {
                   <div className="flex items-center justify-between gap-3"><p className="font-heading text-base font-bold uppercase">Student {index + 1}</p>{members.length > 1 && <button type="button" onClick={() => removeMember(index)} className="inline-flex items-center gap-1 text-xs font-bold text-neutral-500 hover:text-[#e10600]"><X className="h-4 w-4" />Remove</button>}</div>
                   <label className="mt-3 block text-sm font-bold">Student name<input required value={member.studentName} onChange={(event) => updateMember(index, { studentName: event.target.value })} className="mt-1.5 w-full border border-neutral-300 px-3 py-2.5 font-normal" /></label>
                   <p className="mt-3 text-sm font-bold">Choose program</p>
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    {(Object.entries(PLANS) as [PlanKey, typeof PLANS.basic][]).map(([key, option]) => <button key={key} type="button" onClick={() => updateMember(index, { plan: key })} className={`border px-3 py-2 text-left text-xs font-bold ${member.plan === key ? "border-[#e10600] bg-black text-white" : "border-neutral-300 bg-white text-black"}`}><span className="block">{option.name}</span><span className="font-normal">${option.monthly}/mo</span></button>)}
-                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2">{(Object.entries(PLANS) as [PlanKey, typeof PLANS.basic][]).map(([key, option]) => <button key={key} type="button" onClick={() => updateMember(index, { plan: key })} className={`border px-3 py-2 text-left text-xs font-bold ${member.plan === key ? "border-[#e10600] bg-black text-white" : "border-neutral-300 bg-white text-black"}`}><span className="block">{option.name}</span><span className="font-normal">${option.monthly}/mo</span></button>)}</div>
                 </div>
               ))}
               {members.length < 3 && <button type="button" onClick={addMember} className="flex w-full items-center justify-center gap-2 border border-dashed border-neutral-400 px-4 py-3 text-sm font-bold text-neutral-700 hover:border-[#e10600] hover:text-[#e10600]"><Plus className="h-4 w-4" />Add another family member</button>}
             </div>
-            <div className="mt-6 border-y border-neutral-200 py-4 text-sm"><div className="flex justify-between"><span>Due today for the whole family</span><strong>$1.00</strong></div>{members.map((member, index) => <div key={`${member.studentName}-${index}`} className="mt-2 flex justify-between gap-3"><span>Student {index + 1}: {PLANS[member.plan].name}{index > 0 ? " — family rate" : ""} begins {tuitionStartLabel}</span><strong>${displayedRecurringTuition(member, index).toFixed(2)}</strong></div>)}<p className="mt-3 text-neutral-600">Each selected tuition amount will be charged automatically in 14 days, then monthly thereafter.</p></div>
-            <label className="mt-5 flex cursor-pointer gap-3 text-sm leading-relaxed"><input type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} className="mt-1 h-4 w-4 accent-[#e10600]" />I understand that I pay $1 today and that the tuition shown for each enrolled student will be charged automatically in 14 days, then monthly thereafter.</label>
-            <button disabled={checkoutPending} className="mt-6 flex w-full items-center justify-center gap-2 bg-[#e10600] px-5 py-4 font-heading font-bold uppercase tracking-wide text-white disabled:opacity-60">{checkoutPending ? "Opening secure checkout…" : "Enroll family for $1"}<ChevronRight className="h-5 w-5" /></button>
+            <div className="mt-6 border-y border-neutral-200 py-4 text-sm"><div className="flex justify-between"><span>Due today for the whole family</span><strong>$1.00</strong></div><div className="mt-2 flex justify-between gap-3"><span>First scheduled charge on {tuitionStartLabel} (tuition + $1 down payment)</span><strong>${firstDeferredCharge.toFixed(2)}</strong></div>{members.map((member, index) => <div key={`${member.studentName}-${index}`} className="mt-2 flex justify-between gap-3 text-neutral-600"><span>Student {index + 1}: {PLANS[member.plan].name}{index > 0 ? " — family rate" : ""} monthly tuition</span><strong>${displayedRecurringTuition(member, index).toFixed(2)}</strong></div>)}<p className="mt-3 text-neutral-600">The $1 down payment is included once in the first scheduled charge. Monthly tuition continues thereafter.</p></div>
+            <label className="mt-5 flex cursor-pointer gap-3 text-sm leading-relaxed"><input type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} className="mt-1 h-4 w-4 accent-[#e10600]" />I understand that I pay $1 today, that my saved payment method will be charged the selected tuition plus $1 in 14 days, and that regular monthly tuition continues afterward.</label>
+            <button disabled={checkoutPending} className="mt-6 flex w-full items-center justify-center gap-2 bg-[#e10600] px-5 py-4 font-heading font-bold uppercase tracking-wide text-white disabled:opacity-60">{checkoutPending ? "Opening secure checkout…" : "Start for $1"}<ChevronRight className="h-5 w-5" /></button>
           </form>
         </section>
       </main>

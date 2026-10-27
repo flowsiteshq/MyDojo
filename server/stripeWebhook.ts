@@ -204,11 +204,25 @@ async function handleHostedMembershipEnrollment(session: Stripe.Checkout.Session
   const nextBillingDate = new Date(`${getNextBillingDateStr(new Date())}T12:00:00`);
   const tuitionStartDate = hasValidBackToSchoolStart ? specifiedBillingStart! : nextBillingDate;
   const firstMonthPrepaid = session.metadata?.firstMonthPrepaid === "false" ? false : Boolean(paymentIntentId);
+  const isFamilyEnrollment = familyGroupId > 0 && familyMemberOrder > 0;
+  const deferredDownPaymentAmount = isBackToSchool && (!isFamilyEnrollment || familyMemberOrder === 1)
+    ? Math.max(0, Number(session.metadata?.deferredDownPaymentAmount ?? "0"))
+    : 0;
+  let deferredDownPaymentPriceId: string | null = null;
+  if (deferredDownPaymentAmount > 0) {
+    const deferredPrice = await stripe.prices.create({
+      currency: "usd",
+      unit_amount: Math.round(deferredDownPaymentAmount * 100),
+      product_data: { name: "MyDojo offer down payment" },
+    });
+    deferredDownPaymentPriceId = deferredPrice.id;
+  }
   const subscription = await stripe.subscriptions.create({
     customer: customerId,
     items: [{ price: priceId }],
     default_payment_method: paymentMethod.id,
     trial_end: Math.floor(tuitionStartDate.getTime() / 1000),
+    ...(deferredDownPaymentPriceId ? { add_invoice_items: [{ price: deferredDownPaymentPriceId, quantity: 1 }] } : {}),
     payment_settings: { save_default_payment_method: "on_subscription" },
     metadata: { type: "membership", packageId: String(pkg.id), billingAnchor: hasValidBackToSchoolStart ? tuitionStartDate.toISOString() : getNextBillingDateStr(new Date()), ...(isBackToSchool ? { backToSchool: "true", tuitionStartsAt: tuitionStartDate.toISOString() } : {}), ...(hasFamilyDiscount ? { familyGroupId: String(familyGroupId), familyMemberOrder: String(familyMemberOrder), familyDiscount: "50_percent" } : {}) },
   });

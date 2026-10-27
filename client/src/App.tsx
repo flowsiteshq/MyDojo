@@ -155,6 +155,7 @@ function Router() {
         <Route path="/join" component={Join} />
         <Route path="/enroll" component={Enroll} />
         <Route path="/back-to-school" component={BackToSchool} />
+        <Route path="/two-weeks-for-one" component={BackToSchool} />
         <Route path="/summer-camp/enroll" component={SummerCampEnroll} />
         <Route path="/summer-camp/forms" component={SummerCampForms} />
         <Route path="/buy-day-pass" component={BuyDayPass} />
