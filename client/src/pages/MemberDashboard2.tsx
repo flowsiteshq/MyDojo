@@ -766,6 +766,16 @@ function AccountTab({
                     <p className={`mt-1 text-xs ${t.textMuted}`}>Due {formatDate(charge.created)} · {String(charge.status).replaceAll("_", " ")}</p>
                   </div>
                   <p className={`shrink-0 text-sm font-black ${t.textPrimary}`}>{formatAmount(Number(charge.amount || 0))}</p>
+                  {charge.invoiceUrl && (
+                    <a
+                      href={charge.invoiceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="shrink-0 rounded-lg bg-[#E11D2A] px-3 py-2 text-xs font-bold text-white hover:bg-[#bd1621]"
+                    >
+                      Pay now
+                    </a>
+                  )}
                 </div>
               ))}
             </div>

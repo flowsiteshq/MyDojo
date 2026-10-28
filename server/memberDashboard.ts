@@ -299,6 +299,18 @@ export async function getMemberPaymentHistory(
             description: inv.description || "Monthly Membership",
             created: new Date(inv.created * 1000),
             invoiceUrl: inv.hosted_invoice_url,
+          })),
+        ...invList.data
+          .filter(inv => inv.status === "open" && (inv.amount_remaining || 0) > 0)
+          .map(inv => ({
+            id: `stripe-open-${inv.id}`,
+            type: "invoice" as const,
+            amount: (inv.amount_remaining || 0) / 100,
+            currency: (inv.currency || "usd").toUpperCase(),
+            status: "open",
+            description: inv.description || "Outstanding balance",
+            created: new Date(((inv.due_date || inv.created) as number) * 1000),
+            invoiceUrl: inv.hosted_invoice_url,
           }))
       );
     } catch (error) {

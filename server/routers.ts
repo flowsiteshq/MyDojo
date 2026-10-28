@@ -2521,9 +2521,10 @@ Please enter your card details below to complete your registration securely. Tot
       return schedules;
     }),
 
-     // Get member's payment history (FluidPay primary + Stripe fallback)
+    // Get member's payment history (FluidPay primary + Stripe fallback)
     getPaymentHistory: protectedProcedure.query(async ({ ctx }) => {
-      const payments = await getMemberPaymentHistory(ctx.user.email);
+      const enrollment = await getMemberEnrollment(ctx.user.email);
+      const payments = await getMemberPaymentHistory(ctx.user.email, enrollment?.enrollment.stripeCustomerId);
       return payments;
     }),
 
