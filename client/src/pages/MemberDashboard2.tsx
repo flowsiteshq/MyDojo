@@ -1242,7 +1242,7 @@ function PaymentHistorySection({ isDark, payments: externalPayments, isLoading: 
 
 export default function MemberDashboard2() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<"home" | "benefits" | "training" | "locate" | "shop" | "account">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "benefits" | "training" | "locate" | "shop" | "account" | "messages">("home");
   const [trainingDialog, setTrainingDialog] = useState<"schedule" | "curriculum" | "progress" | "attendance" | "testing" | null>(null);
   const [trainingModalDragOffset, setTrainingModalDragOffset] = useState(0);
   const trainingModalTouchStartY = useRef<number | null>(null);
@@ -1676,7 +1676,7 @@ export default function MemberDashboard2() {
             {/* Messages */}
             <button
               className={`relative p-2 rounded-full transition-colors ${t.iconBtn}`}
-              onClick={() => setActiveTab("home")}
+              onClick={() => setActiveTab("messages")}
             >
               <MessageCircle className={`h-5 w-5 ${t.iconColor}`} />
               {unreadCount > 0 && (
@@ -2531,6 +2531,16 @@ export default function MemberDashboard2() {
               setTrainingDialog={setTrainingDialog}
             />
           </>
+        )}
+
+        {activeTab === "messages" && (
+          <div className="w-full px-4 py-6 sm:px-6 lg:px-8">
+            <MessagesTab
+              isDark={isDark}
+              currentUserId={user?.id}
+              program={(myEnrollment as any)?.packageName ?? (enrollment as any)?.enrollment?.program}
+            />
+          </div>
         )}
 
         {false && activeTab === "home" && (

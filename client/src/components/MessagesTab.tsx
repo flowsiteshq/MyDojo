@@ -101,10 +101,29 @@ type Message = {
 interface MessagesTabProps {
   isDark: boolean;
   currentUserId?: number;
+  program?: string;
 }
 
-export function MessagesTab({ isDark, currentUserId }: MessagesTabProps) {
+const PROGRAM_ARTWORK = {
+  kickboxing: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-kickboxing-icon-3wZvsMQWK2QsE88jbA5XvL.webp",
+  littleNinjas: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-little-ninjas-icon-mAMYQ5Bv6uisAiTZ5K5GQu.webp",
+  kids: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-kids-martial-arts-icon-Vj7bBxjn963m8EZYnaGfQP.webp",
+  adult: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-teens-adults-icon-LpWWvsSRjwWK2grH4tDkJg.webp",
+  karate: "https://d2xsxph8kpxj0f.cloudfront.net/310419663031545745/Lu5Er8YqGDyrsXYnbeua3C/program-adult-karate-icon-97TNw8WYGfGSkrXWgHwAij.webp",
+};
+
+function programArtwork(program?: string) {
+  const normalized = String(program ?? "basic").toLowerCase();
+  if (normalized.includes("kickbox")) return { image: PROGRAM_ARTWORK.kickboxing, label: "Kickboxing" };
+  if (normalized.includes("little ninja")) return { image: PROGRAM_ARTWORK.littleNinjas, label: "Little Ninjas" };
+  if (normalized.includes("dragon") || normalized.includes("teen") || normalized.includes("kids")) return { image: PROGRAM_ARTWORK.kids, label: program || "Kids Martial Arts" };
+  if (normalized.includes("adult") || normalized.includes("black belt") || normalized.includes("leadership")) return { image: PROGRAM_ARTWORK.adult, label: program || "Advanced Martial Arts" };
+  return { image: PROGRAM_ARTWORK.karate, label: program || "Basic Martial Arts" };
+}
+
+export function MessagesTab({ isDark, currentUserId, program }: MessagesTabProps) {
   const t = useTokens(isDark);
+  const enrolledProgram = programArtwork(program);
   const [selectedConvId, setSelectedConvId] = useState<number | null>(null);
   const [replyText, setReplyText] = useState("");
   const [mobileShowThread, setMobileShowThread] = useState(false);
@@ -367,11 +386,12 @@ export function MessagesTab({ isDark, currentUserId }: MessagesTabProps) {
       >
         {/* Header */}
         <div className={`px-4 py-4 border-b ${t.headerBg} ${t.divider} flex items-center justify-between`}>
-          <div>
-            <h3 className={`font-bold text-base ${t.textPrimary}`}>Messages</h3>
-            <p className={`text-xs mt-0.5 ${t.textSecondary}`}>
-              {conversations.length} conversation{conversations.length !== 1 ? "s" : ""}
-            </p>
+          <div className="flex min-w-0 items-center gap-3">
+            <img src={enrolledProgram.image} alt={`${enrolledProgram.label} program`} className="h-12 w-12 shrink-0 rounded-xl object-cover" loading="lazy" />
+            <div className="min-w-0">
+              <h3 className={`font-bold text-base ${t.textPrimary}`}>Messages</h3>
+              <p className={`mt-0.5 truncate text-xs ${t.textSecondary}`}>{enrolledProgram.label} · {conversations.length} conversation{conversations.length !== 1 ? "s" : ""}</p>
+            </div>
           </div>
           <button
             onClick={() => setShowNewMsg(true)}
