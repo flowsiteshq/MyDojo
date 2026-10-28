@@ -1109,6 +1109,27 @@ export const webhookEvents = mysqlTable("webhookEvents", {
 export type WebhookEvent = typeof webhookEvents.$inferSelect;
 export type InsertWebhookEvent = typeof webhookEvents.$inferInsert;
 
+// ─── Billing Center Payment Attempts ────────────────────────────────────────
+/** Provider-neutral ledger for member-authorized balance payment attempts. */
+export const billingPaymentAttempts = mysqlTable("billingPaymentAttempts", {
+  id: int("id").autoincrement().primaryKey(),
+  enrollmentId: int("enrollmentId").notNull(),
+  userId: int("userId").notNull(),
+  provider: mysqlEnum("provider", ["stripe", "fluidpay"]).notNull(),
+  amountCents: int("amountCents").notNull(),
+  outstandingSnapshotCents: int("outstandingSnapshotCents").notNull(),
+  idempotencyKey: varchar("idempotencyKey", { length: 255 }).notNull().unique(),
+  providerPaymentId: varchar("providerPaymentId", { length: 255 }),
+  providerInvoiceId: varchar("providerInvoiceId", { length: 255 }),
+  status: mysqlEnum("status", ["initiated", "pending", "succeeded", "failed", "canceled"]).default("initiated").notNull(),
+  failureCode: varchar("failureCode", { length: 100 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BillingPaymentAttempt = typeof billingPaymentAttempts.$inferSelect;
+export type InsertBillingPaymentAttempt = typeof billingPaymentAttempts.$inferInsert;
+
 // ─── PayPal party bookings ────────────────────────────────────────────────────
 /** Durable record linking a birthday-party request to one PayPal order. */
 export const partyBookings = mysqlTable("partyBookings", {

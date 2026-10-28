@@ -617,6 +617,13 @@
       "when": 1793215578695,
       "tag": "0087_blue_lionheart",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "5",
+      "when": 1793230678342,
+      "tag": "0088_luxuriant_garia",
+      "breakpoints": true
     }
   ]
 }

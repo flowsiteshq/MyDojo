@@ -62,6 +62,7 @@ import { toast } from "sonner";
 import { programs } from "@/data/programs";
 import { STUDENT_SHOP_PRODUCTS } from "@/data/shopCatalog";
 import { ParentPortalHome } from "@/components/ParentPortalHome";
+import { PartialBalancePaymentCard } from "@/components/PartialBalancePaymentCard";
 Chart.register(...registerables);
 
 // ─── Theme-aware token helper ─────────────────────────────────────────────────
@@ -770,6 +771,10 @@ function AccountTab({
             </div>
           )}
         </Card>
+
+        {outstandingCharges.length > 0 && (
+          <PartialBalancePaymentCard isDark={isDark} charges={outstandingCharges} />
+        )}
 
         {/* Payment History with Search */}
         <div>

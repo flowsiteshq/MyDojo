@@ -2527,6 +2527,68 @@ Please enter your card details below to complete your registration securely. Tot
       return payments;
     }),
 
+    // Staging-only balance payment flow. Live provider credentials are never
+    // used here; FluidPay stays manual-review until tokenized staging payment
+    // credentials and a verified create-transaction contract are configured.
+    createPartialBalancePayment: protectedProcedure
+      .input(z.object({ amountCents: z.number().int().min(1000), idempotencyKey: z.string().min(16).max(255) }))
+      .mutation(async ({ ctx, input }) => {
+        if (process.env.BILLING_CENTER_MODE !== "staging") {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Staging billing mode is not enabled." });
+        }
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const existing = await db.select().from(schema.billingPaymentAttempts).where(eq(schema.billingPaymentAttempts.idempotencyKey, input.idempotencyKey)).limit(1);
+        if (existing[0]) return { attemptId: existing[0].id, status: existing[0].status, provider: existing[0].provider, clientSecret: null, paymentIntentId: existing[0].providerPaymentId };
+        const enrollment = await getMemberEnrollment(ctx.user.email);
+        if (!enrollment) throw new TRPCError({ code: "NOT_FOUND", message: "No active enrollment found." });
+        const row = enrollment.enrollment;
+        const provider = row.stripeCustomerId ? "stripe" : row.fluidpayCustomerId ? "fluidpay" : null;
+        if (!provider) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No supported billing provider is linked to this enrollment." });
+        if (provider === "fluidpay") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "FluidPay staging partial payments require a verified tokenized payment method and are not enabled yet." });
+        const stagingKey = process.env.STRIPE_STAGING_SECRET_KEY;
+        if (!stagingKey) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Stripe staging credentials are not configured." });
+        const stripe = new Stripe(stagingKey, { apiVersion: "2026-01-28.clover" as any });
+        const openInvoices = await stripe.invoices.list({ customer: row.stripeCustomerId!, status: "open", limit: 50 });
+        const outstandingCents = openInvoices.data.reduce((sum, invoice) => sum + Math.max(0, invoice.amount_remaining || 0), 0);
+        if (outstandingCents < 1000) throw new TRPCError({ code: "BAD_REQUEST", message: "No verified outstanding balance is available for payment." });
+        if (input.amountCents > outstandingCents) throw new TRPCError({ code: "BAD_REQUEST", message: "Payment cannot exceed the verified outstanding balance." });
+        const result = await db.insert(schema.billingPaymentAttempts).values({
+          enrollmentId: row.id, userId: ctx.user.id, provider: "stripe", amountCents: input.amountCents,
+          outstandingSnapshotCents: outstandingCents, idempotencyKey: input.idempotencyKey, status: "initiated",
+        });
+        const attemptId = Number((result as any).insertId);
+        try {
+          const paymentIntent = await stripe.paymentIntents.create({
+            amount: input.amountCents, currency: "usd", customer: row.stripeCustomerId!, payment_method_types: ["card"],
+            description: "MyDojo staging balance payment",
+            metadata: { mydojoBillingAttemptId: String(attemptId), enrollmentId: String(row.id), outstandingSnapshotCents: String(outstandingCents) },
+          }, { idempotencyKey: input.idempotencyKey });
+          await db.update(schema.billingPaymentAttempts).set({ status: "pending", providerPaymentId: paymentIntent.id }).where(eq(schema.billingPaymentAttempts.id, attemptId));
+          return { attemptId, status: "pending", provider: "stripe", clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id };
+        } catch {
+          await db.update(schema.billingPaymentAttempts).set({ status: "failed", failureCode: "provider_create_failed" }).where(eq(schema.billingPaymentAttempts.id, attemptId));
+          throw new TRPCError({ code: "BAD_REQUEST", message: "The staging payment could not be prepared. No charge was recorded." });
+        }
+      }),
+    recordPartialBalancePaymentResult: protectedProcedure
+      .input(z.object({ attemptId: z.number().int().positive(), paymentIntentId: z.string().min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        if (process.env.BILLING_CENTER_MODE !== "staging") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Staging billing mode is not enabled." });
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const rows = await db.select().from(schema.billingPaymentAttempts).where(and(eq(schema.billingPaymentAttempts.id, input.attemptId), eq(schema.billingPaymentAttempts.userId, ctx.user.id))).limit(1);
+        const attempt = rows[0];
+        if (!attempt || attempt.providerPaymentId !== input.paymentIntentId) throw new TRPCError({ code: "NOT_FOUND", message: "Payment attempt not found." });
+        const stagingKey = process.env.STRIPE_STAGING_SECRET_KEY;
+        if (!stagingKey) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Stripe staging credentials are not configured." });
+        const stripe = new Stripe(stagingKey, { apiVersion: "2026-01-28.clover" as any });
+        const paymentIntent = await stripe.paymentIntents.retrieve(input.paymentIntentId);
+        const status = paymentIntent.status === "succeeded" ? "succeeded" : paymentIntent.status === "processing" ? "pending" : "failed";
+        await db.update(schema.billingPaymentAttempts).set({ status, failureCode: status === "failed" ? "payment_not_succeeded" : null }).where(eq(schema.billingPaymentAttempts.id, attempt.id));
+        return { status, verified: status === "succeeded" || status === "pending", amountCents: attempt.amountCents };
+      }),
+
     // Submit a membership change request (pause or cancel)
     requestChange: protectedProcedure
       .input(
