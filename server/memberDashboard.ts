@@ -1,6 +1,6 @@
 import { getDb } from "./db";
-import { enrollments, membershipPackages, classSchedule } from "../drizzle/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { enrollments, membershipPackages, classSchedule, webhookEvents } from "../drizzle/schema";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY!, {
@@ -194,6 +194,7 @@ export async function getMemberPaymentHistory(
         .select({
           id: enrollments.id,
           fluidpayCustomerId: enrollments.fluidpayCustomerId,
+          fluidpaySubscriptionId: enrollments.fluidpaySubscriptionId,
           downPaymentAmount: enrollments.downPaymentAmount,
           createdAt: enrollments.createdAt,
         })
@@ -207,6 +208,37 @@ export async function getMemberPaymentHistory(
           .map(e => e.fluidpayCustomerId)
           .filter((id): id is string => !!id && id !== "NULL")
       ));
+      const fpSubscriptionIds = Array.from(new Set(
+        memberEnrollments
+          .map(e => e.fluidpaySubscriptionId)
+          .filter((id): id is string => !!id && id !== "NULL")
+      ));
+
+      // The webhook ledger is the durable fallback for legacy FluidPay
+      // transactions when the provider search is unavailable. Surface only
+      // positive, approved transactions; raw payloads stay server-side.
+      if (fpSubscriptionIds.length > 0) {
+        const webhookRows = await db
+          .select()
+          .from(webhookEvents)
+          .where(inArray(webhookEvents.fpSubscriptionId, fpSubscriptionIds))
+          .orderBy(desc(webhookEvents.createdAt))
+          .limit(100);
+        for (const event of webhookRows) {
+          const approved = ["approved", "complete", "settled", "pending_settlement", "authorized"].includes(String(event.eventStatus || "").toLowerCase());
+          const amount = Number(event.amountCents || 0);
+          if (!approved || amount <= 0) continue;
+          payments.push({
+            id: `fp-webhook-${event.id}`,
+            type: "fluidpay",
+            amount: amount / 100,
+            currency: "USD",
+            status: "paid",
+            description: "Monthly Membership",
+            created: event.createdAt ?? new Date(),
+          });
+        }
+      }
 
       // Query FluidPay API for each customer vault
       for (const fpCustomerId of fpCustomerIds) {

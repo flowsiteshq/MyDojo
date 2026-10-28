@@ -687,6 +687,7 @@ function AccountTab({
   const overdueBalance = (payments ?? [])
     .filter((p: any) => p.status === "overdue" || p.status === "past_due")
     .reduce((total: number, p: any) => total + Number(p.amount || 0), 0);
+  const outstandingCharges = (payments ?? []).filter((p: any) => ["overdue", "past_due", "partial", "partially_paid"].includes(String(p.status).toLowerCase()));
   const memberCount = 1 + (Array.isArray(childProfiles) ? childProfiles.length : 0);
   const nextPaymentAmount = upcomingPayment?.amount ?? (monthlyPrice ? Number(monthlyPrice) : null);
   const nextPaymentDate = upcomingPayment?.created ? formatDate(upcomingPayment.created) : "Not scheduled";
@@ -744,6 +745,28 @@ function AccountTab({
                   <p className={`text-sm font-semibold ${t.textPrimary}`}>{formatDate(upcomingPayment.created)}</p>
                 </div>
               </div>
+            </div>
+          )}
+        </Card>
+
+        <Card isDark={isDark} className="overflow-hidden">
+          <div className={`border-b px-5 py-4 ${t.borderSubtle}`}>
+            <h3 className={`font-black ${t.textPrimary}`}>Outstanding charges</h3>
+            <p className={`mt-0.5 text-xs ${t.textMuted}`}>Only verified provider records are shown here.</p>
+          </div>
+          {outstandingCharges.length === 0 ? (
+            <div className={`p-5 text-sm ${t.textSecondary}`}>No outstanding charges are currently available.</div>
+          ) : (
+            <div className={`divide-y ${t.borderSubtle}`}>
+              {outstandingCharges.map((charge: any) => (
+                <div key={charge.id} className="flex items-center justify-between gap-4 px-5 py-4">
+                  <div className="min-w-0">
+                    <p className={`truncate text-sm font-bold ${t.textPrimary}`}>{charge.description || "Membership charge"}</p>
+                    <p className={`mt-1 text-xs ${t.textMuted}`}>Due {formatDate(charge.created)} · {String(charge.status).replaceAll("_", " ")}</p>
+                  </div>
+                  <p className={`shrink-0 text-sm font-black ${t.textPrimary}`}>{formatAmount(Number(charge.amount || 0))}</p>
+                </div>
+              ))}
             </div>
           )}
         </Card>
