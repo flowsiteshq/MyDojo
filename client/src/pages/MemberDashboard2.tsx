@@ -1778,7 +1778,7 @@ export default function MemberDashboard2() {
       </header>
 
       {/* ── Page Body ── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
+      <main className={activeTab === "home" ? "w-full px-0 py-0 pb-24" : "max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24"}>
 
         {/* ── BENEFITS TAB ── */}
         {activeTab === "benefits" && (
