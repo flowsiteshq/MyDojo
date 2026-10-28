@@ -1,4 +1,4 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, BELT_RANKS } from "@shared/const";
 import { postToFacebook, postToInstagram, getFacebookPostStats, isFacebookConfigured, isInstagramConfigured } from "./socialMedia";
 import { getCalendarTasksForMonth, getCalendarTasksForUser, createCalendarTask, updateCalendarTask, deleteCalendarTask, createTimeOffRequest, getTimeOffRequestsForUser, getAllTimeOffRequests, updateTimeOffRequest, getApprovedTimeOffForMonth } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -89,7 +89,7 @@ const OCTOBER_PROMOTION_EVENT_ID = "oct-2026-belt-promotion";
 const OCTOBER_PROMOTION_DEADLINE_UTC = "2026-10-29T04:59:59.999Z"; // Oct 28, 11:59 PM CDT
 const OCTOBER_PROMOTION_CEREMONY = "2026-10-31T16:00:00.000Z"; // Oct 31, 11:00 AM CDT
 const BELT_PROMOTION_ACKNOWLEDGMENT = "I understand that submitting an Intent to Promote form indicates my student's desire to participate in the upcoming belt promotion. Promotion is subject to instructor approval, demonstration of required skills, and completion of all applicable testing requirements.";
-const PROMOTION_BELT_SEQUENCE = [
+const LEGACY_PROMOTION_BELT_SEQUENCE = [
   "White Belt",
   "White Belt 1 White Stripe", "White Belt 2 White Stripes", "White Belt 3 White Stripes", "White Belt 4 White Stripes",
   "Yellow Belt",
@@ -113,6 +113,9 @@ const PROMOTION_BELT_SEQUENCE = [
   "Black Belt 2nd Dan",
   "Black Belt 3rd Dan",
 ];
+const PROMOTION_BELT_SEQUENCE = BELT_RANKS.filter(rank => rank !== "No Belt");
+const PROMOTION_STRIPE_COLORS = ["none", "white", "yellow", "red", "black"] as const;
+type PromotionStripeColor = (typeof PROMOTION_STRIPE_COLORS)[number];
 
 function promotionBeltIndex(value: string): number {
   const normalized = value.replace(/[()]/g, "").trim().toLowerCase();
@@ -122,6 +125,16 @@ function promotionBeltIndex(value: string): number {
 function nextPromotionBelt(currentBelt: string): string | null {
   const index = promotionBeltIndex(currentBelt);
   return index >= 0 && index < PROMOTION_BELT_SEQUENCE.length - 1 ? PROMOTION_BELT_SEQUENCE[index + 1] : null;
+}
+
+function stripeProgressUnits(color: PromotionStripeColor, count: number): number {
+  if (color === "none") return 0;
+  const phase = PROMOTION_STRIPE_COLORS.indexOf(color);
+  return Math.max(0, Math.min(16, (phase - 1) * 4 + count));
+}
+
+function promotionEligibility(color: PromotionStripeColor, count: number): "incomplete" | "ready_for_evaluation" {
+  return stripeProgressUnits(color, count) >= 16 ? "ready_for_evaluation" : "incomplete";
 }
 
 function promotionFeeCents(currentBelt: string): number {
@@ -11609,6 +11622,9 @@ Please enter your card details below to complete your registration securely. Tot
         promotionPackageCents: 4_900,
         equipmentCents: 17_900,
         nextRanks: PROMOTION_BELT_SEQUENCE,
+        stripeColors: PROMOTION_STRIPE_COLORS,
+        stripeCounts: [0, 1, 2, 3, 4],
+        stripeProgressRequired: 16,
       };
     }),
 
@@ -11624,6 +11640,8 @@ Please enter your card details below to complete your registration securely. Tot
           phone: schema.enrollments.customerPhone,
           email: schema.enrollments.customerEmail,
           currentBelt: schema.enrollments.beltRank,
+          currentStripePhase: schema.enrollments.currentStripePhase,
+          stripesInCurrentPhase: schema.enrollments.stripesInCurrentPhase,
           currentProgram: schema.membershipPackages.name,
           currentMonthlyPrice: schema.membershipPackages.monthlyPrice,
         })
@@ -11637,7 +11655,16 @@ Please enter your card details below to complete your registration securely. Tot
           .orderBy(desc(schema.enrollments.createdAt))
           .limit(1);
         if (!row) return null;
-        return { ...row, currentBelt: row.currentBelt || "White Belt" };
+        const phaseColors: PromotionStripeColor[] = ["none", "white", "yellow", "red", "black"];
+        const currentStripePhase = Math.max(1, Math.min(4, Number(row.currentStripePhase || 1)));
+        const stripesInCurrentPhase = Math.max(0, Math.min(4, Number(row.stripesInCurrentPhase || 0)));
+        return {
+          ...row,
+          currentBelt: row.currentBelt || "White Belt",
+          currentStripeColor: phaseColors[currentStripePhase] || "none",
+          currentStripeCount: stripesInCurrentPhase,
+          stripeProgressVerified: row.currentStripePhase !== null && row.stripesInCurrentPhase !== null,
+        };
       }),
 
     submit: publicProcedure
@@ -11647,6 +11674,9 @@ Please enter your card details below to complete your registration securely. Tot
         phone: z.string().min(10).max(20),
         email: z.string().email().max(320),
         currentBelt: z.string().min(1).max(100),
+        currentStripeColor: z.enum(PROMOTION_STRIPE_COLORS),
+        currentStripeCount: z.number().int().min(0).max(4),
+        stripeProgressVerified: z.boolean().default(false),
         nextBelt: z.string().max(100).optional(),
         currentProgram: z.string().max(255).optional(),
         instructorRecommendationStatus: z.enum(["pending", "recommended", "not_yet"]).default("pending"),
@@ -11669,6 +11699,8 @@ Please enter your card details below to complete your registration securely. Tot
 
         const expectedNextBelt = nextPromotionBelt(input.currentBelt);
         if (!expectedNextBelt) throw new TRPCError({ code: "BAD_REQUEST", message: "Your current belt is not eligible for the configured October promotion path. Please contact MyDojo." });
+        if (input.currentStripeColor === "none" && input.currentStripeCount !== 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Choose a stripe color before entering a stripe count." });
+        if (input.currentStripeColor !== "none" && input.currentStripeCount === 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Select at least one completed stripe or choose No Stripes." });
         if (input.nextBelt && input.nextBelt !== expectedNextBelt) throw new TRPCError({ code: "BAD_REQUEST", message: "The next belt must follow MyDojo's configured ranking system." });
         if (input.equipmentChoice === "add" && !input.equipmentSize) throw new TRPCError({ code: "BAD_REQUEST", message: "Select an equipment size before adding sparring gear." });
 
@@ -11683,6 +11715,7 @@ Please enter your card details below to complete your registration securely. Tot
         if (duplicate) throw new TRPCError({ code: "CONFLICT", message: "An Intent to Promote already exists for this student and event. Please contact staff if you need to correct it." });
 
         const promotionFee = promotionFeeCents(input.currentBelt);
+        const eligibility = promotionEligibility(input.currentStripeColor, input.currentStripeCount);
         const equipmentFee = input.equipmentChoice === "add" ? 17_900 : 0;
         const paymentAmountCents = promotionFee + equipmentFee;
         const upgradeTargetMonthlyCents = input.upgradeTargetPlan === "Basic" ? 14_900 : input.upgradeTargetPlan === "Black Belt" ? 19_900 : input.upgradeTargetPlan === "Leadership" ? 24_900 : null;
@@ -11702,6 +11735,10 @@ Please enter your card details below to complete your registration securely. Tot
           phone: input.phone.trim(),
           email: input.email.trim().toLowerCase(),
           currentBelt: input.currentBelt,
+          currentStripeColor: input.currentStripeColor,
+          currentStripeCount: input.currentStripeCount,
+          stripeProgressVerified: input.stripeProgressVerified ? 1 : 0,
+          promotionEligibility: eligibility,
           nextBelt: expectedNextBelt,
           currentProgram: input.currentProgram || null,
           instructor: null,
@@ -11731,7 +11768,7 @@ Please enter your card details below to complete your registration securely. Tot
         if (paymentAmountCents === 0) {
           await notifyOwner({
             title: `🥋 Promotion Intent Needs Review — ${input.studentName.trim()}`,
-            content: `${input.parentName.trim()} submitted an intent for ${input.studentName.trim()} (${input.currentBelt} → ${expectedNextBelt}) with no automatic payment due. Review fee eligibility, instructor approval, and ceremony roster. Upgrade request: ${input.upgradeTargetPlan || "none"}.`,
+            content: `${input.parentName.trim()} submitted an intent for ${input.studentName.trim()} (${input.currentBelt}, ${input.currentStripeColor} ${input.currentStripeCount}/4 → ${expectedNextBelt}) with no automatic payment due. Review stripe eligibility, instructor approval, and ceremony roster. Upgrade request: ${input.upgradeTargetPlan || "none"}.`,
           });
           return { checkoutUrl: null, intentId, paymentStatus: "manual_review", totalAmountCents: 0, promotionFeeCents: 0, equipmentFeeCents: 0, upgradeDifferenceCents: currentMonthlyCents !== null && upgradeTargetMonthlyCents !== null ? upgradeTargetMonthlyCents - currentMonthlyCents : null };
         }
@@ -11774,7 +11811,7 @@ Please enter your card details below to complete your registration securely. Tot
       .query(async ({ input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-        const [row] = await db.select({ id: schema.beltTestIntents.id, studentName: schema.beltTestIntents.studentName, nextBelt: schema.beltTestIntents.nextBelt, paymentStatus: schema.beltTestIntents.paymentStatus, amountPaid: schema.beltTestIntents.amountPaid, equipmentPaymentStatus: schema.beltTestIntents.equipmentPaymentStatus, upgradeStatus: schema.beltTestIntents.upgradeStatus, ceremonyStatus: schema.beltTestIntents.ceremonyStatus }).from(schema.beltTestIntents).where(and(eq(schema.beltTestIntents.id, input.intentId), eq(schema.beltTestIntents.eventId, OCTOBER_PROMOTION_EVENT_ID))).limit(1);
+        const [row] = await db.select({ id: schema.beltTestIntents.id, studentName: schema.beltTestIntents.studentName, currentBelt: schema.beltTestIntents.currentBelt, currentStripeColor: schema.beltTestIntents.currentStripeColor, currentStripeCount: schema.beltTestIntents.currentStripeCount, promotionEligibility: schema.beltTestIntents.promotionEligibility, nextBelt: schema.beltTestIntents.nextBelt, paymentStatus: schema.beltTestIntents.paymentStatus, amountPaid: schema.beltTestIntents.amountPaid, equipmentPaymentStatus: schema.beltTestIntents.equipmentPaymentStatus, upgradeStatus: schema.beltTestIntents.upgradeStatus, ceremonyStatus: schema.beltTestIntents.ceremonyStatus }).from(schema.beltTestIntents).where(and(eq(schema.beltTestIntents.id, input.intentId), eq(schema.beltTestIntents.eventId, OCTOBER_PROMOTION_EVENT_ID))).limit(1);
         if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Promotion intent not found" });
         return row;
       }),
@@ -11814,8 +11851,8 @@ Please enter your card details below to complete your registration securely. Tot
       }),
 
     updateRoster: staffOrAdminProcedure
-      .input(z.object({ intentId: z.number().int().positive(), instructorApproved: z.boolean().optional(), ceremonyStatus: z.enum(["pending", "ready", "promoted", "not_promoted", "absent"]).optional(), uniformSize: z.string().max(50).optional(), upgradeStatus: z.enum(["not_requested", "requested", "approved_pending_billing", "completed", "declined"]).optional() }))
-      .mutation(async ({ input }) => {
+      .input(z.object({ intentId: z.number().int().positive(), instructorApproved: z.boolean().optional(), ceremonyStatus: z.enum(["pending", "ready", "promoted", "not_promoted", "absent"]).optional(), uniformSize: z.string().max(50).optional(), upgradeStatus: z.enum(["not_requested", "requested", "approved_pending_billing", "completed", "declined"]).optional(), eligibilityException: z.boolean().optional(), exceptionNote: z.string().max(1000).optional() }))
+      .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
         const [row] = await db.select({ id: schema.beltTestIntents.id }).from(schema.beltTestIntents).where(and(eq(schema.beltTestIntents.id, input.intentId), eq(schema.beltTestIntents.eventId, OCTOBER_PROMOTION_EVENT_ID))).limit(1);
@@ -11825,6 +11862,12 @@ Please enter your card details below to complete your registration securely. Tot
         if (input.ceremonyStatus !== undefined) updates.ceremonyStatus = input.ceremonyStatus;
         if (input.uniformSize !== undefined) updates.uniformSize = input.uniformSize;
         if (input.upgradeStatus !== undefined) updates.upgradeStatus = input.upgradeStatus;
+        if (input.eligibilityException !== undefined) {
+          if (input.eligibilityException && !input.exceptionNote?.trim()) throw new TRPCError({ code: "BAD_REQUEST", message: "Document the reason for a promotion eligibility exception." });
+          updates.eligibilityException = input.eligibilityException ? 1 : 0;
+          updates.eligibilityExceptionNote = input.eligibilityException ? input.exceptionNote!.trim() : null;
+          updates.eligibilityExceptionApprovedBy = input.eligibilityException ? ctx.user.id : null;
+        }
         await db.update(schema.beltTestIntents).set(updates).where(eq(schema.beltTestIntents.id, input.intentId));
         return { success: true };
       }),

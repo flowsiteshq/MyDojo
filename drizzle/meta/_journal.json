@@ -610,6 +610,13 @@
       "when": 1793207261251,
       "tag": "0086_curved_vulture",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "5",
+      "when": 1793215578695,
+      "tag": "0087_blue_lionheart",
+      "breakpoints": true
     }
   ]
 }

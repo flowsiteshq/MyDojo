@@ -11,6 +11,27 @@ describe("October belt promotion workflow", () => {
   it("derives the next belt server-side and refuses arbitrary next ranks", () => {
     expect(routerSource).toContain("nextPromotionBelt(input.currentBelt)");
     expect(routerSource).toContain("The next belt must follow MyDojo's configured ranking system");
+    expect(routerSource).toContain('const PROMOTION_BELT_SEQUENCE = BELT_RANKS.filter(rank => rank !== "No Belt")');
+    expect(pageSource).toContain("Current belt rank");
+    expect(pageSource).toContain("Current stripe color");
+    expect(pageSource).toContain("Number of stripes");
+  });
+
+  it("requires four black stripes for evaluation readiness and keeps incomplete progress separate", () => {
+    expect(routerSource).toContain('promotionEligibility(color: PromotionStripeColor, count: number): "incomplete" | "ready_for_evaluation"');
+    expect(routerSource).toContain("stripeProgressUnits(color, count) >= 16");
+    expect(routerSource).toContain('currentStripeColor: z.enum(PROMOTION_STRIPE_COLORS)');
+    expect(routerSource).toContain('currentStripeCount: z.number().int().min(0).max(4)');
+    expect(pageSource).toContain("STRIPE PROGRESSION INCOMPLETE");
+    expect(pageSource).toContain("BELT PROMOTION ELIGIBLE FOR REVIEW");
+    expect(pageSource).toContain("Stripes are progress markers, not separate belt ranks");
+  });
+
+  it("preserves documented staff exceptions without coupling them to payment", () => {
+    expect(routerSource).toContain("eligibilityException");
+    expect(routerSource).toContain("Document the reason for a promotion eligibility exception");
+    expect(pageSource).toContain("Four black stripes means ready for belt evaluation—not an automatic promotion");
+    expect(pageSource).toContain("Payment status remains PENDING");
   });
 
   it("keeps below-orange submissions in manual review and does not auto-charge them", () => {

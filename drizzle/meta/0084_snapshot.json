@@ -2,7 +2,7 @@
   "version": "5",
   "dialect": "mysql",
   "id": "652457e7-c25e-4082-8334-1bafe8cb8d80",
-  "prevId": "5295f614-a37c-4a29-9ca3-759375c38e81",
+  "prevId": "de271260-a95c-4c54-a266-437aeef9db64",
   "tables": {
     "adminConfig": {
       "name": "adminConfig",
