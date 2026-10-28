@@ -61,6 +61,7 @@ import MyDojoBucksPage from "./MyDojoBucks";
 import { toast } from "sonner";
 import { programs } from "@/data/programs";
 import { STUDENT_SHOP_PRODUCTS } from "@/data/shopCatalog";
+import { ParentPortalHome } from "@/components/ParentPortalHome";
 Chart.register(...registerables);
 
 // ─── Theme-aware token helper ─────────────────────────────────────────────────
@@ -2515,6 +2516,25 @@ export default function MemberDashboard2() {
         {/* ── DASHBOARD TAB ── */}
         {activeTab === "home" && (
           <>
+            <ParentPortalHome
+              firstName={firstName}
+              user={user}
+              selfPhotoUrl={selfPhotoUrl}
+              initials={initials}
+              enrollment={enrollment}
+              myEnrollment={myEnrollment}
+              progressStats={progressStats}
+              nextClass={nextClass}
+              unreadCount={unreadCount}
+              childProfiles={(enrollment as any)?.children ?? []}
+              setActiveTab={setActiveTab}
+              setTrainingDialog={setTrainingDialog}
+            />
+          </>
+        )}
+
+        {false && activeTab === "home" && (
+          <>
             <div className="space-y-5 px-4 pb-8 pt-5 sm:px-6 lg:mx-auto lg:max-w-6xl">
               {(() => {
                 const currentBelt = progressStats?.beltRank ?? enrollment?.enrollment?.beltRank ?? "No Belt";
@@ -2835,7 +2855,7 @@ export default function MemberDashboard2() {
               <div className="flex items-center justify-center py-16">
                 <div className="w-10 h-10 rounded-full border-4 border-[#E11D2A] border-t-transparent animate-spin" />
               </div>
-            ) : !todayClasses || todayClasses.length === 0 ? (
+            ) : (todayClasses ?? []).length === 0 ? (
               <div className={`rounded-2xl border p-12 text-center ${
                 isDark ? 'border-white/8 bg-white/3' : 'border-gray-200 bg-white'
               }`}>
@@ -2847,7 +2867,7 @@ export default function MemberDashboard2() {
               </div>
             ) : (
               <div className="space-y-3">
-                {todayClasses.map((cls) => {
+                {(todayClasses ?? []).map((cls) => {
                   const now = new Date();
                   const nowMins = now.getHours() * 60 + now.getMinutes();
                   const [rawH, rawM] = cls.startTime.replace(/(AM|PM)/i, '').trim().split(':').map(Number);
@@ -2991,8 +3011,8 @@ export default function MemberDashboard2() {
                 {nextClass && (
                   <div className="absolute top-4 right-4 z-10 rounded-xl border border-white/20 bg-black/70 backdrop-blur p-4 max-w-[200px]">
                     <p className="text-[10px] font-bold tracking-widest text-[#E11D2A] uppercase mb-1">Next Class</p>
-                    <p className="text-sm font-bold text-white leading-tight">{nextClass.program}</p>
-                    <p className="text-xs text-white/50 mt-1">{nextClass.day} · {nextClass.startTime}</p>
+                    <p className="text-sm font-bold text-white leading-tight">{nextClass?.program}</p>
+                    <p className="text-xs text-white/50 mt-1">{nextClass?.day} · {nextClass?.startTime}</p>
                     <button className="mt-2 text-xs font-semibold text-[#E11D2A] hover:underline">Set Reminder</button>
                   </div>
                 )}
@@ -3191,24 +3211,24 @@ export default function MemberDashboard2() {
                 <h3 className={`font-bold text-sm uppercase tracking-wider ${t.textMuted} mb-4`}>Membership Management</h3>
                 <div className={`rounded-2xl border p-6 ${isDark ? 'border-white/8 bg-white/5' : 'border-gray-200 bg-white'}`}>
                   {/* Status Banner */}
-                  {myEnrollment.isFrozen ? (
+                  {myEnrollment?.isFrozen ? (
                     <div className="flex items-center gap-3 mb-5 p-4 rounded-xl bg-blue-50 border border-blue-200">
                       <Snowflake className="h-5 w-5 text-blue-500 shrink-0" />
                       <div>
                         <p className="font-semibold text-blue-800 text-sm">Membership Frozen</p>
                         <p className="text-xs text-blue-600">
-                          Freeze period: {myEnrollment.freezeStartDate ? new Date(myEnrollment.freezeStartDate).toLocaleDateString() : ''}
-                          {' – '}{myEnrollment.freezeEndDate ? new Date(myEnrollment.freezeEndDate).toLocaleDateString() : ''}
+                          Freeze period: {myEnrollment?.freezeStartDate ? new Date(myEnrollment?.freezeStartDate ?? '').toLocaleDateString() : ''}
+                          {' – '}{myEnrollment?.freezeEndDate ? new Date(myEnrollment?.freezeEndDate ?? '').toLocaleDateString() : ''}
                         </p>
                       </div>
                     </div>
-                  ) : myEnrollment.cancellationRequestedAt ? (
+                  ) : myEnrollment?.cancellationRequestedAt ? (
                     <div className="flex items-center gap-3 mb-5 p-4 rounded-xl bg-amber-50 border border-amber-200">
                       <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
                       <div>
                         <p className="font-semibold text-amber-800 text-sm">Cancellation Pending</p>
                         <p className="text-xs text-amber-600">
-                          Final billing date: {myEnrollment.cancellationEffectiveDate ? new Date(myEnrollment.cancellationEffectiveDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Processing'}
+                          Final billing date: {myEnrollment?.cancellationEffectiveDate ? new Date(myEnrollment?.cancellationEffectiveDate ?? '').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Processing'}
                         </p>
                       </div>
                     </div>
@@ -3216,10 +3236,10 @@ export default function MemberDashboard2() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Freeze */}
-                    {!myEnrollment.cancellationRequestedAt && (
-                      myEnrollment.isFrozen ? (
+                    {!myEnrollment?.cancellationRequestedAt && (
+                      myEnrollment?.isFrozen ? (
                         <button
-                          onClick={() => myEnrollment.id && unfreezeMutation.mutate({ enrollmentId: myEnrollment.id })}
+                          onClick={() => myEnrollment?.id && unfreezeMutation.mutate({ enrollmentId: myEnrollment?.id })}
                           disabled={unfreezeMutation.isPending}
                           className="flex items-center gap-3 p-4 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 transition-colors text-left"
                         >
@@ -3266,7 +3286,7 @@ export default function MemberDashboard2() {
                     </button>
 
                     {/* Cancel */}
-                    {!myEnrollment.cancellationRequestedAt && (
+                    {!myEnrollment?.cancellationRequestedAt && (
                       <button
                         onClick={() => setShowCancelDialog(true)}
                         className={`flex items-center gap-3 p-4 rounded-xl border transition-colors text-left ${
@@ -3485,7 +3505,7 @@ export default function MemberDashboard2() {
                       Keep Membership
                     </button>
                     <button
-                      onClick={() => myEnrollment?.id && requestCancellationMutation.mutate({ enrollmentId: myEnrollment.id, reason: cancelReason || undefined })}
+                      onClick={() => myEnrollment?.id && requestCancellationMutation.mutate({ enrollmentId: myEnrollment?.id, reason: cancelReason || undefined })}
                       disabled={requestCancellationMutation.isPending}
                       className="flex-1 py-3 rounded-xl font-semibold text-sm bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
                     >
@@ -3562,7 +3582,7 @@ export default function MemberDashboard2() {
                     </button>
                     <button
                       onClick={() => myEnrollment?.id && freezeStartDate && freezeEndDate && freezeMutation.mutate({
-                        enrollmentId: myEnrollment.id,
+                        enrollmentId: myEnrollment?.id,
                         freezeStartDate,
                         freezeEndDate,
                         reason: freezeReason || undefined,
