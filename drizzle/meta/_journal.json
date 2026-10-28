@@ -554,6 +554,27 @@
       "when": 1786716956867,
       "tag": "0078_solid_nebula",
       "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "5",
+      "when": 1793207147665,
+      "tag": "0079_chemical_christian_walker",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "5",
+      "when": 1793207199749,
+      "tag": "0080_burly_reavers",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "5",
+      "when": 1793207261251,
+      "tag": "0081_curved_vulture",
+      "breakpoints": true
     }
   ]
 }

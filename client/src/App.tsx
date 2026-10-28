@@ -113,6 +113,9 @@ const AdminBeltTestIntents = lazy(() => import("./pages/AdminBeltTestIntents"));
 const MemberPortal = lazy(() => import("./pages/MemberPortal"));
 const AdminNewsletter = lazy(() => import("./pages/AdminNewsletter"));
 const AdminEventRegistrations = lazy(() => import("./pages/AdminEventRegistrations"));
+const BeltPromotion = lazy(() => import("./pages/BeltPromotion"));
+const BeltPromotionSuccess = lazy(() => import("./pages/BeltPromotionSuccess"));
+const AdminBeltPromotions = lazy(() => import("./pages/AdminBeltPromotions"));
 
 // Loading component — subtle fade-in bar at the top, no jarring red circle
 const PageLoader = () => (
@@ -214,11 +217,14 @@ function Router() {
         <Route path="/staff-clock-in" component={StaffClockIn} />
         <Route path="/belt-test-intent" component={BeltTestIntent} />
         <Route path="/belt-test-intent/success" component={BeltTestIntentSuccess} />
+        <Route path="/belt-promotion" component={BeltPromotion} />
+        <Route path="/belt-promotion/success" component={BeltPromotionSuccess} />
         <Route path="/august-2026" component={AugustCalendar} />
         <Route path="/parents-night-out-aug" component={ParentsNightOutAug} />
         <Route path="/master-yaeger-seminar" component={MasterYaegerSeminar} />
         <Route path="/member" component={MemberPortal} />
         <Route path="/admin/belt-test-intents" component={AdminBeltTestIntents} />
+        <Route path="/admin/belt-promotions" component={AdminBeltPromotions} />
             <Route path="/admin/newsletter" component={AdminNewsletter} />
         <Route path="/admin/event-registrations" component={AdminEventRegistrations} />
         

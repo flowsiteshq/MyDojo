@@ -71,6 +71,7 @@ import { scheduledPaymentsRouter } from './scheduledPaymentsRouter';
 import { sendLeadConfirmationSms } from "./leadConfirmationSms";
 import { getEnrollmentAgreementVersion, renderEnrollmentAgreementPdf } from "./enrollmentAgreementPdf";
 import { getOrCreateStripeCustomer, getStripe } from "./stripeHelper";
+import { notifyOwner } from "./_core/notification";
 
 function getInsertedRecordId(result: unknown, recordName: string): number {
   const candidateValues = [
@@ -81,6 +82,56 @@ function getInsertedRecordId(result: unknown, recordName: string): number {
   const id = candidateValues.map(value => Number(value)).find(value => Number.isInteger(value) && value > 0);
   if (!id) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `Unable to create ${recordName}` });
   return id;
+}
+
+const OCTOBER_PROMOTION_EVENT_ID = "oct-2026-belt-promotion";
+const OCTOBER_PROMOTION_DEADLINE_UTC = "2026-10-29T04:59:59.999Z"; // Oct 28, 11:59 PM CDT
+const OCTOBER_PROMOTION_CEREMONY = "2026-10-31T16:00:00.000Z"; // Oct 31, 11:00 AM CDT
+const BELT_PROMOTION_ACKNOWLEDGMENT = "I understand that submitting an Intent to Promote form indicates my student's desire to participate in the upcoming belt promotion. Promotion is subject to instructor approval, demonstration of required skills, and completion of all applicable testing requirements.";
+const PROMOTION_BELT_SEQUENCE = [
+  "White Belt",
+  "White Belt 1 White Stripe", "White Belt 2 White Stripes", "White Belt 3 White Stripes", "White Belt 4 White Stripes",
+  "Yellow Belt",
+  "Yellow Belt 1 Yellow Stripe", "Yellow Belt 2 Yellow Stripes", "Yellow Belt 3 Yellow Stripes", "Yellow Belt 4 Yellow Stripes",
+  "Orange Belt",
+  "Orange Belt 1 Orange Stripe", "Orange Belt 2 Orange Stripes", "Orange Belt 3 Orange Stripes", "Orange Belt 4 Orange Stripes",
+  "Green Belt",
+  "Green Belt 1 Green Stripe", "Green Belt 2 Green Stripes", "Green Belt 3 Green Stripes", "Green Belt 4 Green Stripes",
+  "Green Belt 5 Green Stripes", "Green Belt 6 Green Stripes", "Green Belt 7 Green Stripes", "Green Belt 8 Green Stripes",
+  "Blue Belt",
+  "Blue Belt 1 Blue Stripe", "Blue Belt 2 Blue Stripes", "Blue Belt 3 Blue Stripes", "Blue Belt 4 Blue Stripes",
+  "Blue Belt 5 Blue Stripes", "Blue Belt 6 Blue Stripes", "Blue Belt 7 Blue Stripes", "Blue Belt 8 Blue Stripes",
+  "Purple Belt",
+  "Purple Belt 1 Purple Stripe", "Purple Belt 2 Purple Stripes", "Purple Belt 3 Purple Stripes", "Purple Belt 4 Purple Stripes",
+  "Purple Belt 5 Purple Stripes", "Purple Belt 6 Purple Stripes", "Purple Belt 7 Purple Stripes", "Purple Belt 8 Purple Stripes",
+  "Brown Belt",
+  "Brown Belt 1 Brown Stripe", "Brown Belt 2 Brown Stripes", "Brown Belt 3 Brown Stripes", "Brown Belt 4 Brown Stripes",
+  "Brown Belt 5 Brown Stripes", "Brown Belt 6 Brown Stripes", "Brown Belt 7 Brown Stripes", "Brown Belt 8 Brown Stripes",
+  "Probationary Black",
+  "Black Belt 1st Dan",
+  "Black Belt 2nd Dan",
+  "Black Belt 3rd Dan",
+];
+
+function promotionBeltIndex(value: string): number {
+  const normalized = value.replace(/[()]/g, "").trim().toLowerCase();
+  return PROMOTION_BELT_SEQUENCE.findIndex(rank => normalized === rank.toLowerCase());
+}
+
+function nextPromotionBelt(currentBelt: string): string | null {
+  const index = promotionBeltIndex(currentBelt);
+  return index >= 0 && index < PROMOTION_BELT_SEQUENCE.length - 1 ? PROMOTION_BELT_SEQUENCE[index + 1] : null;
+}
+
+function promotionFeeCents(currentBelt: string): number {
+  return promotionBeltIndex(currentBelt) >= promotionBeltIndex("Orange Belt") ? 4_900 : 0;
+}
+
+async function getOctoberPromotionDeadline(db: Awaited<ReturnType<typeof getDb>>): Promise<Date> {
+  if (!db) return new Date(OCTOBER_PROMOTION_DEADLINE_UTC);
+  const [row] = await db.select().from(schema.adminConfig).where(eq(schema.adminConfig.key, "octoberBeltPromotionDeadline")).limit(1);
+  const parsed = row?.value ? new Date(row.value) : new Date(OCTOBER_PROMOTION_DEADLINE_UTC);
+  return Number.isNaN(parsed.getTime()) ? new Date(OCTOBER_PROMOTION_DEADLINE_UTC) : parsed;
 }
 
 export const appRouter = router({
@@ -11404,6 +11455,253 @@ Please enter your card details below to complete your registration securely. Tot
         const db = await getDb();
         if (!db) throw new Error('Database not available');
         return db.select().from(schema.beltTestIntents).orderBy(desc(schema.beltTestIntents.createdAt));
+      }),
+  }),
+
+  // ─── October Belt Promotion ────────────────────────────────────────────────────
+  beltPromotion: router({
+    getConfig: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const deadline = await getOctoberPromotionDeadline(db);
+      return {
+        eventId: OCTOBER_PROMOTION_EVENT_ID,
+        eventName: "MyDojo October Belt Promotion Ceremony",
+        ceremonyAt: OCTOBER_PROMOTION_CEREMONY,
+        deadline: deadline.toISOString(),
+        acknowledgment: BELT_PROMOTION_ACKNOWLEDGMENT,
+        promotionPackageCents: 4_900,
+        equipmentCents: 17_900,
+        nextRanks: PROMOTION_BELT_SEQUENCE,
+      };
+    }),
+
+    lookupExistingStudent: publicProcedure
+      .input(z.object({ email: z.string().email(), phone: z.string().min(7) }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return null;
+        const cleanPhone = input.phone.replace(/\D/g, "");
+        const [row] = await db.select({
+          studentName: schema.enrollments.studentName,
+          parentName: schema.enrollments.customerName,
+          phone: schema.enrollments.customerPhone,
+          email: schema.enrollments.customerEmail,
+          currentBelt: schema.enrollments.beltRank,
+          currentProgram: schema.membershipPackages.name,
+          currentMonthlyPrice: schema.membershipPackages.monthlyPrice,
+        })
+          .from(schema.enrollments)
+          .leftJoin(schema.membershipPackages, eq(schema.enrollments.membershipPackageId, schema.membershipPackages.id))
+          .where(and(
+            eq(schema.enrollments.customerEmail, input.email.trim().toLowerCase()),
+            sql`REPLACE(REPLACE(REPLACE(REPLACE(${schema.enrollments.customerPhone}, '-', ''), ' ', ''), '(', ''), ')', '') = ${cleanPhone}`,
+            ne(schema.enrollments.status, "cancelled"),
+          ))
+          .orderBy(desc(schema.enrollments.createdAt))
+          .limit(1);
+        if (!row) return null;
+        return { ...row, currentBelt: row.currentBelt || "White Belt" };
+      }),
+
+    submit: publicProcedure
+      .input(z.object({
+        studentName: z.string().min(1).max(255),
+        parentName: z.string().min(1).max(255),
+        phone: z.string().min(10).max(20),
+        email: z.string().email().max(320),
+        currentBelt: z.string().min(1).max(100),
+        nextBelt: z.string().max(100).optional(),
+        currentProgram: z.string().max(255).optional(),
+        instructorRecommendationStatus: z.enum(["pending", "recommended", "not_yet"]).default("pending"),
+        signatureName: z.string().min(1).max(255),
+        signedAt: z.string().datetime(),
+        parentAcknowledgment: z.boolean().refine(value => value, "Parent acknowledgment is required"),
+        upgradeTargetPlan: z.enum(["Basic", "Black Belt", "Leadership"]).optional(),
+        equipmentChoice: z.enum(["add", "already_have", "later"]).default("later"),
+        equipmentSize: z.string().max(50).optional(),
+        uniformSize: z.string().max(50).optional(),
+        notes: z.string().max(2000).optional(),
+        eventId: z.string().default(OCTOBER_PROMOTION_EVENT_ID),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        if (input.eventId !== OCTOBER_PROMOTION_EVENT_ID) throw new TRPCError({ code: "BAD_REQUEST", message: "This promotion event is not available" });
+        const deadline = await getOctoberPromotionDeadline(db);
+        if (Date.now() > deadline.getTime()) throw new TRPCError({ code: "BAD_REQUEST", message: "The promotion deadline has passed. Please contact MyDojo for an exception." });
+
+        const expectedNextBelt = nextPromotionBelt(input.currentBelt);
+        if (!expectedNextBelt) throw new TRPCError({ code: "BAD_REQUEST", message: "Your current belt is not eligible for the configured October promotion path. Please contact MyDojo." });
+        if (input.nextBelt && input.nextBelt !== expectedNextBelt) throw new TRPCError({ code: "BAD_REQUEST", message: "The next belt must follow MyDojo's configured ranking system." });
+        if (input.equipmentChoice === "add" && !input.equipmentSize) throw new TRPCError({ code: "BAD_REQUEST", message: "Select an equipment size before adding sparring gear." });
+
+        const [duplicate] = await db.select({ id: schema.beltTestIntents.id, paymentStatus: schema.beltTestIntents.paymentStatus })
+          .from(schema.beltTestIntents)
+          .where(and(
+            eq(schema.beltTestIntents.eventId, OCTOBER_PROMOTION_EVENT_ID),
+            eq(schema.beltTestIntents.email, input.email.trim().toLowerCase()),
+            eq(schema.beltTestIntents.studentName, input.studentName.trim()),
+          ))
+          .limit(1);
+        if (duplicate) throw new TRPCError({ code: "CONFLICT", message: "An Intent to Promote already exists for this student and event. Please contact staff if you need to correct it." });
+
+        const promotionFee = promotionFeeCents(input.currentBelt);
+        const equipmentFee = input.equipmentChoice === "add" ? 17_900 : 0;
+        const paymentAmountCents = promotionFee + equipmentFee;
+        const upgradeTargetMonthlyCents = input.upgradeTargetPlan === "Basic" ? 14_900 : input.upgradeTargetPlan === "Black Belt" ? 19_900 : input.upgradeTargetPlan === "Leadership" ? 24_900 : null;
+        const [currentEnrollment] = await db.select({ monthlyPrice: schema.membershipPackages.monthlyPrice })
+          .from(schema.enrollments)
+          .leftJoin(schema.membershipPackages, eq(schema.enrollments.membershipPackageId, schema.membershipPackages.id))
+          .where(and(eq(schema.enrollments.customerEmail, input.email.trim().toLowerCase()), ne(schema.enrollments.status, "cancelled")))
+          .orderBy(desc(schema.enrollments.createdAt))
+          .limit(1);
+        const currentMonthlyCents = currentEnrollment?.monthlyPrice ? Math.round(Number(currentEnrollment.monthlyPrice) * 100) : null;
+        const upgradeStatus = input.upgradeTargetPlan ? "requested" : "not_requested";
+
+        const insertResult = await db.insert(schema.beltTestIntents).values({
+          eventId: OCTOBER_PROMOTION_EVENT_ID,
+          studentName: input.studentName.trim(),
+          parentName: input.parentName.trim(),
+          phone: input.phone.trim(),
+          email: input.email.trim().toLowerCase(),
+          currentBelt: input.currentBelt,
+          nextBelt: expectedNextBelt,
+          currentProgram: input.currentProgram || null,
+          instructor: null,
+          instructorRecommendationStatus: input.instructorRecommendationStatus,
+          notes: input.notes || null,
+          paymentStatus: paymentAmountCents > 0 ? "pending" : "manual_review",
+          paymentAmountCents,
+          paymentProvider: paymentAmountCents > 0 ? "stripe" : null,
+          parentAcknowledgment: 1,
+          signatureName: input.signatureName.trim(),
+          signedAt: new Date(input.signedAt),
+          upgradeStatus,
+          upgradeTargetPlan: input.upgradeTargetPlan || null,
+          upgradeRequestedAt: input.upgradeTargetPlan ? new Date() : null,
+          upgradeCurrentMonthlyCents: currentMonthlyCents,
+          upgradeNewMonthlyCents: upgradeTargetMonthlyCents,
+          upgradeDifferenceCents: currentMonthlyCents !== null && upgradeTargetMonthlyCents !== null ? upgradeTargetMonthlyCents - currentMonthlyCents : null,
+          equipmentChoice: input.equipmentChoice,
+          equipmentSize: input.equipmentSize || null,
+          equipmentPaymentStatus: input.equipmentChoice === "add" ? (paymentAmountCents > 0 ? "pending" : "manual_review") : "not_selected",
+          ceremonyStatus: "pending",
+          uniformSize: input.uniformSize || null,
+          childIndex: 0,
+        });
+        const intentId = getInsertedRecordId(insertResult, "October promotion intent");
+
+        if (paymentAmountCents === 0) {
+          await notifyOwner({
+            title: `🥋 Promotion Intent Needs Review — ${input.studentName.trim()}`,
+            content: `${input.parentName.trim()} submitted an intent for ${input.studentName.trim()} (${input.currentBelt} → ${expectedNextBelt}) with no automatic payment due. Review fee eligibility, instructor approval, and ceremony roster. Upgrade request: ${input.upgradeTargetPlan || "none"}.`,
+          });
+          return { checkoutUrl: null, intentId, paymentStatus: "manual_review", totalAmountCents: 0, promotionFeeCents: 0, equipmentFeeCents: 0, upgradeDifferenceCents: currentMonthlyCents !== null && upgradeTargetMonthlyCents !== null ? upgradeTargetMonthlyCents - currentMonthlyCents : null };
+        }
+
+        try {
+          const stripe = getStripe();
+          const origin = (ctx.req.headers.origin as string) || process.env.PUBLIC_SITE_URL || "https://www.mydojoma.com";
+          const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+          if (promotionFee > 0) lineItems.push({ price_data: { currency: "usd", product_data: { name: "October Belt Promotion Package", description: "Official new belt, rank certificate, updated curriculum, instructor evaluation, and October 31 ceremony participation." }, unit_amount: promotionFee }, quantity: 1 });
+          if (equipmentFee > 0) lineItems.push({ price_data: { currency: "usd", product_data: { name: "Belt Promotion Sparring Gear Special", description: "Headgear, hand pads, foot pads, and mouthpiece. Size: " + input.equipmentSize }, unit_amount: equipmentFee }, quantity: 1 });
+          const session = await stripe.checkout.sessions.create({
+            mode: "payment",
+            payment_method_types: ["card"],
+            customer_email: input.email.trim().toLowerCase(),
+            line_items: lineItems,
+            client_reference_id: String(intentId),
+            metadata: {
+              type: "october_belt_promotion_payment",
+              intent_id: String(intentId),
+              event_id: OCTOBER_PROMOTION_EVENT_ID,
+              student_name: input.studentName.trim(),
+              parent_name: input.parentName.trim(),
+              payment_amount_cents: String(paymentAmountCents),
+            },
+            success_url: `${origin}/belt-promotion/success?intent_id=${intentId}`,
+            cancel_url: `${origin}/belt-promotion?checkout=cancelled`,
+          });
+          if (!session.url) throw new Error("Stripe did not return a hosted checkout URL");
+          await db.update(schema.beltTestIntents).set({ stripeSessionId: session.id, paymentReference: session.id }).where(eq(schema.beltTestIntents.id, intentId));
+          return { checkoutUrl: session.url, intentId, paymentStatus: "pending", totalAmountCents: paymentAmountCents, promotionFeeCents: promotionFee, equipmentFeeCents: equipmentFee, upgradeDifferenceCents: currentMonthlyCents !== null && upgradeTargetMonthlyCents !== null ? upgradeTargetMonthlyCents - currentMonthlyCents : null };
+        } catch (error) {
+          await db.update(schema.beltTestIntents).set({ paymentStatus: "failed" }).where(eq(schema.beltTestIntents.id, intentId));
+          console.error("[October Belt Promotion] Failed to create checkout", { intentId, error });
+          throw new TRPCError({ code: "BAD_GATEWAY", message: "The secure payment page could not be started. Your intent was saved for staff review; please try again later or contact MyDojo." });
+        }
+      }),
+
+    getStatus: publicProcedure
+      .input(z.object({ intentId: z.number().int().positive() }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const [row] = await db.select({ id: schema.beltTestIntents.id, studentName: schema.beltTestIntents.studentName, nextBelt: schema.beltTestIntents.nextBelt, paymentStatus: schema.beltTestIntents.paymentStatus, amountPaid: schema.beltTestIntents.amountPaid, equipmentPaymentStatus: schema.beltTestIntents.equipmentPaymentStatus, upgradeStatus: schema.beltTestIntents.upgradeStatus, ceremonyStatus: schema.beltTestIntents.ceremonyStatus }).from(schema.beltTestIntents).where(and(eq(schema.beltTestIntents.id, input.intentId), eq(schema.beltTestIntents.eventId, OCTOBER_PROMOTION_EVENT_ID))).limit(1);
+        if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Promotion intent not found" });
+        return row;
+      }),
+
+    adminDashboard: staffOrAdminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const rows = await db.select().from(schema.beltTestIntents).where(eq(schema.beltTestIntents.eventId, OCTOBER_PROMOTION_EVENT_ID)).orderBy(desc(schema.beltTestIntents.createdAt));
+      const paid = rows.filter(row => row.paymentStatus === "paid");
+      return {
+        deadline: (await getOctoberPromotionDeadline(db)).toISOString(),
+        ceremonyAt: OCTOBER_PROMOTION_CEREMONY,
+        totalEligible: rows.length,
+        intentsSubmitted: rows.length,
+        awaitingCompletion: rows.filter(row => row.paymentStatus !== "paid" || !row.instructorApproved).length,
+        testingFeesCollected: paid.reduce((sum, row) => sum + (row.amountPaid || 0), 0),
+        testingFeesOutstanding: rows.filter(row => row.paymentStatus !== "paid").reduce((sum, row) => sum + row.paymentAmountCents, 0),
+        upgradesRequested: rows.filter(row => row.upgradeStatus === "requested").length,
+        upgradesCompleted: rows.filter(row => row.upgradeStatus === "completed").length,
+        sparringPackagesPurchased: rows.filter(row => row.equipmentChoice === "add" && row.equipmentPaymentStatus === "paid").length,
+        totalRevenueCollected: paid.reduce((sum, row) => sum + (row.amountPaid || 0), 0),
+        readyForCeremony: rows.filter(row => row.paymentStatus === "paid" && row.instructorApproved === 1 && row.ceremonyStatus === "ready").length,
+        rows,
+      };
+    }),
+
+    manuallyVerifyPayment: staffOrAdminProcedure
+      .input(z.object({ intentId: z.number().int().positive(), amountCents: z.number().int().nonnegative(), provider: z.enum(["paypal", "stripe", "fluidpay", "cash", "other"]), reference: z.string().min(1).max(255) }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const [row] = await db.select().from(schema.beltTestIntents).where(and(eq(schema.beltTestIntents.id, input.intentId), eq(schema.beltTestIntents.eventId, OCTOBER_PROMOTION_EVENT_ID))).limit(1);
+        if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Promotion intent not found" });
+        if (input.amountCents !== row.paymentAmountCents) throw new TRPCError({ code: "BAD_REQUEST", message: `Amount must exactly match the expected total of $${(row.paymentAmountCents / 100).toFixed(2)}.` });
+        await db.update(schema.beltTestIntents).set({ paymentStatus: "paid", amountPaid: input.amountCents, paymentProvider: input.provider, paymentReference: input.reference, equipmentPaymentStatus: row.equipmentChoice === "add" ? "paid" : row.equipmentPaymentStatus }).where(eq(schema.beltTestIntents.id, input.intentId));
+        return { success: true };
+      }),
+
+    updateRoster: staffOrAdminProcedure
+      .input(z.object({ intentId: z.number().int().positive(), instructorApproved: z.boolean().optional(), ceremonyStatus: z.enum(["pending", "ready", "promoted", "not_promoted", "absent"]).optional(), uniformSize: z.string().max(50).optional(), upgradeStatus: z.enum(["not_requested", "requested", "approved_pending_billing", "completed", "declined"]).optional() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const [row] = await db.select({ id: schema.beltTestIntents.id }).from(schema.beltTestIntents).where(and(eq(schema.beltTestIntents.id, input.intentId), eq(schema.beltTestIntents.eventId, OCTOBER_PROMOTION_EVENT_ID))).limit(1);
+        if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Promotion intent not found" });
+        const updates: Partial<typeof schema.beltTestIntents.$inferInsert> = {};
+        if (input.instructorApproved !== undefined) updates.instructorApproved = input.instructorApproved ? 1 : 0;
+        if (input.ceremonyStatus !== undefined) updates.ceremonyStatus = input.ceremonyStatus;
+        if (input.uniformSize !== undefined) updates.uniformSize = input.uniformSize;
+        if (input.upgradeStatus !== undefined) updates.upgradeStatus = input.upgradeStatus;
+        await db.update(schema.beltTestIntents).set(updates).where(eq(schema.beltTestIntents.id, input.intentId));
+        return { success: true };
+      }),
+
+    setDeadline: adminProcedure
+      .input(z.object({ deadline: z.string().datetime() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const deadline = new Date(input.deadline);
+        if (Number.isNaN(deadline.getTime())) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid deadline" });
+        await db.insert(schema.adminConfig).values({ key: "octoberBeltPromotionDeadline", value: deadline.toISOString() }).onDuplicateKeyUpdate({ set: { value: deadline.toISOString() } });
+        return { deadline: deadline.toISOString() };
       }),
   }),
 

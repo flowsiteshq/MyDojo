@@ -51,6 +51,8 @@ export async function handleStripeWebhook(req: Request, res: Response) {
           await handleBirthdayPartyDeposit(session);
         } else if (session.metadata?.type === "belt_test_intent") {
           await handleBeltTestIntentPayment(session);
+        } else if (session.metadata?.type === "october_belt_promotion_payment") {
+          await handleOctoberBeltPromotionPayment(session);
         } else if (session.metadata?.type === "event_registration") {
           await handleEventRegistrationPayment(session);
         } else if (session.metadata?.type === "intro_offer") {
@@ -922,6 +924,51 @@ async function handleBeltTestIntentPayment(session: Stripe.Checkout.Session) {
   }
 
   console.log(`[Stripe Webhook] Belt test intent confirmed for ${studentName} — $${amountPaid}`);
+}
+
+/**
+ * Handles the October 31 promotion package checkout. The browser return URL is
+ * never trusted; payment_status and the expected stored amount are verified here.
+ */
+async function handleOctoberBeltPromotionPayment(session: Stripe.Checkout.Session) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  if (session.payment_status !== "paid") throw new Error("October promotion checkout did not complete payment");
+
+  const intentId = Number(session.metadata?.intent_id);
+  if (!Number.isInteger(intentId) || intentId <= 0) throw new Error("October promotion checkout is missing its intent reference");
+  const [intent] = await db.select().from(beltTestIntents).where(eq(beltTestIntents.id, intentId)).limit(1);
+  if (!intent) throw new Error(`October promotion intent ${intentId} was not found`);
+  if (intent.paymentStatus === "paid" && intent.paymentReference === session.id) return;
+
+  const actualAmount = session.amount_total ?? 0;
+  if (actualAmount !== intent.paymentAmountCents) {
+    await db.update(beltTestIntents).set({ paymentStatus: "manual_review", paymentProvider: "stripe", paymentReference: session.id }).where(eq(beltTestIntents.id, intentId));
+    throw new Error(`October promotion amount mismatch for intent ${intentId}: expected ${intent.paymentAmountCents}, received ${actualAmount}`);
+  }
+
+  await db.update(beltTestIntents).set({
+    paymentStatus: "paid",
+    amountPaid: actualAmount,
+    paymentProvider: "stripe",
+    paymentReference: session.id,
+    stripeSessionId: session.id,
+    equipmentPaymentStatus: intent.equipmentChoice === "add" ? "paid" : intent.equipmentPaymentStatus,
+  }).where(eq(beltTestIntents.id, intentId));
+
+  await notifyOwner({
+    title: `🥋 October Promotion Payment Verified — ${intent.studentName}`,
+    content: [
+      `Student: ${intent.studentName}`,
+      `Parent: ${intent.parentName}`,
+      `Promotion: ${intent.currentBelt} → ${intent.nextBelt ?? "Pending instructor confirmation"}`,
+      `Amount verified: $${(actualAmount / 100).toFixed(2)}`,
+      `Equipment: ${intent.equipmentChoice === "add" ? `Sparring gear (${intent.equipmentSize ?? "size pending"})` : "Not purchased"}`,
+      `Intent ID: ${intent.id}`,
+      `Stripe session: ${session.id}`,
+      `Next step: verify instructor approval and ceremony readiness in Operations → Belt Promotions.`,
+    ].join("\n"),
+  });
 }
 
 /**
