@@ -3,24 +3,58 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const routerSource = fs.readFileSync(path.resolve(import.meta.dirname, 'routers.ts'), 'utf8');
+const paypalRouterSource = fs.readFileSync(path.resolve(import.meta.dirname, 'paypalRouter.ts'), 'utf8');
+const helperSource = fs.readFileSync(path.resolve(import.meta.dirname, 'paypalHelper.ts'), 'utf8');
+const schemaSource = fs.readFileSync(path.resolve(import.meta.dirname, '../drizzle/schema.ts'), 'utf8');
 const pageSource = fs.readFileSync(path.resolve(import.meta.dirname, '../client/src/pages/BirthdayParties.tsx'), 'utf8');
-const webhookSource = fs.readFileSync(path.resolve(import.meta.dirname, 'stripeWebhook.ts'), 'utf8');
 
-describe('Birthday Party deposit checkout', () => {
-  it('creates server-priced 50% deposits for each published package', () => {
+describe('Birthday Party Stripe full-payment checkout', () => {
+  it('uses server-controlled full package prices and persists the booking before creating the order', () => {
     expect(routerSource).toContain("createCheckout: publicProcedure");
-    expect(routerSource).toContain("ninja: { name: 'Ninja Party', totalCents: 19_900, depositCents: 9_950 }");
-    expect(routerSource).toContain("champion: { name: 'Champion Party', totalCents: 29_900, depositCents: 14_950 }");
-    expect(routerSource).toContain("blackbelt: { name: 'Black Belt VIP Party', totalCents: 44_900, depositCents: 22_450 }");
-    expect(routerSource).toContain("stripe.checkout.sessions.create");
-    expect(routerSource).toContain("type: 'birthday_party_deposit'");
-    expect(webhookSource).toContain('session.metadata?.type === "birthday_party_deposit"');
-    expect(webhookSource).toContain('handleBirthdayPartyDeposit(session)');
+    expect(routerSource).toContain("ninja: { name: 'Ninja Party', totalCents: 19_900 }");
+    expect(routerSource).toContain("champion: { name: 'Champion Party', totalCents: 29_900 }");
+    expect(routerSource).toContain("blackbelt: { name: 'Black Belt VIP Party', totalCents: 44_900 }");
+    expect(routerSource).toContain('schema.partyBookings).values');
+    expect(routerSource).toContain('stripeCheckoutSessionId: session.id');
+    expect(routerSource).toContain("type: 'birthday_party_checkout'");
+    expect(routerSource).toContain("status: 'pending'");
+    expect(routerSource).toContain('return { checkoutUrl: session.url');
+    expect(schemaSource).toContain('export const partyBookings = mysqlTable("partyBookings"');
   });
 
-  it('redirects the public booking form to the secure checkout instead of only sending a request', () => {
+  it('validates the PayPal order against the stored booking before marking paid', () => {
+    expect(paypalRouterSource).toContain('getPayPalOrder(orderId)');
+    expect(paypalRouterSource).toContain('unit?.reference_id !== expectedReference');
+    expect(paypalRouterSource).toContain('actualCurrency !== booking.currency');
+    expect(paypalRouterSource).toContain('actualAmount !== (booking.amountCents / 100).toFixed(2)');
+    expect(paypalRouterSource).toContain('status: "paid"');
+    expect(helperSource).toContain('export async function getPayPalOrder');
+  });
+
+  it('stores and deduplicates verified PayPal webhook events', () => {
+    expect(schemaSource).toContain('export const paypalEvents = mysqlTable("paypalEvents"');
+    expect(paypalRouterSource).toContain('schema.paypalEvents.paypalEventId, event.id');
+    expect(paypalRouterSource).toContain('verifyPayPalWebhookSignature');
+    expect(paypalRouterSource).toContain('processingStatus: "processed"');
+  });
+
+  it('routes the public birthday form to the secure checkout and no longer advertises a deposit', () => {
     expect(pageSource).toContain('trpc.birthday.createCheckout.useMutation');
     expect(pageSource).toContain('window.location.assign(checkoutUrl)');
-    expect(pageSource).toContain('PAY 50% DEPOSIT & REQUEST DATE');
+    expect(pageSource).toContain('Booking Pending Payment');
+    expect(pageSource).toContain('PAY IN FULL SECURELY');
+    expect(pageSource).not.toContain('PAY 50% DEPOSIT');
+  });
+
+  it('provides an admin-only exact-amount manual reconciliation path', () => {
+    expect(routerSource).toContain('reconcileHostedPayment: adminProcedure');
+    expect(routerSource).toContain('paymentConfirmationMethod: \'paypal_manual\'');
+    expect(routerSource).toContain('booking.amountCents !== input.amountCents');
+    expect(routerSource).toContain('Birthday Payment Manually Confirmed');
+  });
+
+  it('does not mark hosted-link bookings paid from a browser return', () => {
+    expect(paypalRouterSource).toContain('Never capture or mark a booking paid because a browser reached this route.');
+    expect(paypalRouterSource).toContain('return res.redirect(303, "/birthday-parties?payment=pending")');
   });
 });

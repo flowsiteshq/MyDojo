@@ -37,7 +37,7 @@ export default function AdminBeltTestIntents() {
             </div>
             <div>
               <h1 className="text-2xl font-black uppercase">Belt Test Intents</h1>
-              <p className="text-gray-400 text-sm">August 15th, 2026 — Intent to Promote Submissions</p>
+              <p className="text-gray-400 text-sm">October 31st, 2026 at 10:00 AM — Intent to Promote Submissions</p>
             </div>
           </div>
           <Button onClick={exportCSV} variant="outline" className="border-zinc-600 text-white hover:bg-zinc-800 gap-2">

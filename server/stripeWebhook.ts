@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import Stripe from "stripe";
 import { getDb } from "./db";
-import { enrollments, membershipPackages, trialSignups, beltTestIntents, eventRegistrations, shopOrders, introOfferPurchases, dayPasses, attendance, familyGroups, familyGroupMembers, paymentFailures, summerCampEnrollments, familyKickboxingAddOns, scheduledPayments, promoCodes } from "../drizzle/schema";
+import { enrollments, membershipPackages, trialSignups, beltTestIntents, eventRegistrations, shopOrders, introOfferPurchases, dayPasses, attendance, familyGroups, familyGroupMembers, paymentFailures, summerCampEnrollments, familyKickboxingAddOns, scheduledPayments, promoCodes, partyBookings } from "../drizzle/schema";
 import { eq, sql } from "drizzle-orm";
 import { notifyOwner } from "./_core/notification";
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_LIVE_SECRET_KEY || "";
-const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
+const STRIPE_SECRET_KEY = process.env.STRIPE_DESTINATION_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || "";
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_DESTINATION_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET || "";
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
   apiVersion: "2026-01-28.clover",
@@ -47,7 +47,7 @@ export async function handleStripeWebhook(req: Request, res: Response) {
         // Route based on metadata type
         if (session.metadata?.type === "belt_exam") {
           await handleBeltExamPayment(session);
-        } else if (session.metadata?.type === "birthday_party_deposit") {
+        } else if (session.metadata?.type === "birthday_party_checkout" || session.metadata?.type === "birthday_party_deposit") {
           await handleBirthdayPartyDeposit(session);
         } else if (session.metadata?.type === "belt_test_intent") {
           await handleBeltTestIntentPayment(session);
@@ -123,6 +123,27 @@ async function handleBirthdayPartyDeposit(session: Stripe.Checkout.Session) {
   };
   const partyPackage = packageLabels[metadata.birthday_package ?? ""] ?? "Birthday Party";
   const deposit = ((session.amount_total ?? 0) / 100).toFixed(2);
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable while fulfilling birthday party checkout");
+  const bookingReference = metadata.bookingReference;
+  if (bookingReference) {
+    const [booking] = await db.select().from(partyBookings)
+      .where(eq(partyBookings.bookingReference, bookingReference)).limit(1);
+    if (!booking) throw new Error("Birthday checkout is not linked to a MyDojo booking");
+    if (Number(session.amount_total ?? 0) !== booking.amountCents) {
+      throw new Error("Birthday checkout amount does not match the stored booking amount");
+    }
+    if (booking.status !== "paid") {
+      await db.update(partyBookings).set({
+        status: "paid",
+        stripeCheckoutSessionId: session.id,
+        stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
+        paymentConfirmationReference: session.id,
+        paidAt: new Date(),
+        lastError: null,
+      }).where(eq(partyBookings.id, booking.id));
+    }
+  }
   await notifyOwner({
     title: `Birthday Deposit Paid — ${partyPackage}`,
     content: [

@@ -462,6 +462,10 @@ export const enrollments = mysqlTable("enrollments", {
   stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   /** Stripe Subscription ID (if recurring billing) */
   stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
+  /** PayPal billing plan ID for recurring membership */
+  paypalPlanId: varchar("paypalPlanId", { length: 255 }),
+  /** PayPal subscription ID for recurring membership */
+  paypalSubscriptionId: varchar("paypalSubscriptionId", { length: 255 }),
   /** Stripe PaymentMethod ID — tokenized reference only, never a raw card number */
   stripePaymentMethodId: varchar("stripePaymentMethodId", { length: 255 }),
   /** Safe display metadata for the saved recurring payment method */
@@ -1104,6 +1108,63 @@ export const webhookEvents = mysqlTable("webhookEvents", {
 
 export type WebhookEvent = typeof webhookEvents.$inferSelect;
 export type InsertWebhookEvent = typeof webhookEvents.$inferInsert;
+
+// ─── PayPal party bookings ────────────────────────────────────────────────────
+/** Durable record linking a birthday-party request to one PayPal order. */
+export const partyBookings = mysqlTable("partyBookings", {
+  id: int("id").autoincrement().primaryKey(),
+  bookingReference: varchar("bookingReference", { length: 64 }).notNull().unique(),
+  packageId: varchar("packageId", { length: 32 }).notNull(),
+  packageName: varchar("packageName", { length: 100 }).notNull(),
+  amountCents: int("amountCents").notNull(),
+  currency: varchar("currency", { length: 3 }).default("USD").notNull(),
+  parentName: varchar("parentName", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  childName: varchar("childName", { length: 255 }).notNull(),
+  childAge: varchar("childAge", { length: 2 }),
+  partyDate: varchar("partyDate", { length: 10 }).notNull(),
+  guestCount: varchar("guestCount", { length: 3 }),
+  message: text("message"),
+  /** Stripe Checkout session created for the new destination account. */
+  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 255 }).unique(),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }).unique(),
+  paypalOrderId: varchar("paypalOrderId", { length: 64 }).unique(),
+  /** PayPal-hosted payment link identifier used when checkout is completed outside the app. */
+  paypalHostedLinkId: varchar("paypalHostedLinkId", { length: 64 }),
+  paypalCaptureId: varchar("paypalCaptureId", { length: 64 }).unique(),
+  payerId: varchar("payerId", { length: 64 }),
+  /** Manual reconciliation evidence for hosted-link payments. */
+  paymentConfirmationMethod: mysqlEnum("paymentConfirmationMethod", ["paypal_webhook", "paypal_manual"]),
+  paymentConfirmedBy: int("paymentConfirmedBy"),
+  paymentConfirmationReference: varchar("paymentConfirmationReference", { length: 128 }),
+  status: mysqlEnum("status", ["pending", "approved", "paid", "failed", "cancelled"]).default("pending").notNull(),
+  paidAt: timestamp("paidAt"),
+  lastError: text("lastError"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PartyBooking = typeof partyBookings.$inferSelect;
+export type InsertPartyBooking = typeof partyBookings.$inferInsert;
+
+// ─── PayPal webhook events ───────────────────────────────────────────────────
+/** Idempotency ledger for verified PayPal webhook deliveries. */
+export const paypalEvents = mysqlTable("paypalEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  paypalEventId: varchar("paypalEventId", { length: 64 }).notNull().unique(),
+  eventType: varchar("eventType", { length: 150 }).notNull(),
+  resourceId: varchar("resourceId", { length: 128 }),
+  rawPayload: json("rawPayload").notNull(),
+  signatureValid: boolean("signatureValid").default(false).notNull(),
+  processingStatus: mysqlEnum("processingStatus", ["pending", "processed", "ignored", "error"]).default("pending").notNull(),
+  processingError: text("processingError"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  processedAt: timestamp("processedAt"),
+});
+
+export type PayPalEvent = typeof paypalEvents.$inferSelect;
+export type InsertPayPalEvent = typeof paypalEvents.$inferInsert;
 
 // ─── Payment Failures ─────────────────────────────────────────────────────────
 /**
@@ -1785,6 +1846,17 @@ export const pnoRsvps = mysqlTable("pnoRsvps", {
   friendName: varchar("friendName", { length: 255 }),
   /** Any dietary restrictions or notes */
   notes: text("notes"),
+  /** Required emergency contact for youth events */
+  emergencyContactName: varchar("emergencyContactName", { length: 255 }),
+  emergencyContactPhone: varchar("emergencyContactPhone", { length: 20 }),
+  /** Required acknowledgement of the event waiver */
+  waiverAccepted: int("waiverAccepted").notNull().default(0),
+  /** Payment state for paid event editions; historical free rows remain intact */
+  paymentStatus: varchar("paymentStatus", { length: 30 }).notNull().default("free"),
+  amountCents: int("amountCents").notNull().default(0),
+  paypalOrderId: varchar("paypalOrderId", { length: 64 }).unique(),
+  paypalCaptureId: varchar("paypalCaptureId", { length: 64 }),
+  paidAt: timestamp("paidAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type PnoRsvp = typeof pnoRsvps.$inferSelect;
@@ -2443,6 +2515,8 @@ export const beltTestIntents = mysqlTable("beltTestIntents", {
   paymentStatus: varchar("paymentStatus", { length: 30 }).notNull().default("pending"),
   stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
   stripeSessionId: varchar("stripeSessionId", { length: 255 }),
+  paypalOrderId: varchar("paypalOrderId", { length: 64 }).unique(),
+  paypalCaptureId: varchar("paypalCaptureId", { length: 64 }),
   amountPaid: int("amountPaid").default(0),
   paymentAmountCents: int("paymentAmountCents").notNull().default(0),
   paymentProvider: varchar("paymentProvider", { length: 30 }),

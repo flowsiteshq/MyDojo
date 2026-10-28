@@ -837,6 +837,12 @@ export async function createPnoRsvp(data: {
   bringingFriend: boolean;
   friendName?: string;
   notes?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  waiverAccepted?: boolean;
+  paymentStatus?: string;
+  amountCents?: number;
+  paypalOrderId?: string;
 }) {
   const db = await getDb();
   if (!db) throw new Error("DB unavailable");
@@ -851,6 +857,12 @@ export async function createPnoRsvp(data: {
     bringingFriend: data.bringingFriend ? 1 : 0,
     friendName: data.friendName,
     notes: data.notes,
+    emergencyContactName: data.emergencyContactName,
+    emergencyContactPhone: data.emergencyContactPhone,
+    waiverAccepted: data.waiverAccepted ? 1 : 0,
+    paymentStatus: data.paymentStatus ?? "free",
+    amountCents: data.amountCents ?? 0,
+    paypalOrderId: data.paypalOrderId,
   });
   return result;
 }

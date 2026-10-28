@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "45a0e455-4e29-408c-9316-32d4b53d8039",
-  "prevId": "d9f3195a-1fdd-4784-8478-c34345b1c55e",
+  "id": "d758b645-06f1-4e37-a6bf-c3fdc0d4b049",
+  "prevId": "c8efcee0-999c-43bf-bd1c-163400102c45",
   "tables": {
     "adminConfig": {
       "name": "adminConfig",
@@ -481,7 +481,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'oct-2026-belt-promotion'"
+          "default": "'aug-2026-belt-test'"
         },
         "groupId": {
           "name": "groupId",
@@ -533,34 +533,12 @@
           "notNull": true,
           "autoincrement": false
         },
-        "nextBelt": {
-          "name": "nextBelt",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "currentProgram": {
-          "name": "currentProgram",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "instructor": {
           "name": "instructor",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
-        },
-        "instructorRecommendationStatus": {
-          "name": "instructorRecommendationStatus",
-          "type": "varchar(30)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'pending'"
         },
         "notes": {
           "name": "notes",
@@ -598,139 +576,6 @@
           "notNull": false,
           "autoincrement": false,
           "default": 0
-        },
-        "paymentAmountCents": {
-          "name": "paymentAmountCents",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "paymentProvider": {
-          "name": "paymentProvider",
-          "type": "varchar(30)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "paymentReference": {
-          "name": "paymentReference",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "parentAcknowledgment": {
-          "name": "parentAcknowledgment",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "signatureName": {
-          "name": "signatureName",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "signedAt": {
-          "name": "signedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "upgradeStatus": {
-          "name": "upgradeStatus",
-          "type": "varchar(30)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'not_requested'"
-        },
-        "upgradeTargetPlan": {
-          "name": "upgradeTargetPlan",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "upgradeRequestedAt": {
-          "name": "upgradeRequestedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "upgradeCurrentMonthlyCents": {
-          "name": "upgradeCurrentMonthlyCents",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "upgradeNewMonthlyCents": {
-          "name": "upgradeNewMonthlyCents",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "upgradeDifferenceCents": {
-          "name": "upgradeDifferenceCents",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "equipmentChoice": {
-          "name": "equipmentChoice",
-          "type": "varchar(40)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'later'"
-        },
-        "equipmentSize": {
-          "name": "equipmentSize",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "equipmentPaymentStatus": {
-          "name": "equipmentPaymentStatus",
-          "type": "varchar(30)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'not_selected'"
-        },
-        "ceremonyStatus": {
-          "name": "ceremonyStatus",
-          "type": "varchar(30)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'pending'"
-        },
-        "instructorApproved": {
-          "name": "instructorApproved",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "uniformSize": {
-          "name": "uniformSize",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
         },
         "smsSent": {
           "name": "smsSent",
@@ -3052,6 +2897,20 @@
         },
         "stripeSubscriptionId": {
           "name": "stripeSubscriptionId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paypalPlanId": {
+          "name": "paypalPlanId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paypalSubscriptionId": {
+          "name": "paypalSubscriptionId",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false,
@@ -5458,6 +5317,229 @@
       },
       "checkConstraint": {}
     },
+    "partyBookings": {
+      "name": "partyBookings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "bookingReference": {
+          "name": "bookingReference",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "packageId": {
+          "name": "packageId",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "packageName": {
+          "name": "packageName",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "amountCents": {
+          "name": "amountCents",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'USD'"
+        },
+        "parentName": {
+          "name": "parentName",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "childName": {
+          "name": "childName",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "childAge": {
+          "name": "childAge",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "partyDate": {
+          "name": "partyDate",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "guestCount": {
+          "name": "guestCount",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paypalOrderId": {
+          "name": "paypalOrderId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paypalHostedLinkId": {
+          "name": "paypalHostedLinkId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paypalCaptureId": {
+          "name": "paypalCaptureId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "payerId": {
+          "name": "payerId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paymentConfirmationMethod": {
+          "name": "paymentConfirmationMethod",
+          "type": "enum('paypal_webhook','paypal_manual')",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paymentConfirmedBy": {
+          "name": "paymentConfirmedBy",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paymentConfirmationReference": {
+          "name": "paymentConfirmationReference",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('pending','approved','paid','failed','cancelled')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "paidAt": {
+          "name": "paidAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lastError": {
+          "name": "lastError",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "partyBookings_id": {
+          "name": "partyBookings_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "partyBookings_bookingReference_unique": {
+          "name": "partyBookings_bookingReference_unique",
+          "columns": [
+            "bookingReference"
+          ]
+        },
+        "partyBookings_paypalOrderId_unique": {
+          "name": "partyBookings_paypalOrderId_unique",
+          "columns": [
+            "paypalOrderId"
+          ]
+        },
+        "partyBookings_paypalCaptureId_unique": {
+          "name": "partyBookings_paypalCaptureId_unique",
+          "columns": [
+            "paypalCaptureId"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
     "paymentFailures": {
       "name": "paymentFailures",
       "columns": {
@@ -5577,6 +5659,103 @@
         }
       },
       "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "paypalEvents": {
+      "name": "paypalEvents",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "paypalEventId": {
+          "name": "paypalEventId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "eventType": {
+          "name": "eventType",
+          "type": "varchar(150)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resourceId": {
+          "name": "resourceId",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "rawPayload": {
+          "name": "rawPayload",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "signatureValid": {
+          "name": "signatureValid",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "processingStatus": {
+          "name": "processingStatus",
+          "type": "enum('pending','processed','ignored','error')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "processingError": {
+          "name": "processingError",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "processedAt": {
+          "name": "processedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "paypalEvents_id": {
+          "name": "paypalEvents_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "paypalEvents_paypalEventId_unique": {
+          "name": "paypalEvents_paypalEventId_unique",
+          "columns": [
+            "paypalEventId"
+          ]
+        }
+      },
       "checkConstraint": {}
     },
     "pnoRsvps": {
