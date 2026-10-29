@@ -272,11 +272,27 @@ export async function getMemberPaymentHistory(
   }
 
   // ── 2. Stripe (legacy / fallback) ────────────────────────────────────────
-  if (stripeCustomerId) {
+  // Some imported records retain a placeholder customer ID. Resolve only an
+  // exact email match in the verified destination account; never rewrite the
+  // enrollment record as part of a read-only dashboard request.
+  let resolvedStripeCustomerId = stripeCustomerId;
+  if (
+    (!resolvedStripeCustomerId || resolvedStripeCustomerId.startsWith("cus_test_")) &&
+    typeof stripe.customers?.list === "function"
+  ) {
+    try {
+      const matches = await stripe.customers.list({ email: customerEmail, limit: 10 });
+      const exactMatches = matches.data.filter((customer) => customer.email?.toLowerCase() === customerEmail.toLowerCase());
+      if (exactMatches.length === 1) resolvedStripeCustomerId = exactMatches[0].id;
+    } catch (error) {
+      console.error("[Member Dashboard] Error resolving Stripe customer by exact email:", error);
+    }
+  }
+  if (resolvedStripeCustomerId) {
     try {
       const [piList, invList] = await Promise.all([
-        stripe.paymentIntents.list({ customer: stripeCustomerId, limit: 20 }),
-        stripe.invoices.list({ customer: stripeCustomerId, limit: 20 }),
+        stripe.paymentIntents.list({ customer: resolvedStripeCustomerId, limit: 20 }),
+        stripe.invoices.list({ customer: resolvedStripeCustomerId, limit: 20 }),
       ]);
 
       payments.push(
