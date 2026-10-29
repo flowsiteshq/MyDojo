@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const routerSource = fs.readFileSync(path.resolve(import.meta.dirname, "paypalRouter.ts"), "utf8");
+const appRouterSource = fs.readFileSync(path.resolve(import.meta.dirname, "routers.ts"), "utf8");
 const helperSource = fs.readFileSync(path.resolve(import.meta.dirname, "paypalHelper.ts"), "utf8");
 const schemaSource = fs.readFileSync(path.resolve(import.meta.dirname, "../drizzle/schema.ts"), "utf8");
 const migrationSource = fs.readFileSync(
@@ -29,6 +30,21 @@ describe("PayPal belt-test checkout safeguards", () => {
     expect(routerSource).toContain("unit?.reference_id !== expectedReference");
     expect(routerSource).toContain('actualCurrency !== "USD"');
     expect(routerSource).toContain("actualAmount !== (expectedAmount / 100).toFixed(2)");
+  });
+
+  it("routes the Intent to Promote fee and optional gear through one PayPal order", () => {
+    expect(appRouterSource).toContain('paymentProvider: paymentAmountCents > 0 ? "paypal" : null');
+    expect(appRouterSource).toContain("amountCents: paymentAmountCents");
+    expect(appRouterSource).toContain("referenceId: `belt-${intentId}`");
+    expect(appRouterSource).toContain("customId: `belt-intent-${intentId}`");
+    expect(appRouterSource).toContain("paypalOrderId: order.orderId");
+    expect(appRouterSource).not.toContain('type: "october_belt_promotion_payment"');
+  });
+
+  it("reconciles the stored combined promotion and gear amount", () => {
+    expect(routerSource).toContain("intent.paymentAmountCents");
+    expect(routerSource).toContain('const includesGear = intents.some((intent) => intent.equipmentChoice === "add")');
+    expect(routerSource).toContain('equipmentPaymentStatus: "paid"');
   });
 
   it("records the verified PayPal capture in the student ledger", () => {

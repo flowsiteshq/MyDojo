@@ -11900,7 +11900,7 @@ Please enter your card details below to complete your registration securely. Tot
           notes: input.notes || null,
           paymentStatus: paymentAmountCents > 0 ? "pending" : "manual_review",
           paymentAmountCents,
-          paymentProvider: paymentAmountCents > 0 ? "stripe" : null,
+          paymentProvider: paymentAmountCents > 0 ? "paypal" : null,
           parentAcknowledgment: 1,
           signatureName: input.signatureName.trim(),
           signedAt: new Date(input.signedAt),
@@ -11928,31 +11928,19 @@ Please enter your card details below to complete your registration securely. Tot
         }
 
         try {
-          const stripe = getStripe();
           const origin = (ctx.req.headers.origin as string) || process.env.PUBLIC_SITE_URL || "https://www.mydojoma.com";
-          const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
-          if (promotionFee > 0) lineItems.push({ price_data: { currency: "usd", product_data: { name: "October Belt Promotion Package", description: "Official new belt, rank certificate, updated curriculum, instructor evaluation, and October 31 ceremony participation." }, unit_amount: promotionFee }, quantity: 1 });
-          if (equipmentFee > 0) lineItems.push({ price_data: { currency: "usd", product_data: { name: "Belt Promotion Sparring Gear Special", description: "Headgear, hand pads, foot pads, and mouthpiece. Size: " + input.equipmentSize }, unit_amount: equipmentFee }, quantity: 1 });
-          const session = await stripe.checkout.sessions.create({
-            mode: "payment",
-            payment_method_types: ["card"],
-            customer_email: input.email.trim().toLowerCase(),
-            line_items: lineItems,
-            client_reference_id: String(intentId),
-            metadata: {
-              type: "october_belt_promotion_payment",
-              intent_id: String(intentId),
-              event_id: OCTOBER_PROMOTION_EVENT_ID,
-              student_name: input.studentName.trim(),
-              parent_name: input.parentName.trim(),
-              payment_amount_cents: String(paymentAmountCents),
-            },
-            success_url: `${origin}/belt-promotion/success?intent_id=${intentId}`,
-            cancel_url: `${origin}/belt-promotion?checkout=cancelled`,
+          const order = await createPayPalOrder({
+            amountCents: paymentAmountCents,
+            referenceId: `belt-${intentId}`,
+            customId: `belt-intent-${intentId}`,
+            returnUrl: `${origin}/belt-promotion/success?intent_id=${intentId}`,
+            cancelUrl: `${origin}/belt-promotion?checkout=cancelled`,
           });
-          if (!session.url) throw new Error("Stripe did not return a hosted checkout URL");
-          await db.update(schema.beltTestIntents).set({ stripeSessionId: session.id, paymentReference: session.id }).where(eq(schema.beltTestIntents.id, intentId));
-          return { checkoutUrl: session.url, intentId, paymentStatus: "pending", totalAmountCents: paymentAmountCents, promotionFeeCents: promotionFee, equipmentFeeCents: equipmentFee, upgradeDifferenceCents: currentMonthlyCents !== null && upgradeTargetMonthlyCents !== null ? upgradeTargetMonthlyCents - currentMonthlyCents : null };
+          await db.update(schema.beltTestIntents).set({
+            paypalOrderId: order.orderId,
+            paymentReference: order.orderId,
+          }).where(eq(schema.beltTestIntents.id, intentId));
+          return { checkoutUrl: order.approvalUrl, intentId, paymentStatus: "pending", totalAmountCents: paymentAmountCents, promotionFeeCents: promotionFee, equipmentFeeCents: equipmentFee, upgradeDifferenceCents: currentMonthlyCents !== null && upgradeTargetMonthlyCents !== null ? upgradeTargetMonthlyCents - currentMonthlyCents : null };
         } catch (error) {
           await db.update(schema.beltTestIntents).set({ paymentStatus: "failed" }).where(eq(schema.beltTestIntents.id, intentId));
           console.error("[October Belt Promotion] Failed to create checkout", { intentId, error });

@@ -81,7 +81,10 @@ async function markBeltOrderPaid(orderId: string, captureId?: string) {
   const intents = await db.select().from(schema.beltTestIntents)
     .where(eq(schema.beltTestIntents.paypalOrderId, orderId));
   if (!intents.length) return false;
-  const expectedAmount = intents.length * 4900;
+  const expectedAmount = intents.reduce((sum, intent) => {
+    const storedAmount = Number(intent.paymentAmountCents);
+    return sum + (Number.isSafeInteger(storedAmount) && storedAmount > 0 ? storedAmount : 4900);
+  }, 0);
   const expectedReference = `belt-${intents[0].groupId || intents[0].id}`;
   const actualAmount = unit?.amount?.value;
   const actualCurrency = unit?.amount?.currency_code;
@@ -89,13 +92,15 @@ async function markBeltOrderPaid(orderId: string, captureId?: string) {
     throw new Error("PayPal belt-test order does not match the stored intent amount or reference");
   }
   if (intents.every((intent) => intent.paymentStatus === "paid")) return true;
-  const amountPerIntent = Math.round(expectedAmount / intents.length);
+  const amountPerIntent = intents.length === 1 ? expectedAmount : 4900;
+  const includesGear = intents.some((intent) => intent.equipmentChoice === "add");
   await db.update(schema.beltTestIntents).set({
     paymentStatus: "paid",
     paypalCaptureId: captureId ?? null,
     amountPaid: amountPerIntent,
     paymentProvider: "paypal",
     paymentReference: orderId,
+    ...(includesGear ? { equipmentPaymentStatus: "paid" } : {}),
   }).where(eq(schema.beltTestIntents.paypalOrderId, orderId));
   try {
     const { notifyOwner } = await import("./_core/notification");
