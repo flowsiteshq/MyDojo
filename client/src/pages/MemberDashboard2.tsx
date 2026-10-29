@@ -1701,10 +1701,10 @@ export default function MemberDashboard2() {
     { id: "bucks", label: "🪙 MyDojo Bucks" },
   ];
 
-  const navigatePortalTab = (tab: "home" | "children" | "benefits" | "training" | "locate" | "shop" | "account" | "messages") => {
+  const navigatePortalTab = (tab: "home" | "children" | "benefits" | "training" | "locate" | "shop" | "account" | "messages", dialog?: "schedule" | "curriculum" | "progress" | "attendance" | "testing") => {
     if (tab === "training") {
       setActiveTab("training");
-      setTrainingDialog(null);
+      setTrainingDialog(dialog ?? null);
       return;
     }
     setActiveTab(tab);
@@ -1903,7 +1903,7 @@ export default function MemberDashboard2() {
       </header>
 
       {/* ── Page Body ── */}
-      {activeTab !== "home" && <PortalSidebar activeTab={activeTab} onNavigate={navigatePortalTab} />}
+      {activeTab !== "home" && <PortalSidebar activeTab={activeTab} trainingDialog={trainingDialog} onNavigate={navigatePortalTab} />}
       <main className={activeTab === "home" ? "w-full px-0 py-0 pb-24" : "min-h-[calc(100vh-4rem)] max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24 lg:pl-[270px]"}>
 
         {/* ── BENEFITS TAB ── */}

@@ -13,21 +13,22 @@ type PortalTab = "home" | "children" | "benefits" | "training" | "locate" | "sho
 
 type Props = {
   activeTab: PortalTab;
-  onNavigate: (tab: PortalTab) => void;
+  trainingDialog: "schedule" | "curriculum" | "progress" | "attendance" | "testing" | null;
+  onNavigate: (tab: PortalTab, dialog?: "schedule" | "curriculum" | "progress" | "attendance" | "testing") => void;
 };
 
-const items: Array<{ label: string; icon: typeof Home; tab: PortalTab }> = [
+const items: Array<{ label: string; icon: typeof Home; tab: PortalTab; dialog?: "schedule" | "curriculum" | "progress" | "attendance" | "testing" }> = [
   { label: "Home", icon: Home, tab: "home" },
   { label: "My Students", icon: Users, tab: "children" },
-  { label: "Classes", icon: CalendarDays, tab: "training" },
-  { label: "Belt Progress", icon: Award, tab: "training" },
+  { label: "Classes", icon: CalendarDays, tab: "training", dialog: "schedule" },
+  { label: "Belt Progress", icon: Award, tab: "training", dialog: "progress" },
   { label: "Billing & Payments", icon: CreditCard, tab: "account" },
   { label: "Equipment Store", icon: ShoppingBag, tab: "shop" },
   { label: "Events", icon: Trophy, tab: "benefits" },
   { label: "Messages", icon: MessageCircle, tab: "messages" },
 ];
 
-export function PortalSidebar({ activeTab, onNavigate }: Props) {
+export function PortalSidebar({ activeTab, trainingDialog, onNavigate }: Props) {
   return (
     <aside className="fixed inset-y-16 left-0 z-40 hidden w-[238px] flex-col bg-[#090a0c] px-4 py-6 text-white lg:flex">
       <div className="flex items-center gap-3 px-3 pb-8">
@@ -35,13 +36,13 @@ export function PortalSidebar({ activeTab, onNavigate }: Props) {
         <span className="text-xl font-black tracking-[0.16em]">MYDOJO</span>
       </div>
       <nav className="space-y-1" aria-label="Member portal navigation">
-        {items.map(({ label, icon: Icon, tab }) => {
-          const selected = activeTab === tab || (tab === "training" && activeTab === "training");
+        {items.map(({ label, icon: Icon, tab, dialog }) => {
+          const selected = activeTab === tab && (tab !== "training" || (dialog === "schedule" ? trainingDialog === "schedule" : trainingDialog !== "schedule"));
           return (
             <button
               key={label}
               type="button"
-              onClick={() => onNavigate(tab)}
+              onClick={() => onNavigate(tab, dialog)}
               className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold transition ${
                 selected ? "bg-[#e10600] text-white" : "text-white/70 hover:bg-white/10 hover:text-white"
               }`}
