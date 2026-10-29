@@ -62,7 +62,7 @@ export function PartialBalancePaymentCard({ isDark, charges }: Props) {
     <div className={`rounded-xl border p-5 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-gray-200 bg-white"}`}>
       <div className="flex items-start gap-3">
         <div className="rounded-lg bg-[#E11D2A]/10 p-2"><CreditCard className="h-5 w-5 text-[#E11D2A]" /></div>
-        <div className="min-w-0 flex-1"><h3 className={`font-black ${isDark ? "text-white" : "text-gray-900"}`}>Pay toward your balance</h3><p className={`mt-1 text-xs ${isDark ? "text-white/60" : "text-gray-600"}`}>Choose any amount from $10.00 up to your verified outstanding balance of ${(maxCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}.</p></div>
+        <div className="min-w-0 flex-1"><h3 className={`font-black ${isDark ? "text-white" : "text-gray-900"}`}>Pay toward your balance</h3><p className={`mt-1 text-xs ${isDark ? "text-white/60" : "text-gray-600"}`}>Choose any amount from $1.00 up to your verified outstanding balance of ${(maxCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}.</p></div>
       </div>
       <div className={`mt-4 flex items-start gap-2 rounded-lg p-3 text-xs ${isDark ? "bg-amber-400/10 text-amber-200" : "bg-amber-50 text-amber-800"}`}><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><span>This is a one-time payment toward your verified balance. It does not change your recurring membership amount or schedule.</span></div>
       {!clientSecret ? (

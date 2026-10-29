@@ -2583,7 +2583,7 @@ Please enter your card details below to complete your registration securely. Tot
     // FluidPay remains manual-review until its tokenized transaction contract
     // is independently verified.
     createPartialBalancePayment: protectedProcedure
-      .input(z.object({ amountCents: z.number().int().min(1000), idempotencyKey: z.string().min(16).max(255) }))
+      .input(z.object({ amountCents: z.number().int().min(100), idempotencyKey: z.string().min(16).max(255) }))
       .mutation(async ({ ctx, input }) => {
         const billingMode = process.env.BILLING_CENTER_MODE === "live" ? "live" : process.env.BILLING_CENTER_MODE === "staging" ? "staging" : null;
         if (!billingMode) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Billing Center payment mode is not configured." });
@@ -2604,7 +2604,7 @@ Please enter your card details below to complete your registration securely. Tot
         const stripe = new Stripe(stripeKey, { apiVersion: "2026-01-28.clover" as any });
         const openInvoices = await stripe.invoices.list({ customer: row.stripeCustomerId!, status: "open", limit: 50 });
         const outstandingCents = openInvoices.data.reduce((sum, invoice) => sum + Math.max(0, invoice.amount_remaining || 0), 0);
-        if (outstandingCents < 1000) throw new TRPCError({ code: "BAD_REQUEST", message: "No verified outstanding balance is available for payment." });
+        if (outstandingCents < 100) throw new TRPCError({ code: "BAD_REQUEST", message: "No verified outstanding balance is available for payment." });
         if (input.amountCents > outstandingCents) throw new TRPCError({ code: "BAD_REQUEST", message: "Payment cannot exceed the verified outstanding balance." });
         const result = await db.insert(schema.billingPaymentAttempts).values({
           enrollmentId: row.id, userId: ctx.user.id, provider: "stripe", amountCents: input.amountCents,
