@@ -4,6 +4,18 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 
 type Props = { onBack: () => void };
+type ScheduleClass = {
+  id: number;
+  program: string;
+  ageLabel?: string;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  instructor?: string | null;
+  location: string;
+  eligible?: boolean;
+  eligibilityReason?: string;
+};
 
 const PROGRAM_IMAGES: Record<string, string> = {
   "Little Ninjas": "/images/program-little-ninjas.jpg",
@@ -75,11 +87,7 @@ export default function ClassScheduleDashboard({ onBack }: Props) {
   }, [selectedDate]);
 
   const reservations = reservationsQuery.data ?? [];
-  const classes = (scheduleQuery.data ?? []) as Array<(typeof scheduleQuery.data extends Array<infer T> ? T : never) & {
-    eligible?: boolean;
-    ageLabel?: string;
-    eligibilityReason?: string;
-  }>;
+  const classes = (scheduleQuery.data ?? []) as ScheduleClass[];
   const selectedReservations = reservations.filter((reservation) => reservation.classDate === selectedDate && reservation.enrollmentId === activeStudentId);
   const nextReservedClass = reservations.find((reservation) => reservation.enrollmentId === activeStudentId) ?? reservations[0];
   const isReserved = (classId: number, date: string) => reservations.some((reservation) => reservation.classScheduleId === classId && reservation.classDate === date && reservation.enrollmentId === activeStudentId && reservation.status === "confirmed");

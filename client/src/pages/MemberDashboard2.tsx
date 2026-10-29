@@ -2200,7 +2200,7 @@ export default function MemberDashboard2() {
             </div>
 
             {/* ── Focused Training Detail Modals ── */}
-            <Dialog open={trainingDialog !== null && trainingDialog !== "schedule"} onOpenChange={(open) => !open && closeTrainingModal()}>
+            <Dialog open={trainingDialog !== null} onOpenChange={(open) => !open && closeTrainingModal()}>
               <DialogContent showCloseButton={false} className={`max-h-[calc(100dvh-2rem)] max-w-3xl overflow-hidden p-0 gap-0 ${isDark ? "border-white/10 bg-zinc-950 text-white" : "border-slate-200 bg-white text-slate-950"}`}>
                 <div
                   className="will-change-transform"
