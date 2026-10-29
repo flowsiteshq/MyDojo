@@ -248,6 +248,18 @@ paypalRouter.post("/capture-order", async (req, res) => {
     else if (pno) await markPnoOrderPaid(orderId, captured.captureId);
     else if (belt) await markBeltOrderPaid(orderId, captured.captureId);
     else await markGearOrderPaid(orderId, captured.captureId);
+    if (gear) {
+      const [paidGear] = await db.select({
+        orderReference: schema.gearOrders.orderReference,
+        productName: schema.gearOrders.productName,
+        studentName: schema.gearOrders.studentName,
+        size: schema.gearOrders.size,
+        color: schema.gearOrders.color,
+        amountCents: schema.gearOrders.amountCents,
+        paymentStatus: schema.gearOrders.paymentStatus,
+      }).from(schema.gearOrders).where(eq(schema.gearOrders.paypalOrderId, orderId)).limit(1);
+      return res.json({ received: true, status: paidGear?.paymentStatus === "paid" ? "paid" : "pending", order: paidGear ?? null });
+    }
     return res.json({ received: true, status: "paid" });
   } catch (error) {
     console.error("[PayPal capture-order]", error);

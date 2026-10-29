@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, adminProcedure, router } from "./_core/trpc";
 import { getDb } from "./db";
 import * as schema from "../drizzle/schema";
 import { createPayPalOrder } from "./paypalHelper";
@@ -130,5 +130,38 @@ export const shopRouter = router({
         console.error("[PayPal gear checkout]", error);
         throw new TRPCError({ code: "BAD_GATEWAY", message: "Unable to create secure PayPal checkout." });
       }
+    }),
+
+  listPayPalGearOrders: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable." });
+    const orders = await db.select().from(schema.gearOrders).orderBy(desc(schema.gearOrders.createdAt));
+    const paid = orders.filter((order) => order.paymentStatus === "paid");
+    const refunded = orders.filter((order) => order.paymentStatus === "refunded");
+    return {
+      summary: {
+        packagesSold: paid.length,
+        grossSalesCents: paid.reduce((total, order) => total + order.amountCents, 0),
+        refundedCents: refunded.reduce((total, order) => total + order.amountCents, 0),
+        awaitingFulfillment: paid.filter((order) => order.fulfillmentStatus !== "fulfilled").length,
+        goal: 20,
+      },
+      orders,
+    };
+  }),
+
+  updatePayPalGearFulfillment: adminProcedure
+    .input(z.object({
+      orderReference: z.string().min(8).max(80),
+      fulfillmentStatus: z.enum(["pending", "ready", "fulfilled"]),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable." });
+      const [order] = await db.select().from(schema.gearOrders).where(eq(schema.gearOrders.orderReference, input.orderReference)).limit(1);
+      if (!order) throw new TRPCError({ code: "NOT_FOUND", message: "Gear order not found." });
+      if (order.paymentStatus !== "paid") throw new TRPCError({ code: "CONFLICT", message: "Only verified paid orders can be fulfilled." });
+      await db.update(schema.gearOrders).set({ fulfillmentStatus: input.fulfillmentStatus }).where(eq(schema.gearOrders.id, order.id));
+      return { success: true, orderReference: order.orderReference, fulfillmentStatus: input.fulfillmentStatus };
     }),
 });

@@ -226,13 +226,34 @@ export default function Shop() {
   const [checkoutDefaultColor, setCheckoutDefaultColor] = useState("");
   const [showBack, setShowBack] = useState<Record<string, boolean>>({});
   const [modalShowBack, setModalShowBack] = useState(false);
-  const [checkoutStatus, setCheckoutStatus] = useState<"success" | "cancelled" | null>(null);
+  const [checkoutStatus, setCheckoutStatus] = useState<"success" | "cancelled" | "pending" | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const status = params.get("shop");
     if (status === "success" || status === "cancelled") {
       setCheckoutStatus(status);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+    const gearStatus = params.get("gear");
+    const paypalToken = params.get("token");
+    if (gearStatus === "paypal-pending" && paypalToken) {
+      setCheckoutStatus("pending");
+      fetch("/api/paypal/capture-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: paypalToken }),
+      }).then(async (response) => {
+        if (!response.ok) throw new Error("Payment verification failed");
+        const result = await response.json() as { status?: string };
+        setCheckoutStatus(result.status === "paid" ? "success" : "pending");
+        window.history.replaceState({}, "", window.location.pathname);
+      }).catch(() => {
+        setCheckoutStatus("pending");
+        window.history.replaceState({}, "", window.location.pathname);
+      });
+    } else if (gearStatus === "cancelled") {
+      setCheckoutStatus("cancelled");
       window.history.replaceState({}, "", window.location.pathname);
     }
     const requestedProduct = params.get("product");
@@ -322,8 +343,8 @@ export default function Shop() {
       <section className="py-16 md:py-20">
         <div className="container">
           {checkoutStatus ? (
-            <div className={`mb-8 flex items-start justify-between gap-4 border p-5 ${checkoutStatus === "success" ? "border-green-200 bg-green-50 text-green-950" : "border-amber-200 bg-amber-50 text-amber-950"}`} role="status">
-              <div><p className="font-bold">{checkoutStatus === "success" ? "Order received" : "Checkout cancelled"}</p><p className="mt-1 text-sm">{checkoutStatus === "success" ? "Thank you for your order. Your MyDojo team will prepare your gear and follow up with fulfillment details." : "No payment was made. Your selected gear is still available whenever you are ready."}</p></div>
+            <div className={`mb-8 flex items-start justify-between gap-4 border p-5 ${checkoutStatus === "success" ? "border-green-200 bg-green-50 text-green-950" : checkoutStatus === "pending" ? "border-blue-200 bg-blue-50 text-blue-950" : "border-amber-200 bg-amber-50 text-amber-950"}`} role="status">
+              <div><p className="font-bold">{checkoutStatus === "success" ? "Payment verified — order received" : checkoutStatus === "pending" ? "Payment verification pending" : "Checkout cancelled"}</p><p className="mt-1 text-sm">{checkoutStatus === "success" ? "Your PayPal payment was verified. Your MyDojo team will prepare the selected gear and follow up with fulfillment details." : checkoutStatus === "pending" ? "We received the PayPal return, but will not mark the order paid until PayPal confirms the capture. If you completed checkout, please keep your PayPal receipt." : "No payment was made. Your selected gear is still available whenever you are ready."}</p></div>
               <button onClick={() => setCheckoutStatus(null)} className="text-sm font-bold underline">Dismiss</button>
             </div>
           ) : null}
