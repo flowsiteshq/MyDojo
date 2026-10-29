@@ -26,6 +26,34 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+function isSeasonallyVisible(program: string, date?: string) {
+  // The current admin schedule has no per-row season dates. Summer Camp is
+  // therefore restricted to the configured May–August operating season.
+  return program !== "Summer Camp" || !date || [5, 6, 7, 8].includes(Number(date.slice(5, 7)));
+}
+
+function ageOnDate(dateOfBirth: string | null | undefined, date: string) {
+  if (!dateOfBirth) return null;
+  const birth = new Date(`${dateOfBirth}T12:00:00`);
+  const current = new Date(`${date}T12:00:00`);
+  if (Number.isNaN(birth.getTime())) return null;
+  let age = current.getFullYear() - birth.getFullYear();
+  if (current.getMonth() < birth.getMonth() || (current.getMonth() === birth.getMonth() && current.getDate() < birth.getDate())) age -= 1;
+  return age;
+}
+
+function eligibilityFor(program: string, student: { dateOfBirth?: string | null; packageName?: string | null } | undefined, date: string) {
+  const age = ageOnDate(student?.dateOfBirth, date);
+  const packageName = (student?.packageName ?? "").toLowerCase();
+  if (program === "Summer Camp") return { eligible: isSeasonallyVisible(program, date), ageLabel: "Seasonal", eligibilityReason: "Summer Camp is not in session on this date." };
+  if (!student) return { eligible: false, ageLabel: "Member only", eligibilityReason: "Select an active student to check eligibility." };
+  if (program === "Little Ninjas" || program === "Little Ninjas & Me") return { eligible: age !== null && age >= 3 && age <= 5, ageLabel: "Ages 3–5", eligibilityReason: "Age-restricted program." };
+  if (program === "Dragon Kids" || program === "Dragon Kids & Teens" || program === "After School") return { eligible: age !== null && age >= 6 && age <= 12, ageLabel: "Ages 6–12", eligibilityReason: "Age-restricted program." };
+  if (program === "Teens" || program === "Teen Warriors") return { eligible: age !== null && age >= 13 && age <= 15, ageLabel: "Ages 13–15", eligibilityReason: "Age-restricted program." };
+  if (program === "Kickboxing") return { eligible: age !== null && age >= 16 && (packageName.includes("kick") || packageName.includes("black") || packageName.includes("leadership") || packageName.includes("foundation")), ageLabel: "Ages 16+", eligibilityReason: "Adult members with authorized kickboxing access." };
+  return { eligible: age !== null && age >= 16, ageLabel: "Ages 16+", eligibilityReason: "Adult program." };
+}
+
 export const classReservationRouter = router({
   /**
    * Get the full active class schedule, optionally filtered by day of week.
@@ -35,10 +63,20 @@ export const classReservationRouter = router({
     .input(z.object({
       date: z.string().optional(), // YYYY-MM-DD — if provided, also returns reservation counts for that date
       location: z.string().optional().default("Tomball HQ"),
+      enrollmentId: z.number().optional(),
     }))
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      const student = input.enrollmentId
+        ? (await db
+          .select({ dateOfBirth: schema.enrollments.dateOfBirth, packageName: schema.membershipPackages.name })
+          .from(schema.enrollments)
+          .leftJoin(schema.membershipPackages, eq(schema.enrollments.membershipPackageId, schema.membershipPackages.id))
+          .where(and(eq(schema.enrollments.id, input.enrollmentId), eq(schema.enrollments.status, "active")))
+          .limit(1))[0]
+        : undefined;
 
       const classes = await db
         .select()
@@ -46,7 +84,11 @@ export const classReservationRouter = router({
         .where(
           and(
             eq(schema.classSchedule.isActive, 1),
-            input.location ? eq(schema.classSchedule.location, input.location) : undefined
+            input.location ? or(
+              eq(schema.classSchedule.location, input.location),
+              sql`LOWER(${schema.classSchedule.location}) LIKE CONCAT('%', LOWER(${input.location}), '%')`,
+            ) : undefined,
+            input.date ? eq(schema.classSchedule.dayOfWeek, sql`DAYNAME(${input.date})`) : undefined,
           )
         )
         .orderBy(
@@ -71,10 +113,22 @@ export const classReservationRouter = router({
           .groupBy(schema.classReservations.classScheduleId);
 
         const countMap = new Map(reservations.map(r => [r.classScheduleId, r.count]));
-        return classes.map(c => ({ ...c, reservationCount: countMap.get(c.id) ?? 0 }));
+        const visible = classes.filter((c) => isSeasonallyVisible(c.program, input.date));
+        const unique = new Map<string, typeof visible[number]>();
+        for (const item of visible) {
+          const key = `${item.program}|${item.location}|${item.dayOfWeek}|${item.startTime}|${item.endTime}|${item.instructor ?? ""}`;
+          if (!unique.has(key)) unique.set(key, item);
+        }
+        return Array.from(unique.values()).map(c => ({ ...c, reservationCount: countMap.get(c.id) ?? 0, ...eligibilityFor(c.program, student, input.date!) }));
       }
 
-      return classes.map(c => ({ ...c, reservationCount: 0 }));
+      const visible = classes.filter((c) => isSeasonallyVisible(c.program));
+      const unique = new Map<string, typeof visible[number]>();
+      for (const item of visible) {
+        const key = `${item.program}|${item.location}|${item.dayOfWeek}|${item.startTime}|${item.endTime}|${item.instructor ?? ""}`;
+        if (!unique.has(key)) unique.set(key, item);
+      }
+      return Array.from(unique.values()).map(c => ({ ...c, reservationCount: 0 }));
     }),
 
   /**
@@ -182,6 +236,17 @@ export const classReservationRouter = router({
       }
 
       const cls = classSlot[0];
+      const eligibility = eligibilityFor(cls.program, {
+        dateOfBirth: enroll.dateOfBirth,
+        packageName: (await db
+          .select({ name: schema.membershipPackages.name })
+          .from(schema.membershipPackages)
+          .where(eq(schema.membershipPackages.id, enroll.membershipPackageId))
+          .limit(1))[0]?.name,
+      }, input.classDate);
+      if (!eligibility.eligible) {
+        throw new TRPCError({ code: "FORBIDDEN", message: `This student is not eligible for ${cls.program}.` });
+      }
 
       const insertData: typeof schema.classReservations.$inferInsert = {
         classScheduleId: input.classScheduleId,

@@ -2090,7 +2090,7 @@ export default function MemberDashboard2() {
         )}
 
         {/* ── TRAINING TAB ── */}
-        {activeTab === "training" && (
+        {activeTab === "training" && trainingDialog !== "schedule" && (
           <div className="space-y-8">
 
             {/* ── Training Dashboard Header ── */}
@@ -2229,14 +2229,14 @@ export default function MemberDashboard2() {
                     </button>
                     <DialogHeader className="gap-1 text-left">
                       <DialogTitle className={`text-xl font-black ${t.textPrimary}`}>
-                        {trainingDialog === "schedule" && "My Schedule"}
+                        {(trainingDialog as string) === "schedule" && "My Schedule"}
                         {trainingDialog === "curriculum" && "My Curriculum"}
                         {trainingDialog === "progress" && "My Progress"}
                         {trainingDialog === "attendance" && "My Attendance"}
                         {trainingDialog === "testing" && "Belt Testing"}
                       </DialogTitle>
                       <DialogDescription className={t.textSecondary}>
-                        {trainingDialog === "schedule" && "Your recurring classes and upcoming training times."}
+                        {(trainingDialog as string) === "schedule" && "Your recurring classes and upcoming training times."}
                         {trainingDialog === "curriculum" && "Review each technique and mark completed items as you practice."}
                         {trainingDialog === "progress" && "Track your belt journey, stripe progress, and training milestones."}
                         {trainingDialog === "attendance" && "See your consistency, recent class activity, and weekly attendance."}
@@ -2246,7 +2246,7 @@ export default function MemberDashboard2() {
                   </div>
 
                   <div className="max-h-[calc(100dvh-11rem)] overflow-y-auto p-5 sm:p-6">
-                  {trainingDialog === "schedule" && (
+                  {(trainingDialog as string) === "schedule" && (
                     <div className="space-y-3">
                       {((schedules?.length ? schedules : todayClasses) ?? []).length > 0 ? ((schedules?.length ? schedules : todayClasses) ?? []).map((schedule: any) => {
                         const scheduleDay = schedule.dayOfWeek || "Today";
