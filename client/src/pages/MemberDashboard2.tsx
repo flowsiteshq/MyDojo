@@ -1040,12 +1040,33 @@ function AccountTab({
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card isDark={isDark} className="p-4">
-          <div className="flex items-start justify-between"><CreditCard className="h-5 w-5 text-[#E11D2A]" /><span className="text-[10px] font-bold uppercase tracking-wider text-green-600">{overdueBalance > 0 ? "Due" : "Current"}</span></div>
+        <button
+          type="button"
+          onClick={() => overdueBalance > 0 && setAccountSection("billing")}
+          disabled={overdueBalance <= 0}
+          className={`rounded-2xl border p-4 text-left transition-colors ${
+            isDark
+              ? "border-white/10 bg-white/[0.03] hover:bg-white/[0.07] disabled:hover:bg-white/[0.03]"
+              : "border-gray-200 bg-white hover:bg-red-50 disabled:hover:bg-white"
+          }`}
+          aria-label={overdueBalance > 0 ? "Review and pay current balance" : "No balance due"}
+        >
+          <div className="flex items-start justify-between">
+            <CreditCard className="h-5 w-5 text-[#E11D2A]" />
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${overdueBalance > 0 ? "text-red-600" : "text-green-600"}`}>
+              {overdueBalance > 0 ? "Due" : "Current"}
+            </span>
+          </div>
           <p className={`mt-4 text-xs font-semibold ${t.textMuted}`}>Current Balance</p>
           <p className={`mt-1 text-2xl font-black ${t.textPrimary}`}>{formatAmount(overdueBalance)}</p>
-          <p className={`mt-1 text-xs ${overdueBalance > 0 ? "text-red-600" : "text-green-600"}`}>{overdueBalance > 0 ? "Please review your balance" : "All caught up"}</p>
-        </Card>
+          {overdueBalance > 0 ? (
+            <span className="mt-2 inline-flex items-center gap-1 rounded-lg bg-[#E11D2A] px-2.5 py-1.5 text-xs font-bold text-white">
+              Pay Now <ChevronRight className="h-3.5 w-3.5" />
+            </span>
+          ) : (
+            <p className="mt-1 text-xs text-green-600">All caught up</p>
+          )}
+        </button>
         <Card isDark={isDark} className="p-4">
           <Calendar className="h-5 w-5 text-[#E11D2A]" />
           <p className={`mt-4 text-xs font-semibold ${t.textMuted}`}>Next Payment</p>
