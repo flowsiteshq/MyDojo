@@ -19,7 +19,7 @@ vi.mock("stripe", () => {
 });
 
 import { getDb } from "./db";
-import { getMemberPaymentHistory } from "./memberDashboard";
+import { getMemberPaymentHistory, getMemberBalancePaymentHistory } from "./memberDashboard";
 
 /**
  * Build a mock DB that:
@@ -170,5 +170,37 @@ describe("getMemberPaymentHistory", () => {
     // Only the $49 payment should appear
     expect(result.length).toBe(1);
     expect(result[0].amount).toBe(49);
+  });
+});
+
+describe("getMemberBalancePaymentHistory", () => {
+  it("returns only succeeded attempts and preserves the ledger amount", async () => {
+    const rows = [
+      {
+        id: 44,
+        amountCents: 100,
+        status: "succeeded",
+        createdAt: new Date("2026-10-29T12:00:00Z"),
+      },
+    ];
+    const chain = {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue(rows),
+    };
+    vi.mocked(getDb).mockResolvedValue({ select: vi.fn().mockReturnValue(chain) } as any);
+
+    const result = await getMemberBalancePaymentHistory(7);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      id: "balance-44",
+      amount: 1,
+      currency: "USD",
+      status: "paid",
+      description: "Partial balance payment",
+    });
   });
 });
