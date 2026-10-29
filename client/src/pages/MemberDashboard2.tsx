@@ -1357,7 +1357,7 @@ function PaymentHistorySection({ isDark, payments: externalPayments, isLoading: 
 
 export default function MemberDashboard2() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState<"home" | "benefits" | "training" | "locate" | "shop" | "account" | "messages">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "children" | "benefits" | "training" | "locate" | "shop" | "account" | "messages">("home");
   const [trainingDialog, setTrainingDialog] = useState<"schedule" | "curriculum" | "progress" | "attendance" | "testing" | null>(null);
   const [trainingModalDragOffset, setTrainingModalDragOffset] = useState(0);
   const trainingModalTouchStartY = useRef<number | null>(null);
@@ -2421,7 +2421,17 @@ export default function MemberDashboard2() {
         )}
 
         {/* ── ACCOUNT TAB ── */}
-       {activeTab === "account" && (
+        {activeTab === "children" && (
+          <div className="space-y-5">
+            <button onClick={() => setActiveTab("home")} className={`flex items-center gap-2 text-sm font-semibold ${t.textSecondary} hover:text-[#E11D2A] transition-colors`}>
+              <ChevronRight className="h-4 w-4 rotate-180" /> Back
+            </button>
+            <h2 className={`text-2xl font-black ${t.textPrimary}`}>My Students</h2>
+            <MyChildren isDark={isDark} />
+          </div>
+        )}
+
+        {activeTab === "account" && (
           <AccountTab
             isDark={isDark}
             user={user}
