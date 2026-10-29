@@ -2622,7 +2622,7 @@ Please enter your card details below to complete your registration securely. Tot
           enrollmentId: row.id, userId: ctx.user.id, provider: "stripe", amountCents: input.amountCents,
           outstandingSnapshotCents: outstandingCents, idempotencyKey: input.idempotencyKey, status: "initiated",
         });
-        const attemptId = Number((result as any).insertId);
+        const attemptId = getInsertedRecordId(result, "billing payment attempt");
         try {
           const paymentIntent = await stripe.paymentIntents.create({
             amount: input.amountCents, currency: "usd", customer: stripeCustomerId, payment_method_types: ["card"],
