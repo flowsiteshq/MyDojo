@@ -2602,7 +2602,19 @@ Please enter your card details below to complete your registration securely. Tot
           : process.env.STRIPE_DESTINATION_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
         if (!stripeKey) throw new TRPCError({ code: "PRECONDITION_FAILED", message: `Stripe ${billingMode} credentials are not configured.` });
         const stripe = new Stripe(stripeKey, { apiVersion: "2026-01-28.clover" as any });
-        const openInvoices = await stripe.invoices.list({ customer: row.stripeCustomerId!, status: "open", limit: 50 });
+        // Some imported enrollments retain a legacy placeholder customer ID.
+        // Resolve it only by an exact email match in the verified destination
+        // account before listing invoices or creating a PaymentIntent.
+        let stripeCustomerId = row.stripeCustomerId;
+        if ((!stripeCustomerId || stripeCustomerId.startsWith("cus_test_")) && typeof stripe.customers?.list === "function") {
+          const matches = await stripe.customers.list({ email: ctx.user.email, limit: 10 });
+          const exactMatches = matches.data.filter((customer) => customer.email?.toLowerCase() === ctx.user.email.toLowerCase());
+          if (exactMatches.length === 1) stripeCustomerId = exactMatches[0].id;
+        }
+        if (!stripeCustomerId || stripeCustomerId.startsWith("cus_test_")) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No verified Stripe customer is linked to this enrollment." });
+        }
+        const openInvoices = await stripe.invoices.list({ customer: stripeCustomerId, status: "open", limit: 50 });
         const outstandingCents = openInvoices.data.reduce((sum, invoice) => sum + Math.max(0, invoice.amount_remaining || 0), 0);
         if (outstandingCents < 100) throw new TRPCError({ code: "BAD_REQUEST", message: "No verified outstanding balance is available for payment." });
         if (input.amountCents > outstandingCents) throw new TRPCError({ code: "BAD_REQUEST", message: "Payment cannot exceed the verified outstanding balance." });
@@ -2613,7 +2625,7 @@ Please enter your card details below to complete your registration securely. Tot
         const attemptId = Number((result as any).insertId);
         try {
           const paymentIntent = await stripe.paymentIntents.create({
-            amount: input.amountCents, currency: "usd", customer: row.stripeCustomerId!, payment_method_types: ["card"],
+            amount: input.amountCents, currency: "usd", customer: stripeCustomerId, payment_method_types: ["card"],
             description: `MyDojo ${billingMode} balance payment`,
             metadata: { mydojoBillingAttemptId: String(attemptId), enrollmentId: String(row.id), outstandingSnapshotCents: String(outstandingCents) },
           }, { idempotencyKey: input.idempotencyKey });
