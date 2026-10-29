@@ -67,6 +67,7 @@ import { PortalSidebar } from "@/components/PortalSidebar";
 import ClassScheduleDashboard from "@/components/ClassScheduleDashboard";
 import { PartialBalancePaymentCard } from "@/components/PartialBalancePaymentCard";
 import { StripePaymentForm } from "@/components/StripePaymentForm";
+import BeltJourneyPage from "@/components/BeltJourneyPage";
 Chart.register(...registerables);
 
 // ─── Theme-aware token helper ─────────────────────────────────────────────────
@@ -1964,6 +1965,9 @@ export default function MemberDashboard2() {
         {activeTab === "training" && trainingDialog === "schedule" && (
           <ClassScheduleDashboard onBack={() => { setTrainingDialog(null); setActiveTab("home"); }} />
         )}
+        {activeTab === "training" && trainingDialog === "progress" && (
+          <BeltJourneyPage isDark={isDark} onBack={() => setTrainingDialog(null)} />
+        )}
 
         {/* ── BENEFITS TAB ── */}
         {activeTab === "benefits" && (
@@ -2144,7 +2148,7 @@ export default function MemberDashboard2() {
         )}
 
         {/* ── TRAINING TAB ── */}
-        {activeTab === "training" && trainingDialog !== "schedule" && (
+        {activeTab === "training" && trainingDialog !== "schedule" && trainingDialog !== "progress" && (
           <div className="space-y-8">
 
             {/* ── Training Dashboard Header ── */}
@@ -2285,14 +2289,12 @@ export default function MemberDashboard2() {
                       <DialogTitle className={`text-xl font-black ${t.textPrimary}`}>
                         {(trainingDialog as string) === "schedule" && "My Schedule"}
                         {trainingDialog === "curriculum" && "My Curriculum"}
-                        {trainingDialog === "progress" && "My Progress"}
                         {trainingDialog === "attendance" && "My Attendance"}
                         {trainingDialog === "testing" && "Belt Testing"}
                       </DialogTitle>
                       <DialogDescription className={t.textSecondary}>
                         {(trainingDialog as string) === "schedule" && "Your recurring classes and upcoming training times."}
                         {trainingDialog === "curriculum" && "Review each technique and mark completed items as you practice."}
-                        {trainingDialog === "progress" && "Track your belt journey, stripe progress, and training milestones."}
                         {trainingDialog === "attendance" && "See your consistency, recent class activity, and weekly attendance."}
                         {trainingDialog === "testing" && "Review your next test and complete registration when you are ready."}
                       </DialogDescription>
@@ -2328,8 +2330,6 @@ export default function MemberDashboard2() {
                   )}
 
                   {trainingDialog === "curriculum" && <CurriculumViewer isDark={isDark} />}
-
-                  {trainingDialog === "progress" && <ProgressTab isDark={isDark} />}
 
                   {trainingDialog === "attendance" && (
                     <div className="space-y-5">
