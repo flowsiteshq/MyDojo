@@ -55,7 +55,7 @@ import { getDb } from "./db";
 import * as schema from "../drizzle/schema";
 import { chatbotConversations, trialSignups, conversationStates } from "../drizzle/schema";
 import { eq, and, or, desc, asc, isNull, isNotNull, ne, sql, inArray, like, not, between, gte, count } from "drizzle-orm";
-import { getMemberEnrollment, getMemberClassSchedules, getMemberPaymentHistory, getMemberSubscription } from "./memberDashboard";
+import { getMemberEnrollment, getMemberClassSchedules, getMemberPaymentHistory, getMemberBalancePaymentHistory, getMemberSubscription } from "./memberDashboard";
 import { createChangeRequest, getUserChangeRequests, getPendingChangeRequests, approveChangeRequest, denyChangeRequest } from "./membershipChangeRequests";
 import { sendStreakMilestoneEmail, checkStreakMilestone, sendEnrollmentConfirmationEmail, sendProgramConfirmationEmail } from "./emailService";
 import { ENV } from "./_core/env";
@@ -2525,7 +2525,8 @@ Please enter your card details below to complete your registration securely. Tot
     getPaymentHistory: protectedProcedure.query(async ({ ctx }) => {
       const enrollment = await getMemberEnrollment(ctx.user.email);
       const payments = await getMemberPaymentHistory(ctx.user.email, enrollment?.enrollment.stripeCustomerId);
-      return payments;
+      const balancePayments = await getMemberBalancePaymentHistory(ctx.user.id);
+      return [...payments, ...balancePayments].sort((a, b) => b.created.getTime() - a.created.getTime());
     }),
 
     // Prepare the existing open invoice's PaymentIntent for the authenticated
@@ -7958,6 +7959,34 @@ Please enter your card details below to complete your registration securely. Tot
           })
         );
         return enriched;
+      }),
+    // Confirmed member balance payments for administrative billing review.
+    // This reads the shared attempt ledger and never counts failed/pending rows.
+    getBalancePayments: staffOrAdminProcedure
+      .input(z.object({ limit: z.number().int().min(1).max(200).default(100) }))
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        return db
+          .select({
+            id: schema.billingPaymentAttempts.id,
+            enrollmentId: schema.billingPaymentAttempts.enrollmentId,
+            userId: schema.billingPaymentAttempts.userId,
+            provider: schema.billingPaymentAttempts.provider,
+            amountCents: schema.billingPaymentAttempts.amountCents,
+            outstandingSnapshotCents: schema.billingPaymentAttempts.outstandingSnapshotCents,
+            providerPaymentId: schema.billingPaymentAttempts.providerPaymentId,
+            status: schema.billingPaymentAttempts.status,
+            createdAt: schema.billingPaymentAttempts.createdAt,
+            customerName: schema.enrollments.customerName,
+            customerEmail: schema.enrollments.customerEmail,
+            studentName: schema.enrollments.studentName,
+          })
+          .from(schema.billingPaymentAttempts)
+          .leftJoin(schema.enrollments, eq(schema.enrollments.id, schema.billingPaymentAttempts.enrollmentId))
+          .where(eq(schema.billingPaymentAttempts.status, "succeeded"))
+          .orderBy(desc(schema.billingPaymentAttempts.createdAt))
+          .limit(input.limit);
       }),
     // Get recent webhook events (admin only)
     getWebhookEvents: protectedProcedure

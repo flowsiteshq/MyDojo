@@ -1,5 +1,5 @@
 import { getDb } from "./db";
-import { enrollments, membershipPackages, classSchedule, webhookEvents } from "../drizzle/schema";
+import { enrollments, membershipPackages, classSchedule, webhookEvents, billingPaymentAttempts } from "../drizzle/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import Stripe from "stripe";
 
@@ -95,6 +95,28 @@ export type PaymentHistoryItem = {
   created: Date;
   invoiceUrl?: string | null;
 };
+
+/** Return only provider-confirmed balance payments from the shared ledger. */
+export async function getMemberBalancePaymentHistory(userId: number): Promise<PaymentHistoryItem[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select()
+    .from(billingPaymentAttempts)
+    .where(and(eq(billingPaymentAttempts.userId, userId), eq(billingPaymentAttempts.status, "succeeded")))
+    .orderBy(desc(billingPaymentAttempts.createdAt))
+    .limit(100);
+
+  return rows.map((row) => ({
+    id: `balance-${row.id}`,
+    type: "payment" as const,
+    amount: row.amountCents / 100,
+    currency: "USD",
+    status: "paid",
+    description: "Partial balance payment",
+    created: row.createdAt,
+  }));
+}
 
 /**
  * Query FluidPay API for all transactions for a given customer vault ID.
