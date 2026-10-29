@@ -6,7 +6,7 @@ const routerSource = fs.readFileSync(path.resolve(import.meta.dirname, "paypalRo
 const helperSource = fs.readFileSync(path.resolve(import.meta.dirname, "paypalHelper.ts"), "utf8");
 const schemaSource = fs.readFileSync(path.resolve(import.meta.dirname, "../drizzle/schema.ts"), "utf8");
 const migrationSource = fs.readFileSync(
-  path.resolve(import.meta.dirname, "../docs/0089_repair_belt_test_paypal_columns.sql"),
+  path.resolve(import.meta.dirname, "../drizzle/0090_repair_belt_paypal_identifiers.sql"),
   "utf8",
 );
 
