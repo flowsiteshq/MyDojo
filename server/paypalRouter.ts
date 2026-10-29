@@ -89,10 +89,13 @@ async function markBeltOrderPaid(orderId: string, captureId?: string) {
     throw new Error("PayPal belt-test order does not match the stored intent amount or reference");
   }
   if (intents.every((intent) => intent.paymentStatus === "paid")) return true;
+  const amountPerIntent = Math.round(expectedAmount / intents.length);
   await db.update(schema.beltTestIntents).set({
     paymentStatus: "paid",
     paypalCaptureId: captureId ?? null,
-    amountPaid: 4900,
+    amountPaid: amountPerIntent,
+    paymentProvider: "paypal",
+    paymentReference: orderId,
   }).where(eq(schema.beltTestIntents.paypalOrderId, orderId));
   try {
     const { notifyOwner } = await import("./_core/notification");
