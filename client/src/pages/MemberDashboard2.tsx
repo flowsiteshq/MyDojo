@@ -692,7 +692,7 @@ function AccountTab({
   const completedPayments = (payments ?? []).filter((p: any) => p.status !== "upcoming");
   const recentPayments = completedPayments.slice(0, 5);
   const overdueBalance = (payments ?? [])
-    .filter((p: any) => ["open", "overdue", "past_due"].includes(String(p.status).toLowerCase()))
+    .filter((p: any) => ["open", "overdue", "past_due", "partial", "partially_paid"].includes(String(p.status).toLowerCase()))
     .reduce((total: number, p: any) => total + Number(p.amount || 0), 0);
   const outstandingCharges = (payments ?? []).filter((p: any) => ["open", "overdue", "past_due", "partial", "partially_paid"].includes(String(p.status).toLowerCase()));
   const memberCount = 1 + (Array.isArray(childProfiles) ? childProfiles.length : 0);

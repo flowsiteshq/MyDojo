@@ -68,7 +68,7 @@ export function ParentPortalHome({
   const { data: payments = [] } = trpc.member.getPaymentHistory.useQuery(undefined, { enabled: true });
   const upcomingPayment = (payments as any[]).find((payment: any) => payment.status === "upcoming");
   const overdueBalance = (payments as any[])
-    .filter((payment: any) => ["open", "overdue", "past_due"].includes(String(payment.status).toLowerCase()))
+    .filter((payment: any) => ["open", "overdue", "past_due", "partial", "partially_paid"].includes(String(payment.status).toLowerCase()))
     .reduce((total: number, payment: any) => total + Number(payment.amount || 0), 0);
   const nextPaymentAmount = upcomingPayment?.amount ?? (monthlyPrice ? Number(monthlyPrice) : null);
   const nextPaymentDate = upcomingPayment?.created ? new Date(upcomingPayment.created).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "Not scheduled";
