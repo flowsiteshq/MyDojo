@@ -141,11 +141,10 @@ function promotionFeeCents(currentBelt: string): number {
   return promotionBeltIndex(currentBelt) >= promotionBeltIndex("Orange Belt") ? 4_900 : 0;
 }
 
-async function getOctoberPromotionDeadline(db: Awaited<ReturnType<typeof getDb>>): Promise<Date> {
-  if (!db) return new Date(OCTOBER_PROMOTION_DEADLINE_UTC);
-  const [row] = await db.select().from(schema.adminConfig).where(eq(schema.adminConfig.key, "octoberBeltPromotionDeadline")).limit(1);
-  const parsed = row?.value ? new Date(row.value) : new Date(OCTOBER_PROMOTION_DEADLINE_UTC);
-  return Number.isNaN(parsed.getTime()) ? new Date(OCTOBER_PROMOTION_DEADLINE_UTC) : parsed;
+async function getOctoberPromotionDeadline(_db: Awaited<ReturnType<typeof getDb>>): Promise<null> {
+  // Registration is intentionally open-ended. Keep the helper so existing
+  // config/admin response shapes remain compatible without blocking checkout.
+  return null;
 }
 
 export const appRouter = router({
@@ -11775,7 +11774,7 @@ Please enter your card details below to complete your registration securely. Tot
         eventId: OCTOBER_PROMOTION_EVENT_ID,
         eventName: "MyDojo October Belt Promotion Ceremony",
         ceremonyAt: OCTOBER_PROMOTION_CEREMONY,
-        deadline: deadline.toISOString(),
+        deadline: null,
         acknowledgment: BELT_PROMOTION_ACKNOWLEDGMENT,
         promotionPackageCents: 4_900,
         equipmentCents: 17_900,
@@ -11852,9 +11851,6 @@ Please enter your card details below to complete your registration securely. Tot
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
         if (input.eventId !== OCTOBER_PROMOTION_EVENT_ID) throw new TRPCError({ code: "BAD_REQUEST", message: "This promotion event is not available" });
-        const deadline = await getOctoberPromotionDeadline(db);
-        if (Date.now() > deadline.getTime()) throw new TRPCError({ code: "BAD_REQUEST", message: "The promotion deadline has passed. Please contact MyDojo for an exception." });
-
         const expectedNextBelt = nextPromotionBelt(input.currentBelt);
         if (!expectedNextBelt) throw new TRPCError({ code: "BAD_REQUEST", message: "Your current belt is not eligible for the configured October promotion path. Please contact MyDojo." });
         if (input.currentStripeColor === "none" && input.currentStripeCount !== 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Choose a stripe color before entering a stripe count." });
@@ -11980,7 +11976,7 @@ Please enter your card details below to complete your registration securely. Tot
       const rows = await db.select().from(schema.beltTestIntents).where(eq(schema.beltTestIntents.eventId, OCTOBER_PROMOTION_EVENT_ID)).orderBy(desc(schema.beltTestIntents.createdAt));
       const paid = rows.filter(row => row.paymentStatus === "paid");
       return {
-        deadline: (await getOctoberPromotionDeadline(db)).toISOString(),
+        deadline: null,
         ceremonyAt: OCTOBER_PROMOTION_CEREMONY,
         totalEligible: rows.length,
         intentsSubmitted: rows.length,

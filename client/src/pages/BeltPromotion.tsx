@@ -80,7 +80,7 @@ export default function BeltPromotion() {
     setStripeProgressVerified(Boolean(lookup.data.stripeProgressVerified));
   }, [lookup.data]);
 
-  const deadlineText = config?.deadline ? new Date(config.deadline).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short", timeZone: "America/Chicago" }) : "Wednesday, October 28 at 11:59 PM Houston time";
+  const deadlineText = config?.deadline ? new Date(config.deadline).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short", timeZone: "America/Chicago" }) : "No registration deadline";
   const ceremonyText = config?.ceremonyAt ? new Date(config.ceremonyAt).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short", timeZone: "America/Chicago" }) : "Saturday, October 31 at 11:00 AM Houston time";
   const promotionFee = currentBelt && BELTS.indexOf(currentBelt) >= BELTS.indexOf("Orange Belt") ? 49 : 0;
   const equipmentFee = equipmentChoice === "add" ? 179 : 0;
