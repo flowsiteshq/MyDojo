@@ -3,9 +3,12 @@ import { enrollments, membershipPackages, classSchedule, webhookEvents } from ".
 import { eq, and, desc, inArray } from "drizzle-orm";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_LIVE_SECRET_KEY!, {
+const stripe = new Stripe(
+  process.env.STRIPE_DESTINATION_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY!,
+  {
   apiVersion: "2026-01-28.clover",
-});
+  },
+);
 
 const FLUIDPAY_API_URL = "https://app.fluidpay.com";
 const FLUIDPAY_SECRET_KEY = process.env.FLUIDPAY_SECRET_KEY;
