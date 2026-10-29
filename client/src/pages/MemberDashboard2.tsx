@@ -688,7 +688,7 @@ function AccountTab({
   const overdueBalance = (payments ?? [])
     .filter((p: any) => p.status === "overdue" || p.status === "past_due")
     .reduce((total: number, p: any) => total + Number(p.amount || 0), 0);
-  const outstandingCharges = (payments ?? []).filter((p: any) => ["overdue", "past_due", "partial", "partially_paid"].includes(String(p.status).toLowerCase()));
+  const outstandingCharges = (payments ?? []).filter((p: any) => ["open", "overdue", "past_due", "partial", "partially_paid"].includes(String(p.status).toLowerCase()));
   const memberCount = 1 + (Array.isArray(childProfiles) ? childProfiles.length : 0);
   const nextPaymentAmount = upcomingPayment?.amount ?? (monthlyPrice ? Number(monthlyPrice) : null);
   const nextPaymentDate = upcomingPayment?.created ? formatDate(upcomingPayment.created) : "Not scheduled";
