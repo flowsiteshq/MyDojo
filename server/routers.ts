@@ -11643,58 +11643,108 @@ Please enter your card details below to complete your registration securely. Tot
         parentCommitmentAgreed: z.boolean().optional(),
         eventId: z.string().default('oct-2026-belt-test'),
         children: z.array(z.object({
-          studentName: z.string().min(1),
-          currentBelt: z.string().min(1),
-          beltSeeking: z.string().optional(),
-          instructor: z.string().optional(),
-          selfReflectionRatings: z.string().optional(),
-          writtenAnswers: z.string().optional(),
-          blackBeltQuestion: z.string().optional(),
-          studentPledgeAgreed: z.boolean().optional(),
-        })).min(1),
+          studentName: z.string().min(1).max(255),
+          currentBelt: z.string().min(1).max(100),
+          currentStripeColor: z.enum(PROMOTION_STRIPE_COLORS).default("none"),
+          currentStripeCount: z.number().int().min(0).max(4).default(0),
+          stripeProgressVerified: z.boolean().default(false),
+          currentProgram: z.string().max(255).optional(),
+          instructorRecommendationStatus: z.enum(["pending", "recommended", "not_yet"]).default("pending"),
+          upgradeTargetPlan: z.enum(["Basic", "Black Belt", "Leadership"]).optional(),
+          equipmentChoice: z.enum(["add", "already_have", "later"]).default("later"),
+          equipmentSize: z.string().max(50).optional(),
+          equipmentQuantity: z.number().int().min(0).max(3).default(0),
+          uniformSize: z.string().max(50).optional(),
+          notes: z.string().max(2000).optional(),
+        })).min(1).max(10),
       }))
       .mutation(async ({ ctx, input }) => {
         const db = await getDb();
         if (!db) throw new Error('Database not available');
         const groupId = `grp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         const insertedIds: number[] = [];
+        let totalAmountCents = 0;
         for (let i = 0; i < input.children.length; i++) {
           const child = input.children[i];
-          const [result] = await db.insert(schema.beltTestIntents).values({
+          const expectedNextBelt = nextPromotionBelt(child.currentBelt);
+          if (!expectedNextBelt) throw new TRPCError({ code: "BAD_REQUEST", message: `The current belt for ${child.studentName} is not eligible for the configured promotion path.` });
+          if (child.currentStripeColor === "none" && child.currentStripeCount !== 0) throw new TRPCError({ code: "BAD_REQUEST", message: `Choose a stripe color for ${child.studentName} before entering a stripe count.` });
+          if (child.currentStripeColor !== "none" && child.currentStripeCount === 0) throw new TRPCError({ code: "BAD_REQUEST", message: `Select at least one completed stripe for ${child.studentName}, or choose No Stripes.` });
+          if (child.equipmentChoice === "add" && (!child.equipmentSize || child.equipmentQuantity < 1)) throw new TRPCError({ code: "BAD_REQUEST", message: `Select a size and at least one gear set for ${child.studentName}.` });
+          const promotionFee = promotionFeeCents(child.currentBelt);
+          const equipmentQuantity = child.equipmentChoice === "add" ? child.equipmentQuantity : 0;
+          const equipmentFee = equipmentQuantity * 17_900;
+          const paymentAmountCents = promotionFee + equipmentFee;
+          totalAmountCents += paymentAmountCents;
+          const [existing] = await db.select({ id: schema.beltTestIntents.id, paymentStatus: schema.beltTestIntents.paymentStatus })
+            .from(schema.beltTestIntents)
+            .where(and(eq(schema.beltTestIntents.eventId, input.eventId), eq(schema.beltTestIntents.email, input.email.trim().toLowerCase()), eq(schema.beltTestIntents.studentName, child.studentName.trim())))
+            .limit(1);
+          if (existing?.paymentStatus === "paid") throw new TRPCError({ code: "CONFLICT", message: `${child.studentName} already has a paid promotion intent. Contact staff before submitting another payment.` });
+          const childValues = {
             eventId: input.eventId,
             groupId,
             childIndex: i,
-            studentName: child.studentName,
+            studentName: child.studentName.trim(),
             parentName: input.parentName,
             phone: input.phone,
-            email: input.email,
+            email: input.email.trim().toLowerCase(),
             currentBelt: child.currentBelt,
-            beltSeeking: child.beltSeeking || null,
-            instructor: child.instructor || null,
+            currentStripeColor: child.currentStripeColor,
+            currentStripeCount: child.currentStripeCount,
+            stripeProgressVerified: child.stripeProgressVerified ? 1 : 0,
+            promotionEligibility: promotionEligibility(child.currentStripeColor, child.currentStripeCount),
+            nextBelt: expectedNextBelt,
+            currentProgram: child.currentProgram || null,
+            instructor: null,
+            instructorRecommendationStatus: child.instructorRecommendationStatus,
+            notes: child.notes || null,
             testingFor: input.testingFor,
-            selfReflectionRatings: child.selfReflectionRatings || null,
-            writtenAnswers: child.writtenAnswers || null,
+            paymentStatus: paymentAmountCents > 0 ? 'pending' : 'manual_review',
+            paymentAmountCents,
+            paymentProvider: paymentAmountCents > 0 ? 'paypal' : null,
             parentRatings: input.parentRatings || null,
             parentAnswers: input.parentAnswers || null,
             parentRecommendation: input.parentRecommendation || null,
             parentComments: input.parentComments || null,
-            blackBeltQuestion: child.blackBeltQuestion || null,
-            studentPledgeAgreed: child.studentPledgeAgreed ? 1 : 0,
             parentCommitmentAgreed: input.parentCommitmentAgreed ? 1 : 0,
-            paymentStatus: 'pending',
-          });
-          insertedIds.push((result as any).insertId);
+            parentAcknowledgment: input.parentCommitmentAgreed ? 1 : 0,
+            signatureName: input.parentName,
+            signedAt: new Date(),
+            upgradeStatus: child.upgradeTargetPlan ? "requested" : "not_requested",
+            upgradeTargetPlan: child.upgradeTargetPlan || null,
+            upgradeRequestedAt: child.upgradeTargetPlan ? new Date() : null,
+            equipmentChoice: child.equipmentChoice,
+            equipmentSize: child.equipmentSize || null,
+            equipmentPaymentStatus: equipmentQuantity > 0 ? "pending" : "not_selected",
+            uniformSize: child.uniformSize || null,
+          };
+          if (existing) {
+            await db.update(schema.beltTestIntents).set({
+              ...childValues,
+              paypalOrderId: null,
+              paypalCaptureId: null,
+              paymentReference: null,
+              amountPaid: 0,
+            }).where(eq(schema.beltTestIntents.id, existing.id));
+            insertedIds.push(existing.id);
+          } else {
+            const [result] = await db.insert(schema.beltTestIntents).values(childValues);
+            insertedIds.push((result as any).insertId);
+          }
         }
         const origin = (ctx.req.headers.origin as string) || 'https://mydojoma.com';
         const studentNames = input.children.map(c => c.studentName).join(', ');
+        if (totalAmountCents === 0) return { checkoutUrl: null, groupId, intentIds: insertedIds };
         const order = await createPayPalOrder({
-          amountCents: input.children.length * 4900,
+          amountCents: totalAmountCents,
           referenceId: `belt-${groupId}`,
           returnUrl: `${origin}/belt-test-intent/success?name=${encodeURIComponent(studentNames)}&count=${input.children.length}`,
           cancelUrl: `${origin}/belt-test-intent`,
         });
-        await db.update(schema.beltTestIntents).set({ paypalOrderId: order.orderId }).where(eq(schema.beltTestIntents.groupId, groupId));
-        return { checkoutUrl: order.approvalUrl, groupId, intentIds: insertedIds };
+        // Keep the PayPal order ID on the first row only; the group ID links the remaining children.
+        await db.update(schema.beltTestIntents).set({ paypalOrderId: order.orderId, paymentReference: order.orderId }).where(eq(schema.beltTestIntents.id, insertedIds[0]));
+        return { checkoutUrl: order.approvalUrl, groupId, intentIds: insertedIds, totalAmountCents };
       }),
     // Legacy single-child submit (kept for backwards compat)
     submit: publicProcedure

@@ -32,18 +32,17 @@ describe("PayPal belt-test checkout safeguards", () => {
     expect(routerSource).toContain("actualAmount !== (expectedAmount / 100).toFixed(2)");
   });
 
-  it("routes the Intent to Promote fee and optional gear through one PayPal order", () => {
-    expect(appRouterSource).toContain('paymentProvider: paymentAmountCents > 0 ? "paypal" : null');
-    expect(appRouterSource).toContain("amountCents: paymentAmountCents");
-    expect(appRouterSource).toContain("referenceId: `belt-${intentId}`");
-    expect(appRouterSource).toContain("customId: `belt-intent-${intentId}`");
+  it("routes multiple children and gear quantities through one PayPal order", () => {
+    expect(appRouterSource).toContain("children: z.array");
+    expect(appRouterSource).toContain("equipmentQuantity");
+    expect(appRouterSource).toContain("totalAmountCents");
+    expect(appRouterSource).toContain("amountCents: totalAmountCents");
+    expect(appRouterSource).toContain("referenceId: `belt-${groupId}`");
     expect(appRouterSource).toContain("paypalOrderId: order.orderId");
-    expect(appRouterSource).not.toContain('type: "october_belt_promotion_payment"');
   });
 
   it("reconciles the stored combined promotion and gear amount", () => {
     expect(routerSource).toContain("intent.paymentAmountCents");
-    expect(routerSource).toContain('const includesGear = intents.some((intent) => intent.equipmentChoice === "add")');
     expect(routerSource).toContain('equipmentPaymentStatus: "paid"');
   });
 
@@ -61,7 +60,7 @@ describe("PayPal belt-test checkout safeguards", () => {
     expect(routerSource).toContain('paypalCaptureId: captureId ?? null');
     expect(routerSource).toContain('paymentProvider: "paypal"');
     expect(routerSource).toContain('paymentReference: orderId');
-    expect(routerSource).toContain("amountPaid: amountPerIntent");
+    expect(routerSource).toContain("amountPaid: Number(intent.paymentAmountCents) || 0");
   });
 
   it("prevents duplicate capture reconciliation and rejects unlinked orders", () => {
