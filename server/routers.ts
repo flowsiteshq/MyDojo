@@ -2578,15 +2578,15 @@ Please enter your card details below to complete your registration securely. Tot
         };
       }),
 
-    // Staging-only balance payment flow. Live provider credentials are never
-    // used here; FluidPay stays manual-review until tokenized staging payment
-    // credentials and a verified create-transaction contract are configured.
+    // Guarded balance payment flow. The deployment selects `staging` or
+    // `live` through BILLING_CENTER_MODE; the browser never selects the mode.
+    // FluidPay remains manual-review until its tokenized transaction contract
+    // is independently verified.
     createPartialBalancePayment: protectedProcedure
       .input(z.object({ amountCents: z.number().int().min(1000), idempotencyKey: z.string().min(16).max(255) }))
       .mutation(async ({ ctx, input }) => {
-        if (process.env.BILLING_CENTER_MODE !== "staging") {
-          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Staging billing mode is not enabled." });
-        }
+        const billingMode = process.env.BILLING_CENTER_MODE === "live" ? "live" : process.env.BILLING_CENTER_MODE === "staging" ? "staging" : null;
+        if (!billingMode) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Billing Center payment mode is not configured." });
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
         const existing = await db.select().from(schema.billingPaymentAttempts).where(eq(schema.billingPaymentAttempts.idempotencyKey, input.idempotencyKey)).limit(1);
@@ -2596,10 +2596,12 @@ Please enter your card details below to complete your registration securely. Tot
         const row = enrollment.enrollment;
         const provider = row.stripeCustomerId ? "stripe" : row.fluidpayCustomerId ? "fluidpay" : null;
         if (!provider) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No supported billing provider is linked to this enrollment." });
-        if (provider === "fluidpay") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "FluidPay staging partial payments require a verified tokenized payment method and are not enabled yet." });
-        const stagingKey = process.env.STRIPE_STAGING_SECRET_KEY;
-        if (!stagingKey) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Stripe staging credentials are not configured." });
-        const stripe = new Stripe(stagingKey, { apiVersion: "2026-01-28.clover" as any });
+        if (provider === "fluidpay") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "FluidPay partial payments require a verified tokenized payment method and are not enabled yet." });
+        const stripeKey = billingMode === "staging"
+          ? process.env.STRIPE_STAGING_SECRET_KEY
+          : process.env.STRIPE_DESTINATION_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+        if (!stripeKey) throw new TRPCError({ code: "PRECONDITION_FAILED", message: `Stripe ${billingMode} credentials are not configured.` });
+        const stripe = new Stripe(stripeKey, { apiVersion: "2026-01-28.clover" as any });
         const openInvoices = await stripe.invoices.list({ customer: row.stripeCustomerId!, status: "open", limit: 50 });
         const outstandingCents = openInvoices.data.reduce((sum, invoice) => sum + Math.max(0, invoice.amount_remaining || 0), 0);
         if (outstandingCents < 1000) throw new TRPCError({ code: "BAD_REQUEST", message: "No verified outstanding balance is available for payment." });
@@ -2612,28 +2614,31 @@ Please enter your card details below to complete your registration securely. Tot
         try {
           const paymentIntent = await stripe.paymentIntents.create({
             amount: input.amountCents, currency: "usd", customer: row.stripeCustomerId!, payment_method_types: ["card"],
-            description: "MyDojo staging balance payment",
+            description: `MyDojo ${billingMode} balance payment`,
             metadata: { mydojoBillingAttemptId: String(attemptId), enrollmentId: String(row.id), outstandingSnapshotCents: String(outstandingCents) },
           }, { idempotencyKey: input.idempotencyKey });
           await db.update(schema.billingPaymentAttempts).set({ status: "pending", providerPaymentId: paymentIntent.id }).where(eq(schema.billingPaymentAttempts.id, attemptId));
-          return { attemptId, status: "pending", provider: "stripe", clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id };
+          return { attemptId, status: "pending", provider: "stripe", mode: billingMode, clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id };
         } catch {
           await db.update(schema.billingPaymentAttempts).set({ status: "failed", failureCode: "provider_create_failed" }).where(eq(schema.billingPaymentAttempts.id, attemptId));
-          throw new TRPCError({ code: "BAD_REQUEST", message: "The staging payment could not be prepared. No charge was recorded." });
+          throw new TRPCError({ code: "BAD_REQUEST", message: `The ${billingMode} payment could not be prepared. No charge was recorded.` });
         }
       }),
     recordPartialBalancePaymentResult: protectedProcedure
       .input(z.object({ attemptId: z.number().int().positive(), paymentIntentId: z.string().min(1) }))
       .mutation(async ({ ctx, input }) => {
-        if (process.env.BILLING_CENTER_MODE !== "staging") throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Staging billing mode is not enabled." });
+        const billingMode = process.env.BILLING_CENTER_MODE === "live" ? "live" : process.env.BILLING_CENTER_MODE === "staging" ? "staging" : null;
+        if (!billingMode) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Billing Center payment mode is not configured." });
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
         const rows = await db.select().from(schema.billingPaymentAttempts).where(and(eq(schema.billingPaymentAttempts.id, input.attemptId), eq(schema.billingPaymentAttempts.userId, ctx.user.id))).limit(1);
         const attempt = rows[0];
         if (!attempt || attempt.providerPaymentId !== input.paymentIntentId) throw new TRPCError({ code: "NOT_FOUND", message: "Payment attempt not found." });
-        const stagingKey = process.env.STRIPE_STAGING_SECRET_KEY;
-        if (!stagingKey) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Stripe staging credentials are not configured." });
-        const stripe = new Stripe(stagingKey, { apiVersion: "2026-01-28.clover" as any });
+        const stripeKey = billingMode === "staging"
+          ? process.env.STRIPE_STAGING_SECRET_KEY
+          : process.env.STRIPE_DESTINATION_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+        if (!stripeKey) throw new TRPCError({ code: "PRECONDITION_FAILED", message: `Stripe ${billingMode} credentials are not configured.` });
+        const stripe = new Stripe(stripeKey, { apiVersion: "2026-01-28.clover" as any });
         const paymentIntent = await stripe.paymentIntents.retrieve(input.paymentIntentId);
         const status = paymentIntent.status === "succeeded" ? "succeeded" : paymentIntent.status === "processing" ? "pending" : "failed";
         await db.update(schema.billingPaymentAttempts).set({ status, failureCode: status === "failed" ? "payment_not_succeeded" : null }).where(eq(schema.billingPaymentAttempts.id, attempt.id));

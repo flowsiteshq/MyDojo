@@ -55,7 +55,7 @@ export function PartialBalancePaymentCard({ isDark, charges }: Props) {
   };
 
   if (complete) {
-    return <div className={`rounded-xl border p-4 ${isDark ? "border-emerald-400/30 bg-emerald-400/10" : "border-emerald-200 bg-emerald-50"}`}><div className="flex items-center gap-2"><CheckCircle2 className="h-5 w-5 text-emerald-600" /><p className="text-sm font-bold text-emerald-800">Staging payment verified</p></div><p className="mt-1 text-xs text-emerald-700">The payment attempt was recorded for reconciliation. Your live account was not charged.</p></div>;
+    return <div className={`rounded-xl border p-4 ${isDark ? "border-emerald-400/30 bg-emerald-400/10" : "border-emerald-200 bg-emerald-50"}`}><div className="flex items-center gap-2"><CheckCircle2 className="h-5 w-5 text-emerald-600" /><p className="text-sm font-bold text-emerald-800">Payment submitted</p></div><p className="mt-1 text-xs text-emerald-700">Your payment was confirmed by the payment processor and recorded for account reconciliation.</p></div>;
   }
 
   return (
@@ -64,7 +64,7 @@ export function PartialBalancePaymentCard({ isDark, charges }: Props) {
         <div className="rounded-lg bg-[#E11D2A]/10 p-2"><CreditCard className="h-5 w-5 text-[#E11D2A]" /></div>
         <div className="min-w-0 flex-1"><h3 className={`font-black ${isDark ? "text-white" : "text-gray-900"}`}>Pay toward your balance</h3><p className={`mt-1 text-xs ${isDark ? "text-white/60" : "text-gray-600"}`}>Choose any amount from $10.00 up to your verified outstanding balance of ${(maxCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}.</p></div>
       </div>
-      <div className={`mt-4 flex items-start gap-2 rounded-lg p-3 text-xs ${isDark ? "bg-amber-400/10 text-amber-200" : "bg-amber-50 text-amber-800"}`}><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><span>Staging checkout only. No live card or subscription charge is made from this test flow.</span></div>
+      <div className={`mt-4 flex items-start gap-2 rounded-lg p-3 text-xs ${isDark ? "bg-amber-400/10 text-amber-200" : "bg-amber-50 text-amber-800"}`}><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><span>This is a one-time payment toward your verified balance. It does not change your recurring membership amount or schedule.</span></div>
       {!clientSecret ? (
         <>
           <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -91,13 +91,13 @@ export function PartialBalancePaymentCard({ isDark, charges }: Props) {
           ) : (
             <div className={`mt-4 rounded-lg border p-4 ${isDark ? "border-red-400/30 bg-red-400/10" : "border-red-200 bg-red-50"}`}>
               <p className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Confirm your payment</p>
-              <p className={`mt-1 text-xs ${isDark ? "text-white/70" : "text-gray-600"}`}>You are authorizing a ${((selectedCents) / 100).toFixed(2)} staging payment. This does not change live billing.</p>
+              <p className={`mt-1 text-xs ${isDark ? "text-white/70" : "text-gray-600"}`}>You are authorizing a one-time payment of ${((selectedCents) / 100).toFixed(2)} toward your verified balance. This will charge the payment method you submit.</p>
               <div className="mt-3 flex gap-2"><button type="button" onClick={() => setConfirmed(false)} className="flex-1 rounded-lg border px-3 py-2 text-sm font-bold">Back</button><button type="button" disabled={createAttempt.isPending} onClick={confirmPayment} className="flex-1 rounded-lg bg-[#E11D2A] px-3 py-2 text-sm font-bold text-white">{createAttempt.isPending ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : `Confirm & pay $${(selectedCents / 100).toFixed(2)}`}</button></div>
             </div>
           )}
         </>
       ) : (
-        <div className="mt-4"><StripePaymentForm clientSecret={clientSecret} mode="payment" submitLabel={`Pay $${(selectedCents / 100).toFixed(2)} (staging)`} loading={recordResult.isPending} onSuccess={({ paymentIntentId: confirmedId }) => { const id = confirmedId || paymentIntentId; if (!id || !attemptId) return toast.error("Payment confirmation could not be verified."); recordResult.mutate({ attemptId, paymentIntentId: id }, { onSuccess: (result) => { if (result.verified) setComplete(true); else toast.error("The provider did not confirm this payment."); }, onError: (error) => toast.error(error.message || "Could not verify the payment result.") }); }} onError={(message) => toast.error(message)} /></div>
+        <div className="mt-4"><StripePaymentForm clientSecret={clientSecret} mode="payment" submitLabel={`Pay $${(selectedCents / 100).toFixed(2)}`} loading={recordResult.isPending} onSuccess={({ paymentIntentId: confirmedId }) => { const id = confirmedId || paymentIntentId; if (!id || !attemptId) return toast.error("Payment confirmation could not be verified."); recordResult.mutate({ attemptId, paymentIntentId: id }, { onSuccess: (result) => { if (result.verified) setComplete(true); else toast.error("The provider did not confirm this payment."); }, onError: (error) => toast.error(error.message || "Could not verify the payment result.") }); }} onError={(message) => toast.error(message)} /></div>
       )}
       <p className={`mt-3 flex items-center justify-center gap-1 text-center text-[11px] ${isDark ? "text-white/50" : "text-gray-500"}`}><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />No card details are stored by MyDojo.</p>
     </div>
