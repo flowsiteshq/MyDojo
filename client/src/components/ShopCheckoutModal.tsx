@@ -36,7 +36,6 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
   const [size, setSize] = useState("");
   const [color, setColor] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
-  const checkoutMutation = trpc.shop.createCheckout.useMutation();
   const paypalCheckoutMutation = trpc.shop.createPayPalGearCheckout.useMutation();
 
   useEffect(() => {
@@ -51,31 +50,6 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
   }, [open, defaultName, defaultStudentName, defaultEmail, defaultColor, product]);
 
   if (!product) return null;
-
-  const startCheckout = async () => {
-    setFormError(null);
-    if (!name.trim()) return setFormError("Please enter your full name.");
-    if (!studentName.trim()) return setFormError("Please enter the student name.");
-    if (!email.trim() || !email.includes("@")) return setFormError("Please enter a valid email address.");
-    if (product.sizes?.length && !size) return setFormError("Please select a size.");
-    if (product.colors?.length && !color) return setFormError("Please select a color.");
-
-    try {
-      const { checkoutUrl } = await checkoutMutation.mutateAsync({
-        productId: product.id,
-        size: size || undefined,
-        color: color || undefined,
-        customerName: name.trim(),
-        customerEmail: email.trim(),
-        customerPhone: phone.trim() || undefined,
-        returnTo: window.location.pathname.startsWith("/dashboard") ? "/dashboard" : "/shop",
-      });
-      if (!checkoutUrl) throw new Error("Secure checkout could not be created.");
-      window.location.assign(checkoutUrl);
-    } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Unable to start secure checkout. Please try again.");
-    }
-  };
 
   const startPayPalCheckout = async () => {
     setFormError(null);
@@ -97,7 +71,7 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
   };
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen && !checkoutMutation.isPending) onClose(); }}>
+    <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen && !paypalCheckoutMutation.isPending) onClose(); }}>
       <DialogContent className="w-full max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -157,11 +131,8 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
             <Lock className="h-3.5 w-3.5 shrink-0" />
             You will complete your secure payment here. MyDojo never stores your card details.
           </div>
-          <Button onClick={startPayPalCheckout} disabled={checkoutMutation.isPending || paypalCheckoutMutation.isPending} className="w-full bg-[#0070BA] font-bold text-white hover:bg-[#005EA6]">
+          <Button onClick={startPayPalCheckout} disabled={paypalCheckoutMutation.isPending} className="w-full bg-[#0070BA] font-bold text-white hover:bg-[#005EA6]">
             {paypalCheckoutMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Opening PayPal…</> : <>Continue with PayPal — ${product.price.toFixed(2)}</>}
-          </Button>
-          <Button onClick={startCheckout} disabled={checkoutMutation.isPending || paypalCheckoutMutation.isPending} variant="outline" className="w-full font-bold">
-            {checkoutMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Opening secure checkout…</> : <>Continue to Secure Checkout — ${product.price.toFixed(2)}</>}
           </Button>
         </div>
       </DialogContent>
