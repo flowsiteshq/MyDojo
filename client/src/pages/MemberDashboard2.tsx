@@ -63,6 +63,7 @@ import { programs } from "@/data/programs";
 import { STUDENT_SHOP_PRODUCTS } from "@/data/shopCatalog";
 import { ParentPortalHome } from "@/components/ParentPortalHome";
 import { PortalSidebar } from "@/components/PortalSidebar";
+import ClassScheduleDashboard from "@/components/ClassScheduleDashboard";
 import { PartialBalancePaymentCard } from "@/components/PartialBalancePaymentCard";
 import { StripePaymentForm } from "@/components/StripePaymentForm";
 Chart.register(...registerables);
@@ -1906,6 +1907,10 @@ export default function MemberDashboard2() {
       {activeTab !== "home" && <PortalSidebar activeTab={activeTab} trainingDialog={trainingDialog} onNavigate={navigatePortalTab} />}
       <main className={activeTab === "home" ? "w-full px-0 py-0 pb-24" : "min-h-[calc(100vh-4rem)] max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24 lg:pl-[270px]"}>
 
+        {activeTab === "training" && trainingDialog === "schedule" && (
+          <ClassScheduleDashboard onBack={() => { setTrainingDialog(null); setActiveTab("home"); }} />
+        )}
+
         {/* ── BENEFITS TAB ── */}
         {activeTab === "benefits" && (
           <div className="space-y-8">
@@ -2195,7 +2200,7 @@ export default function MemberDashboard2() {
             </div>
 
             {/* ── Focused Training Detail Modals ── */}
-            <Dialog open={trainingDialog !== null} onOpenChange={(open) => !open && closeTrainingModal()}>
+            <Dialog open={trainingDialog !== null && trainingDialog !== "schedule"} onOpenChange={(open) => !open && closeTrainingModal()}>
               <DialogContent showCloseButton={false} className={`max-h-[calc(100dvh-2rem)] max-w-3xl overflow-hidden p-0 gap-0 ${isDark ? "border-white/10 bg-zinc-950 text-white" : "border-slate-200 bg-white text-slate-950"}`}>
                 <div
                   className="will-change-transform"
