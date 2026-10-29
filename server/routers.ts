@@ -2528,6 +2528,55 @@ Please enter your card details below to complete your registration securely. Tot
       return payments;
     }),
 
+    // Prepare the existing open invoice's PaymentIntent for the authenticated
+    // member's embedded payment page. This never creates a new charge and
+    // refuses invoices belonging to another Stripe customer.
+    createOpenInvoicePayment: protectedProcedure
+      .input(z.object({ invoiceId: z.string().regex(/^in_[A-Za-z0-9]+$/) }))
+      .mutation(async ({ ctx, input }) => {
+        const enrollment = await getMemberEnrollment(ctx.user.email);
+        if (!enrollment) throw new TRPCError({ code: "NOT_FOUND", message: "No active enrollment found." });
+
+        const stripe = new Stripe(
+          process.env.STRIPE_DESTINATION_SECRET_KEY || process.env.STRIPE_LIVE_SECRET_KEY || process.env.STRIPE_SECRET_KEY || "",
+          { apiVersion: "2026-01-28.clover" },
+        );
+        let customerId = enrollment.enrollment.stripeCustomerId || null;
+
+        // Imported records can contain a placeholder customer ID. Resolve only
+        // an exact email match in this verified account; never rewrite records.
+        if ((!customerId || customerId.startsWith("cus_test_")) && typeof stripe.customers?.list === "function") {
+          const matches = await stripe.customers.list({ email: ctx.user.email, limit: 10 });
+          const exactMatches = matches.data.filter((customer) => customer.email?.toLowerCase() === ctx.user.email.toLowerCase());
+          if (exactMatches.length === 1) customerId = exactMatches[0].id;
+        }
+        if (!customerId) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No verified Stripe customer is linked to this enrollment." });
+
+        const invoice = await stripe.invoices.retrieve(input.invoiceId, { expand: ["payments.data.payment_intent"] });
+        const invoiceCustomer = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
+        if (invoiceCustomer !== customerId || invoice.status !== "open" || (invoice.amount_remaining || 0) <= 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "That outstanding invoice is not available for this account." });
+        }
+
+        const invoicePayment = invoice.payments?.data.find(
+          (payment) => payment.payment?.type === "payment_intent" && payment.payment.payment_intent,
+        );
+        const paymentIntent = invoicePayment?.payment?.payment_intent;
+        const expandedPaymentIntent = typeof paymentIntent === "string"
+          ? await stripe.paymentIntents.retrieve(paymentIntent)
+          : paymentIntent;
+        if (!expandedPaymentIntent?.client_secret) {
+          throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Stripe has not prepared this invoice for online payment yet." });
+        }
+
+        return {
+          invoiceId: invoice.id,
+          amount: (invoice.amount_remaining || 0) / 100,
+          currency: (invoice.currency || "usd").toUpperCase(),
+          clientSecret: expandedPaymentIntent.client_secret,
+        };
+      }),
+
     // Staging-only balance payment flow. Live provider credentials are never
     // used here; FluidPay stays manual-review until tokenized staging payment
     // credentials and a verified create-transaction contract are configured.

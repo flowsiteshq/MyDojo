@@ -86,6 +86,7 @@ export async function getMemberClassSchedules(packageName: string, location: str
 
 export type PaymentHistoryItem = {
   id: string;
+  invoiceId?: string;
   type: "payment" | "invoice" | "fluidpay" | "fluidpay_upcoming";
   amount: number;
   currency: string;
@@ -323,6 +324,7 @@ export async function getMemberPaymentHistory(
           .filter(inv => inv.status === "open" && (inv.amount_remaining || 0) > 0)
           .map(inv => ({
             id: `stripe-open-${inv.id}`,
+            invoiceId: inv.id,
             type: "invoice" as const,
             amount: (inv.amount_remaining || 0) / 100,
             currency: (inv.currency || "usd").toUpperCase(),

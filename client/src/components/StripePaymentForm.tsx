@@ -47,12 +47,13 @@ function getStripePromise() {
 interface InnerFormProps {
   mode: "payment" | "setup";
   submitLabel: string;
+  returnUrl?: string;
   loading?: boolean;
   onSuccess: (result: { paymentIntentId?: string; setupIntentId?: string; paymentMethodId?: string }) => void;
   onError: (message: string) => void;
 }
 
-function InnerForm({ mode, submitLabel, loading, onSuccess, onError }: InnerFormProps) {
+function InnerForm({ mode, submitLabel, returnUrl, loading, onSuccess, onError }: InnerFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
@@ -68,7 +69,7 @@ function InnerForm({ mode, submitLabel, loading, onSuccess, onError }: InnerForm
     if (mode === "payment") {
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
-        confirmParams: {},
+        confirmParams: returnUrl ? { return_url: returnUrl } : {},
         redirect: "if_required",
       });
       if (error) {
@@ -127,6 +128,7 @@ function InnerForm({ mode, submitLabel, loading, onSuccess, onError }: InnerForm
     if (mode === "payment") {
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
+        confirmParams: returnUrl ? { return_url: returnUrl } : undefined,
         redirect: "if_required",
       });
       if (error) {
@@ -264,6 +266,8 @@ export interface StripePaymentFormProps {
   submitLabel?: string;
   /** External loading state (e.g. while server is creating the intent) */
   loading?: boolean;
+  /** Optional absolute URL Stripe should return to after payment/authentication */
+  returnUrl?: string;
   /** Called when payment/setup succeeds */
   onSuccess: (result: { paymentIntentId?: string; setupIntentId?: string; paymentMethodId?: string }) => void;
   /** Called with a user-facing error message */
@@ -276,6 +280,7 @@ export function StripePaymentForm({
   clientSecret,
   mode,
   submitLabel = mode === "payment" ? "Pay Now" : "Save Card",
+  returnUrl,
   loading,
   onSuccess,
   onError,
@@ -307,6 +312,7 @@ export function StripePaymentForm({
       <InnerForm
         mode={mode}
         submitLabel={submitLabel}
+        returnUrl={returnUrl}
         loading={loading}
         onSuccess={onSuccess}
         onError={onError}

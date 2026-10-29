@@ -63,6 +63,7 @@ import { programs } from "@/data/programs";
 import { STUDENT_SHOP_PRODUCTS } from "@/data/shopCatalog";
 import { ParentPortalHome } from "@/components/ParentPortalHome";
 import { PartialBalancePaymentCard } from "@/components/PartialBalancePaymentCard";
+import { StripePaymentForm } from "@/components/StripePaymentForm";
 Chart.register(...registerables);
 
 // ─── Theme-aware token helper ─────────────────────────────────────────────────
@@ -653,6 +654,7 @@ function AccountTab({
   const t = useTokens(isDark);
   const { isAuthenticated, logout } = useAuth();
   const [accountSection, setAccountSection] = useState<string | null>(null);
+  const [invoicePayment, setInvoicePayment] = useState<{ invoiceId: string; amount: number; currency: string; clientSecret: string } | null>(null);
   const [paymentSearch, setPaymentSearch] = useState("");
   const [showEnrollmentAgreement, setShowEnrollmentAgreement] = useState(false);
 
@@ -662,6 +664,7 @@ function AccountTab({
   const { data: childProfiles } = trpc.childProfiles.list.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+  const createOpenInvoicePayment = trpc.member.createOpenInvoicePayment.useMutation();
 
   const formatAmount = (amount: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
@@ -705,6 +708,41 @@ function AccountTab({
   });
 
   // If a sub-section is open, render that
+  if (accountSection === "invoice-payment") {
+    const returnUrl = typeof window !== "undefined"
+      ? `${window.location.origin}/dashboard?payment=success`
+      : "https://www.mydojoma.com/dashboard?payment=success";
+    return (
+      <div className="space-y-5">
+        <button onClick={() => { setAccountSection("billing"); setInvoicePayment(null); }} className={`flex items-center gap-2 text-sm font-semibold ${t.textSecondary} hover:text-[#E11D2A] transition-colors`}>
+          <ChevronRight className="h-4 w-4 rotate-180" /> Back to billing
+        </button>
+        <h2 className={`text-2xl font-black ${t.textPrimary}`}>Pay outstanding balance</h2>
+        <Card isDark={isDark} className="p-6">
+          {invoicePayment ? (
+            <>
+              <p className={`mb-5 text-sm ${t.textSecondary}`}>Secure payment for your verified MyDojo balance.</p>
+              <StripePaymentForm
+                clientSecret={invoicePayment.clientSecret}
+                mode="payment"
+                submitLabel={`Pay ${formatAmount(invoicePayment.amount)}`}
+                returnUrl={returnUrl}
+                onSuccess={() => {
+                  toast.success("Payment received. Returning to your account…");
+                  setAccountSection(null);
+                  setInvoicePayment(null);
+                }}
+                onError={(message) => toast.error(message)}
+              />
+            </>
+          ) : (
+            <div className={`text-sm ${t.textSecondary}`}>Preparing secure payment…</div>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
   if (accountSection === "billing") {
     return (
       <div className="space-y-5">
@@ -766,7 +804,25 @@ function AccountTab({
                     <p className={`mt-1 text-xs ${t.textMuted}`}>Due {formatDate(charge.created)} · {String(charge.status).replaceAll("_", " ")}</p>
                   </div>
                   <p className={`shrink-0 text-sm font-black ${t.textPrimary}`}>{formatAmount(Number(charge.amount || 0))}</p>
-                  {charge.invoiceUrl && (
+                  {charge.invoiceId ? (
+                    <button
+                      onClick={() => {
+                        setInvoicePayment(null);
+                        setAccountSection("invoice-payment");
+                        createOpenInvoicePayment.mutate({ invoiceId: charge.invoiceId }, {
+                          onSuccess: (payment) => setInvoicePayment(payment),
+                          onError: (error) => {
+                            setAccountSection("billing");
+                            toast.error(error.message || "Could not open this payment.");
+                          },
+                        });
+                      }}
+                      disabled={createOpenInvoicePayment.isPending}
+                      className="shrink-0 rounded-lg bg-[#E11D2A] px-3 py-2 text-xs font-bold text-white hover:bg-[#bd1621] disabled:opacity-60"
+                    >
+                      {createOpenInvoicePayment.isPending ? "Opening…" : "Pay now"}
+                    </button>
+                  ) : charge.invoiceUrl ? (
                     <a
                       href={charge.invoiceUrl}
                       target="_blank"
@@ -775,7 +831,7 @@ function AccountTab({
                     >
                       Pay now
                     </a>
-                  )}
+                  ) : null}
                 </div>
               ))}
             </div>
