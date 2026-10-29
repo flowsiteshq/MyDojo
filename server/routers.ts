@@ -2524,7 +2524,7 @@ Please enter your card details below to complete your registration securely. Tot
     // Get member's payment history (FluidPay primary + Stripe fallback)
     getPaymentHistory: protectedProcedure.query(async ({ ctx }) => {
       const enrollment = await getMemberEnrollment(ctx.user.email);
-      const payments = await getMemberPaymentHistory(ctx.user.email, enrollment?.enrollment.stripeCustomerId);
+      const payments = await getMemberPaymentHistory(ctx.user.email, enrollment?.enrollment.stripeCustomerId, ctx.user.id);
       const balancePayments = await getMemberBalancePaymentHistory(ctx.user.id);
       return [...payments, ...balancePayments].sort((a, b) => b.created.getTime() - a.created.getTime());
     }),

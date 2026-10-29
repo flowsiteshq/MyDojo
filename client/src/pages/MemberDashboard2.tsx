@@ -807,7 +807,7 @@ function AccountTab({
                     <p className={`mt-1 text-xs ${t.textMuted}`}>Due {formatDate(charge.created)} · {String(charge.status).replaceAll("_", " ")}</p>
                   </div>
                   <p className={`shrink-0 text-sm font-black ${t.textPrimary}`}>{formatAmount(Number(charge.amount || 0))}</p>
-                  {charge.invoiceId ? (
+                  {charge.invoiceId && charge.status !== "partial" ? (
                     <button
                       onClick={() => {
                         setInvoicePayment(null);

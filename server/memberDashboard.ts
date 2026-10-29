@@ -207,9 +207,11 @@ async function getFluidPayTransactions(fpCustomerId: string): Promise<PaymentHis
  */
 export async function getMemberPaymentHistory(
   customerEmail: string,
-  stripeCustomerId?: string | null
+  stripeCustomerId?: string | null,
+  userId?: number,
 ): Promise<PaymentHistoryItem[]> {
   const payments: PaymentHistoryItem[] = [];
+  let succeededBalancePaymentCents = 0;
 
   // ── 1. FluidPay (direct API query by customer vault ID) ───────────────────
   try {
@@ -227,6 +229,19 @@ export async function getMemberPaymentHistory(
         .from(enrollments)
         .where(eq(enrollments.customerEmail, customerEmail))
         .orderBy(desc(enrollments.createdAt));
+
+      if (userId && memberEnrollments.length > 0) {
+        const balanceAttempts = await db
+          .select({ amountCents: billingPaymentAttempts.amountCents })
+          .from(billingPaymentAttempts)
+          .where(and(
+            eq(billingPaymentAttempts.userId, userId),
+            eq(billingPaymentAttempts.status, "succeeded"),
+            eq(billingPaymentAttempts.provider, "stripe"),
+            inArray(billingPaymentAttempts.enrollmentId, memberEnrollments.map((enrollment) => enrollment.id)),
+          ));
+        succeededBalancePaymentCents = balanceAttempts.reduce((sum, attempt) => sum + Math.max(0, attempt.amountCents || 0), 0);
+      }
 
       // Collect unique FluidPay customer IDs
       const fpCustomerIds = Array.from(new Set(
@@ -342,20 +357,29 @@ export async function getMemberPaymentHistory(
             created: new Date(inv.created * 1000),
             invoiceUrl: inv.hosted_invoice_url,
           })),
-        ...invList.data
-          .filter(inv => inv.status === "open" && (inv.amount_remaining || 0) > 0)
-          .map(inv => ({
-            id: `stripe-open-${inv.id}`,
-            invoiceId: inv.id,
-            type: "invoice" as const,
-            amount: (inv.amount_remaining || 0) / 100,
-            currency: (inv.currency || "usd").toUpperCase(),
-            status: "open",
-            description: inv.description || "Outstanding balance",
-            created: new Date(((inv.due_date || inv.created) as number) * 1000),
-            invoiceUrl: inv.hosted_invoice_url,
-          }))
       );
+
+      let unappliedBalancePaymentCents = succeededBalancePaymentCents;
+      for (const inv of invList.data
+        .filter((invoice) => invoice.status === "open" && (invoice.amount_remaining || 0) > 0)
+        .sort((a, b) => (a.created || 0) - (b.created || 0))) {
+        const invoiceRemainingCents = Math.max(0, inv.amount_remaining || 0);
+        const appliedCents = Math.min(invoiceRemainingCents, unappliedBalancePaymentCents);
+        const adjustedRemainingCents = invoiceRemainingCents - appliedCents;
+        unappliedBalancePaymentCents -= appliedCents;
+        if (adjustedRemainingCents <= 0) continue;
+        payments.push({
+          id: `stripe-open-${inv.id}`,
+          invoiceId: inv.id,
+          type: "invoice" as const,
+          amount: adjustedRemainingCents / 100,
+          currency: (inv.currency || "usd").toUpperCase(),
+          status: appliedCents > 0 ? "partial" : "open",
+          description: inv.description || "Outstanding balance",
+          created: new Date(((inv.due_date || inv.created) as number) * 1000),
+          invoiceUrl: inv.hosted_invoice_url,
+        });
+      }
     } catch (error) {
       console.error("[Member Dashboard] Error fetching Stripe payment history:", error);
     }
