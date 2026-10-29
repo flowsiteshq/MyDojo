@@ -2180,6 +2180,37 @@ export const shopOrders = mysqlTable("shopOrders", {
 });
 export type ShopOrder = typeof shopOrders.$inferSelect;
 export type InsertShopOrder = typeof shopOrders.$inferInsert;
+
+/** Pending and completed PayPal merchandise orders. Kept separate from Stripe shopOrders. */
+export const gearOrders = mysqlTable("gearOrders", {
+  id: int("id").autoincrement().primaryKey(),
+  orderReference: varchar("orderReference", { length: 80 }).notNull().unique(),
+  paypalOrderId: varchar("paypalOrderId", { length: 64 }).unique(),
+  paypalCaptureId: varchar("paypalCaptureId", { length: 64 }).unique(),
+  paymentReference: varchar("paymentReference", { length: 128 }),
+  paymentProvider: varchar("paymentProvider", { length: 32 }),
+  customerName: varchar("customerName", { length: 255 }).notNull(),
+  studentName: varchar("studentName", { length: 255 }).notNull(),
+  customerEmail: varchar("customerEmail", { length: 320 }).notNull(),
+  customerPhone: varchar("customerPhone", { length: 40 }),
+  productId: varchar("productId", { length: 120 }).notNull(),
+  productName: varchar("productName", { length: 255 }).notNull(),
+  size: varchar("size", { length: 32 }).notNull(),
+  color: varchar("color", { length: 32 }).notNull(),
+  amountCents: int("amountCents").notNull(),
+  currency: varchar("currency", { length: 3 }).default("USD").notNull(),
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "paid", "failed", "cancelled", "refunded"]).default("pending").notNull(),
+  fulfillmentStatus: mysqlEnum("fulfillmentStatus", ["pending", "ready", "fulfilled"]).default("pending").notNull(),
+  paidAt: timestamp("paidAt"),
+  refundedAt: timestamp("refundedAt"),
+  refundReference: varchar("refundReference", { length: 128 }),
+  lastError: text("lastError"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type GearOrder = typeof gearOrders.$inferSelect;
+export type InsertGearOrder = typeof gearOrders.$inferInsert;
+
 // ─── AI SMS Assistant ────────────────────────────────────────────────────────
 
 /**

@@ -107,6 +107,33 @@ async function markBeltOrderPaid(orderId: string, captureId?: string) {
   return true;
 }
 
+async function markGearOrderPaid(orderId: string, captureId?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const order = await getPayPalOrder(orderId);
+  const unit = order.purchase_units?.[0];
+  const [gear] = await db.select().from(schema.gearOrders)
+    .where(eq(schema.gearOrders.paypalOrderId, orderId)).limit(1);
+  if (!gear) return false;
+  const expectedReference = gear.orderReference;
+  const actualAmount = unit?.amount?.value;
+  const actualCurrency = unit?.amount?.currency_code;
+  if (unit?.reference_id !== expectedReference || actualCurrency !== gear.currency || actualAmount !== (gear.amountCents / 100).toFixed(2)) {
+    throw new Error("PayPal gear order does not match the stored amount or reference");
+  }
+  if (gear.paymentStatus === "paid") return true;
+  if (gear.paymentStatus !== "pending") throw new Error(`PayPal gear order is not pending (status: ${gear.paymentStatus})`);
+  await db.update(schema.gearOrders).set({
+    paymentStatus: "paid",
+    paymentProvider: "paypal",
+    paymentReference: orderId,
+    paypalCaptureId: captureId ?? gear.paypalCaptureId,
+    paidAt: new Date(),
+    lastError: null,
+  }).where(and(eq(schema.gearOrders.id, gear.id), eq(schema.gearOrders.paymentStatus, "pending")));
+  return true;
+}
+
 paypalRouter.get("/health", async (_req, res) => {
   try {
     await getPayPalAccessToken();
@@ -166,7 +193,7 @@ paypalRouter.post("/webhook", async (req, res) => {
         .where(eq(schema.partyBookings.paypalOrderId, String(orderId))).limit(1);
       if (party) {
         await markPartyOrderPaid(String(orderId), captureId);
-      } else if (!(await markPnoOrderPaid(String(orderId), captureId)) && !(await markBeltOrderPaid(String(orderId), captureId))) {
+      } else if (!(await markPnoOrderPaid(String(orderId), captureId)) && !(await markBeltOrderPaid(String(orderId), captureId)) && !(await markGearOrderPaid(String(orderId), captureId))) {
         throw new Error("PayPal completed order is not linked to a MyDojo registration");
       }
       await db.update(schema.paypalEvents).set({ processingStatus: "processed", processedAt: new Date() }).where(eq(schema.paypalEvents.paypalEventId, event.id));
@@ -213,12 +240,14 @@ paypalRouter.post("/capture-order", async (req, res) => {
     const [party] = await db.select({ id: schema.partyBookings.id }).from(schema.partyBookings).where(eq(schema.partyBookings.paypalOrderId, orderId)).limit(1);
     const [pno] = await db.select({ id: schema.pnoRsvps.id }).from(schema.pnoRsvps).where(eq(schema.pnoRsvps.paypalOrderId, orderId)).limit(1);
     const [belt] = await db.select({ id: schema.beltTestIntents.id }).from(schema.beltTestIntents).where(eq(schema.beltTestIntents.paypalOrderId, orderId)).limit(1);
-    if (!party && !pno && !belt) return res.status(404).json({ error: "PayPal order is not linked to a MyDojo event" });
+    const [gear] = await db.select({ id: schema.gearOrders.id }).from(schema.gearOrders).where(eq(schema.gearOrders.paypalOrderId, orderId)).limit(1);
+    if (!party && !pno && !belt && !gear) return res.status(404).json({ error: "PayPal order is not linked to a MyDojo registration" });
     const current = await getPayPalOrder(orderId);
     const captured = current.status === "COMPLETED" ? { captureId: undefined } : await capturePayPalOrder(orderId);
     if (party) await markPartyOrderPaid(orderId, captured.captureId);
     else if (pno) await markPnoOrderPaid(orderId, captured.captureId);
-    else await markBeltOrderPaid(orderId, captured.captureId);
+    else if (belt) await markBeltOrderPaid(orderId, captured.captureId);
+    else await markGearOrderPaid(orderId, captured.captureId);
     return res.json({ received: true, status: "paid" });
   } catch (error) {
     console.error("[PayPal capture-order]", error);

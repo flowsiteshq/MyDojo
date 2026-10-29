@@ -23,34 +23,39 @@ interface Props {
   open: boolean;
   onClose: () => void;
   defaultName?: string;
+  defaultStudentName?: string;
   defaultEmail?: string;
   defaultColor?: string;
 }
 
-export function ShopCheckoutModal({ product, open, onClose, defaultName = "", defaultEmail = "", defaultColor = "" }: Props) {
+export function ShopCheckoutModal({ product, open, onClose, defaultName = "", defaultStudentName = "", defaultEmail = "", defaultColor = "" }: Props) {
   const [name, setName] = useState(defaultName);
+  const [studentName, setStudentName] = useState(defaultStudentName);
   const [email, setEmail] = useState(defaultEmail);
   const [phone, setPhone] = useState("");
   const [size, setSize] = useState("");
   const [color, setColor] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const checkoutMutation = trpc.shop.createCheckout.useMutation();
+  const paypalCheckoutMutation = trpc.shop.createPayPalGearCheckout.useMutation();
 
   useEffect(() => {
     if (!open) return;
     setName(defaultName);
+    setStudentName(defaultStudentName);
     setEmail(defaultEmail);
     setPhone("");
     setSize("");
     setColor(product?.colors?.includes(defaultColor) ? defaultColor : "");
     setFormError(null);
-  }, [open, defaultName, defaultEmail, defaultColor, product]);
+  }, [open, defaultName, defaultStudentName, defaultEmail, defaultColor, product]);
 
   if (!product) return null;
 
   const startCheckout = async () => {
     setFormError(null);
     if (!name.trim()) return setFormError("Please enter your full name.");
+    if (!studentName.trim()) return setFormError("Please enter the student name.");
     if (!email.trim() || !email.includes("@")) return setFormError("Please enter a valid email address.");
     if (product.sizes?.length && !size) return setFormError("Please select a size.");
     if (product.colors?.length && !color) return setFormError("Please select a color.");
@@ -69,6 +74,25 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
       window.location.assign(checkoutUrl);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Unable to start secure checkout. Please try again.");
+    }
+  };
+
+  const startPayPalCheckout = async () => {
+    setFormError(null);
+    if (!name.trim()) return setFormError("Please enter the parent or purchaser name.");
+    if (!studentName.trim()) return setFormError("Please enter the student name.");
+    if (!email.trim() || !email.includes("@")) return setFormError("Please enter a valid email address.");
+    if (!size || !color) return setFormError("Please select a size and color.");
+    try {
+      const { checkoutUrl } = await paypalCheckoutMutation.mutateAsync({
+        customerName: name.trim(), studentName: studentName.trim(), customerEmail: email.trim(),
+        customerPhone: phone.trim() || undefined, size: size as any, color: color as any,
+        returnTo: window.location.pathname.startsWith("/dashboard") ? "/dashboard" : "/shop",
+      });
+      if (!checkoutUrl) throw new Error("PayPal checkout could not be created.");
+      window.location.assign(checkoutUrl);
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Unable to start PayPal checkout. Please try again.");
     }
   };
 
@@ -97,6 +121,10 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
           <div>
             <Label htmlFor="shop-name">Full Name *</Label>
             <Input id="shop-name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Your name" className="mt-1" />
+          </div>
+          <div>
+            <Label htmlFor="shop-student-name">Student Name *</Label>
+            <Input id="shop-student-name" value={studentName} onChange={(event) => setStudentName(event.target.value)} placeholder="Student receiving the gear" className="mt-1" />
           </div>
           <div>
             <Label htmlFor="shop-email">Email Address *</Label>
@@ -129,7 +157,10 @@ export function ShopCheckoutModal({ product, open, onClose, defaultName = "", de
             <Lock className="h-3.5 w-3.5 shrink-0" />
             You will complete your secure payment here. MyDojo never stores your card details.
           </div>
-          <Button onClick={startCheckout} disabled={checkoutMutation.isPending} className="w-full bg-[#E11D2A] font-bold text-white hover:bg-[#C91826]">
+          <Button onClick={startPayPalCheckout} disabled={checkoutMutation.isPending || paypalCheckoutMutation.isPending} className="w-full bg-[#0070BA] font-bold text-white hover:bg-[#005EA6]">
+            {paypalCheckoutMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Opening PayPal…</> : <>Continue with PayPal — ${product.price.toFixed(2)}</>}
+          </Button>
+          <Button onClick={startCheckout} disabled={checkoutMutation.isPending || paypalCheckoutMutation.isPending} variant="outline" className="w-full font-bold">
             {checkoutMutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Opening secure checkout…</> : <>Continue to Secure Checkout — ${product.price.toFixed(2)}</>}
           </Button>
         </div>

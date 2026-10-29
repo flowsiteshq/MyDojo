@@ -41,8 +41,8 @@ describe("PayPal belt-test checkout safeguards", () => {
 
   it("prevents duplicate capture reconciliation and rejects unlinked orders", () => {
     expect(routerSource).toContain('if (intents.every((intent) => intent.paymentStatus === "paid")) return true;');
-    expect(routerSource).toContain('if (!party && !pno && !belt) return res.status(404)');
-    expect(routerSource).toContain('PayPal order is not linked to a MyDojo event');
+    expect(routerSource).toContain('if (!party && !pno && !belt && !gear) return res.status(404)');
+    expect(routerSource).toContain('PayPal order is not linked to a MyDojo registration');
   });
 
   it("does not mark a record paid from a cancelled or unverified browser return", () => {

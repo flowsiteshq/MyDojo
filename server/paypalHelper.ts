@@ -42,6 +42,7 @@ export async function createPayPalOrder(params: {
   referenceId: string;
   returnUrl: string;
   cancelUrl: string;
+  customId?: string;
 }): Promise<{ orderId: string; approvalUrl: string }> {
   if (!Number.isSafeInteger(params.amountCents) || params.amountCents <= 0) {
     throw new Error("Invalid PayPal amount");
@@ -58,6 +59,7 @@ export async function createPayPalOrder(params: {
       intent: "CAPTURE",
       purchase_units: [{
         reference_id: params.referenceId,
+        ...(params.customId ? { custom_id: params.customId } : {}),
         amount: {
           currency_code: "USD",
           value: (params.amountCents / 100).toFixed(2),
