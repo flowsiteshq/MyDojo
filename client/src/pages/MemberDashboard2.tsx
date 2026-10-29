@@ -42,6 +42,7 @@ import {
   Package,
   MapPin,
   Search,
+  Download,
   Home as HomeIcon,
   ShoppingBag,
   User as UserIcon,
@@ -863,7 +864,12 @@ function AccountTab({
               }`}
             />
           </div>
-          <PaymentHistorySection isDark={isDark} payments={filteredPayments} isLoading={paymentsLoading} />
+          <PaymentHistorySection
+            isDark={isDark}
+            payments={filteredPayments}
+            isLoading={paymentsLoading}
+            remainingBalance={overdueBalance}
+          />
         </div>
 
         {/* Membership Actions */}
@@ -1249,7 +1255,17 @@ function AccountTab({
 }
 
 // ─── Payment History Section ─────────────────────────────────────────────────
-function PaymentHistorySection({ isDark, payments: externalPayments, isLoading: externalLoading }: { isDark: boolean; payments?: any[]; isLoading?: boolean }) {
+function PaymentHistorySection({
+  isDark,
+  payments: externalPayments,
+  isLoading: externalLoading,
+  remainingBalance = 0,
+}: {
+  isDark: boolean;
+  payments?: any[];
+  isLoading?: boolean;
+  remainingBalance?: number;
+}) {
   const t = useTokens(isDark);
   const { isAuthenticated } = useAuth();
   const [expanded, setExpanded] = useState(false);
@@ -1267,6 +1283,33 @@ function PaymentHistorySection({ isDark, payments: externalPayments, isLoading: 
 
   const formatDate = (date: Date | string) =>
     new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+
+  const downloadReceipt = (payment: any) => {
+    if (payment.status === "upcoming") return;
+    const date = formatDate(payment.created);
+    const amount = formatAmount(Number(payment.amount || 0));
+    const transactionReference = String(payment.id || "unavailable");
+    const receipt = [
+      "MYDOJO MARTIAL ARTS & FITNESS",
+      "Payment Receipt",
+      "",
+      `Transaction date: ${date}`,
+      `Description: ${payment.description || "Membership payment"}`,
+      `Amount paid: ${amount}`,
+      "Payment method: Card details are securely handled by the payment processor.",
+      `Transaction reference: ${transactionReference}`,
+      `Remaining account balance: ${formatAmount(Number(remainingBalance || 0))}`,
+      "",
+      "This receipt contains no full card number or security code.",
+    ].join("\n");
+    const blob = new Blob([receipt], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `mydojo-receipt-${transactionReference}.txt`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div>
@@ -1332,6 +1375,17 @@ function PaymentHistorySection({ isDark, payments: externalPayments, isLoading: 
                   >
                     {p.status === "upcoming" ? "Scheduled" : "Paid"}
                   </span>
+                  {p.status !== "upcoming" && (
+                    <button
+                      type="button"
+                      onClick={() => downloadReceipt(p)}
+                      className={`rounded-md p-1.5 ${isDark ? "text-white/60 hover:bg-white/10 hover:text-white" : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"}`}
+                      aria-label={`Download receipt for ${formatAmount(p.amount)}`}
+                      title="Download receipt"
+                    >
+                      <Download className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
