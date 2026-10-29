@@ -11866,7 +11866,9 @@ Please enter your card details below to complete your registration securely. Tot
             eq(schema.beltTestIntents.studentName, input.studentName.trim()),
           ))
           .limit(1);
-        if (duplicate) throw new TRPCError({ code: "CONFLICT", message: "An Intent to Promote already exists for this student and event. Please contact staff if you need to correct it." });
+        if (duplicate?.paymentStatus === "paid") {
+          throw new TRPCError({ code: "CONFLICT", message: "This student’s promotion payment is already recorded. Staff must add any additional gear or correction so you are not charged twice." });
+        }
 
         const promotionFee = promotionFeeCents(input.currentBelt);
         const eligibility = promotionEligibility(input.currentStripeColor, input.currentStripeCount);
@@ -11882,7 +11884,7 @@ Please enter your card details below to complete your registration securely. Tot
         const currentMonthlyCents = currentEnrollment?.monthlyPrice ? Math.round(Number(currentEnrollment.monthlyPrice) * 100) : null;
         const upgradeStatus = input.upgradeTargetPlan ? "requested" : "not_requested";
 
-        const insertResult = await db.insert(schema.beltTestIntents).values({
+        const intentValues = {
           eventId: OCTOBER_PROMOTION_EVENT_ID,
           studentName: input.studentName.trim(),
           parentName: input.parentName.trim(),
@@ -11916,8 +11918,20 @@ Please enter your card details below to complete your registration securely. Tot
           ceremonyStatus: "pending",
           uniformSize: input.uniformSize || null,
           childIndex: 0,
-        });
-        const intentId = getInsertedRecordId(insertResult, "October promotion intent");
+        };
+        let intentId: number;
+        if (duplicate) {
+          await db.update(schema.beltTestIntents).set({
+            ...intentValues,
+            paypalOrderId: null,
+            paypalCaptureId: null,
+            paymentReference: null,
+          }).where(eq(schema.beltTestIntents.id, duplicate.id));
+          intentId = duplicate.id;
+        } else {
+          const insertResult = await db.insert(schema.beltTestIntents).values(intentValues);
+          intentId = getInsertedRecordId(insertResult, "October promotion intent");
+        }
 
         if (paymentAmountCents === 0) {
           await notifyOwner({

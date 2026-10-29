@@ -47,6 +47,15 @@ describe("PayPal belt-test checkout safeguards", () => {
     expect(routerSource).toContain('equipmentPaymentStatus: "paid"');
   });
 
+  it("allows unpaid intents to be updated while keeping paid intents protected", () => {
+    expect(appRouterSource).toContain('if (duplicate?.paymentStatus === "paid")');
+    expect(appRouterSource).toContain("await db.update(schema.beltTestIntents).set({");
+    expect(appRouterSource).toContain("paypalOrderId: null");
+    expect(appRouterSource).toContain("paypalCaptureId: null");
+    expect(appRouterSource).toContain("intentId = duplicate.id");
+    expect(appRouterSource).toContain("eq(schema.beltTestIntents.studentName, input.studentName.trim())");
+  });
+
   it("records the verified PayPal capture in the student ledger", () => {
     expect(routerSource).toContain('paymentStatus: "paid"');
     expect(routerSource).toContain('paypalCaptureId: captureId ?? null');
