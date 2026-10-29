@@ -3828,9 +3828,9 @@ export default function MemberDashboard2() {
         )}
       </main>
 
-      {/* ── Bottom Tab Bar (always visible — T-Life style) ── */}
+      {/* ── Bottom Tab Bar (mobile only — desktop uses the sidebar) ── */}
       <nav
-        className={`fixed bottom-0 left-0 right-0 z-50 border-t flex items-stretch ${
+        className={`fixed bottom-0 left-0 right-0 z-50 hidden border-t flex items-stretch md:hidden ${
           isDark
             ? "border-white/10 bg-black/90 backdrop-blur-xl"
             : "border-gray-200 bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.08)]"
