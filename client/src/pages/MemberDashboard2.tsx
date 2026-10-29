@@ -62,6 +62,7 @@ import { toast } from "sonner";
 import { programs } from "@/data/programs";
 import { STUDENT_SHOP_PRODUCTS } from "@/data/shopCatalog";
 import { ParentPortalHome } from "@/components/ParentPortalHome";
+import { PortalSidebar } from "@/components/PortalSidebar";
 import { PartialBalancePaymentCard } from "@/components/PartialBalancePaymentCard";
 import { StripePaymentForm } from "@/components/StripePaymentForm";
 Chart.register(...registerables);
@@ -1700,6 +1701,15 @@ export default function MemberDashboard2() {
     { id: "bucks", label: "🪙 MyDojo Bucks" },
   ];
 
+  const navigatePortalTab = (tab: "home" | "children" | "benefits" | "training" | "locate" | "shop" | "account" | "messages") => {
+    if (tab === "training") {
+      setActiveTab("training");
+      setTrainingDialog(null);
+      return;
+    }
+    setActiveTab(tab);
+  };
+
   return (
     <div
       className={`min-h-screen ${t.textPrimary} ${isDark ? "" : t.pageBgClass}`}
@@ -1893,7 +1903,8 @@ export default function MemberDashboard2() {
       </header>
 
       {/* ── Page Body ── */}
-      <main className={activeTab === "home" ? "w-full px-0 py-0 pb-24" : "max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24"}>
+      {activeTab !== "home" && <PortalSidebar activeTab={activeTab} onNavigate={navigatePortalTab} />}
+      <main className={activeTab === "home" ? "w-full px-0 py-0 pb-24" : "min-h-[calc(100vh-4rem)] max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24 lg:pl-[270px]"}>
 
         {/* ── BENEFITS TAB ── */}
         {activeTab === "benefits" && (
