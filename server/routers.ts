@@ -11814,6 +11814,108 @@ Please enter your card details below to complete your registration securely. Tot
       }),
   }),
 
+  // ─── Digital Belt Testing Control ───────────────────────────────────────────
+  beltTesting: router({
+    listSessions: staffOrAdminProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const intents = await db.select().from(schema.beltTestIntents).orderBy(desc(schema.beltTestIntents.createdAt));
+      const sessions = await db.select().from(schema.beltTestSessions);
+      const scores = await db.select().from(schema.beltTestScores);
+      return intents.map(intent => ({
+        intent,
+        session: sessions.find(session => session.beltTestIntentId === intent.id) ?? null,
+        scores: scores.filter(score => sessions.find(session => session.id === score.sessionId)?.beltTestIntentId === intent.id),
+      }));
+    }),
+
+    createSession: staffOrAdminProcedure
+      .input(z.object({ intentId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const [intent] = await db.select().from(schema.beltTestIntents).where(eq(schema.beltTestIntents.id, input.intentId)).limit(1);
+        if (!intent) throw new TRPCError({ code: "NOT_FOUND", message: "Intent to Promote not found" });
+        const [existing] = await db.select().from(schema.beltTestSessions).where(eq(schema.beltTestSessions.beltTestIntentId, input.intentId)).limit(1);
+        if (existing) return existing;
+        const sessionInsert = await db.insert(schema.beltTestSessions).values({ beltTestIntentId: input.intentId, createdByUserId: ctx.user.id });
+        const sessionId = getInsertedRecordId(sessionInsert, "belt test session");
+        const criteria = [
+          ["technique", "Technique and form", 20, 0],
+          ["self_defense", "Self-defense application", 20, 0],
+          ["board_breaking", "Board breaking", 20, 1],
+          ["sparring", "Sparring", 20, 1],
+          ["discipline", "Discipline, focus, and etiquette", 20, 0],
+        ] as const;
+        await db.insert(schema.beltTestScores).values(criteria.map(([criterionKey, criterionName, maxPoints, passRequired]) => ({ sessionId, criterionKey, criterionName, maxPoints, passRequired })));
+        const [session] = await db.select().from(schema.beltTestSessions).where(eq(schema.beltTestSessions.id, sessionId));
+        return session;
+      }),
+
+    saveScore: staffOrAdminProcedure
+      .input(z.object({ scoreId: z.number().int().positive(), pointsEarned: z.number().int().min(0), notes: z.string().max(1000).optional() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const [score] = await db.select().from(schema.beltTestScores).where(eq(schema.beltTestScores.id, input.scoreId)).limit(1);
+        if (!score) throw new TRPCError({ code: "NOT_FOUND", message: "Score criterion not found" });
+        if (input.pointsEarned > score.maxPoints) throw new TRPCError({ code: "BAD_REQUEST", message: `Score cannot exceed ${score.maxPoints} points` });
+        await db.update(schema.beltTestScores).set({ pointsEarned: input.pointsEarned, notes: input.notes || null }).where(eq(schema.beltTestScores.id, input.scoreId));
+        const scores = await db.select().from(schema.beltTestScores).where(eq(schema.beltTestScores.sessionId, score.sessionId));
+        const totalPoints = scores.reduce((sum, item) => sum + item.maxPoints, 0);
+        const earnedPoints = scores.reduce((sum, item) => sum + (item.id === score.id ? input.pointsEarned : item.pointsEarned), 0);
+        const requiredPassed = scores.filter(item => item.passRequired).every(item => (item.id === score.id ? input.pointsEarned : item.pointsEarned) >= Math.ceil(item.maxPoints * 0.5));
+        const passed = requiredPassed && totalPoints > 0 && earnedPoints / totalPoints >= 0.7;
+        await db.update(schema.beltTestSessions).set({ totalPoints, earnedPoints, passed: passed ? 1 : 0, status: "in_progress" }).where(eq(schema.beltTestSessions.id, score.sessionId));
+        return { success: true, totalPoints, earnedPoints, passed };
+      }),
+
+    updateSession: staffOrAdminProcedure
+      .input(z.object({ sessionId: z.number().int().positive(), staffNotes: z.string().max(3000).optional(), testedAt: z.string().datetime().optional() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        await db.update(schema.beltTestSessions).set({ staffNotes: input.staffNotes || null, testedAt: input.testedAt ? new Date(input.testedAt) : undefined }).where(eq(schema.beltTestSessions.id, input.sessionId));
+        return { success: true };
+      }),
+
+    publishResult: staffOrAdminProcedure
+      .input(z.object({ sessionId: z.number().int().positive() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const [session] = await db.select().from(schema.beltTestSessions).where(eq(schema.beltTestSessions.id, input.sessionId)).limit(1);
+        if (!session) throw new TRPCError({ code: "NOT_FOUND", message: "Test session not found" });
+        const scores = await db.select().from(schema.beltTestScores).where(eq(schema.beltTestScores.sessionId, input.sessionId));
+        if (!scores.length || scores.some(score => score.pointsEarned === 0 && score.passRequired)) throw new TRPCError({ code: "BAD_REQUEST", message: "Complete the required board-breaking and sparring scores before publishing." });
+        await db.update(schema.beltTestSessions).set({ status: "published", publishedAt: new Date() }).where(eq(schema.beltTestSessions.id, input.sessionId));
+        return { success: true };
+      }),
+
+    uploadHighlightPhoto: staffOrAdminProcedure
+      .input(z.object({ sessionId: z.number().int().positive(), imageBase64: z.string(), mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]), caption: z.string().max(300).optional() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+        const buffer = Buffer.from(input.imageBase64, "base64");
+        if (buffer.length > 8 * 1024 * 1024) throw new TRPCError({ code: "BAD_REQUEST", message: "Highlight photo must be under 8 MB" });
+        const { url } = await storagePut(`belt-test-highlights/${input.sessionId}-${Date.now()}.${input.mimeType.split("/")[1]}`, buffer, input.mimeType);
+        await db.update(schema.beltTestSessions).set({ highlightPhotoUrl: url, staffNotes: input.caption || undefined }).where(eq(schema.beltTestSessions.id, input.sessionId));
+        return { url };
+      }),
+
+    getMyPublishedResults: protectedProcedure.query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const intents = await db.select().from(schema.beltTestIntents).where(eq(schema.beltTestIntents.email, ctx.user.email));
+      const intentIds = intents.map(intent => intent.id);
+      if (!intentIds.length) return [];
+      const sessions = await db.select().from(schema.beltTestSessions).where(and(eq(schema.beltTestSessions.status, "published"), inArray(schema.beltTestSessions.beltTestIntentId, intentIds)));
+      const scores = await db.select().from(schema.beltTestScores).where(inArray(schema.beltTestScores.sessionId, sessions.map(session => session.id).length ? sessions.map(session => session.id) : [-1]));
+      return sessions.map(session => ({ session, intent: intents.find(intent => intent.id === session.beltTestIntentId), scores: scores.filter(score => score.sessionId === session.id) }));
+    }),
+  }),
+
   // ─── October Belt Promotion ────────────────────────────────────────────────────
   beltPromotion: router({
     getConfig: publicProcedure.query(async () => {

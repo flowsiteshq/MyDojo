@@ -101,6 +101,7 @@ const KidsMartialArts = lazy(() => import("./pages/KidsMartialArts"));
 const AdultKickboxing = lazy(() => import("./pages/AdultKickboxing"));
 const GiftCertRedeem = lazy(() => import("./pages/GiftCertRedeem"));
 const AdminGiftCerts = lazy(() => import("./pages/AdminGiftCerts"));
+const AdminBeltTesting = lazy(() => import("./pages/AdminBeltTesting"));
 const ReadToEarn = lazy(() => import("./pages/ReadToEarn"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -224,6 +225,7 @@ function Router() {
         <Route path="/master-yaeger-seminar" component={MasterYaegerSeminar} />
         <Route path="/member" component={MemberPortal} />
         <Route path="/admin/belt-test-intents" component={AdminBeltTestIntents} />
+        <Route path="/admin/belt-testing" component={AdminBeltTesting} />
         <Route path="/admin/belt-promotions" component={AdminBeltPromotions} />
             <Route path="/admin/newsletter" component={AdminNewsletter} />
         <Route path="/admin/event-registrations" component={AdminEventRegistrations} />

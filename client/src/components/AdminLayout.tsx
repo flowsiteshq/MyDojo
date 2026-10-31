@@ -174,6 +174,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/pno-rsvps", label: "PNO RSVPs", icon: PartyPopper },
     { href: "/admin/camp-enrollments", label: "Camp Enrollments", icon: Tent },
     { href: "/admin/belt-test-intents", label: "Belt Test Intents", icon: Award },
+    { href: "/admin/belt-testing", label: "Digital Belt Testing", icon: ClipboardList },
     { href: "/admin/belt-promotions", label: "Belt Promotions", icon: Award },
     { href: "/admin/event-registrations", label: "Event Registrations", icon: CalendarCheck },
     { href: "/admin/newsletter", label: "Newsletter", icon: Mail },

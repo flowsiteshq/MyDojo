@@ -2623,6 +2623,43 @@ export const beltTestIntents = mysqlTable("beltTestIntents", {
 export type BeltTestIntent = typeof beltTestIntents.$inferSelect;
 export type InsertBeltTestIntent = typeof beltTestIntents.$inferInsert;
 
+// ─── Digital Belt Testing Control ─────────────────────────────────────────────
+// Scores are separate from Intent to Promote so staff can grade safely without
+// changing registration, payment, or promotion-intent records.
+export const beltTestSessions = mysqlTable("beltTestSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  beltTestIntentId: int("beltTestIntentId").notNull().unique(),
+  status: varchar("status", { length: 30 }).notNull().default("draft"), // draft | in_progress | completed | published
+  totalPoints: int("totalPoints").notNull().default(0),
+  earnedPoints: int("earnedPoints").notNull().default(0),
+  passThreshold: int("passThreshold").notNull().default(70),
+  passed: int("passed").notNull().default(0),
+  staffNotes: text("staffNotes"),
+  highlightPhotoUrl: text("highlightPhotoUrl"),
+  testedAt: timestamp("testedAt"),
+  publishedAt: timestamp("publishedAt"),
+  createdByUserId: int("createdByUserId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type BeltTestSession = typeof beltTestSessions.$inferSelect;
+export type InsertBeltTestSession = typeof beltTestSessions.$inferInsert;
+
+export const beltTestScores = mysqlTable("beltTestScores", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: int("sessionId").notNull(),
+  criterionKey: varchar("criterionKey", { length: 60 }).notNull(),
+  criterionName: varchar("criterionName", { length: 150 }).notNull(),
+  maxPoints: int("maxPoints").notNull().default(10),
+  pointsEarned: int("pointsEarned").notNull().default(0),
+  passRequired: int("passRequired").notNull().default(0),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type BeltTestScore = typeof beltTestScores.$inferSelect;
+export type InsertBeltTestScore = typeof beltTestScores.$inferInsert;
+
 // ─── Event Registrations ───────────────────────────────────────────────────────
 export const eventRegistrations = mysqlTable("eventRegistrations", {
   id: int("id").autoincrement().primaryKey(),
